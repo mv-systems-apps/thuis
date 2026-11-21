@@ -8,6 +8,10 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand: proef (stap 1 van het bouwplan). `thuis.html` test alleen het aanmelden
-bij Microsoft, het openen van de gedeelde map via een deellink, lezen en
-schrijven met de controle op tussentijdse wijzigingen.
+Stand: app-shell (stap 2 van het bouwplan): indeling met tabbladen, aanmelden
+bij Microsoft, de gedeelde map koppelen via een deellink en de melding bij een
+nieuwe versie. De lijsten zelf volgen in de volgende stappen.
+
+Tests: `node thuis-tests.cjs` (met `APP=<pad>` een andere versie controleren).
+Na elke wijziging aan de app ook:
+`python3 ../apps-basis/check_app.py thuis.html --basis ../apps-basis`

@@ -2,124 +2,271 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1D3FAF">
 <title>thuis</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
+  :root{
+    --kobalt:#1D3FAF; --paars:#4B3CC0; --violet:#7A3FC8; --turkoois:#0A7581; --eenmalig:#6A3BC4;
+    --tekst:#18202B; --zacht:#3A4250; --grijs:#5A6472; --lijn:#DEDCEE; --rij:#EFEEF7; --achter:#F4F3FB;
+    --oranje-bg:#FFF5E6; --oranje:#6B3D02; --rood:#B42318;
+  }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:18px;color:#18202B;background:#F4F3FB}
-  header{position:sticky;top:0;height:60px;display:flex;align-items:center;gap:10px;padding:0 16px;color:#FFFFFF;
-         background:linear-gradient(115deg,#1D3FAF 0%,#4B3CC0 60%,#7A3FC8 100%)}
-  header h1{margin:0;font-size:22px}
-  main{padding:14px;display:flex;flex-direction:column;gap:16px;max-width:560px;margin:0 auto}
-  section{background:#FFFFFF;border:1px solid #DEDCEE;padding:14px;display:flex;flex-direction:column;gap:10px}
-  h2{margin:0;font-size:18px;color:#4B3CC0}
-  p{margin:0;font-size:17px;line-height:1.4;color:#3A4250}
-  button{min-height:52px;border:0;padding:0 16px;font:inherit;font-size:18px;font-weight:600;color:#FFFFFF;
-         background:linear-gradient(135deg,#4B3CC0,#7A3FC8)}
-  button.tweede{background:#FFFFFF;color:#4B3CC0;border:2px solid #4B3CC0}
-  button:disabled{opacity:.45}
-  input{height:52px;border:2px solid #CFCBE6;padding:0 12px;font:inherit;font-size:18px;width:100%}
-  .rij{display:flex;flex-wrap:wrap;gap:8px}
-  .status{font-size:17px;color:#3A4250}
-  #inhoud{white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,monospace;font-size:17px;background:#F7F6FB;padding:10px;max-height:240px;overflow:auto}
-  #log{list-style:none;margin:0;padding:0;font-size:17px}
-  #log li{padding:6px 0;border-bottom:1px solid #EFEEF7}
-  #log .goed{color:#0A6570}
-  #log .fout{color:#B42318}
-  .stempel{text-align:center;font-size:17px;color:#6B7482;padding:8px 0 24px}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:18px;color:var(--tekst);background:var(--achter);
+       display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+  button,input{font:inherit}
+  /* Vaste kop, scrollend midden, vaste tabbalk: de navigatie scrollt niet weg. */
+  header{flex-shrink:0;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px;color:#FFFFFF;
+         background:linear-gradient(115deg,var(--kobalt) 0%,var(--paars) 60%,var(--violet) 100%)}
+  .merk{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700}
+  #wolk{min-height:44px;display:flex;align-items:center;gap:6px;padding:0 8px;border:0;background:transparent;color:#E4E0FF;font-size:17px}
+  #wolk svg{flex-shrink:0}
+  main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .scherm{padding:14px;display:flex;flex-direction:column;gap:16px;max-width:640px;margin:0 auto}
+  .scherm[hidden]{display:none}
+  h2{margin:0 0 6px 2px;font-size:17px;font-weight:700;color:var(--paars)}
+  .kaart{background:#FFFFFF;border:1px solid var(--lijn)}
+  .rij{display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 14px;border-bottom:1px solid var(--rij)}
+  .rij:last-child{border-bottom:0}
+  .rij .label{flex:1}
+  .rij .waarde{font-size:17px;color:var(--grijs);text-align:right}
+  .leeg{padding:28px 18px;text-align:center;color:var(--zacht);font-size:17px;line-height:1.45}
+  .leeg b{display:block;font-size:19px;color:var(--tekst);margin-bottom:6px}
+  .knop{min-height:52px;border:0;padding:0 16px;font-size:18px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,var(--paars),var(--violet))}
+  .knop.tweede{background:#FFFFFF;color:var(--paars);border:2px solid var(--paars)}
+  .knop.rood{background:#FFFFFF;color:var(--rood);border:2px solid var(--rood)}
+  .knop:disabled{opacity:.45}
+  .knoppen{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
+  .veld{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+  .veld label{font-size:17px;font-weight:600;color:var(--paars)}
+  .veld input{height:52px;border:2px solid #CFCBE6;padding:0 12px;font-size:18px;width:100%;background:#FFFFFF;color:var(--tekst)}
+  .stempel{text-align:center;font-size:17px;color:#6B7482;padding:4px 0 8px}
+  /* Meldingen: één melding per regel, de knoppen eronder; ze blijven staan tot je
+     ze wegtikt of het is opgelost (gedeelde conventie). */
+  #meldingen{display:flex;flex-direction:column;gap:8px;padding:14px 14px 0;max-width:640px;margin:0 auto}
+  #meldingen:empty{display:none}
+  .melding{background:var(--oranje-bg);color:var(--oranje);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+  .melding.info{background:#ECEAF8;color:#2E2A4F}
+  .melding p{margin:0;font-size:17px;line-height:1.4}
+  .melding .knoppen{padding:0}
+  nav{flex-shrink:0;height:64px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#FFFFFF;border-top:1px solid var(--lijn);
+      padding-bottom:env(safe-area-inset-bottom)}
+  nav button{border:0;border-top:3px solid transparent;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
+  nav button svg{width:28px;height:28px;stroke:#6B7482;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  nav button[aria-current="page"]{border-top-color:var(--paars);background:#F1EFFB}
+  nav button[aria-current="page"] svg{stroke:var(--paars)}
+  button:focus-visible,input:focus-visible{outline:3px solid #5EE0E8;outline-offset:2px}
 </style>
 </head>
 <body>
 <header>
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5EE0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
-  <h1>thuis – proef</h1>
+  <div class="merk">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5EE0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+    <span>thuis</span>
+  </div>
+  <button id="wolk" type="button" aria-label="Synchroniseren">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E4E0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 9a4.5 4.5 0 0 0 1 9z"></path><path id="wolkTeken" d="M9.5 13.5l2 2 3.5-3.5"></path></svg>
+    <span id="wolkTekst">—</span>
+  </button>
 </header>
-<main>
-  <section>
-    <h2>1. Aanmelden</h2>
-    <p class="status" id="aanmeldStatus">Nog niet aangemeld.</p>
-    <div class="rij">
-      <button id="btnAanmelden">Aanmelden bij Microsoft</button>
+
+<main id="midden">
+  <div id="meldingen" aria-live="polite"></div>
+  <section class="scherm" id="scherm-boodschappen" aria-labelledby="tab-boodschappen">
+    <div class="kaart leeg" id="leegBoodschappen">
+      <b>Nog niets op de lijst</b>
+      <span id="leegBoodschappenTekst">Hier komt de boodschappenlijst.</span>
     </div>
   </section>
 
-  <section>
-    <h2>2. Map openen via deellink</h2>
-    <label for="deellink" class="status">Plak de deellink naar de map <b>thuis</b>:</label>
-    <input id="deellink" type="url" inputmode="url" autocomplete="off" placeholder="https://1drv.ms/…">
-    <div class="rij"><button id="btnMap">Map openen</button></div>
-    <p class="status" id="mapStatus">Nog geen map.</p>
-  </section>
-
-  <section>
-    <h2>3 en 4. Lezen en schrijven</h2>
-    <div class="rij">
-      <button id="btnLezen">Lezen</button>
-      <button id="btnSchrijven" class="tweede">Regel toevoegen</button>
-    </div>
-    <p class="status" id="bestandStatus">Nog niet gelezen.</p>
-    <div id="inhoud" hidden></div>
-  </section>
-
-  <section>
-    <h2>5. Botsingstest</h2>
-    <p>Tik op Lezen. Wijzig dan <b>thuis.txt</b> ergens anders (OneDrive op internet, of de OneDrive-app). Tik daarna hier op Regel toevoegen, zonder eerst opnieuw te lezen. Goed is: de app weigert, met code 412.</p>
-  </section>
-
-  <section>
-    <h2>6. Vernieuwen</h2>
-    <p class="status" id="tokenStatus">—</p>
-    <div class="rij">
-      <button id="btnVernieuwen" class="tweede">Nu vernieuwen</button>
-      <button id="btnWissen" class="tweede">Proef wissen</button>
+  <section class="scherm" id="scherm-doen" aria-labelledby="tab-doen" hidden>
+    <div class="kaart leeg">
+      <b>Nog geen acties</b>
+      <span>Hier komen de dingen die gedaan moeten worden.</span>
     </div>
   </section>
 
-  <section>
-    <h2>Logboek</h2>
-    <ul id="log"></ul>
+  <section class="scherm" id="scherm-instellingen" aria-labelledby="tab-instellingen" hidden>
+    <div>
+      <h2>Synchroniseren</h2>
+      <div class="kaart">
+        <div class="rij"><span class="label">Aangemeld als</span><span class="waarde" id="wieAangemeld">niet aangemeld</span></div>
+        <div class="rij"><span class="label">Gedeelde map</span><span class="waarde" id="mapNaam">nog geen</span></div>
+        <div class="veld" id="mapVeld">
+          <label for="deellink">Deellink naar de map</label>
+          <input id="deellink" type="url" inputmode="url" autocomplete="off" placeholder="https://1drv.ms/…">
+          <button class="knop tweede" id="btnMap" type="button">Map koppelen</button>
+        </div>
+        <div class="knoppen">
+          <button class="knop" id="btnAanmelden" type="button">Aanmelden bij Microsoft</button>
+          <button class="knop rood" id="btnAfmelden" type="button" hidden>Afmelden</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2>App</h2>
+      <div class="kaart">
+        <div class="rij"><span class="label">Browser</span><span class="waarde" id="appBrowser">—</span></div>
+        <div class="rij"><span class="label">Aanmelding geldig</span><span class="waarde" id="appToken">—</span></div>
+      </div>
+    </div>
+    <div class="stempel" id="app-version-stamp">Versie 1352901-002</div>
   </section>
-
-  <div class="stempel">Versie 1352901-001</div>
 </main>
+
+<nav aria-label="Onderdelen">
+  <button id="tab-boodschappen" type="button" data-scherm="boodschappen" aria-label="Boodschappen" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7z"></path><path d="M9 7a3 3 0 0 1 6 0"></path></svg>
+  </button>
+  <button id="tab-doen" type="button" data-scherm="doen" aria-label="Doen">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16"></rect><path d="M8 12l3 3 5-6"></path></svg>
+  </button>
+  <button id="tab-instellingen" type="button" data-scherm="instellingen" aria-label="Instellingen">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg>
+  </button>
+</nav>
 
 <script>
 'use strict';
-/* Proef (stap 1 van het bouwplan in ontwerp.md): aanmelden met een eigen
-   PKCE-flow, de gedeelde map openen via een deellink, thuis.txt lezen en
-   schrijven met If-Match. Alles hier is tijdelijk; de echte app vervangt het.
-   Bewust eenvoudig: de inlog staat voor deze proef in localStorage, in de app
-   komt hij in IndexedDB. Het logboek toont nooit inlogcodes. */
+/* thuis — app-shell (stap 2 van het bouwplan in ontwerp.md): indeling, tabbladen,
+   aanmelden bij Microsoft, de gedeelde map koppelen en de melding bij een nieuwe
+   versie. Lijsten, samenvoegen en synchroniseren volgen in de volgende stappen. */
+
+const APP_FILE = 'thuis.html';
+const CACHE_PREFIX = 'thuis-';
+const VERSION_RE = /Versie ([0-9A-F]+-[0-9A-F]+)/;
 
 const CLIENT_ID = 'ce3baf27-62c5-4e28-956a-d306ddb0947c';
 const AUTH = 'https://login.microsoftonline.com/consumers/oauth2/v2.0';
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 const SCOPE = 'Files.ReadWrite.All offline_access User.Read';
-const REDIRECT = new URL('thuis.html', location.href).href.split('?')[0].split('#')[0];
+const REDIRECT = new URL(APP_FILE, location.href).href.split('?')[0].split('#')[0];
 const GRENS = 10000;
-const SLEUTEL = { pkce: 'thuis-proef-pkce', token: 'thuis-proef-token', map: 'thuis-proef-map' };
+/* Microsoft laat een webapp een aanmelding hooguit 24 uur vernieuwen. */
+const AANMELD_GRENS = 24 * 3600 * 1000;
 
 const $ = (id) => document.getElementById(id);
-let laatst = null; // { fileId, eTag, tekst } van de laatste keer lezen
 
-function log(tekst, soort) {
-  const li = document.createElement('li');
-  const t = new Date();
-  li.textContent = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0') + ':' +
-    String(t.getSeconds()).padStart(2, '0') + '  ' + tekst;
-  if (soort) li.className = soort;
-  $('log').prepend(li);
+/* ---------- kleine hulpfuncties (getest in thuis-tests.cjs) ---------- */
+function browserNaam(ua) {
+  if (/\bEdg(A|iOS)?\//.test(ua)) return 'Edge';
+  if (/SamsungBrowser\//.test(ua)) return 'Samsung Internet';
+  if (/Firefox\//.test(ua)) return 'Firefox';
+  if (/Chrome\//.test(ua)) return 'Chrome';
+  return 'andere browser';
 }
 
-function lees(sleutel) {
-  try { return JSON.parse(localStorage.getItem(sleutel) || 'null'); } catch (e) { return null; }
+function base64url(bytes) {
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
-function bewaar(sleutel, waarde) {
-  try { localStorage.setItem(sleutel, JSON.stringify(waarde)); } catch (e) { log('Opslaan in de browser mislukt: ' + e.message, 'fout'); }
+
+/* De deellink van OneDrive als sleutel voor /shares (Microsoft Graph). */
+function deelSleutel(link) {
+  return 'u!' + base64url(new TextEncoder().encode(link.trim()));
 }
+
+function duurTekst(ms) {
+  const m = Math.max(0, Math.round(ms / 60000));
+  if (m < 60) return m + ' min';
+  return Math.floor(m / 60) + ' u ' + (m % 60) + ' min';
+}
+
+/* ---------- opslag in de browser: IndexedDB ---------- */
+let __db = null;
+function db() {
+  if (__db) return __db;
+  __db = new Promise((resolve, reject) => {
+    const req = indexedDB.open('thuis', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('kv');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return __db;
+}
+async function kvGet(sleutel) {
+  const d = await db();
+  return new Promise((resolve, reject) => {
+    const r = d.transaction('kv').objectStore('kv').get(sleutel);
+    r.onsuccess = () => resolve(r.result === undefined ? null : r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function kvSet(sleutel, waarde) {
+  const d = await db();
+  return new Promise((resolve, reject) => {
+    const t = d.transaction('kv', 'readwrite');
+    t.objectStore('kv').put(waarde, sleutel);
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(t.error);
+  });
+}
+async function kvDel(sleutel) {
+  const d = await db();
+  return new Promise((resolve, reject) => {
+    const t = d.transaction('kv', 'readwrite');
+    t.objectStore('kv').delete(sleutel);
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(t.error);
+  });
+}
+
+/* De proef bewaarde de aanmelding en de map in localStorage;
+   die resten ruimen we hier op. */
+['thuis-proef-pkce', 'thuis-proef-token', 'thuis-proef-map'].forEach((k) => {
+  try { localStorage.removeItem(k); } catch (e) { /* geen localStorage: niets op te ruimen */ }
+});
+
+/* ---------- meldingen ---------- */
+function melding(id, tekst, knoppen, soort) {
+  let el = $(id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = id;
+    $('meldingen').appendChild(el);
+  }
+  el.className = 'melding' + (soort ? ' ' + soort : '');
+  el.setAttribute('role', 'status');
+  el.textContent = '';
+  const p = document.createElement('p');
+  p.textContent = tekst;
+  el.appendChild(p);
+  if (knoppen && knoppen.length) {
+    const rij = document.createElement('div');
+    rij.className = 'knoppen';
+    for (const k of knoppen) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'knop' + (k.tweede ? ' tweede' : '');
+      b.textContent = k.tekst;
+      b.addEventListener('click', k.actie);
+      rij.appendChild(b);
+    }
+    el.appendChild(rij);
+  }
+}
+function meldingWeg(id) {
+  const el = $(id);
+  if (el) el.remove();
+}
+
+/* ---------- tabbladen ---------- */
+function toonScherm(naam) {
+  for (const b of document.querySelectorAll('nav button')) {
+    const aan = b.dataset.scherm === naam;
+    if (aan) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    $('scherm-' + b.dataset.scherm).hidden = !aan;
+  }
+  $('midden').scrollTop = 0;
+}
+for (const b of document.querySelectorAll('nav button')) {
+  b.addEventListener('click', () => toonScherm(b.dataset.scherm));
+}
+$('wolk').addEventListener('click', () => toonScherm('instellingen'));
 
 /* ---------- netwerk met tijdsgrens ---------- */
 async function metGrens(url, init) {
@@ -128,18 +275,13 @@ async function metGrens(url, init) {
   try {
     return await fetch(url, Object.assign({}, init || {}, { signal: ac.signal }));
   } catch (e) {
-    throw new Error(e.name === 'AbortError' ? 'geen antwoord binnen 10 s' : 'netwerkfout (' + e.message + ')');
+    throw new Error(e.name === 'AbortError' ? 'geen antwoord binnen 10 s' : 'geen verbinding');
   } finally {
     clearTimeout(klok);
   }
 }
 
-/* ---------- PKCE ---------- */
-function base64url(bytes) {
-  let s = '';
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
+/* ---------- aanmelden: eigen PKCE-flow, zonder externe bibliotheek ---------- */
 function willekeurig(n) {
   const b = new Uint8Array(n);
   crypto.getRandomValues(b);
@@ -152,7 +294,7 @@ async function sha256(tekst) {
 async function aanmelden() {
   const verifier = willekeurig(48);
   const state = willekeurig(16);
-  bewaar(SLEUTEL.pkce, { verifier, state, t: Date.now() });
+  await kvSet('pkce', { verifier, state, t: Date.now() });
   const p = new URLSearchParams({
     client_id: CLIENT_ID,
     response_type: 'code',
@@ -163,7 +305,6 @@ async function aanmelden() {
     code_challenge: base64url(await sha256(verifier)),
     code_challenge_method: 'S256'
   });
-  log('Naar Microsoft…');
   location.assign(AUTH + '/authorize?' + p.toString());
 }
 
@@ -175,195 +316,285 @@ async function tokenAanvraag(velden) {
     body
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((json.error || res.status) + (json.error_description ? ': ' + json.error_description.split('\r')[0] : ''));
+  if (!res.ok) {
+    const err = new Error(json.error || ('code ' + res.status));
+    err.opnieuwAanmelden = json.error === 'invalid_grant';
+    throw err;
+  }
   const nu = Date.now();
-  const oud = lees(SLEUTEL.token) || {};
-  const tok = {
+  const oud = (await kvGet('auth')) || {};
+  const nieuw = {
     access: json.access_token,
     accessTot: nu + (json.expires_in || 3600) * 1000,
     refresh: json.refresh_token || oud.refresh,
-    refreshSinds: json.refresh_token ? nu : oud.refreshSinds,
-    aangemeldOp: velden.grant_type === 'authorization_code' ? nu : oud.aangemeldOp
+    /* Vernieuwen verlengt de grens van 24 uur niet: die telt vanaf het aanmelden. */
+    aangemeldOp: velden.grant_type === 'authorization_code' ? nu : oud.aangemeldOp,
+    naam: oud.naam || ''
   };
-  bewaar(SLEUTEL.token, tok);
-  return tok;
+  await kvSet('auth', nieuw);
+  return nieuw;
 }
 
 async function terugVanMicrosoft() {
   const q = new URLSearchParams(location.search);
   if (!q.has('code') && !q.has('error')) return;
-  const pkce = lees(SLEUTEL.pkce);
   history.replaceState(null, '', REDIRECT);
-  const standalone = matchMedia('(display-mode: standalone)').matches;
-  log('Terug van Microsoft, ' + (standalone ? 'in de geïnstalleerde app' : 'in een browsertab (niet de app)'), standalone ? 'goed' : 'fout');
-  if (q.has('error')) { log('Microsoft meldt: ' + q.get('error') + ' ' + (q.get('error_description') || ''), 'fout'); return; }
-  if (!pkce || pkce.state !== q.get('state')) { log('Onbekende of verlopen aanmeldpoging (state klopt niet).', 'fout'); return; }
+  const pkce = await kvGet('pkce');
+  await kvDel('pkce');
+  if (q.has('error')) {
+    if (q.get('error') !== 'access_denied') melding('m-aanmelden', 'Aanmelden is niet gelukt (' + q.get('error') + ').', [{ tekst: 'Opnieuw aanmelden', actie: aanmelden }]);
+    return;
+  }
+  if (!pkce || pkce.state !== q.get('state')) {
+    melding('m-aanmelden', 'Aanmelden is niet gelukt: de aanmeldpoging is verlopen.', [{ tekst: 'Opnieuw aanmelden', actie: aanmelden }]);
+    return;
+  }
   try {
     await tokenAanvraag({ grant_type: 'authorization_code', code: q.get('code'), redirect_uri: REDIRECT, code_verifier: pkce.verifier });
-    localStorage.removeItem(SLEUTEL.pkce);
-    log('Aangemeld.', 'goed');
+    meldingWeg('m-aanmelden');
   } catch (e) {
-    log('Inloggen afronden mislukt: ' + e.message, 'fout');
+    melding('m-aanmelden', 'Aanmelden is niet gelukt (' + e.message + ').', [{ tekst: 'Opnieuw aanmelden', actie: aanmelden }]);
   }
 }
 
-async function token(forceer) {
-  const tok = lees(SLEUTEL.token);
-  if (!tok || !tok.refresh) throw new Error('niet aangemeld');
-  if (!forceer && tok.access && tok.accessTot - Date.now() > 60000) return tok.access;
-  const nieuw = await tokenAanvraag({ grant_type: 'refresh_token', refresh_token: tok.refresh });
-  log('Toegang vernieuwd' + (forceer ? ' (handmatig).' : '.'), 'goed');
-  return nieuw.access;
+/* Geeft een geldige toegangscode, of gooit een fout. Een verlopen aanmelding
+   blokkeert niets: er komt een rustige melding met de weg terug. */
+async function toegang() {
+  const auth = await kvGet('auth');
+  if (!auth || !auth.refresh) throw new Error('niet aangemeld');
+  if (auth.access && auth.accessTot - Date.now() > 60000) return auth.access;
+  try {
+    return (await tokenAanvraag({ grant_type: 'refresh_token', refresh_token: auth.refresh })).access;
+  } catch (e) {
+    if (e.opnieuwAanmelden) {
+      melding('m-aanmelden', 'De aanmelding bij Microsoft is verlopen.', [{ tekst: 'Opnieuw aanmelden', actie: aanmelden }]);
+    }
+    throw e;
+  }
 }
 
 async function graph(pad, init) {
   const opt = Object.assign({}, init || {});
-  opt.headers = Object.assign({ Authorization: 'Bearer ' + await token() }, opt.headers || {});
+  opt.headers = Object.assign({ Authorization: 'Bearer ' + await toegang() }, opt.headers || {});
   return metGrens(pad.startsWith('http') ? pad : GRAPH + pad, opt);
 }
 
-async function graphFout(res) {
-  const j = await res.json().catch(() => null);
-  return res.status + (j && j.error ? ' ' + j.error.code + ': ' + j.error.message : '');
+/* Bij het openen: nadert de grens van 24 uur en is er netwerk, dan vraagt de app
+   om opnieuw aan te melden — liever thuis bij het openen dan straks in de winkel.
+   Eén tik; meestal hoeft er niets te worden ingevuld. */
+async function aanmeldingOpTijd() {
+  const auth = await kvGet('auth');
+  if (!auth || !auth.aangemeldOp || !navigator.onLine) return;
+  const over = AANMELD_GRENS - (Date.now() - auth.aangemeldOp);
+  if (over < 4 * 3600 * 1000) {
+    melding('m-aanmelden', over > 0
+      ? 'De aanmelding bij Microsoft verloopt over ' + duurTekst(over) + '. Vernieuw hem nu, dan werkt alles straks ook onderweg.'
+      : 'De aanmelding bij Microsoft is verlopen.', [{ tekst: 'Opnieuw aanmelden', actie: aanmelden }]);
+  }
 }
 
-/* ---------- map via deellink ---------- */
-async function mapOpenen() {
+async function afmelden() {
+  await kvDel('auth');
+  await kvDel('map');
+  meldingWeg('m-aanmelden');
+  await toonStatus();
+}
+
+/* ---------- gedeelde map ---------- */
+async function mapKoppelen() {
   const link = $('deellink').value.trim();
-  if (!/^https:\/\//.test(link)) { log('Plak eerst een deellink die met https:// begint.', 'fout'); return; }
-  const id = 'u!' + base64url(new TextEncoder().encode(link));
+  if (!/^https:\/\//.test(link)) { melding('m-map', 'Plak een deellink die met https:// begint.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-map') }]); return; }
+  $('btnMap').disabled = true;
   try {
-    const res = await graph('/shares/' + id + '/driveItem');
-    if (!res.ok) { log('Map openen mislukt: ' + await graphFout(res), 'fout'); return; }
+    const res = await graph('/shares/' + deelSleutel(link) + '/driveItem');
+    if (!res.ok) throw new Error(res.status === 404 || res.status === 403 ? 'deze link geeft geen toegang' : 'code ' + res.status);
     const item = await res.json();
-    if (!item.folder) { log('Dat is geen map, maar "' + item.name + '". Maak een deellink naar de map zelf.', 'fout'); return; }
-    const map = { driveId: item.parentReference.driveId, itemId: item.id, naam: item.name };
-    bewaar(SLEUTEL.map, map);
-    log('Map "' + item.name + '" gevonden en onthouden.', 'goed');
-    toon();
+    if (!item.folder) throw new Error('"' + item.name + '" is geen map');
+    await kvSet('map', { driveId: item.parentReference.driveId, itemId: item.id, naam: item.name });
+    $('deellink').value = '';
+    meldingWeg('m-map');
   } catch (e) {
-    log('Map openen mislukt: ' + e.message, 'fout');
+    melding('m-map', 'Map koppelen is niet gelukt: ' + e.message + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-map') }]);
+  } finally {
+    $('btnMap').disabled = false;
+    await toonStatus();
   }
 }
 
-/* ---------- lezen en schrijven ---------- */
-async function bestandLezen() {
-  const map = lees(SLEUTEL.map);
-  if (!map) { log('Open eerst de map (stap 2).', 'fout'); return; }
-  try {
-    const basis = '/drives/' + map.driveId + '/items/' + map.itemId;
-    let res = await graph(basis + ':/thuis.txt');
-    if (res.status === 404) {
-      log('thuis.txt bestaat nog niet; de proef maakt hem aan.');
-      const begin = 'instelling;proef;gemaakt=' + new Date().toISOString().slice(0, 16) + '\n';
-      res = await graph(basis + ':/thuis.txt:/content?@microsoft.graph.conflictBehavior=fail', {
-        method: 'PUT', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: begin
-      });
-      if (!res.ok) { log('Aanmaken mislukt: ' + await graphFout(res), 'fout'); return; }
-      res = await graph(basis + ':/thuis.txt');
-    }
-    if (!res.ok) { log('Lezen mislukt: ' + await graphFout(res), 'fout'); return; }
-    const item = await res.json();
-    const dl = item['@microsoft.graph.downloadUrl'];
-    const inhoud = await metGrens(dl, { cache: 'no-store' });
-    if (!inhoud.ok) { log('Downloaden mislukt: ' + inhoud.status, 'fout'); return; }
-    const bytes = new Uint8Array(await inhoud.arrayBuffer());
-    let tekst;
-    try { tekst = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
-    catch (e) { log('thuis.txt is geen geldige UTF-8; niet gelezen.', 'fout'); return; }
-    laatst = { fileId: item.id, eTag: item.eTag, tekst };
-    const regels = tekst.split(/\r?\n/).filter((r) => r !== '').length;
-    log('Gelezen: ' + regels + ' regels, ' + bytes.length + ' bytes.', 'goed');
-    $('bestandStatus').textContent = 'Gelezen om ' + new Date().toLocaleTimeString('nl-NL') + ' · ' + regels + ' regels';
-    $('inhoud').hidden = false;
-    $('inhoud').textContent = tekst;
-  } catch (e) {
-    log('Lezen mislukt: ' + e.message, 'fout');
-  }
-}
-
-async function bestandSchrijven() {
-  const map = lees(SLEUTEL.map);
-  if (!map || !laatst) { log('Tik eerst op Lezen.', 'fout'); return; }
-  const regel = 'actie;Proef ' + new Date().toLocaleString('nl-NL').replace(/[;|]/g, ',');
-  const nieuw = laatst.tekst + (laatst.tekst === '' || laatst.tekst.endsWith('\n') ? '' : '\n') + regel + '\n';
-  try {
-    const res = await graph('/drives/' + map.driveId + '/items/' + laatst.fileId + '/content', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'If-Match': laatst.eTag },
-      body: nieuw
-    });
-    if (res.status === 412) {
-      log('Geweigerd met 412: het bestand is sinds het lezen gewijzigd. Dit is goed: de bescherming werkt.', 'goed');
-      return;
-    }
-    if (!res.ok) { log('Schrijven mislukt: ' + await graphFout(res), 'fout'); return; }
-    const item = await res.json();
-    laatst = { fileId: item.id, eTag: item.eTag, tekst: nieuw };
-    log('Regel toegevoegd en weggeschreven.', 'goed');
-    $('inhoud').textContent = nieuw;
-  } catch (e) {
-    log('Schrijven mislukt: ' + e.message, 'fout');
-  }
-}
-
-/* ---------- weergave ---------- */
-function duur(ms) {
-  const m = Math.round(ms / 60000);
-  if (Math.abs(m) < 60) return m + ' min';
-  return Math.floor(m / 60) + ' u ' + (Math.abs(m) % 60) + ' min';
-}
-async function toon() {
-  const tok = lees(SLEUTEL.token);
-  const map = lees(SLEUTEL.map);
-  if (tok && tok.refresh) {
-    $('aanmeldStatus').textContent = 'Aangemeld.';
-    const nu = Date.now();
-    $('tokenStatus').textContent =
-      'Toegang nog ' + duur(tok.accessTot - nu) + ' geldig. Aanmelding ' +
-      (tok.refreshSinds ? duur(nu - tok.refreshSinds) + ' oud' : 'onbekend') +
-      ' (grens 24 u).';
-  } else {
-    $('aanmeldStatus').textContent = 'Nog niet aangemeld.';
-    $('tokenStatus').textContent = '—';
-  }
-  $('mapStatus').textContent = map ? 'Map: ' + map.naam : 'Nog geen map.';
+/* ---------- status in beeld ---------- */
+async function toonStatus() {
+  const auth = await kvGet('auth');
+  const map = await kvGet('map');
+  const aangemeld = !!(auth && auth.refresh);
+  $('btnAanmelden').hidden = aangemeld;
+  $('btnAfmelden').hidden = !aangemeld;
+  $('wieAangemeld').textContent = aangemeld ? (auth.naam || 'aangemeld') : 'niet aangemeld';
+  $('mapNaam').textContent = map ? map.naam : 'nog geen';
+  $('mapVeld').hidden = !aangemeld || !!map;
+  $('appToken').textContent = aangemeld && auth.aangemeldOp ? 'nog ' + duurTekst(AANMELD_GRENS - (Date.now() - auth.aangemeldOp)) : '—';
+  $('wolkTekst').textContent = !aangemeld ? 'niet aangemeld' : !map ? 'geen map' : 'gekoppeld';
+  $('wolk').setAttribute('aria-label', 'Synchroniseren: ' + $('wolkTekst').textContent);
+  $('leegBoodschappenTekst').textContent = !aangemeld || !map
+    ? 'Meld je eerst aan en koppel de gedeelde map, bij Instellingen.'
+    : 'Hier komt de boodschappenlijst.';
 }
 
 async function wieBenIk() {
   try {
     const res = await graph('/me?$select=displayName');
-    if (res.ok) {
-      const j = await res.json();
-      $('aanmeldStatus').textContent = 'Aangemeld als ' + j.displayName + '.';
-    }
-  } catch (e) { /* stil: de status toont al "Aangemeld." */ }
+    if (!res.ok) return;
+    const j = await res.json();
+    const auth = await kvGet('auth');
+    if (auth) { auth.naam = j.displayName; await kvSet('auth', auth); }
+    await toonStatus();
+  } catch (e) { /* zonder netwerk blijft de vorige naam staan */ }
 }
 
 $('btnAanmelden').addEventListener('click', aanmelden);
-$('btnMap').addEventListener('click', mapOpenen);
-$('btnLezen').addEventListener('click', bestandLezen);
-$('btnSchrijven').addEventListener('click', bestandSchrijven);
-$('btnVernieuwen').addEventListener('click', async () => {
-  try { await token(true); } catch (e) { log('Vernieuwen mislukt: ' + e.message, 'fout'); }
-  toon();
-});
-$('btnWissen').addEventListener('click', () => {
-  Object.values(SLEUTEL).forEach((k) => localStorage.removeItem(k));
-  laatst = null;
-  $('inhoud').hidden = true;
-  log('Proefgegevens gewist (aanmelding en map).');
-  toon();
-});
+$('btnAfmelden').addEventListener('click', afmelden);
+$('btnMap').addEventListener('click', mapKoppelen);
+$('appBrowser').textContent = browserNaam(navigator.userAgent) +
+  (matchMedia('(display-mode: standalone)').matches ? ' · geïnstalleerd' : ' · in de browser');
 
+/* ---------- nieuwe versie (volgens conventies.md §3, naar het voorbeeld van trends) ---------- */
+let updateBarShown = false;
+function toonUpdateBalk() {
+  if (updateBarShown) return;
+  if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) return;
+  updateBarShown = true;
+  melding('m-versie', 'Er is een nieuwe versie van thuis.', [{ tekst: 'Nu laden', actie: herlaadMetWachtendeWorker }], 'info');
+}
+
+function currentVersionStamp() {
+  const el = $('app-version-stamp');
+  const m = el && el.textContent.match(VERSION_RE);
+  return m ? m[1] : null;
+}
+
+/* Het stempel staat in de pagina: de stroom lezen en stoppen zodra het gevonden is. */
+async function stempelUitResponse(resp) {
+  if (!resp.body || typeof resp.body.getReader !== 'function') {
+    const m = (await resp.text()).match(VERSION_RE);
+    return m ? m[1] : null;
+  }
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const m = buffer.match(VERSION_RE);
+      if (m) return m[1];
+      if (buffer.length > 8192) buffer = buffer.slice(-2048);
+    }
+  } catch (e) { return null; }
+  finally { try { reader.cancel(); } catch (e) { /* al klaar */ } }
+  return null;
+}
+
+async function cachedVersionStamp() {
+  if (!('caches' in window)) return null;
+  /* De cache is van het hele domein (ook golf-score, trends en events): alleen de
+     eigen caches tellen, en zonder eigen cache meldt de app niets. */
+  const namen = (await caches.keys()).filter((n) => n.startsWith(CACHE_PREFIX));
+  if (!namen.length) return null;
+  let nieuwste = null;
+  for (const naam of namen) {
+    try {
+      const cache = await caches.open(naam);
+      const resp = await cache.match(APP_FILE) || await cache.match('./' + APP_FILE) ||
+        await cache.match(new URL(APP_FILE, location.href).href);
+      if (!resp) continue;
+      const gevonden = await stempelUitResponse(resp);
+      if (gevonden && (nieuwste === null || gevonden > nieuwste)) nieuwste = gevonden;
+    } catch (e) { /* deze cache overslaan, met de rest doorgaan */ }
+  }
+  return nieuwste;
+}
+
+async function checkAppUpdate() {
+  if (updateBarShown || location.protocol === 'file:') return;
+  try {
+    const cur = currentVersionStamp();
+    if (!cur) return;
+    const cached = await cachedVersionStamp();
+    if (cached && cached > cur) toonUpdateBalk();
+  } catch (e) { /* stil: liever geen melding dan een valse */ }
+}
+
+let __herladen = false;
+function herlaadNu() {
+  if (__herladen) return;
+  __herladen = true;
+  location.reload();
+}
+function herlaadMetWachtendeWorker() {
+  const wachtend = __swRegistratie && __swRegistratie.waiting;
+  if (!wachtend) { herlaadNu(); return; }
+  navigator.serviceWorker.addEventListener('controllerchange', herlaadNu, { once: true });
+  setTimeout(herlaadNu, 3000);
+  wachtend.postMessage({ type: 'nuOverstappen' });
+}
+
+const SW_UPDATE_INTERVAL = 30 * 60 * 1000;
+let __swUpdateLaatst = 0;
+let __swRegistratie = null;
+function vraagSwUpdate() {
+  if (!__swRegistratie) return;
+  const nu = Date.now();
+  if (nu - __swUpdateLaatst < SW_UPDATE_INTERVAL) return;
+  __swUpdateLaatst = nu;
+  __swRegistratie.update().catch(() => {});
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'kopieVernieuwd') checkAppUpdate();
+  });
+}
+setTimeout(checkAppUpdate, 4000);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  vraagSwUpdate();
+  checkAppUpdate();
+  toonStatus();
+});
+setInterval(() => {
+  if (document.hidden) return;
+  vraagSwUpdate();
+  checkAppUpdate();
+}, SW_UPDATE_INTERVAL);
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw-thuis.js').then((reg) => {
+      __swRegistratie = reg;
+      __swUpdateLaatst = Date.now();
+      if (reg.waiting) toonUpdateBalk();
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state !== 'installed') return;
+          if (reg.waiting) toonUpdateBalk(); else checkAppUpdate();
+        });
+      });
+    }).catch(() => { /* zonder service worker werkt de app gewoon, alleen niet offline */ });
+  });
+}
+
+/* ---------- start ---------- */
 (async () => {
-  log('Gestart ' + (matchMedia('(display-mode: standalone)').matches ? 'als geïnstalleerde app' : 'in de browser') +
-      ' · ' + (/Edg\//.test(navigator.userAgent) ? 'Edge' : /Chrome\//.test(navigator.userAgent) ? 'Chrome' : 'andere browser'));
-  await terugVanMicrosoft();
-  await toon();
-  if ((lees(SLEUTEL.token) || {}).refresh) wieBenIk();
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('sw-thuis.js').catch((e) => log('Service worker niet geregistreerd: ' + e.message, 'fout'));
+  try {
+    await terugVanMicrosoft();
+    await aanmeldingOpTijd();
+    await toonStatus();
+    const auth = await kvGet('auth');
+    if (auth && auth.refresh) wieBenIk();
+  } catch (e) {
+    melding('m-start', 'De app kon zijn gegevens in de browser niet openen (' + (e.message || e) + ').', []);
   }
 })();
 </script>
