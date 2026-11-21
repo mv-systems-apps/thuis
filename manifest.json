@@ -1,0 +1,18 @@
+{
+  "name": "thuis",
+  "short_name": "thuis",
+  "description": "Boodschappen en acties voor thuis",
+  "lang": "nl",
+  "start_url": "./thuis.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F3FB",
+  "theme_color": "#1D3FAF",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
