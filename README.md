@@ -8,10 +8,15 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand: app-shell (stap 2 van het bouwplan): indeling met tabbladen, aanmelden
-bij Microsoft, de gedeelde map koppelen via een deellink en de melding bij een
-nieuwe versie. De lijsten zelf volgen in de volgende stappen.
+Stand: stap 6 van het bouwplan. Werkt: aanmelden, de gedeelde map koppelen,
+synchroniseren met OneDrive (lokale kopie, wachtrij, If-Match, dagbackup) en het
+boodschappenscherm (toevoegen, zoeken, filters, op en van de lijst).
 
-Tests: `node thuis-tests.cjs` (met `APP=<pad>` een andere versie controleren).
+Tests:
+- `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie
+- `NODE_PATH=<map> node thuis-dom.cjs` — rooktest in jsdom met een gesimuleerde
+  OneDrive (`npm i jsdom fake-indexeddb` in die map). Geen echte browser.
+- `python3 mutaties.py` — sloopt de kern op bekende plekken; elke mutatie moet worden gevangen
+
 Na elke wijziging aan de app ook:
 `python3 ../apps-basis/check_app.py thuis.html --basis ../apps-basis`

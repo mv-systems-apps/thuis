@@ -77,7 +77,8 @@ Eén bestand `thuis.txt` in de gedeelde map, plus een dagbackup en een submap
 `fotos/`.
 
 - UTF-8; een bestand dat geen geldige UTF-8 is, wordt niet gelezen en nooit
-  overschreven. BOM, CRLF/LF en het slotregeleinde blijven zoals ze waren.
+  overschreven. Een BOM gaat eruit (zoals trends; geen ander programma leest
+  het bestand mee). CRLF/LF en het slotregeleinde blijven zoals ze waren.
 - Eén regel per record, velden gescheiden door `;`.
 - Vast zijn alleen het eerste veld (het soortwoord) en het tweede (de naam).
   Al het andere is `naam=waarde`, gesplitst op de eerste `=`. Wat leeg is,
@@ -94,7 +95,7 @@ Eén bestand `thuis.txt` in de gedeelde map, plus een dagbackup en een submap
 
 ```
 instelling;personen;namen=Mark|Partner
-instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2026-11-21
+instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2026-11-21T06:00
 afdeling;Groente & fruit
 afdeling;Zuivel & eieren
 winkel;Albert Heijn;route=Groente & fruit|Brood|Zuivel & eieren
