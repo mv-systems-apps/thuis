@@ -150,7 +150,7 @@ eenmalige artikelen die 12 maanden niet op de lijst stonden.
   toe, of dezelfde afdeling): de tweede gaat op in de eerste. De telefoon die
   dat merkt, zet in zijn wachtrij, mandje, favorieten en gekozen winkel de
   nieuwe id om naar de bestaande.
-- **Verwijderen** gebeurt meteen, via de wachtrij. "Ongedaan maken" (10 s, zolang
+- **Verwijderen** gebeurt meteen, via de wachtrij. "Ongedaan maken" (6 s, met een aftellend balkje in de knop; zolang
   de melding staat) zet het terug met dezelfde id, inclusief de plekken van de
   artikelen.
 - **Volgorde van afdelingen:** wat de ander intussen toevoegde, komt achteraan;
@@ -196,7 +196,9 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Per regel: links het soorticoon (alleen weergave), de naam, rechts het
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
-  een klein winkelsymbool. Wat de ander op de lijst zette, krijgt "nieuw" tot
+  onder de naam een grijs regeltje met die winkels ("Albert Heijn · Plus");
+  zo ook onder "Niet bij <winkel>" in Boodschappen. Een getal rechts in een
+  kop zegt altijd waarvan: "6 artikelen", "2 winkels", "3 afdelingen". Wat de ander op de lijst zette, krijgt "nieuw" tot
   je het gezien hebt (in beeld op Artikelen of Boodschappen en dat scherm
   verlaten); per telefoon bewaard, niet in het bestand.
 - Geen knop "Naar de winkel": de winkel is een eigen tabblad.
@@ -211,10 +213,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   prullenbak links van Opslaan). Afdelingen horen bij deze winkel alleen
-  (de route, op volgorde): greep vooraan om te verslepen, potloodje als enige
-  knop (Afdeling bewerken); tik op de naam doet hetzelfde. Onderaan "Afdeling".
+  (de route, op volgorde): greep vooraan om te verslepen; tik op de naam
+  opent Afdeling bewerken (geen potloodje, net als bij artikelen). Onderaan "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
-  winkel zonder afdeling. Verwijderen pas na 10 s, met Ongedaan maken.
+  winkel zonder afdeling. Verwijderen meteen, 6 s Ongedaan maken.
 - Artikelen koppelen gebeurt hier niet, maar bij het artikel (stap 8).
 
 ### 5.2 Winkel (tabblad)
@@ -269,7 +271,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   ✕ = weghalen; "Winkel toevoegen": zoeken of toevoegen zoals in de Winkels-tab,
   daarna meteen de afdeling), gekocht in één regel ("Laatst gekocht 15 nov ·
   meestal elke week"; "meestal" pas vanaf drie aankopen). Onderaan prullenbak
-  (10 s Ongedaan maken) en Opslaan. Wijzigingen zijn een kladversie tot Opslaan;
+  (6 s Ongedaan maken) en Opslaan. Wijzigingen zijn een kladversie tot Opslaan;
   nieuwe winkels en afdelingen bestaan wel meteen. Sluiten (kruisje, terugknop
   van de telefoon of een ander tabblad) met wijzigingen vraagt "Wijzigingen
   opslaan?" [Weggooien] [Opslaan]; het kruisje van die vraag = verder bewerken.
