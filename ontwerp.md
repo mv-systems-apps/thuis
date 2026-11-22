@@ -102,7 +102,8 @@ hand te bewerken.
 {
 "versie": "1352902-459",
 "instellingen": {
- "wekelijks": {"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}
+ "wekelijks": {"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"},
+ "archief": {"bewaren":"1m"}
 },
 "winkels": {
  "k7f2q": {"naam":"Albert Heijn","afdelingen":[{"id":"a3xm9","naam":"Groente & fruit"},{"id":"z8pd4","naam":"Zuivel"}]},
@@ -122,14 +123,16 @@ hand te bewerken.
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen` |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
-| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `gekocht` (laatste zes datums) |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
 tijdstippen `2026-11-21T10:12` in lokale tijd (Europe/Amsterdam).
 
-Opruimen door de app: afgeronde acties na 3 maanden;
-eenmalige artikelen die 12 maanden niet op de lijst stonden.
+Opruimen door de app: afgeronde acties na 3 maanden; eenmalige artikelen in
+het archief (niet op de lijst) die de ingestelde tijd niet gekocht zijn
+(`instellingen.archief.bewaren`: `1w`, `1m` standaard, `3m`, `1j`; de laatste
+dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
 
 ## 4. Samenvoegen
 
@@ -189,7 +192,12 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Tijdens het typen verdwijnen de onderbalken, zodat er ruimte is voor de
   resultaten.
 - Filterknoppen (icoon + aantal): Op de lijst, Eenmalig, Wekelijks,
-  Regelmatig, Suggesties (lampje). Overal geldt de volgorde eenmalig,
+  Regelmatig, Suggesties (lampje). Eenmalig toont (en telt) alleen wat op de
+  lijst staat; gekocht of van de lijst gehaald gaat een eenmalig artikel naar
+  het "Archief" eronder (ingeklapt, nieuwste eerst, grijs, met "gekocht 19 nov"
+  of "van de lijst 14 jul"; de + zet het terug). Zoeken vindt ook het archief.
+  Elke lijst heeft een kopbalk (lichtpaars, paarse titel, rechts het aantal).
+  Overal geldt de volgorde eenmalig,
   wekelijks, regelmatig. Suggesties: artikelen die langer geleden
   gekocht zijn dan gewoonlijk (minstens 3 aankopen nodig). Zonder historie
   staat er uitleg.
@@ -236,15 +244,15 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?" met
   gelijke koppen (paars op lichtpaars, rechts het aantal winkels): "Nodig"
   (winkels met iets dat nergens anders te koop is; onder de naam die
-  artikelen, grijs "+ …" wat ook elders kan), "Kan ook" (alles ook elders;
-  artikelen grijs; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels vet met een
+  artikelen op één regel, afgekapt met "…", en grijs "+n" voor wat ook elders
+  kan), "Kan ook" (alles ook elders; geen namen, rechts het aantal; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels vet met een
   paars icoon en ingeklapt "Overige winkels". De
-  gekozen winkel heeft een lichtpaarse regel met het label "geselecteerd".
-  Alleen wat bij een winkel is vastgelegd telt, met het aantal, meeste eerst,
-  bij gelijk aantal de gekozen bovenaan; bij een of twee artikelen staan ze eronder. Rechts "2
+  gekozen winkel heeft een lichtpaarse regel met een paarse streep links.
+  Alleen wat bij een winkel is vastgelegd telt, met het aantal; binnen elke
+  groep alfabetisch (de volgorde van je route hangt niet van de lijst af); bij een of twee artikelen staan ze eronder. Rechts "2
   artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
   (alleen wat er niet al boven staat, rechts "2 winkels"). Kruisje rechtsboven; onderaan
-  "Zoeken of toevoegen" (placeholder "Winkel", + voegt toe). De laatste keuze
+  een zoekvak zonder kopje (placeholder "Winkel", + voegt toe). De laatste keuze
   geldt per telefoon. Winkels beheren komt bij Instellingen (stap 9).
 - "Afdeling onbekend": wat hier te koop is maar nog geen afdeling heeft, met de
   icoonknop "Waar ligt dit?" (kaartspeld). Die vraagt naar de
@@ -305,9 +313,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   de app de huidige stand als `thuis_voor_terugzetten.json`; daarna een melding
   met "Ongedaan maken". Alleen als er geen wijzigingen klaarstaan, met
   If-Match. Een backup in een ouder formaat is niet terug te zetten.
+- Archief: "Verwijderen als niet gekocht in" 1 week, 1 mnd (standaard), 3 mnd,
+  1 jaar. Geldt voor beiden (in thuis.json).
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
-- Winkels en afdelingen: tabblad Winkels (5.1b). Later: bewaartermijnen
-  (archief, backups), personen (Doen).
+- Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
 ### 5.6 Sync-overzicht (tik op het wolkje)
 - Toestand: bijgewerkt (tijd), bezig, offline met n wachtende wijzigingen,

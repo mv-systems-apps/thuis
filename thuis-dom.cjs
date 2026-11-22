@@ -208,8 +208,8 @@ const BEGIN = [
   rijVan('Bananen').querySelector('.naarwinkel').click();
   let k = d.getElementById('keuze');
   controle('winkel: winkelicoon vraagt bij welke winkel het te koop is', !!k && k.getAttribute('aria-label') === 'Bij welke winkel is Bananen te koop?');
-  controle('keuzelijst: kopje "Zoeken of toevoegen" en placeholder Winkel',
-    k.querySelector('.zoek label').textContent === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
+  controle('keuzelijst: zoekvak zonder kopje, placeholder Winkel',
+    !k.querySelector('.zoek label') && k.querySelector('#keuzeZoek').getAttribute('aria-label') === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
   k.querySelector('#keuzeZoek').value = 'Albert Heijn';
   k.querySelector('.plusknop').click();
   await slaap(100);
@@ -611,6 +611,38 @@ const BEGIN = [
     const bewaard = await w6.eval("kvGet('gezien')");
     controle('nieuw: gezien bewaard op de telefoon, niet in het bestand',
       Array.isArray(bewaard) && bewaard.length === 1 && /\|2026-11-01T10:00$/.test(bewaard[0]) && !/gezien/.test(od6.bestanden['thuis.json'].tekst), JSON.stringify(bewaard));
+  }
+
+  /* 5h. Archief: eenmalig gekocht of van de lijst → archief; instelling bewaren. */
+  {
+    const od7 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Pesto;op=2026-11-20T10:00\nartikel;Hummus;gekocht=2026-11-19\nartikel;Zonnebrand;weg=2026-11-10\nartikel;Melk;soort=wekelijks\n');
+    const w7 = await start(od7);
+    await slaap(800);
+    const d7 = w7.document;
+    const filterE = [...d7.querySelectorAll('#filters .filter')][1];
+    controle('archief: filterknop Eenmalig telt alleen wat op de lijst staat', filterE.textContent === '1', filterE.textContent);
+    filterE.click(); await slaap(20);
+    const namen7 = () => [...d7.querySelectorAll('#lijst .item')].map(naamVanRij).join();
+    const arch = () => d7.getElementById('archief');
+    controle('archief: onder Eenmalig alleen Pesto; archief ingeklapt met "2 artikelen", kopbalken',
+      namen7() === 'Pesto' && !!arch() && arch().querySelector('.kopbalk .tal').textContent === '2 artikelen' && !arch().querySelector('.lijst') && !!d7.querySelector('#lijstBlok > .kopbalk'), namen7());
+    arch().querySelector('.kopbalk').click(); await slaap(20);
+    const archNamen = [...arch().querySelectorAll('.item')].map((r) => naamVanRij(r) + ':' + r.querySelector('.hint').textContent).join();
+    controle('archief uitgeklapt: nieuwste eerst, gekocht of van de lijst', archNamen === 'Hummus:gekocht 19 nov,Zonnebrand:van de lijst 10 nov', archNamen);
+    [...arch().querySelectorAll('.item')][0].querySelector('.rondje').click(); await slaap(20);
+    controle('archief: + zet Hummus terug op de lijst, onder Eenmalig', namen7() === 'Hummus,Pesto' && [...arch().querySelectorAll('.item')].length === 1, namen7());
+    [...d7.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Pesto').querySelector('.rondje').click();
+    await slaap(1800);
+    controle('archief: van de lijst gehaald gaat (na even grijs) naar het archief', namen7() === 'Hummus' && /Pesto/.test(arch().textContent), namen7());
+    await slaap(1500);
+    const t7 = R(od7.bestanden['thuis.json'].tekst);
+    const vandaag = new Date(); const dstr7 = vandaag.getFullYear() + '-' + String(vandaag.getMonth() + 1).padStart(2, '0') + '-' + String(vandaag.getDate()).padStart(2, '0');
+    controle('archief: "weg" met de datum van vandaag in het bestand', new RegExp('^artikel;Pesto;soort=eenmalig;weg=' + dstr7 + '$', 'm').test(t7), t7);
+    d7.getElementById('tab-instellingen').click(); await slaap(50);
+    const opties = [...d7.querySelectorAll('#archiefBewaren button')];
+    controle('instelling archief: 1 week, 1 mnd, 3 mnd, 1 jaar; standaard 1 mnd', opties.map((b) => b.textContent).join() === '1 week,1 mnd,3 mnd,1 jaar' && opties[1].getAttribute('aria-checked') === 'true');
+    opties[3].click(); await slaap(2500);
+    controle('instelling archief: 1 jaar in het bestand', /^instelling;archief;bewaren=1j$/m.test(R(od7.bestanden['thuis.json'].tekst)), R(od7.bestanden['thuis.json'].tekst));
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */

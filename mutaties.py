@@ -16,6 +16,8 @@ MUTATIES = [
   ("patroon al bij twee aankopen", "if (d.length < 3 || gaten.length < 2) return { laatst, interval: null };", "if (gaten.length < 1) return { laatst, interval: null };"),
   ("zonder winkel bij onbekend", "    if (!a.plekken.length) { zonder.push(a); continue; }", ""),
   ("ook-elders maakt nodig", "    const alleen = hier.filter((a) => a.plekken.length === 1).map((a) => a.naam);", "    const alleen = hier.map((a) => a.naam);"),
+  ("archief negeert weg", "  return (r.weg || '') > g ? r.weg : g;", "  return g;"),
+  ("archief negeert de instelling", "    const dagen = Object.prototype.hasOwnProperty.call(BEWAREN, b) ? BEWAREN[b] : BEWAREN['1m'];", "    const dagen = BEWAREN['1m'];"),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

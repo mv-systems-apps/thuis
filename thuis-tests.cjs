@@ -327,13 +327,22 @@ controle('wekelijks: eerste keer legt alleen het moment vast', () => {
 });
 
 /* ---------- opruimen ---------- */
-controle('opruimen: oude afgeronde actie en oud eenmalig artikel', () => {
+controle('opruimen: oude afgeronde actie; archief standaard na 1 maand niet gekocht (ook via "weg"); op de lijst of zonder datum blijft', () => {
   const k = kern();
-  const m = lees({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] }, lam02: { naam: 'Lampje2', soort: 'eenmalig', op: '2026-11-20T10:00', gekocht: ['2025-10-01'] }, bat01: { naam: 'Batterij', soort: 'eenmalig', gekocht: ['2026-01-01'] } },
+  const m = lees({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] }, lam02: { naam: 'Lampje2', soort: 'eenmalig', op: '2026-11-20T10:00', gekocht: ['2025-10-01'] },
+      bat01: { naam: 'Batterij', soort: 'eenmalig', gekocht: ['2026-11-01'] }, kaa01: { naam: 'Kaars', soort: 'eenmalig', weg: '2026-09-01' }, tas01: { naam: 'Tas', soort: 'eenmalig' },
+      mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2025-01-01'] } },
     acties: { a1111: { naam: 'Pakket', klaar: '2026-01-01' }, a2222: { naam: 'Filter', herhaal: 'maand', klaar: '2026-01-01' } } });
   const n = k.opruimen(m, NU);
   const o = uit(k, m);
-  return gelijk(n + '|' + Object.keys(o.artikelen).join() + '|' + Object.keys(o.acties).join(), '2|bat01,lam02|a2222');
+  return gelijk(n + '|' + Object.keys(o.artikelen).sort().join() + '|' + Object.keys(o.acties).join(), '3|bat01,lam02,mel01,tas01|a2222');
+});
+controle('opruimen: instelling archief bewaren (1 jaar) telt; ongeldige waarde wordt niet gelezen', () => {
+  const k = kern();
+  const m = lees({ instellingen: { archief: { bewaren: '1j' } }, artikelen: { bat01: { naam: 'Batterij', soort: 'eenmalig', gekocht: ['2026-01-01'] }, lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] } } });
+  k.opruimen(m, NU);
+  const fout = k.leesBestand(JSON.stringify({ versie: k.FORMAAT, instellingen: { archief: { bewaren: 'toString' } } }));
+  return gelijk(Object.keys(uit(k, m).artikelen).join() + '|' + fout.ok, 'bat01|false');
 });
 
 /* ---------- een hele ronde ---------- */
@@ -388,7 +397,7 @@ controle('winkelkeuze: nodig = iets dat nergens anders te koop is; ook elders te
   const t = K.winkelTellingen(AL, WL).map((x) => x.naam + ':' + (x.moet ? 'nodig' : 'kan') + ':' + x.alleen.join('+') + '/' + x.ook.join('+')).join();
   return gelijk(t, 'Albert Heijn:kan:/Melk,Gamma:nodig:Schroeven/,Plus:kan:/Melk');
 });
-controle('winkelkeuze: alleen waar iets is vastgelegd, meeste eerst; na kopen valt een winkel weg', () => {
+controle('winkelkeuze: alleen waar iets is vastgelegd, alfabetisch; na kopen valt een winkel weg', () => {
   const t1 = K.winkelTellingen(AL, WL).map((x) => x.naam + ' ' + x.aantal).join();
   const t2 = K.winkelTellingen(AL.map((a) => a.naam === 'Melk' ? Object.assign({}, a, { op: '' }) : a), WL).map((x) => x.naam).join();
   return gelijk(t1 + '|' + t2, 'Albert Heijn 1,Gamma 1,Plus 1|Gamma');
