@@ -168,6 +168,65 @@ const BEGIN = [
   controle('botsing 412: Hagelslag ook in de lijst', namenInLijst(w).includes('Hagelslag'));
   controle('botsing 412: Melk van de lijst', !namenInLijst(w).includes('Melk'));
 
+  /* 5b. Van de lijst halen: even grijs op zijn plek, dan onder "Van de lijst gehaald". */
+  const rondjeVan = (naam) => [...w.document.querySelectorAll('.item')].find((r) => r.dataset.naam === naam).querySelector('.rondje');
+  rondjeVan('pesto').click();
+  const direct = [...w.document.querySelectorAll('#lijst .item')].find((r) => r.dataset.naam === 'pesto');
+  controle('van de lijst: blijft eerst grijs op zijn plek', !!direct && direct.classList.contains('vertrekt'));
+  await slaap(1800);
+  const inLijst = namenInLijst(w).includes('pesto');
+  const weg = w.document.getElementById('weggehaald');
+  controle('van de lijst: na 1,5 s onder "Van de lijst gehaald"', !inLijst && !!weg && weg.textContent.includes('pesto'), 'inLijst=' + inLijst + ' weg=' + (weg && weg.textContent));
+  rondjeVan('pesto').click();
+  const wegNa = w.document.getElementById('weggehaald');
+  controle('van de lijst: één tik zet hem terug', namenInLijst(w).includes('pesto') && !(wegNa && wegNa.textContent.includes('pesto')), JSON.stringify(namenInLijst(w)));
+  await slaap(2500);
+
+  /* 5c. De winkelstand. */
+  const d = w.document;
+  d.getElementById('btnNaarWinkel').click();
+  await slaap(300);
+  controle('winkel: winkelstand open, tabbalk weg', d.body.classList.contains('winkelstand') && !d.getElementById('winkelstand').hidden);
+  controle('winkel: zonder winkels de vraag om er een te kiezen', d.getElementById('winkelNaam').textContent === 'Winkel kiezen');
+  const waarKnop = (naam) => [...d.querySelectorAll('#winkelMidden .wrij')].find((r) => r.querySelector('.nm').textContent === naam).querySelector('.waar');
+  waarKnop('Bananen').click();
+  let k = d.getElementById('keuze');
+  controle('winkel: "Waar ligt dit?" zonder winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Winkel kiezen');
+  k.querySelector('.nieuw input').value = 'Albert Heijn';
+  k.querySelector('.nieuw button').click();
+  await slaap(100);
+  controle('winkel: nieuwe winkel gekozen', d.getElementById('winkelNaam').textContent === 'Albert Heijn');
+  waarKnop('Bananen').click();
+  k = d.getElementById('keuze');
+  k.querySelector('.nieuw input').value = 'Groente & fruit';
+  k.querySelector('.nieuw button').click();
+  await slaap(100);
+  const kopjes = [...d.querySelectorAll('#winkelMidden h3')].map((h) => h.textContent);
+  controle('winkel: Bananen staat nu onder Groente & fruit', kopjes.includes('Groente & fruit'), JSON.stringify(kopjes));
+  await slaap(2500);
+  const t5c = od.bestanden['thuis.txt'].tekst;
+  controle('winkel: afdeling, winkel met route en artikel in OneDrive',
+    /^afdeling;Groente & fruit$/m.test(t5c) && /^winkel;Albert Heijn;route=Groente & fruit$/m.test(t5c) && /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;/m.test(t5c), t5c);
+
+  const vinkVan = (naam) => [...d.querySelectorAll('#winkelMidden .wrij')].find((r) => r.querySelector('.nm').textContent === naam);
+  vinkVan('Bananen').querySelector('.vink').click();
+  controle('winkel: afgevinkt blijft eerst op zijn plek', vinkVan('Bananen').classList.contains('gedaan'));
+  await slaap(1800);
+  const mandje = [...d.querySelectorAll('#winkelMidden h3')].map((h) => h.textContent).find((x) => x.startsWith('In het mandje'));
+  controle('winkel: na 1,5 s in het mandje', mandje === 'In het mandje · 1', mandje);
+  controle('winkel: teller 1 / n', /^1 \/ \d+$/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
+  await slaap(2500);
+  const vandaag = new Date(); const dstr = vandaag.getFullYear() + '-' + String(vandaag.getMonth() + 1).padStart(2, '0') + '-' + String(vandaag.getDate()).padStart(2, '0');
+  const t5d = od.bestanden['thuis.txt'].tekst;
+  controle('winkel: in OneDrive van de lijst, met de aankoopdatum', new RegExp('^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;gekocht=2000-01-01\\|' + dstr + '$', 'm').test(t5d), t5d);
+  [...d.querySelectorAll('#winkelMidden .wrij.gedaan .vink')].find((b) => b.textContent.includes('Bananen')).click();
+  await slaap(2500);
+  const t5e = od.bestanden['thuis.txt'].tekst;
+  controle('winkel: terugtikken zet hem terug op de lijst, zonder de aankoopdatum',
+    /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=[^;]+;opdoor=[^;]*;?gekocht=2000-01-01$/m.test(t5e) || /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=[^;]+;gekocht=2000-01-01$/m.test(t5e), t5e);
+  d.getElementById('winkelKlaar').click();
+  controle('winkel: Klaar sluit de winkelstand', !d.body.classList.contains('winkelstand') && d.getElementById('winkelstand').hidden);
+
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
   od = onedrive(null);
   od.bestanden['thuis.txt'] = { bytes: new Uint8Array([0x61, 0x72, 0x74, 0xFF, 0x0A]), eTag: '"x1"', id: 'id-thuis.txt' };

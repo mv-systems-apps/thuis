@@ -8,9 +8,10 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand: stap 6 van het bouwplan. Werkt: aanmelden, de gedeelde map koppelen,
+Stand: stap 7 van het bouwplan. Werkt: aanmelden, de gedeelde map koppelen,
 synchroniseren met OneDrive (lokale kopie, wachtrij, If-Match, dagbackup) en het
-boodschappenscherm (toevoegen, zoeken, filters, op en van de lijst).
+boodschappenscherm (toevoegen, zoeken, filters, op en van de lijst) en de
+winkelstand (winkels, afdelingen in looproute, afvinken, mandje).
 
 Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie

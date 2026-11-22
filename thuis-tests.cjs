@@ -98,7 +98,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Date });
-  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen };', ctx);
   return ctx.__k;
 }
 const NU = new Date(2026, 10, 21, 10, 0); // za 21-11-2026 10:00 lokale tijd
@@ -288,6 +288,62 @@ controle('ronde: alleen een BOM is reden om te schrijven (dan gaat hij eruit)', 
 });
 controle('ronde: een bestand dat geen UTF-8 is, wordt nooit verwerkt', () =>
   gelijk(kern().synchroniseer(new Uint8Array([0xC3, 0x28]), [], NU).ok, false));
+
+
+/* ================= stap 6 en 7: weergave, winkelstand ================= */
+const WINKELS = [
+  'afdeling;Brood', 'afdeling;Groente & fruit', 'afdeling;Zuivel',
+  'winkel;Albert Heijn;route=Groente & fruit|Brood|Zuivel',
+  'winkel;Lidl;route=Zuivel',
+  'artikel;Bananen;afd=Groente & fruit;op=2026-11-21T06:00',
+  'artikel;Brood;afd=Brood;op=2026-11-21T06:00',
+  'artikel;Hummus;afd=Zuivel;winkel=Lidl;op=2026-11-21T06:00',
+  'artikel;Kattenvoer;afd=Huisdier;op=2026-11-21T06:00',
+  'artikel;Afwasborstel;op=2026-11-21T06:00',
+  'artikel;Melk;afd=Zuivel;op=2026-11-21T06:00',
+  'artikel;Rijst;afd=Brood'
+].join('\n') + '\n';
+controle('winkel: indeling in looproute, Overig-groep bovenaan, elders apart', () => {
+  const k = kern(); const m = lees(WINKELS).model;
+  const ah = k.winkelLijst(m).find((w) => w.naam === 'Albert Heijn');
+  const ind = k.winkelIndeling(k.artikelLijst(m), ah);
+  return gelijk(ind.boven.map((a) => a.naam).join(',') + '|' + ind.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam).join('+')).join(',') + '|' + ind.elders.map((a) => a.naam).join(','),
+    'Afwasborstel,Kattenvoer|Groente & fruit:Bananen,Brood:Brood,Zuivel:Melk|Hummus');
+});
+controle('winkel: in de Lidl staat Hummus gewoon in de route, de rest zonder afdeling bovenaan', () => {
+  const k = kern(); const m = lees(WINKELS).model;
+  const lidl = k.winkelLijst(m).find((w) => w.naam === 'Lidl');
+  const ind = k.winkelIndeling(k.artikelLijst(m), lidl);
+  return gelijk(ind.boven.map((a) => a.naam).join(',') + '|' + ind.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam).join('+')).join(','),
+    'Afwasborstel,Bananen,Brood,Kattenvoer|Zuivel:Hummus+Melk');
+});
+controle('winkel: een afdeling aan de route toevoegen botst niet en geeft geen dubbele', () => {
+  const k = kern(); const m = lees(WINKELS).model;
+  const r1 = k.pasToe(m, H({ actie: 'lijstErbij', soort: 'winkel', naam: 'Lidl', veld: 'route', waarde: 'Brood' }), NU);
+  const r2 = k.pasToe(m, H({ actie: 'lijstErbij', soort: 'winkel', naam: 'Lidl', veld: 'route', waarde: 'brood' }), NU);
+  return gelijk(r1.status + '|' + r2.status + '|' + k.winkelLijst(m).find((w) => w.naam === 'Lidl').route.join('|'), 'ok|al|Zuivel|Brood');
+});
+controle('winkel: terugzetten haalt de aankoopdatum weer weg', () => {
+  const k = kern(); const m = lees('artikel;Kaas;gekocht=2026-11-14\n').model;
+  k.pasToe(m, H({ actie: 'gekocht', soort: 'artikel', naam: 'Kaas', datum: '2026-11-21' }), NU);
+  k.pasToe(m, H({ actie: 'nietGekocht', soort: 'artikel', naam: 'Kaas', datum: '2026-11-21' }), NU);
+  return gelijk(k.schrijfBestand(m), 'artikel;Kaas;gekocht=2026-11-14\n');
+});
+controle('suggestie: na drie aankopen en langer dan gewoonlijk geleden', () => {
+  const k = kern();
+  const s = k.suggestie(['2026-10-03', '2026-10-24', '2026-10-10', '2026-10-17'], '2026-11-21');
+  return gelijk(s && k.suggestieTekst(s), 'laatst 24 okt · meestal elke week');
+});
+controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () => {
+  const k = kern();
+  return gelijk(k.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null &&
+    k.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true);
+});
+controle('zoeken: deel van de naam, zonder hoofdletters', () => {
+  const k = kern();
+  const al = k.artikelLijst(lees(WINKELS).model);
+  return gelijk(k.zoekArtikelen(al, 'RO').map((a) => a.naam).join(',') + '|' + k.zoekArtikelen(al, ' BORST').map((a) => a.naam).join(','), 'Brood|Afwasborstel');
+});
 
 console.log((fout ? 'FOUT' : 'OK') + ': ' + goed + ' goed, ' + fout + ' fout  (' + path.basename(path.dirname(APP)) + '/' + path.basename(APP) + ')');
 process.exit(fout ? 1 : 0);
