@@ -166,7 +166,16 @@ const BEGIN = [
   await typ(w, 'mel');
   controle('zoeken: Gevonden toont Melk', w.document.getElementById('lijstTitel').textContent === 'Gevonden' && namenInLijst(w).join() === 'Melk', namenInLijst(w).join());
   controle('kopregel: rechts het aantal artikelen', w.document.getElementById('lijstAantal').textContent === '1 artikel', w.document.getElementById('lijstAantal').textContent);
-  controle('zoeken: filterknoppen verborgen', w.document.getElementById('filters').hidden === true);
+  {
+    const fk = () => [...w.document.querySelectorAll('#filters .filter')];
+    const aan = () => fk().map((b) => b.getAttribute('aria-pressed') === 'true' ? 1 : 0).join('');
+    controle('zoeken: filterknoppen blijven, geen gekleurd, ze tellen de treffers', !w.document.getElementById('filters').hidden && aan() === '00000' && fk()[0].getAttribute('aria-label') === 'Op de lijst, ' + (namenInLijst(w).length ? w.eval("artikelen.filter((a) => a.op && zoekPast(a.naam, a.notitie, 'mel')).length") : 0), aan() + ' ' + fk()[0].getAttribute('aria-label'));
+    const leeg = fk().find((b) => / 0$/.test(b.getAttribute('aria-label')));
+    leeg.click();
+    controle('zoeken: tik op een filter zoekt alleen daarin (hier niets)', w.document.getElementById('lijstTitel').textContent === 'Gevonden' && namenInLijst(w).length === 0 && leeg.isConnected === false && aan().indexOf('1') !== -1);
+    fk()[aan().indexOf('1')].click();
+    controle('zoeken: nog een tik = weer in alles', namenInLijst(w).join() === 'Melk' && aan() === '00000');
+  }
   await typ(w, '');
 
   /* 5. Tegelijk gewijzigd: de ander voegt Hagelslag toe vlak voor ons schrijven (412). */
@@ -189,6 +198,13 @@ const BEGIN = [
   const inLijst = namenInLijst(w).includes('pesto');
   const weg = w.document.getElementById('weggehaald');
   controle('van de lijst: na 1,5 s onder "Van de lijst gehaald"', !inLijst && !!weg && weg.textContent.includes('pesto'), 'inLijst=' + inLijst + ' weg=' + (weg && weg.textContent));
+  weg.querySelector('.kopbalk').click();
+  const weg2 = w.document.getElementById('weggehaald');
+  controle('van de lijst: kop inklapbaar (pijl, aantal blijft)', weg2.querySelector('.kopbalk').getAttribute('aria-expanded') === 'false' && !weg2.querySelector('.lijst') && /\d+ artikel/.test(weg2.textContent), weg2.innerHTML.slice(0, 300));
+  weg2.querySelector('.kopbalk').click();
+  w.document.getElementById('lijstKop').click();
+  controle('op de lijst: kop inklapbaar', w.document.getElementById('lijst').hidden && w.document.getElementById('lijstKop').getAttribute('aria-expanded') === 'false' && !!w.document.getElementById('weggehaald'));
+  w.document.getElementById('lijstKop').click();
   rondjeVan('pesto').click();
   const wegNa = w.document.getElementById('weggehaald');
   controle('van de lijst: één tik zet hem terug', namenInLijst(w).includes('pesto') && !(wegNa && wegNa.textContent.includes('pesto')), JSON.stringify(namenInLijst(w)));
@@ -248,10 +264,9 @@ const BEGIN = [
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
-  controle('winkelkeuze: AH onder "Nodig" (Bananen alleen daar), vet met paars icoon; "Overige winkels" ingeklapt, kruisje, zoekvak onderaan',
-    JSON.stringify(zicht) === '["Nodig1 winkel","Albert HeijnBananen1 artikel","Overige winkels1 winkel"]' && k.querySelector('.optie').classList.contains('sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
-  overigeKop(k).click();
-  controle('winkelkeuze: uitklappen toont de overige winkels, niet nog eens de AH', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn,Lidl centrum');
+  controle('winkelkeuze: gekozen winkel bovenaan onder vaste kop Huidig (streep, geen pijl), AH onder "Nodig" (Bananen alleen daar), vet met paars icoon; geen Overige als er niets over is, kruisje, zoekvak onderaan',
+    JSON.stringify(zicht) === '["Huidig","Lidl centrum","Nodig1 winkel","Albert HeijnBananen1 artikel"]' && k.querySelector('.uitklapper.vast') && !k.querySelector('.uitklapper.vast svg') && k.querySelector('.optie').classList.contains('actief') && k.querySelectorAll('.optie')[1].classList.contains('sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
+  controle('winkelkeuze: elke winkel één keer', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Lidl centrum,Albert Heijn');
   k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
   controle('keuzelijst: typen filtert (één keer, ook al staat hij in twee secties)', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn');
   k.querySelector('.kruis').click();
@@ -259,7 +274,7 @@ const BEGIN = [
 
   /* in de Lidl: Bananen ligt alleen bij de AH, dus niet hier; wat nog geen winkels heeft staat bovenaan */
   d.getElementById('winkelKies').click();
-  k = d.getElementById('keuze'); overigeKop(k).click();
+  k = d.getElementById('keuze');
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
   await slaap(100);
   const eldersKop = d.querySelector('#winkelLijst .uitklap');
@@ -305,13 +320,13 @@ const BEGIN = [
   /* mandje per winkel: in een andere winkel begint de teller op 0 en is het mandje leeg */
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
-  overigeKop(k).click();
+  (overigeKop(k) || { click() {} }).click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
   await slaap(50);
   controle('mandje per winkel: in de Lidl geen mandje van de AH; de voortgang (hele lijst) blijft 1',
     ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')) && /^1 van/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
   d.getElementById('winkelKies').click();
-  k = d.getElementById('keuze'); overigeKop(k).click();
+  k = d.getElementById('keuze'); (overigeKop(k) || { click() {} }).click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Albert Heijn')).click();
   await slaap(50);
   d.getElementById('winkelKies').click();
@@ -850,6 +865,32 @@ const BEGIN = [
     nt.value = 'halfvol'; nt.setSelectionRange(7, 7); nt.dispatchEvent(new wD.Event('input')); await slaap(20);
     controle('notitie: zonder # geen lijst', dD.getElementById('tagLijst').hidden);
     nt.blur(); dD.getElementById('artikelOpslaan').click(); await slaap(30);
+  }
+
+  /* 5o. Lege lijsten: overal dezelfde melding; bij Boodschappen dan geen winkel. */
+  {
+    const odE = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
+    const wE = await start(odE);
+    await slaap(800);
+    const dE = wE.document;
+    wE.eval("winkel.id = winkels[0].id");
+    dE.getElementById('tab-winkel').click(); await slaap(30);
+    const lijstE = dE.getElementById('winkelLijst');
+    controle('leeg: eerst Melk bij de Plus', !!lijstE.querySelector('.winkelkaart') && /Melk/.test(lijstE.textContent));
+    [...lijstE.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Melk')).click(); await slaap(1800);
+    lijstE.querySelector('.icoonknop.amber').click(); await slaap(50);
+    controle('leeg: Boodschappen zonder artikelen toont geen winkel, alleen "Geen artikelen"', !lijstE.querySelector('.winkelkaart') && lijstE.textContent === 'Geen artikelen' && !!lijstE.querySelector('.kaart.leegregel'), lijstE.innerHTML.slice(0, 200));
+    const mE = [...dE.querySelectorAll('#meldingen .melding')].find((m) => /Mandje leeggemaakt/.test(m.textContent));
+    const vE = mE && mE.querySelector('.vinkknop[aria-label="Klaar"]');
+    if (vE) vE.click();
+    controle('melding met Ongedaan maken heeft rechts een vinkje; tikken sluit de melding', !!vE && !mE.isConnected);
+    dE.getElementById('tab-boodschappen').click(); await slaap(20);
+    dE.getElementById('invoerTekst').value = 'Kaas'; dE.getElementById('invoerPlus').click(); await slaap(50);
+    dE.getElementById('tab-winkel').click(); await slaap(30);
+    controle('leeg: komt er iets op de lijst, dan is de winkelkop er weer', !!lijstE.querySelector('.winkelkaart') && dE.getElementById('winkelNaam').textContent === 'Plus' && /Kaas/.test(lijstE.textContent), lijstE.textContent);
+    dE.getElementById('tab-doen').click(); await slaap(30);
+    const doenE = dE.getElementById('doenLijst');
+    controle('leeg: Doen in dezelfde stijl als Winkels', doenE.textContent === 'Geen acties' && !!doenE.querySelector('.kaart.leegregel'), doenE.innerHTML);
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */

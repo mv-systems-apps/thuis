@@ -258,7 +258,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   artikelen op één regel, afgekapt met "…", en grijs "+n" voor wat ook elders
   kan), "Kan ook" (alles ook elders; geen namen, rechts het aantal; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels vet met een
   paars icoon en ingeklapt "Overige winkels". De
-  gekozen winkel heeft een lichtpaarse regel met een paarse streep links.
+  gekozen winkel staat bovenaan onder de vaste kop "Huidig" (geen pijl), met een
+  paarse streep links, en niet nog eens in een groep.
+- Staat er niets op de lijst, dan geen winkelkaart: alleen "Geen artikelen"
+  (de gekozen winkel blijft bewaard).
   Alleen wat bij een winkel is vastgelegd telt, met het aantal; binnen elke
   groep alfabetisch (de volgorde van je route hangt niet van de lijst af); bij een of twee artikelen staan ze eronder. Rechts "2
   artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
@@ -370,6 +373,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   een spatie en je typt door. Hoofdletters en accenten tellen niet mee.
 
 ### 5.10 Letters
+- Lege lijsten overal hetzelfde: een witte kaart, links, grijs, 18 px.
 - Namen in lijsten en invoervelden 20 px, gewoon (niet vet).
 - Kopbalken en uitklappers 18 px vet.
 - Al het overige (winkels, notitie, wanneer, aantal, knoppen) 17 px; nergens kleiner.

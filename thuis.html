@@ -131,6 +131,7 @@
   .melding .knoppen{padding:0}
   /* Knoppen in een melding vullen de breedte: één knop over de hele breedte, twee naast elkaar elk de helft. */
   .melding .knoppen .knop{flex:1 1 0;min-width:0}
+  .melding .knoppen .knop.vinkknop{flex:0 0 56px;padding:0;display:flex;align-items:center;justify-content:center;border:0;background:linear-gradient(135deg,var(--paars),var(--violet))}
   /* Systeemknoppen (in meldingen) omrand, zoals Afmelden, zodat ze zich onderscheiden
      van de gewone, gevulde knoppen. Sluiten en Annuleren grijs omrand. */
   .melding .knop{background:#FFFFFF;color:var(--paars);border:2px solid var(--paars)}
@@ -173,6 +174,8 @@
   .kopbalk h2,.kopbalk h3,.kopbalk .kopnaam{flex:1;min-width:0;margin:0;font-size:18px;font-weight:700;color:var(--paars)}
   .kopbalk .tal{flex-shrink:0;font-size:17px;font-weight:400;color:var(--grijs)}
   .kopbalk svg{flex-shrink:0}
+  #lijstPijl{display:flex}
+  #lijstPijl:empty{display:none}
   button.kopbalk{cursor:pointer}
   .blok{display:flex;flex-direction:column}
   .item.archief .tekst,.item.archief .icoon{opacity:.7}
@@ -201,7 +204,7 @@
   .item .hint{font-size:17px;color:var(--grijs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item .nieuw{padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600}
   .rondje{width:44px;height:44px;flex-shrink:0;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
-  .lijst .leeg{padding:16px 14px;text-align:left}
+  .lijst .leeg{padding:16px 14px;text-align:left;font-size:18px;color:var(--grijs)}
   /* Tijdens het typen de onderbalk weg: dan is er ruimte voor de zoekresultaten. */
   body.typen nav{display:none}
   /* ---------- tabblad Winkels ---------- */
@@ -286,7 +289,7 @@
   #keuze .optie .nm{flex:1;min-width:0;line-height:1.3;overflow-wrap:anywhere}
   #keuze .optie .sub{display:block;font-size:17px;color:var(--grijs)}
   /* De gekozen optie: lichtpaars met een paarse streep links. */
-  #keuze .optie.actief{color:var(--paars);font-weight:700;background:#F1EFFB;border-left:5px solid var(--paars);padding-left:11px}
+  #keuze .optie.actief{color:var(--paars);font-weight:700;border-left:5px solid var(--paars);padding-left:11px}
   #keuze .optie.actief .sub{font-weight:400}
   #keuze .optie.sterk .nm{font-weight:700}
   #keuze .optie.sterk .sub{font-weight:400}
@@ -335,7 +338,7 @@
   <section class="scherm" id="scherm-boodschappen" aria-labelledby="tab-boodschappen">
     <div class="filters" id="filters" role="group" aria-label="Welke lijst"></div>
     <div class="blok" id="lijstBlok">
-      <div class="kopbalk"><h2 id="lijstTitel">Op de lijst</h2><span class="tal" id="lijstAantal"></span></div>
+      <button class="kopbalk" type="button" id="lijstKop" aria-expanded="true"><span class="kopnaam" id="lijstTitel">Op de lijst</span><span class="tal" id="lijstAantal"></span><span id="lijstPijl"></span></button>
       <div class="lijst" id="lijst"></div>
     </div>
     <div id="artikelScherm" hidden></div>
@@ -414,7 +417,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-018</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-019</div>
   </section>
 </main>
 
@@ -1428,6 +1431,16 @@ function melding(id, tekst, knoppen, soort) {
       b.addEventListener('click', k.actie);
       rij.appendChild(b);
     }
+    /* Met Ongedaan maken: rechts een vinkje = goed zo, melding weg. */
+    if (knoppen.some((k) => k.aftel)) {
+      const v = document.createElement('button');
+      v.type = 'button';
+      v.className = 'knop vinkknop';
+      v.setAttribute('aria-label', 'Klaar');
+      v.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+      v.addEventListener('click', () => meldingWeg(id));
+      rij.appendChild(v);
+    }
     el.appendChild(rij);
   }
 }
@@ -2157,7 +2170,9 @@ function svgIcoon(pad, kleur, maat) {
     '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0">' + pad + '</svg>';
 }
 
-const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', vertrekt: new Map(), weggehaald: new Map(), archiefOpen: false, teller: '' };
+const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', vertrekt: new Map(), weggehaald: new Map(), archiefOpen: false, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '' };
+/* Inklappijl: rechts in een kopbalk; open wijst omlaag. */
+const KLAPPIJL = (open) => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + (open ? 90 : 0) + 'deg)"><path d="M9 5l7 7-7 7"></path></svg>';
 function weggehaaldLegen() {
   for (const v of scherm.vertrekt.values()) clearTimeout(v.timer);
   scherm.vertrekt.clear();
@@ -2208,20 +2223,25 @@ function soortMenu(open) {
   m.hidden = false;
 }
 
-function tekenFilters() {
+/* Hoort een artikel bij een filter? Bij zoeken telt Eenmalig ook het archief mee. */
+function inFilter(a, k, vandaag, zoekend) {
+  if (k === 'L') return !!a.op;
+  if (k === 'S') return !a.op && !!suggestie(a.gekocht, vandaag);
+  if (k === 'E') return a.letter === 'E' && (zoekend || !!a.op);
+  return a.letter === k;
+}
+/* Zoeken: de knoppen blijven staan, geen is gekleurd (zoeken gaat in alles) en
+   ze tellen de treffers. Een tik zoekt alleen in dat filter; nog een tik = weer alles. */
+function tekenFilters(zoekend) {
   const vandaag = datumTekst(new Date());
-  const tel = {
-    L: artikelen.filter((a) => a.op).length,
-    E: artikelen.filter((a) => a.letter === 'E' && a.op).length,
-    W: artikelen.filter((a) => a.letter === 'W').length,
-    R: artikelen.filter((a) => a.letter === 'R').length,
-    S: artikelen.filter((a) => !a.op && suggestie(a.gekocht, vandaag)).length
-  };
+  const bron = zoekend ? zoekArtikelen(artikelen, scherm.zoek) : artikelen;
+  const tel = {};
+  for (const k of ['L', 'E', 'W', 'R', 'S']) tel[k] = bron.filter((a) => inFilter(a, k, vandaag, zoekend)).length;
   const namen = { L: 'Op de lijst', E: 'Eenmalig', W: 'Wekelijks', R: 'Regelmatig', S: 'Suggesties' };
   const f = $('filters');
   f.innerHTML = '';
   for (const k of ['L', 'E', 'W', 'R', 'S']) {
-    const aan = scherm.filter === k;
+    const aan = zoekend ? scherm.zoekIn === k : scherm.filter === k;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'filter';
     b.setAttribute('aria-pressed', String(aan));
@@ -2229,7 +2249,14 @@ function tekenFilters() {
     b.style.background = aan ? KLEUR[k] : TINT[k];
     b.style.color = aan ? '#FFFFFF' : KLEUR[k];
     b.innerHTML = svgIcoon(PADEN[k], aan ? '#FFFFFF' : KLEUR[k], 22) + '<span>' + tel[k] + '</span>';
-    b.addEventListener('click', () => { scherm.filter = k; scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); weggehaaldLegen(); tekenBoodschappen(); });
+    /* Tijdens het zoeken blijft het toetsenbord open. */
+    b.addEventListener('pointerdown', (e) => { if (zoekend) e.preventDefault(); });
+    b.addEventListener('mousedown', (e) => { if (zoekend) e.preventDefault(); });
+    b.addEventListener('click', () => {
+      if (zoekend) scherm.zoekIn = scherm.zoekIn === k ? '' : k;
+      else scherm.filter = k;
+      scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); weggehaaldLegen(); tekenBoodschappen();
+    });
     f.appendChild(b);
   }
 }
@@ -2237,7 +2264,7 @@ function tekenFilters() {
 /* Wat de lijst nu toont: zoekresultaten, of het gekozen filter. */
 function lijstVoorScherm(zoekend, vandaag) {
   let l, titel;
-  if (zoekend) { l = zoekArtikelen(artikelen, scherm.zoek); titel = 'Gevonden'; }
+  if (zoekend) { l = zoekArtikelen(artikelen, scherm.zoek); if (scherm.zoekIn) l = l.filter((a) => inFilter(a, scherm.zoekIn, vandaag, true)); titel = 'Gevonden'; }
   else if (scherm.filter === 'L') { l = artikelen.filter((a) => a.op || scherm.vertrekt.has(a.id)); titel = 'Op de lijst'; }
   else if (scherm.filter === 'S') { l = artikelen.filter((a) => !a.op && suggestie(a.gekocht, vandaag)); titel = 'Suggesties'; }
   /* Eenmalig: alleen wat op de lijst staat; de rest staat in het archief. */
@@ -2336,9 +2363,14 @@ function tekenWeggehaald(zoekend) {
   sec.id = 'weggehaald';
   sec.className = 'weggehaald';
   sec.className = 'weggehaald blok';
-  sec.innerHTML = '<div class="kopbalk"><h2>Van de lijst gehaald</h2><span class="tal"></span></div><div class="lijst"></div>';
+  const open = !scherm.dicht.weg;
+  sec.innerHTML = '<button class="kopbalk" type="button"><span class="kopnaam">Van de lijst gehaald</span><span class="tal"></span>' + KLAPPIJL(open) + '</button>' + (open ? '<div class="lijst"></div>' : '');
+  const kop = sec.querySelector('.kopbalk');
+  kop.setAttribute('aria-expanded', String(open));
+  if (!open) kop.style.borderBottom = '1px solid var(--lijn)';
+  kop.addEventListener('click', () => { scherm.dicht.weg = open; tekenWeggehaald(false); });
   sec.querySelector('.tal').textContent = telTekst(weg.length, 'artikel', 'artikelen');
-  for (const a of weg) sec.querySelector('.lijst').appendChild(artikelRij(a, { weg: true }));
+  if (open) for (const a of weg) sec.querySelector('.lijst').appendChild(artikelRij(a, { weg: true }));
   $('lijstBlok').after(sec);
 }
 
@@ -2387,13 +2419,19 @@ function tekenBoodschappen() {
     return;
   }
   const zoekend = normNaam(scherm.zoek) !== '';
-  $('filters').hidden = zoekend;
-  if (!zoekend) tekenFilters();
+  $('filters').hidden = false;
+  tekenFilters(zoekend);
   const vandaag = datumTekst(new Date());
   const { lijst: lijstNu, titel, onder } = lijstVoorScherm(zoekend, vandaag);
   $('lijstTitel').textContent = titel;
   $('lijstAantal').textContent = onder;
+  /* Inklappen per kop; zoekresultaten staan altijd open. */
+  const open = zoekend || !scherm.dicht.lijst;
+  $('lijstKop').setAttribute('aria-expanded', String(open));
+  $('lijstKop').style.borderBottom = open ? '' : '1px solid var(--lijn)';
+  $('lijstPijl').innerHTML = zoekend ? '' : KLAPPIJL(open);
   const l = $('lijst');
+  l.hidden = !open;
   l.innerHTML = '';
   if (!lijstNu.length) {
     const p = document.createElement('div');
@@ -2462,6 +2500,7 @@ function lijstKlik(e) {
   }
 }
 $('lijst').addEventListener('click', lijstKlik);
+$('lijstKop').addEventListener('click', () => { if (normNaam(scherm.zoek)) return; scherm.dicht.lijst = !scherm.dicht.lijst; tekenBoodschappen(); });
 $('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald') || e.target.closest('#archief .lijst')) lijstKlik(e); });
 
 function toevoegen() {
@@ -2481,6 +2520,7 @@ function toevoegen() {
   }
   vakLeeg($('invoerTekst'));
   scherm.zoek = '';
+  scherm.zoekIn = '';
   scherm.nieuwSoort = soortVanFilter();
   tekenSoortknop();
   invoerBijwerken();
@@ -2491,6 +2531,7 @@ function toevoegen() {
 function invoerAnnuleren() {
   vakLeeg($('invoerTekst'));
   scherm.zoek = '';
+  scherm.zoekIn = '';
   scherm.nieuwSoort = soortVanFilter();
   $('invoerTekst').blur();
   tekenSoortknop();
@@ -2506,7 +2547,13 @@ $('invoerTekst').addEventListener('blur', () => setTimeout(invoerBijwerken, 0));
 
 $('invoerSoort').addEventListener('click', () => soortMenu($('soortMenu').hidden));
 $('invoerPlus').addEventListener('click', toevoegen);
-$('invoerTekst').addEventListener('input', () => { scherm.zoek = $('invoerTekst').value; weggehaaldLegen(); invoerBijwerken(); tekenBoodschappen(); });
+$('invoerTekst').addEventListener('input', () => {
+  /* Nieuw zoeken begint in alles; wordt het vak leeg, dan blijf je op het filter dat je tijdens het zoeken koos. */
+  const was = normNaam(scherm.zoek) !== '';
+  scherm.zoek = $('invoerTekst').value;
+  const is = normNaam(scherm.zoek) !== '';
+  if (!was && is) scherm.zoekIn = '';
+  if (was && !is && scherm.zoekIn) { scherm.filter = scherm.zoekIn; scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); scherm.zoekIn = ''; } weggehaaldLegen(); invoerBijwerken(); tekenBoodschappen(); });
 $('invoerTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegen(); } });
 /* De tabbalk gaat alleen weg zolang het toetsenbord echt open is. Op Android
    sluit je het toetsenbord vaak met terug; het vak houdt dan de focus, dus
@@ -2579,15 +2626,19 @@ function keuzeOptie(o, kies) {
   b.addEventListener('click', () => { sluitKeuze(); kies(o.id); });
   return b;
 }
+/* Zonder wissel: een vaste kop (zelfde uiterlijk, geen pijl, niet in te klappen). */
 function keuzeUitklapper(titel, open, wissel, tal) {
-  const kb = document.createElement('button');
-  kb.type = 'button'; kb.className = 'uitklapper';
-  kb.setAttribute('aria-expanded', String(open));
-  kb.innerHTML = '<span></span><span class="tal"></span>' + PIJL_RECHTS;
+  const kb = document.createElement(wissel ? 'button' : 'div');
+  kb.className = 'uitklapper' + (wissel ? '' : ' vast');
+  kb.innerHTML = '<span></span><span class="tal"></span>' + (wissel ? PIJL_RECHTS : '');
   kb.querySelector('span').textContent = titel;
   kb.querySelector('.tal').textContent = tal || '';
-  kb.querySelector('svg').style.transform = 'rotate(' + (open ? 90 : 0) + 'deg)';
-  kb.addEventListener('click', wissel);
+  if (wissel) {
+    kb.type = 'button';
+    kb.setAttribute('aria-expanded', String(open));
+    kb.querySelector('svg').style.transform = 'rotate(' + (open ? 90 : 0) + 'deg)';
+    kb.addEventListener('click', wissel);
+  }
   return kb;
 }
 function keuzeLeeg(tekst) { const p = document.createElement('div'); p.className = 'leeg'; p.textContent = tekst; return p; }
@@ -2639,7 +2690,7 @@ function keuzeLijst(opt) {
       return;
     }
     opt.secties.forEach((s, i) => {
-      if (s.titel) opties.appendChild(keuzeUitklapper(s.titel, open[i], () => { open[i] = !open[i]; teken(); }, s.tal));
+      if (s.titel) opties.appendChild(keuzeUitklapper(s.titel, open[i], s.vast ? null : () => { open[i] = !open[i]; teken(); }, s.tal));
       if (open[i]) for (const o of s.opties) opties.appendChild(keuzeOptie(o, opt.kies));
     });
     if (!opties.children.length) opties.appendChild(keuzeLeeg('Nog niets'));
@@ -2719,9 +2770,16 @@ function winkelKiezen() {
        voor wat ook elders kan. Bij Kan ook geen namen: het aantal staat rechts. */
     sub: x.moet ? [x.alleen.join(', ')].concat(x.ook.length ? [{ grijs: '+' + x.ook.length }] : []) : null
   });
-  const moet = tel.filter((x) => x.moet), kan = tel.filter((x) => !x.moet);
-  const rest = winkels.filter((w) => !tel.some((x) => x.id === w.id));
+  /* De gekozen winkel bovenaan onder een vaste kop "Huidig" (met de streep); de groepen daaronder zonder hem. */
+  const anders = (x) => x.id !== winkel.id;
+  const moet = tel.filter((x) => x.moet && anders(x)), kan = tel.filter((x) => !x.moet && anders(x));
+  const rest = winkels.filter((w) => anders(w) && !tel.some((x) => x.id === w.id));
   const secties = [];
+  const gekozen = huidigeWinkel();
+  if (gekozen) {
+    const x = tel.find((y) => y.id === gekozen.id);
+    secties.push({ titel: 'Huidig', vast: true, opties: [x ? optie(x) : { id: gekozen.id, naam: gekozen.naam, actief: true }] });
+  }
   if (moet.length) secties.push({ titel: 'Nodig', tal: telTekst(moet.length, 'winkel', 'winkels'), opties: moet.map(optie) });
   /* "Kan ook" pak je pas als het alsnog moet: ingeklapt. Is er niets nodig,
      dan heet die groep "Te koop bij" en staat hij open. */
@@ -2917,7 +2975,7 @@ const WINKELKOP = $('winkelKop');
 function tekenWinkel() {
   if (!model || !winkelOpen()) return;
   const w = huidigeWinkel();
-  $('winkelNaam').textContent = w ? w.naam : 'Winkel kiezen';
+  WINKELKOP.querySelector('#winkelNaam').textContent = w ? w.naam : 'Winkel kiezen';
   /* Net afgevinkt (1,5 s): nog op zijn plek, als gedaan. */
   const weergave = artikelen.map((a) => {
     const m = winkel.vertraagd.has(a.id) && winkel.mandje.get(a.id);
@@ -2927,7 +2985,7 @@ function tekenWinkel() {
   const soortVan = (a) => winkel.vertraagd.has(a.id) ? 'gedaan' : null;
   const doel = $('winkelLijst');
   doel.innerHTML = '';
-  if (!gekoppeld) { const p = document.createElement('div'); p.className = 'kaart leeg'; p.textContent = 'Nog niet gekoppeld'; doel.appendChild(p); return; }
+  if (!gekoppeld) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Nog niet gekoppeld'; doel.appendChild(p); return; }
   if (ind.zonder.length) {
     /* Zelfde vorm als de winkelkaart, met een lichte streep: een eigen groep, niet de winkel. */
     const kaart = document.createElement('section');
@@ -2939,16 +2997,18 @@ function tekenWinkel() {
     for (const a of ind.zonder) sec.appendChild(winkelRij(a, soortVan(a) || 'zonder'));
     doel.appendChild(kaart);
   }
-  const kaart = tekenWinkelkaart(doel, w, ind, soortVan);
-  if (ind.elders.length) eldersSectie(doel, w, ind.elders, soortVan);
-  const hier = mandjeHier();
-  const inMandje = hier.filter((m) => !winkel.vertraagd.has(m.id));
-  if (inMandje.length) mandjeSectie(doel, inMandje);
   const open = ind.zonder.length + ind.onbekend.length + ind.groepen.reduce((n, g) => n + g.items.length, 0) + ind.elders.length;
+  const inMandje = mandjeHier().filter((m) => !winkel.vertraagd.has(m.id));
+  /* Niets op de lijst: geen winkel tonen (de keuze blijft bewaard voor straks). */
+  if (!open && !inMandje.length) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Geen artikelen'; doel.appendChild(p); }
+  else {
+    tekenWinkelkaart(doel, w, ind, soortVan);
+    if (ind.elders.length) eldersSectie(doel, w, ind.elders, soortVan);
+    if (inMandje.length) mandjeSectie(doel, inMandje);
+  }
   /* De voortgang gaat over de hele lijst: wat in een van de mandjes ligt, telt als gehaald. */
   const klaar = winkel.mandje.size;
   const totaal = open - winkel.vertraagd.size + klaar;
-  if (!open && !inMandje.length) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = 'Geen artikelen'; kaart.appendChild(p); }
   $('winkelTeller').textContent = klaar + ' van ' + telTekst(totaal, 'artikel', 'artikelen');
   $('winkelVoortgang').style.width = (totaal ? Math.round(100 * klaar / totaal) : 0) + '%';
 }
@@ -2970,7 +3030,7 @@ function tekenWinkelkaart(doel, w, ind, soortVan) {
     for (const a of g.items) sec.appendChild(winkelRij(a, soortVan(a) || 'gewoon'));
   }
   const n = ind.onbekend.length + ind.groepen.reduce((t, g) => t + g.items.length, 0);
-  $('winkelHier').textContent = w && n ? telTekst(n, 'artikel', 'artikelen') : '';
+  WINKELKOP.querySelector('#winkelHier').textContent = w && n ? telTekst(n, 'artikel', 'artikelen') : '';
   return kaart;
 }
 
@@ -3545,7 +3605,7 @@ function tekenDoen() {
   if (!model || $('scherm-doen').hidden || bd.id) return;
   const doel = $('doenLijst');
   doel.innerHTML = '';
-  if (!gekoppeld) { const p = document.createElement('div'); p.className = 'kaart leeg'; p.textContent = 'Nog niet gekoppeld'; doel.appendChild(p); return; }
+  if (!gekoppeld) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Nog niet gekoppeld'; doel.appendChild(p); return; }
   const vandaag = datumTekst(new Date());
   const z = zoekVorm($('doenTekst').value);
   const alle = actieLijst(model).filter((a) => !z || zoekPast(a.naam, a.notitie, $('doenTekst').value));
@@ -3571,7 +3631,7 @@ function tekenDoen() {
     } else kop.style.borderBottom = '1px solid var(--lijn)';
     doel.appendChild(sec);
   }
-  if (!doel.children.length) { const p = document.createElement('div'); p.className = 'kaart leeg'; p.textContent = z ? 'Niets gevonden' : 'Geen acties'; doel.appendChild(p); }
+  if (!doel.children.length) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = z ? 'Niets gevonden' : 'Geen acties'; doel.appendChild(p); }
 }
 
 function actieAfronden(a) {
