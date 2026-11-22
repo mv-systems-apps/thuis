@@ -11,7 +11,7 @@ De gedeelde afspraken voor alle apps staan in de repo
 Stand: stap 7 van het bouwplan. Werkt: aanmelden, de gedeelde map koppelen,
 synchroniseren met OneDrive (lokale kopie, wachtrij, If-Match, dagbackup) en het
 boodschappenscherm (toevoegen, zoeken, filters, op en van de lijst) en de
-tabblad Winkel (winkels met favorieten per telefoon, afdelingen in looproute, afvinken, mandje dat bewaard blijft tot je het leegmaakt), vier tabbladen met vegen rondom.
+tabblad Winkel (per artikel in welke winkels en waar het daar ligt, winkelkeuze met aantallen, afdelingen in looproute, afvinken, mandje dat bewaard blijft tot je het leegmaakt), vier tabbladen met vegen rondom.
 
 Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie

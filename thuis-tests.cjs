@@ -100,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Date });
-  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen, winkelsNodig };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen, winkelTellingen, teKoopIn, afdelingIn };', ctx);
   return ctx.__k;
 }
 const NU = new Date(2026, 10, 21, 10, 0); // za 21-11-2026 10:00 lokale tijd
@@ -347,22 +347,70 @@ controle('zoeken: deel van de naam, zonder hoofdletters', () => {
   return gelijk(k.zoekArtikelen(al, 'RO').map((a) => a.naam).join(',') + '|' + k.zoekArtikelen(al, ' BORST').map((a) => a.naam).join(','), 'Brood|Afwasborstel');
 });
 
-controle('winkels: in de Albert Heijn is ook de Lidl nodig, voor Hummus', () => {
-  const k = kern(); const m = lees(WINKELS).model;
-  const ws = k.winkelLijst(m);
-  const n = k.winkelsNodig(k.artikelLijst(m), ws.find((w) => w.naam === 'Albert Heijn'), ws);
-  return gelijk(JSON.stringify(n.extra), '[{"winkel":"Lidl","artikelen":["Hummus"]}]');
+const PLEKKEN = [
+  'afdeling;Zuivel', 'afdeling;Koeling', 'afdeling;IJzerwaren',
+  'winkel;Albert Heijn;route=Zuivel', 'winkel;Plus;route=Koeling', 'winkel;Gamma;route=IJzerwaren', 'winkel;Lidl',
+  'artikel;Melk;ligt=Albert Heijn:Zuivel|Plus:Koeling;op=1',
+  'artikel;Schroeven;ligt=Gamma:IJzerwaren;op=1',
+  'artikel;Cadeau;op=1',
+  'artikel;Hummus;winkel=Lidl;op=1',
+  'artikel;Brood;niet=Gamma;op=1'
+].join('\n') + '\n';
+controle('plekken: melk ligt bij de AH in Zuivel en bij de Plus in Koeling', () => {
+  const k = kern(); const m = lees(PLEKKEN).model; const ws = k.winkelLijst(m); const as = k.artikelLijst(m);
+  const ah = k.winkelIndeling(as, ws.find((w) => w.naam === 'Albert Heijn'));
+  const plus = k.winkelIndeling(as, ws.find((w) => w.naam === 'Plus'));
+  return gelijk(JSON.stringify([ah.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam)), plus.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam))]),
+    '[["Zuivel:Melk"],["Koeling:Melk"]]');
 });
-controle('winkels: in de Lidl is alles te halen', () => {
-  const k = kern(); const m = lees(WINKELS).model;
-  const ws = k.winkelLijst(m);
-  return gelijk(k.winkelsNodig(k.artikelLijst(m), ws.find((w) => w.naam === 'Lidl'), ws).extra.length, 0);
+controle('plekken: in de Gamma geen melk, wel schroeven; niet= haalt brood weg; wat overal kan staat bovenaan', () => {
+  const k = kern(); const m = lees(PLEKKEN).model; const ws = k.winkelLijst(m);
+  const g = k.winkelIndeling(k.artikelLijst(m), ws.find((w) => w.naam === 'Gamma'));
+  return gelijk(JSON.stringify({ boven: g.boven.map((a) => a.naam), groepen: g.groepen.map((x) => x.afd), elders: g.elders.map((a) => a.naam) }),
+    '{"boven":["Cadeau"],"groepen":["IJzerwaren"],"elders":["Brood","Hummus","Melk"]}');
 });
-controle('winkels: zo weinig mogelijk extra winkels (één winkel die twee artikelen heeft)', () => {
-  const k = kern();
-  const m = lees('winkel;A\nwinkel;B\nwinkel;C\nartikel;x;winkel=B|C;op=1\nartikel;y;winkel=C;op=1\nartikel;z;op=1\n').model;
-  const ws = k.winkelLijst(m);
-  return gelijk(JSON.stringify(k.winkelsNodig(k.artikelLijst(m), ws[0], ws).extra), '[{"winkel":"C","artikelen":["x","y"]}]');
+controle('winkelkeuze: alleen winkels waar iets is vastgelegd, meeste eerst; overal-artikelen tellen niet', () => {
+  const k = kern(); const m = lees(PLEKKEN).model;
+  return gelijk(k.winkelTellingen(k.artikelLijst(m), k.winkelLijst(m)).map((x) => x.naam + ' ' + x.aantal).join(', '),
+    'Albert Heijn 1, Gamma 1, Lidl 1, Plus 1');
+});
+controle('winkelkeuze: na het kopen bij de AH valt de Plus weg', () => {
+  const k = kern(); const m = lees(PLEKKEN).model;
+  const as = k.artikelLijst(m).map((a) => a.naam === 'Melk' ? Object.assign({}, a, { op: '' }) : a);
+  return gelijk(k.winkelTellingen(as, k.winkelLijst(m)).map((x) => x.naam).join(','), 'Gamma,Lidl');
+});
+controle('plaats: in een tweede winkel erbij, oude winkel= wordt ligt=, afdeling vervangen', () => {
+  const k = kern(); const m = lees(PLEKKEN).model;
+  k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Hummus', winkel: 'Plus', afd: 'Koeling' });
+  k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'Plus', afd: 'Zuivel' });
+  const t2 = k.schrijfBestand(m);
+  return gelijk([/^artikel;Hummus;.*$/m.exec(t2)[0], /^artikel;Melk;.*$/m.exec(t2)[0]].join('\n'),
+    'artikel;Hummus;ligt=Lidl|Plus:Koeling;op=1\nartikel;Melk;ligt=Albert Heijn:Zuivel|Plus:Zuivel;op=1');
+});
+controle('plaats: twee telefoons plaatsen in verschillende winkels, botst niet', () => {
+  const k = kern(); const m = lees('artikel;Melk;op=1\n').model;
+  const r1 = k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'AH', afd: 'Zuivel' });
+  const r2 = k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'Plus', afd: '' });
+  return gelijk(r1.status + r2.status + ' ' + k.schrijfBestand(m), 'okok artikel;Melk;ligt=AH:Zuivel|Plus;op=1\n');
+});
+controle('niet hier: uit ligt en in niet; daarna weer plaatsen haalt niet= weg', () => {
+  const k = kern(); const m = lees(PLEKKEN).model;
+  k.pasToe(m, { actie: 'nietHier', soort: 'artikel', naam: 'Melk', winkel: 'Plus' });
+  k.pasToe(m, { actie: 'nietHier', soort: 'artikel', naam: 'Cadeau', winkel: 'Gamma' });
+  const a = k.schrijfBestand(m);
+  k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'Plus', afd: 'Koeling' });
+  const b = k.schrijfBestand(m);
+  return gelijk([/^artikel;Melk;.*$/m.exec(a)[0], /^artikel;Cadeau;.*$/m.exec(a)[0], /^artikel;Melk;.*$/m.exec(b)[0]].join('\n'),
+    'artikel;Melk;ligt=Albert Heijn:Zuivel;niet=Plus;op=1\nartikel;Cadeau;niet=Gamma;op=1\nartikel;Melk;ligt=Albert Heijn:Zuivel|Plus:Koeling;op=1');
+});
+controle('hernoemen van winkel en afdeling gaat mee in ligt= en niet=', () => {
+  const k = kern(); const m = lees(PLEKKEN).model;
+  k.pasToe(m, { actie: 'hernoem', soort: 'winkel', naam: 'Plus', nieuw: 'Plus Oost' });
+  k.pasToe(m, { actie: 'hernoem', soort: 'afdeling', naam: 'Zuivel', nieuw: 'Zuivel & eieren' });
+  k.pasToe(m, { actie: 'hernoem', soort: 'winkel', naam: 'Gamma', nieuw: 'Karwei' });
+  const t2 = k.schrijfBestand(m);
+  return gelijk([/^artikel;Melk;.*$/m.exec(t2)[0], /^artikel;Brood;.*$/m.exec(t2)[0]].join('\n'),
+    'artikel;Melk;ligt=Albert Heijn:Zuivel & eieren|Plus Oost:Koeling;op=1\nartikel;Brood;niet=Karwei;op=1');
 });
 controle('rondjes: één definitie, gevuld even groot als de buitenkant van open (13,5 = 12,4 + 2,2/2)', () => {
   const r = (scripts.match(/const RONDJE = \{[\s\S]*?\n\};/) || [''])[0];
@@ -372,6 +420,9 @@ controle('rondjes: één definitie, gevuld even groot als de buitenkant van open
   return (gevuld.length >= 2 && open.length >= 2 && gevuld.concat(open).every((x) => Math.abs(x - 13.5) < 0.01)) || JSON.stringify({ gevuld, open });
 });
 controle('rondjes: krimpen nooit (flex-shrink:0)', () => /\.rondsvg\{flex-shrink:0\}/.test(html) || 'regel ontbreekt');
+
+controle('tabbalk: alleen weg als het toetsenbord echt open is (niet op focus alleen)', () =>
+  /visualViewport/.test(scripts) && !/addEventListener\('focus', \(\) => document\.body\.classList\.add\('typen'\)\)/.test(scripts) || 'tabbalk verdwijnt al bij focus');
 
 console.log((fout ? 'FOUT' : 'OK') + ': ' + goed + ' goed, ' + fout + ' fout  (' + path.basename(path.dirname(APP)) + '/' + path.basename(APP) + ')');
 process.exit(fout ? 1 : 0);

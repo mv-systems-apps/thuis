@@ -96,7 +96,6 @@
   .winkelbalk .boven{height:56px;display:flex;align-items:center;gap:6px;padding:0 6px 0 14px}
   .winkelbalk .winkelnaam{flex:1;min-width:0;height:48px;border:0;background:transparent;color:var(--tekst);font-size:20px;font-weight:700;display:flex;align-items:center;gap:6px;padding:0;text-align:left}
   .winkelbalk .winkelnaam span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .winkelbalk .winkels{min-height:44px;border:0;background:transparent;color:var(--paars);font-size:17px;font-weight:600;padding:0 8px}
   .winkelbalk .onder{display:flex;align-items:center;gap:10px;padding:0 14px 10px}
   .winkelbalk .balk{flex:1;height:6px;background:#ECEAF8}
   .winkelbalk .balk div{height:6px;width:0;background:linear-gradient(90deg,#5EE0E8,var(--violet))}
@@ -123,20 +122,25 @@
   /* ---------- keuzelijst van onderen ---------- */
   #keuze{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(24,20,60,.35)}
   #keuze .paneel{background:#FFFFFF;max-height:80dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
-  #keuze h3{margin:0;padding:14px 16px 6px;font-size:18px;color:var(--paars)}
-  #keuze .zoek{display:flex;flex-direction:column;gap:6px;padding:4px 14px 10px}
-  #keuze .zoek label{font-size:17px;font-weight:600;color:var(--paars)}
-  #keuze .zoekbalk{display:flex;height:54px;border:2px solid var(--paars)}
-  #keuze .zoekbalk input{flex:1;min-width:0;border:0;outline:none;padding:0 12px;font-size:19px}
-  #keuze .opties{overflow-y:auto}
-  #keuze .groep{margin:8px 16px 2px;font-size:17px;color:var(--grijs)}
-  #keuze .optie{display:flex;align-items:center;border-top:1px solid var(--rij)}
-  #keuze .optie > button:first-child{flex:1;min-height:52px;border:0;background:#FFFFFF;display:flex;align-items:center;padding:0 16px;font-size:18px;color:var(--tekst);text-align:left}
-  #keuze .optie.fav > button:first-child{color:var(--paars);font-weight:600}
-  #keuze .optie.actief > button:first-child{font-weight:700}
-  #keuze .ster{width:44px;height:44px;margin-right:6px;flex-shrink:0;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
+  #keuze .kop{display:flex;align-items:center;gap:8px;padding:6px 6px 4px 16px}
+  #keuze h3{flex:1;min-width:0;margin:0;font-size:18px;color:var(--paars)}
+  #keuze .kruis{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
+  #keuze .opties{flex:1;min-height:120px;overflow-y:auto}
+  #keuze .optie{width:100%;min-height:56px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:18px;color:var(--tekst);text-align:left}
+  #keuze .optie .nm{flex:1;min-width:0;line-height:1.3;overflow-wrap:anywhere}
+  #keuze .optie .sub{display:block;font-size:16px;color:var(--grijs)}
+  #keuze .optie.actief{color:var(--paars);font-weight:700}
+  #keuze .optie.actief .sub{font-weight:400}
+  #keuze .optie .tal{min-width:32px;height:30px;padding:0 8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#ECEAF8;color:var(--paars);font-size:17px;font-weight:700}
+  #keuze .optie.amber{border-top:1px solid var(--lijn);background:#FAFAFD;color:#7A4A05;font-weight:600}
+  #keuze .uitklapper{width:100%;min-height:48px;border:0;border-top:1px solid var(--lijn);background:#FAFAFD;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:17px;font-weight:600;color:var(--grijs);text-align:left}
+  #keuze .uitklapper span{flex:1}
+  #keuze .uitleg{padding:2px 16px 8px;font-size:17px;color:var(--grijs)}
   #keuze .leeg{padding:14px 16px;font-size:17px;color:var(--zacht)}
-  #keuze .sluit{margin:8px 16px 12px;height:52px;border:2px solid var(--paars);background:#FFFFFF;color:var(--paars);font-size:18px;font-weight:600}
+  #keuze .zoek{flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:10px 14px 14px;border-top:1px solid var(--lijn);background:var(--achter)}
+  #keuze .zoek label{font-size:17px;font-weight:600;color:var(--paars)}
+  #keuze .zoekbalk{display:flex;height:54px;border:2px solid var(--paars);background:#FFFFFF}
+  #keuze .zoekbalk input{flex:1;min-width:0;border:0;outline:none;padding:0 12px;font-size:19px}
   /* ---------- van de lijst gehaald (boodschappen) ---------- */
   .item.vertrekt{opacity:.55}
   .weggehaald .item{opacity:.7}
@@ -182,7 +186,6 @@
           <span id="winkelNaam">Winkel kiezen</span>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
-        <button class="winkels" id="winkelAantal" type="button" hidden></button>
       </div>
       <div class="onder">
         <div class="balk" aria-hidden="true"><div id="winkelVoortgang"></div></div>
@@ -224,7 +227,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-002</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-003</div>
   </section>
 </main>
 
@@ -276,13 +279,13 @@ const VASTE_VELDEN = { hernoemd: 2 };
 /* Volgorde waarin bekende velden worden geschreven; onbekende volgen erna, in hun eigen volgorde. */
 const VELDVOLGORDE = {
   winkel: ['route'],
-  artikel: ['soort', 'afd', 'winkel', 'op', 'opdoor', 'gekocht'],
+  artikel: ['soort', 'ligt', 'niet', 'afd', 'winkel', 'op', 'opdoor', 'gekocht'],
   actie: ['datum', 'herhaal', 'wie', 'notitie', 'link', 'foto', 'klaar', 'door'],
   hernoemd: ['nieuw', 'op'],
   instelling: ['namen', 'dag', 'tijd', 'teruggezet']
 };
 /* Velden waarin | een lijstscheider is. */
-const LIJSTVELDEN = { route: true, winkel: true, gekocht: true, namen: true };
+const LIJSTVELDEN = { route: true, winkel: true, ligt: true, niet: true, gekocht: true, namen: true };
 const MAX_GEKOCHT = 6;
 const SORTEER = new Intl.Collator('nl', { sensitivity: 'base', numeric: true });
 
@@ -395,6 +398,22 @@ function schrijfBestand(model) {
 
 function lijst(w) { return w ? String(w).split('|').filter((x) => x !== '') : []; }
 
+/* Waar een artikel te koop is: ligt=Albert Heijn:Zuivel|Plus:Koeling|Jumbo
+   (winkel, dan na de eerste : de afdeling in die winkel; zonder : nog onbekend).
+   Leeg = overal te koop, behalve in de winkels bij niet=. Het oudere veld
+   winkel= telt mee zolang ligt= er nog niet is. */
+function plekLijst(w) {
+  return lijst(w).map((x) => { const i = x.indexOf(':'); return i < 0 ? { winkel: x, afd: '' } : { winkel: x.slice(0, i), afd: x.slice(i + 1) }; });
+}
+function plekTekst(plekken) { return plekken.map((p) => p.afd ? p.winkel + ':' + p.afd : p.winkel).join('|'); }
+function plekkenVan(r) {
+  return r.velden.has('ligt') ? plekLijst(r.velden.get('ligt')) : lijst(r.velden.get('winkel')).map((w) => ({ winkel: w, afd: '' }));
+}
+function zetPlekken(r, plekken) {
+  r.velden.delete('winkel');
+  if (plekken.length) r.velden.set('ligt', plekTekst(plekken)); else r.velden.delete('ligt');
+}
+
 /* Zoekt een record; via een hernoemd-spoor ook onder een oude naam. */
 function vindRecord(model, soort, naam) {
   let n = naam;
@@ -424,6 +443,14 @@ function hernoem(model, rec, nieuweNaam, nu) {
     }
     if (rec.soort === 'winkel' && r.soort === 'artikel' && r.velden.has('winkel')) {
       r.velden.set('winkel', lijst(r.velden.get('winkel')).map((w) => normNaam(w) === oudN ? nieuweNaam : w).join('|'));
+    }
+    if (r.soort === 'artikel' && r.velden.has('ligt')) {
+      r.velden.set('ligt', plekTekst(plekLijst(r.velden.get('ligt')).map((p) =>
+        rec.soort === 'winkel' && normNaam(p.winkel) === oudN ? { winkel: nieuweNaam, afd: p.afd }
+        : rec.soort === 'afdeling' && normNaam(p.afd) === oudN ? { winkel: p.winkel, afd: nieuweNaam } : p)));
+    }
+    if (rec.soort === 'winkel' && r.soort === 'artikel' && r.velden.has('niet')) {
+      r.velden.set('niet', lijst(r.velden.get('niet')).map((w) => normNaam(w) === oudN ? nieuweNaam : w).join('|'));
     }
   }
   if (normNaam(oud) === normNaam(nieuweNaam)) return; // alleen hoofdletters of spaties: geen spoor nodig
@@ -484,6 +511,30 @@ function pasToe(model, h, nu) {
   if (h.actie === 'nietGekocht') {
     const data = lijst(r.velden.get('gekocht')).filter((d) => d !== h.datum);
     if (data.length) r.velden.set('gekocht', data.join('|')); else r.velden.delete('gekocht');
+    return { status: 'ok' };
+  }
+  if (h.actie === 'plaats') {
+    /* Te koop in deze winkel, eventueel met de afdeling daar. Botst niet met
+       een plaatsing in een andere winkel. */
+    const plekken = plekkenVan(r);
+    const oud = plekken.find((p) => normNaam(p.winkel) === normNaam(h.winkel));
+    const niet = lijst(r.velden.get('niet')).filter((w) => normNaam(w) !== normNaam(h.winkel));
+    const nietWas = lijst(r.velden.get('niet')).length !== niet.length;
+    if (oud && oud.afd === (h.afd || '') && !nietWas && r.velden.has('ligt')) return { status: 'al' };
+    zetPlekken(r, plekken.filter((p) => p !== oud).concat([{ winkel: oud ? oud.winkel : h.winkel, afd: h.afd || '' }]));
+    if (niet.length) r.velden.set('niet', niet.join('|')); else r.velden.delete('niet');
+    return { status: 'ok' };
+  }
+  if (h.actie === 'nietHier') {
+    /* Niet te koop in deze winkel. */
+    const plekken = plekkenVan(r);
+    const niet = lijst(r.velden.get('niet'));
+    const rest = plekken.filter((p) => normNaam(p.winkel) !== normNaam(h.winkel));
+    const al = niet.some((w) => normNaam(w) === normNaam(h.winkel));
+    if (al && rest.length === plekken.length) return { status: 'al' };
+    zetPlekken(r, rest);
+    if (!al) niet.push(h.winkel);
+    r.velden.set('niet', niet.join('|'));
     return { status: 'ok' };
   }
   if (h.actie === 'lijstErbij') {
@@ -596,7 +647,7 @@ function artikelLijst(model) {
     const soort = SOORT_LETTER[r.velden.get('soort')] ? r.velden.get('soort') : 'eenmalig';
     uit.push({
       naam: r.vast[0], sleutel: normNaam(r.vast[0]), soort, letter: SOORT_LETTER[soort],
-      afd: r.velden.get('afd') || '', winkels: lijst(r.velden.get('winkel')),
+      afd: r.velden.get('afd') || '', plekken: plekkenVan(r), niet: lijst(r.velden.get('niet')),
       op: r.velden.get('op') || '', opdoor: r.velden.get('opdoor') || '',
       gekocht: lijst(r.velden.get('gekocht'))
     });
@@ -655,10 +706,22 @@ function afdelingLijst(model) {
   return uit.sort((a, b) => SORTEER.compare(a, b));
 }
 
+/* Is dit artikel te koop in deze winkel? */
+function teKoopIn(a, winkelNaam) {
+  const n = normNaam(winkelNaam);
+  if (a.niet.some((w) => normNaam(w) === n)) return false;
+  return !a.plekken.length || a.plekken.some((p) => normNaam(p.winkel) === n);
+}
+/* De afdeling van dit artikel in deze winkel (het oude afd= als terugval). */
+function afdelingIn(a, winkelNaam) {
+  const p = a.plekken.find((x) => normNaam(x.winkel) === normNaam(winkelNaam));
+  return (p && p.afd) || a.afd;
+}
+
 /* Deelt de artikelen op de lijst in voor één winkel:
-   boven  — geen afdeling, of een afdeling die deze winkel niet heeft (met "Waar ligt dit?")
+   boven  — nog niet bekend waar het ligt (met "Waar ligt dit?")
    groepen — per afdeling, in looproute
-   elders — alleen te koop in andere winkels */
+   elders — niet te koop in deze winkel */
 function winkelIndeling(artikelen, winkel) {
   const route = winkel ? winkel.route : [];
   const routeN = route.map(normNaam);
@@ -666,34 +729,26 @@ function winkelIndeling(artikelen, winkel) {
   const perAfd = route.map(() => []);
   for (const a of artikelen) {
     if (!a.op) continue;
-    if (winkel && a.winkels.length && !a.winkels.some((w) => normNaam(w) === normNaam(winkel.naam))) {
-      elders.push(a);
-      continue;
-    }
-    const i = a.afd ? routeN.indexOf(normNaam(a.afd)) : -1;
+    if (winkel && !teKoopIn(a, winkel.naam)) { elders.push(a); continue; }
+    const afd = winkel ? afdelingIn(a, winkel.naam) : a.afd;
+    const i = afd ? routeN.indexOf(normNaam(afd)) : -1;
     if (i === -1) boven.push(a); else perAfd[i].push(a);
   }
   const groepen = route.map((afd, i) => ({ afd, items: perAfd[i] })).filter((g) => g.items.length);
   return { boven, groepen, elders };
 }
 
-/* Welke andere winkels zijn nodig om alles op de lijst te halen? Artikelen die
-   alleen in bepaalde winkels liggen en niet in deze; gretig: steeds de winkel
-   die de meeste van de overgebleven artikelen heeft. */
-function winkelsNodig(artikelen, winkel, winkels) {
-  let rest = artikelen.filter((a) => a.op && a.winkels.length &&
-    !a.winkels.some((w) => normNaam(w) === normNaam(winkel.naam)));
-  const extra = [];
-  while (rest.length) {
-    const tel = new Map();
-    for (const a of rest) for (const w of a.winkels) tel.set(normNaam(w), (tel.get(normNaam(w)) || 0) + 1);
-    let beste = null, max = 0;
-    for (const [w, n] of tel) if (n > max || (n === max && SORTEER.compare(w, beste) < 0)) { beste = w; max = n; }
-    const naam = (winkels.find((x) => normNaam(x.naam) === beste) || { naam: rest.find((a) => a.winkels.some((w) => normNaam(w) === beste)).winkels.find((w) => normNaam(w) === beste) }).naam;
-    extra.push({ winkel: naam, artikelen: rest.filter((a) => a.winkels.some((w) => normNaam(w) === beste)).map((a) => a.naam) });
-    rest = rest.filter((a) => !a.winkels.some((w) => normNaam(w) === beste));
+/* Voor de winkelkeuze: per winkel hoeveel van de lijst je er kunt halen. Alleen
+   wat bij die winkel is vastgelegd telt; wat overal te koop is, telt nergens.
+   Winkels met 0 vallen weg; meeste eerst. */
+function winkelTellingen(artikelen, winkels) {
+  const uit = [];
+  for (const w of winkels) {
+    const n = normNaam(w.naam);
+    const hier = artikelen.filter((a) => a.op && a.plekken.some((p) => normNaam(p.winkel) === n) && !a.niet.some((x) => normNaam(x) === n));
+    if (hier.length) uit.push({ naam: w.naam, aantal: hier.length, artikelen: hier.map((a) => a.naam) });
   }
-  return { extra };
+  return uit.sort((x, y) => y.aantal - x.aantal || SORTEER.compare(x.naam, y.naam));
 }
 /* == einde kern == */
 
@@ -1453,7 +1508,7 @@ function tekenBoodschappen() {
     rij.innerHTML =
       '<span class="icoon" role="img" aria-label="' + SOORTNAAM[a.letter].toLowerCase() + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 24) + '</span>' +
       '<span class="tekst"><span class="naam"><span></span>' +
-      (a.winkels.length ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="alleen bij ' + a.winkels.join(', ').replace(/"/g, '') + '">' + WINKELSYMBOOL + '</svg>' : '') +
+      (a.plekken.length ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="alleen bij ' + a.plekken.map((p) => p.winkel).join(', ').replace(/"/g, '') + '">' + WINKELSYMBOOL + '</svg>' : '') +
       (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
       (sug ? '<span class="hint"></span>' : '') + '</span>' +
       '<button class="rondje" type="button" aria-pressed="' + (a.op ? 'true' : 'false') + '">' + (a.op ? RONDJE.aan : RONDJE.plus) + '</button>';
@@ -1552,10 +1607,21 @@ $('invoerSoort').addEventListener('click', () => soortMenu($('soortMenu').hidden
 $('invoerPlus').addEventListener('click', toevoegen);
 $('invoerTekst').addEventListener('input', () => { scherm.zoek = $('invoerTekst').value; weggehaaldLegen(); tekenBoodschappen(); });
 $('invoerTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegen(); } });
-$('invoerTekst').addEventListener('focus', () => document.body.classList.add('typen'));
-$('invoerTekst').addEventListener('blur', () => setTimeout(() => {
-  if (document.activeElement !== $('invoerTekst')) document.body.classList.remove('typen');
-}, 150));
+/* De tabbalk gaat alleen weg zolang het toetsenbord echt open is. Op Android
+   sluit je het toetsenbord vaak met terug; het vak houdt dan de focus, dus
+   focus alleen is geen goed teken. Het zichtbare deel van het scherm wel. */
+const volleHoogte = { h: window.innerHeight };
+function typenBijwerken() {
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  if (document.activeElement !== $('invoerTekst')) volleHoogte.h = Math.max(volleHoogte.h, h);
+  const open = document.activeElement === $('invoerTekst') && h < volleHoogte.h * 0.8;
+  document.body.classList.toggle('typen', open);
+}
+$('invoerTekst').addEventListener('focus', () => setTimeout(typenBijwerken, 300));
+$('invoerTekst').addEventListener('blur', () => setTimeout(typenBijwerken, 150));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', typenBijwerken);
+window.addEventListener('resize', typenBijwerken);
 
 /* Verversen: elke paar minuten zolang de app in beeld is, en bij terugkomen of weer online. */
 setInterval(() => { if (!document.hidden) planSync(0); }, VERVERS_GEWOON);
@@ -1574,11 +1640,12 @@ async function gegevensLaden() {
 }
 
 /* ---------- keuzelijst van onderen (winkel, afdeling) ---------- */
-/* opt: { titel, placeholder, opties: [{ naam, actief, fav }], kies(naam),
-   nieuw(naam), favoriet(naam)? }. Bovenin één vak "Zoeken of toevoegen":
-   typen filtert, + maakt een nieuwe aan (of kiest de bestaande met die naam). */
-const STER_AAN = '<svg width="22" height="22" viewBox="0 0 24 24" fill="#4B3CC0" stroke="#4B3CC0" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"></path></svg>';
-const STER_UIT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A93C9" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"></path></svg>';
+/* opt: { titel, secties: [{ uitleg?, titel?, ingeklapt?, opties: [{ naam, sub?, aantal?, actief? }] }],
+   kies(naam), actie?: { tekst, doe() }, zoek?: { placeholder, extra: [namen], nieuw(naam) } }.
+   Kruisje rechtsboven; "Zoeken of toevoegen" onderaan. Tijdens het typen één
+   lijst met alles wat past, uit alle secties. */
+const KRUIS = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
+const PIJL_RECHTS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>';
 function keuzeLijst(opt) {
   sluitKeuze();
   const k = document.createElement('div');
@@ -1586,62 +1653,87 @@ function keuzeLijst(opt) {
   k.setAttribute('role', 'dialog');
   k.setAttribute('aria-modal', 'true');
   k.setAttribute('aria-label', opt.titel);
-  k.innerHTML = '<div class="paneel"><h3></h3><div class="zoek"><label for="keuzeZoek">Zoeken of toevoegen</label>' +
+  k.innerHTML = '<div class="paneel"><div class="kop"><h3></h3><button class="kruis" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
+    '<div class="opties"></div>' +
+    (opt.zoek ? '<div class="zoek"><label for="keuzeZoek">Zoeken of toevoegen</label>' +
     '<div class="zoekbalk"><input id="keuzeZoek" type="text" autocomplete="off" enterkeyhint="done">' +
     '<button class="plusknop" type="button" aria-label="Toevoegen">' +
-    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>' +
-    '<div class="opties"></div><button class="sluit" type="button">Sluiten</button></div>';
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>' : '') + '</div>';
   k.querySelector('h3').textContent = opt.titel;
   const inp = k.querySelector('input');
-  inp.placeholder = opt.placeholder;
+  if (inp) inp.placeholder = opt.zoek.placeholder;
   const opties = k.querySelector('.opties');
+  const open = opt.secties.map((s) => !s.ingeklapt);
+  const alleNamen = () => {
+    const gezien = new Set(), uit = [];
+    for (const s of opt.secties) for (const o of s.opties) if (!gezien.has(normNaam(o.naam))) { gezien.add(normNaam(o.naam)); uit.push(o); }
+    for (const n of (opt.zoek && opt.zoek.extra) || []) if (!gezien.has(normNaam(n))) { gezien.add(normNaam(n)); uit.push({ naam: n }); }
+    return uit;
+  };
+  const optieKnop = (o) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
+    b.innerHTML = '<span class="nm"></span>' + (o.aantal ? '<span class="tal"></span>' : '');
+    b.querySelector('.nm').textContent = o.naam;
+    if (o.sub) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = o.sub; b.querySelector('.nm').appendChild(s); }
+    if (o.aantal) b.querySelector('.tal').textContent = o.aantal;
+    if (o.actief) b.setAttribute('aria-current', 'true');
+    b.addEventListener('click', () => { sluitKeuze(); opt.kies(o.naam); });
+    return b;
+  };
   const teken = () => {
-    const t = normNaam(inp.value);
-    const zicht = opt.opties.filter((o) => !t || normNaam(o.naam).indexOf(t) !== -1);
+    const t = inp ? normNaam(inp.value) : '';
     opties.innerHTML = '';
-    const groepen = opt.favoriet && !t
-      ? [['Favorieten', zicht.filter((o) => o.fav)], [zicht.some((o) => o.fav) ? 'Overige' : '', zicht.filter((o) => !o.fav)]]
-      : [['', zicht]];
-    for (const [titel, lijstG] of groepen) {
-      if (!lijstG.length) continue;
-      if (titel) { const g = document.createElement('div'); g.className = 'groep'; g.textContent = titel; opties.appendChild(g); }
-      for (const o of lijstG) {
-        const rij = document.createElement('div');
-        rij.className = 'optie' + (o.fav ? ' fav' : '') + (o.actief ? ' actief' : '');
-        const b = document.createElement('button');
-        b.type = 'button'; b.textContent = o.naam;
-        if (o.actief) b.setAttribute('aria-current', 'true');
-        b.addEventListener('click', () => { sluitKeuze(); opt.kies(o.naam); });
-        rij.appendChild(b);
-        if (opt.favoriet) {
-          const s = document.createElement('button');
-          s.type = 'button'; s.className = 'ster';
-          s.setAttribute('aria-pressed', String(!!o.fav));
-          s.setAttribute('aria-label', o.naam + (o.fav ? ': favoriet, weghalen' : ': favoriet maken'));
-          s.innerHTML = o.fav ? STER_AAN : STER_UIT;
-          s.addEventListener('click', async () => { o.fav = !o.fav; await opt.favoriet(o.naam, o.fav); teken(); });
-          rij.appendChild(s);
-        }
-        opties.appendChild(rij);
+    if (t) {
+      const zicht = alleNamen().filter((o) => normNaam(o.naam).indexOf(t) !== -1);
+      for (const o of zicht) opties.appendChild(optieKnop(o));
+      if (!zicht.length) {
+        const p = document.createElement('div'); p.className = 'leeg';
+        p.textContent = 'Niets gevonden. Tik op + om "' + schoonTekst(inp.value) + '" toe te voegen.';
+        opties.appendChild(p);
       }
+      return;
     }
-    if (!zicht.length) {
+    opt.secties.forEach((s, i) => {
+      if (s.titel) {
+        const kb = document.createElement('button');
+        kb.type = 'button'; kb.className = 'uitklapper';
+        kb.setAttribute('aria-expanded', String(open[i]));
+        kb.innerHTML = '<span></span>' + PIJL_RECHTS;
+        kb.querySelector('span').textContent = s.titel;
+        kb.querySelector('svg').style.transform = 'rotate(' + (open[i] ? 90 : 0) + 'deg)';
+        kb.addEventListener('click', () => { open[i] = !open[i]; teken(); });
+        opties.appendChild(kb);
+      }
+      if (s.uitleg) { const u = document.createElement('div'); u.className = 'uitleg'; u.textContent = s.uitleg; opties.appendChild(u); }
+      if (open[i]) for (const o of s.opties) opties.appendChild(optieKnop(o));
+    });
+    if (opt.actie) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'optie amber';
+      b.textContent = opt.actie.tekst;
+      b.addEventListener('click', () => { sluitKeuze(); opt.actie.doe(); });
+      opties.appendChild(b);
+    }
+    if (!opties.children.length) {
       const p = document.createElement('div'); p.className = 'leeg';
-      p.textContent = t ? 'Niets gevonden. Tik op + om "' + schoonTekst(inp.value) + '" toe te voegen.' : 'Nog niets. Typ een naam en tik op +.';
+      p.textContent = 'Nog niets. Typ hieronder een naam en tik op +.';
       opties.appendChild(p);
     }
   };
   const toevoegenNu = () => {
     const v = schoonTekst(inp.value);
     if (!v) { inp.focus(); return; }
-    const bestaand = opt.opties.find((o) => normNaam(o.naam) === normNaam(v));
+    const bestaand = alleNamen().find((o) => normNaam(o.naam) === normNaam(v));
     sluitKeuze();
-    if (bestaand) opt.kies(bestaand.naam); else opt.nieuw(v);
+    if (bestaand) opt.kies(bestaand.naam); else opt.zoek.nieuw(v);
   };
-  inp.addEventListener('input', teken);
-  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegenNu(); } });
-  k.querySelector('.plusknop').addEventListener('click', toevoegenNu);
-  k.querySelector('.sluit').addEventListener('click', sluitKeuze);
+  if (inp) {
+    inp.addEventListener('input', teken);
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegenNu(); } });
+    k.querySelector('.plusknop').addEventListener('click', toevoegenNu);
+  }
+  k.querySelector('.kruis').addEventListener('click', sluitKeuze);
   k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
   teken();
   document.body.appendChild(k);
@@ -1655,7 +1747,7 @@ function sluitKeuze() { const k = $('keuze'); if (k) k.remove(); }
    en wordt alleen leeggemaakt met de knop. */
 const VERTRAGING = 1500;
 const VERVERS_WINKEL = 30 * 1000;
-const winkel = { naam: '', mandje: new Map(), vertraagd: new Map(), eldersOpen: false, favorieten: [] };
+const winkel = { naam: '', mandje: new Map(), vertraagd: new Map(), eldersOpen: false };
 
 function winkelOpen() { return !$('scherm-winkel').hidden; }
 
@@ -1665,7 +1757,6 @@ function huidigeWinkel() {
 
 async function winkelLaden() {
   winkel.naam = (await kvGet('winkel')) || '';
-  winkel.favorieten = (await kvGet('favorieten')) || [];
   const m = (await kvGet('mandje')) || [];
   winkel.mandje = new Map(m.map((x) => [x.naam, x]));
 }
@@ -1673,19 +1764,29 @@ function mandjeBewaren() {
   kvSet('mandje', Array.from(winkel.mandje.values()));
 }
 
+/* Een winkelnaam mag geen : bevatten (dat scheidt winkel en afdeling in ligt=). */
+function winkelNaamSchoon(s) { return schoonTekst(String(s).replace(/:/g, ' ')); }
+
 function winkelKiezen() {
   const ws = winkelLijst(model);
-  const fav = (n) => winkel.favorieten.some((f) => normNaam(f) === normNaam(n));
+  const tel = winkelTellingen(artikelen, ws);
+  const laatst = normNaam(winkel.naam);
+  /* Bij een gelijk aantal staat de laatst gekozen winkel bovenaan. */
+  tel.sort((x, y) => y.aantal - x.aantal || (normNaam(y.naam) === laatst) - (normNaam(x.naam) === laatst) || SORTEER.compare(x.naam, y.naam));
   keuzeLijst({
-    titel: 'Winkel kiezen', placeholder: 'Winkel',
-    opties: ws.map((w) => ({ naam: w.naam, actief: normNaam(w.naam) === normNaam(winkel.naam), fav: fav(w.naam) })),
+    titel: 'Waar ga je heen?',
+    secties: [
+      { opties: tel.map((x) => ({ naam: x.naam, aantal: x.aantal, actief: normNaam(x.naam) === laatst,
+          sub: normNaam(x.naam) === laatst ? 'laatst gekozen' : x.aantal <= 2 ? x.artikelen.join(', ') : '' })) },
+      { titel: 'Alle winkels · ' + ws.length, ingeklapt: tel.length > 0,
+        opties: ws.map((w) => ({ naam: w.naam, actief: normNaam(w.naam) === laatst })) }
+    ],
     kies: (naam) => kiesWinkel(naam),
-    nieuw: (naam) => { handelen([{ actie: 'nieuw', soort: 'winkel', naam, velden: {} }]); kiesWinkel(naam); },
-    favoriet: async (naam, aan) => {
-      winkel.favorieten = winkel.favorieten.filter((f) => normNaam(f) !== normNaam(naam));
-      if (aan) winkel.favorieten.push(naam);
-      await kvSet('favorieten', winkel.favorieten);
-    }
+    zoek: { placeholder: 'Winkel', extra: [], nieuw: (v) => {
+      const naam = winkelNaamSchoon(v);
+      handelen([{ actie: 'nieuw', soort: 'winkel', naam, velden: {} }]);
+      kiesWinkel(naam);
+    } }
   });
 }
 function kiesWinkel(naam) {
@@ -1694,6 +1795,8 @@ function kiesWinkel(naam) {
   tekenWinkel();
 }
 
+/* Waar ligt dit, in déze winkel? Kiezen legt vast: te koop hier, en in die
+   afdeling. Of: niet te koop hier. */
 function waarLigtDit(a) {
   if (!winkel.naam) { winkelKiezen(); return; }
   const w = huidigeWinkel();
@@ -1702,15 +1805,20 @@ function waarLigtDit(a) {
   const kies = (afd, nieuweAfdeling) => {
     const hs = [];
     if (nieuweAfdeling) hs.push({ actie: 'nieuw', soort: 'afdeling', naam: afd, velden: {} });
-    hs.push({ actie: 'zet', soort: 'artikel', naam: a.naam, veld: 'afd', oud: a.afd, nieuw: afd });
+    hs.push({ actie: 'plaats', soort: 'artikel', naam: a.naam, winkel: winkel.naam, afd });
     if (!route.some((r) => normNaam(r) === normNaam(afd))) hs.push({ actie: 'lijstErbij', soort: 'winkel', naam: winkel.naam, veld: 'route', waarde: afd });
     handelen(hs);
   };
   keuzeLijst({
-    titel: 'Waar ligt ' + a.naam + '?', placeholder: 'Afdeling',
-    opties: route.concat(overige).map((afd) => ({ naam: afd })),
+    titel: 'Waar ligt ' + a.naam + ' bij ' + winkel.naam + '?',
+    secties: [
+      { uitleg: route.length ? 'Afdelingen van ' + winkel.naam + ', in looproute' : winkel.naam + ' heeft nog geen afdelingen. Kies er een of voeg er een toe.',
+        opties: route.map((x) => ({ naam: x })) },
+      ...(overige.length ? [{ titel: 'Andere afdelingen · ' + overige.length, ingeklapt: route.length > 0, opties: overige.map((x) => ({ naam: x })) }] : [])
+    ],
     kies: (afd) => kies(afd, false),
-    nieuw: (afd) => kies(afd, true)
+    actie: { tekst: 'Niet te koop bij ' + winkel.naam, doe: () => handelen([{ actie: 'nietHier', soort: 'artikel', naam: a.naam, winkel: winkel.naam }]) },
+    zoek: { placeholder: 'Afdeling', extra: [], nieuw: (afd) => kies(afd, true) }
   });
 }
 
@@ -1784,7 +1892,7 @@ function winkelRij(a, soort) {
   }
   if (soort === 'elders') {
     const s = document.createElement('span'); s.className = 'elders';
-    s.textContent = 'alleen ' + a.winkels.join(', ');
+    s.textContent = a.plekken.length ? 'alleen ' + a.plekken.map((p) => p.winkel).join(', ') : '';
     rij.appendChild(s);
   }
   return rij;
@@ -1799,18 +1907,6 @@ function tekenWinkel() {
     return m ? Object.assign({}, a, { op: m.op || 'x', opdoor: m.opdoor }) : a;
   });
   const ind = winkelIndeling(weergave, w);
-  const nodig = w ? winkelsNodig(weergave, w, winkelLijst(model)) : null;
-  const aantal = $('winkelAantal');
-  aantal.hidden = !nodig;
-  if (nodig) {
-    aantal.textContent = '1 van ' + (1 + nodig.extra.length);
-    aantal.setAttribute('aria-label', nodig.extra.length
-      ? 'Je hebt ' + (1 + nodig.extra.length) + ' winkels nodig; tik voor welke'
-      : 'Alles op de lijst ligt in deze winkel');
-    aantal.onclick = () => melding('m-winkels', nodig.extra.length
-      ? 'Ook nog nodig: ' + nodig.extra.map((x) => x.winkel + ' (' + x.artikelen.join(', ') + ')').join('; ') + '.'
-      : 'Alles op de lijst ligt in ' + winkel.naam + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-winkels') }]);
-  }
   const doel = $('winkelLijst');
   doel.innerHTML = '';
   const soortVan = (a) => winkel.vertraagd.has(a.naam) ? 'gedaan' : null;
@@ -1839,7 +1935,7 @@ function tekenWinkel() {
     kop.type = 'button'; kop.className = 'uitklap';
     kop.setAttribute('aria-expanded', String(winkel.eldersOpen));
     kop.innerHTML = '<span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + (winkel.eldersOpen ? 90 : 0) + 'deg)"><path d="M9 5l7 7-7 7"></path></svg>';
-    kop.querySelector('span').textContent = 'Elders te koop · ' + ind.elders.length;
+    kop.querySelector('span').textContent = 'Niet bij ' + winkel.naam + ' · ' + ind.elders.length;
     kop.addEventListener('click', () => { winkel.eldersOpen = !winkel.eldersOpen; tekenWinkel(); });
     const sec = sectie(kop, true);
     if (winkel.eldersOpen) for (const a of ind.elders) sec.appendChild(winkelRij(a, soortVan(a) || 'elders'));
@@ -1852,7 +1948,7 @@ function tekenWinkel() {
     leeg.innerHTML = MANDJE_WEG;
     leeg.addEventListener('click', mandjeLeegmaken);
     const sec = sectie('In het mandje · ' + inMandje.length, true, leeg);
-    for (const n of inMandje) sec.appendChild(winkelRij({ naam: n, winkels: [] }, 'gedaan'));
+    for (const n of inMandje) sec.appendChild(winkelRij({ naam: n, plekken: [] }, 'gedaan'));
   }
   const open = ind.boven.length + ind.groepen.reduce((s, g) => s + g.items.length, 0) + ind.elders.length;
   const klaarAantal = winkel.mandje.size;

@@ -100,9 +100,9 @@ afdeling;Groente & fruit
 afdeling;Zuivel & eieren
 winkel;Albert Heijn;route=Groente & fruit|Brood|Zuivel & eieren
 winkel;Lidl;route=Groente & fruit|Zuivel & eieren
-artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=2026-11-21T06:00;gekocht=2026-11-07|2026-11-14
-artikel;Hummus;soort=eenmalig;afd=Zuivel & eieren;winkel=Lidl;op=2026-11-20T18:12;opdoor=Partner
-artikel;Koffie;soort=regelmatig;afd=Drogisterij;gekocht=2026-09-12|2026-10-03|2026-10-24
+artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit|Lidl:Groente & fruit;op=2026-11-21T06:00;gekocht=2026-11-07|2026-11-14
+artikel;Hummus;soort=eenmalig;ligt=Lidl:Zuivel & eieren;op=2026-11-20T18:12;opdoor=Partner
+artikel;Koffie;soort=regelmatig;niet=Gamma;gekocht=2026-09-12|2026-10-03|2026-10-24
 actie;Filter afzuigkap vervangen;datum=2026-11-19;herhaal=maand
 actie;Dakgoot laten reinigen;datum=2027-K1;herhaal=jaar
 actie;Fietsband plakken;wie=Mark
@@ -116,7 +116,7 @@ hernoemd;artikel;Koffie;nieuw=Koffiebonen;op=2026-11-21
 | `instelling` | instelling voor beide | `personen`: `namen`; `wekelijks`: `dag`, `tijd`, `teruggezet` |
 | `afdeling` | gedeelde afdeling | — |
 | `winkel` | winkel | `route`: de afdelingen in looproute; een afdeling die er niet in staat, heeft die winkel niet |
-| `artikel` | boodschap | `soort` (wekelijks, regelmatig, eenmalig), `afd`, `winkel` (alleen daar te koop), `op` (sinds wanneer op de lijst; afwezig = niet op de lijst), `opdoor`, `gekocht` (laatste zes) |
+| `artikel` | boodschap | `soort` (wekelijks, regelmatig, eenmalig), `ligt` (waar te koop: `winkel:afdeling` of alleen `winkel`, met `|` ertussen; leeg = overal), `niet` (winkels waar het niet te koop is), `afd` en `winkel` (oud, worden nog gelezen), `op` (sinds wanneer op de lijst; afwezig = niet op de lijst), `opdoor`, `gekocht` (laatste zes) |
 | `actie` | taak | `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
 | `hernoemd` | spoor van een hernoeming, 30 dagen | soort record, oude naam, `nieuw`, `op` |
 
@@ -189,28 +189,28 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Geen knop "Naar de winkel": de winkel is een eigen tabblad.
 
 ### 5.2 Winkel (tabblad)
-- Bovenin de winkelnaam; een tik opent de keuzelijst "Winkel kiezen": bovenin
-  het vak met erboven "Zoeken of toevoegen" en als placeholder "Winkel" (typen
-  filtert, + maakt een nieuwe winkel), daaronder de favorieten (paars, gevulde
-  ster) en de overige winkels alfabetisch. Een tik op de ster maakt een winkel
-  favoriet of niet. Favorieten en de laatste keuze gelden per telefoon (niet in
-  thuis.txt). De keuzelijst voor een afdeling werkt hetzelfde, met als
-  placeholder "Afdeling" en zonder favorieten. Toevoegen is overal een +, geen
-  woord. Rechts daarvan "1 van 2": deze
-  winkel en het aantal winkels dat nodig is om alles op de lijst te halen
-  (uitgerekend uit de artikelen die alleen in bepaalde winkels liggen; tik toont
-  welke winkel nog nodig is, of "alles hier"). Daaronder de voortgangsbalk met
-  "2 van 8": afgevinkt van het totaal aan artikelen. Geen eenheden: de plek zegt
-  wat er bedoeld wordt.
-- Bovenaan, zonder kopje: artikelen zonder afdeling of met een afdeling die
-  deze winkel niet heeft, elk met een icoonknop "Waar ligt dit?" (kaartspeld
-  met vraagteken, licht paars) om in één tik een afdeling te kiezen of te maken. Een
-  nieuwe afdeling komt achteraan de route van de winkel.
+- Per artikel leg je vast in welke winkels het te koop is, en per winkel in
+  welke afdeling het daar ligt (`ligt=`). Geen winkels = overal te koop, behalve
+  bij de winkels in `niet=`. Een winkelnaam bevat geen `:`.
+- Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?": de
+  winkels waar je iets van de lijst kunt halen (alleen wat bij die winkel is
+  vastgelegd telt), met het aantal, meeste eerst, bij gelijk aantal de laatst
+  gekozen bovenaan; bij een of twee artikelen staan ze eronder. Winkels met 0
+  staan er niet in; ingeklapt "Alle winkels". Kruisje rechtsboven; onderaan
+  "Zoeken of toevoegen" (placeholder "Winkel", + voegt toe). De laatste keuze
+  geldt per telefoon. Winkels beheren komt bij Instellingen (stap 9).
+  Daaronder de voortgangsbalk met "2 van 8".
+- Bovenaan, zonder kopje: wat in deze winkel nog geen afdeling heeft, met de
+  icoonknop "Waar ligt dit?" (kaartspeld, licht paars). Die vraagt naar de
+  afdelingen van déze winkel (looproute; andere afdelingen ingeklapt; zoeken of
+  toevoegen onderaan) en heeft de regel "Niet te koop bij <winkel>". Kiezen
+  legt vast: te koop hier, in die afdeling; een nieuwe afdeling komt achteraan
+  de route.
 - Daarna de afdelingen in looproute.
 - Elke vink is direct een handeling (van de lijst, aankoopdatum erbij). Het
   item blijft 1,5 s grijs op zijn plek en schuift dan naar "In het mandje".
   Terugtikken zet het terug en haalt de aankoopdatum weg.
-- "Elders te koop": artikelen die alleen in andere winkels liggen, ingeklapt
+- "Niet bij <winkel>": artikelen die hier niet te koop zijn, ingeklapt
   en grijs, wel af te vinken.
 - Het mandje blijft staan tot je het leegmaakt: rechts naast het kopje "In het
   mandje" staat een icoonknop (mandje met kruis, "Mandje leegmaken"). Het mandje hoort bij de telefoon (niet in

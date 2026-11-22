@@ -191,7 +191,7 @@ const BEGIN = [
   const rijVan = (naam) => [...d.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').textContent === naam);
   rijVan('Bananen').querySelector('.waar').click();
   let k = d.getElementById('keuze');
-  controle('winkel: "Waar ligt dit?" zonder winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Winkel kiezen');
+  controle('winkel: "Waar ligt dit?" zonder winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Waar ga je heen?');
   controle('keuzelijst: kopje "Zoeken of toevoegen" en placeholder Winkel',
     k.querySelector('.zoek label').textContent === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
   k.querySelector('#keuzeZoek').value = 'Albert Heijn';
@@ -208,26 +208,49 @@ const BEGIN = [
   controle('winkel: Bananen staat nu onder Groente & fruit', kopjes.includes('Groente & fruit'), JSON.stringify(kopjes));
   await slaap(2500);
   const t5c = od.bestanden['thuis.txt'].tekst;
-  controle('winkel: afdeling, winkel met route en artikel in OneDrive',
-    /^afdeling;Groente & fruit$/m.test(t5c) && /^winkel;Albert Heijn;route=Groente & fruit$/m.test(t5c) && /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;/m.test(t5c), t5c);
+  controle('winkel: afdeling, winkel met route en artikel (ligt=winkel:afdeling) in OneDrive',
+    /^afdeling;Groente & fruit$/m.test(t5c) && /^winkel;Albert Heijn;route=Groente & fruit$/m.test(t5c) && /^artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit;/m.test(t5c), t5c);
 
-  /* favorieten per telefoon */
+  /* winkel kiezen: alleen waar iets is vastgelegd, met aantal; de rest onder "Alle winkels" */
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
-  k.querySelector('#keuzeZoek').value = 'Lidl'; k.querySelector('.plusknop').click();
+  k.querySelector('#keuzeZoek').value = 'Lidl: centrum'; k.querySelector('.plusknop').click();
   await slaap(100);
+  controle('winkel: : in een winkelnaam wordt een spatie', d.getElementById('winkelNaam').textContent === 'Lidl centrum', d.getElementById('winkelNaam').textContent);
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
-  [...k.querySelectorAll('.optie')].find((o) => o.textContent.includes('Lidl')).querySelector('.ster').click();
-  await slaap(100);
-  const groepen = [...k.querySelectorAll('.groep')].map((g) => g.textContent);
-  const eerste = k.querySelector('.optie > button').textContent;
-  controle('favorieten: Lidl als favoriet bovenaan', groepen[0] === 'Favorieten' && eerste === 'Lidl', JSON.stringify({ groepen, eerste }));
+  const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
+  controle('winkelkeuze: AH met 1 (en wat), "Alle winkels · 2" ingeklapt, kruisje, zoekvak onderaan',
+    JSON.stringify(zicht) === '["Albert HeijnBananen1","Alle winkels · 2"]' && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
+  k.querySelector('.uitklapper').click();
+  controle('winkelkeuze: uitklappen toont alle winkels', k.querySelectorAll('.optie').length === 3);
   k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
-  controle('keuzelijst: typen filtert', [...k.querySelectorAll('.optie')].map((o) => o.textContent).join() === 'Albert Heijn');
-  [...k.querySelectorAll('.optie > button')].find((b) => b.textContent === 'Albert Heijn').click();
-  await slaap(2500);
-  controle('favorieten staan niet in thuis.txt', !/favoriet/i.test(od.bestanden['thuis.txt'].tekst));
+  controle('keuzelijst: typen filtert (één keer, ook al staat hij in twee secties)', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn');
+  k.querySelector('.kruis').click();
+  controle('keuzelijst: kruisje sluit', !d.getElementById('keuze'));
+
+  /* in de Lidl: Bananen ligt alleen bij de AH, dus niet hier; Melk niet te koop hier */
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze'); k.querySelector('.uitklapper').click();
+  [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
+  await slaap(100);
+  const eldersKop = d.querySelector('#winkelLijst .uitklap span');
+  controle('winkel: in de Lidl staat Bananen onder "Niet bij Lidl centrum"', !!eldersKop && eldersKop.textContent === 'Niet bij Lidl centrum · 1', eldersKop && eldersKop.textContent);
+  const losRij = d.querySelector('#winkelLijst .wrij .waar') && d.querySelector('#winkelLijst .wrij .waar').closest('.wrij');
+  const losNaam = losRij ? losRij.querySelector('.nm').textContent : '';
+  if (losRij) {
+    losRij.querySelector('.waar').click();
+    k = d.getElementById('keuze');
+    controle('waar ligt dit: titel noemt de winkel', k.getAttribute('aria-label') === 'Waar ligt ' + losNaam + ' bij Lidl centrum?', k.getAttribute('aria-label'));
+    [...k.querySelectorAll('.optie.amber')].find((b) => b.textContent === 'Niet te koop bij Lidl centrum').click();
+    await slaap(2500);
+    controle('niet hier: ' + losNaam + ' krijgt niet=Lidl centrum en staat onder "Niet bij"',
+      new RegExp('^artikel;' + losNaam + ';.*niet=Lidl centrum', 'm').test(od.bestanden['thuis.txt'].tekst) && d.querySelector('#winkelLijst .uitklap span').textContent === 'Niet bij Lidl centrum · 2', od.bestanden['thuis.txt'].tekst);
+  } else controle('niet hier: er staat iets zonder plek op de lijst', false);
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze');
+  [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Albert Heijn')).click();
+  await slaap(100);
 
   rijVan('Bananen').querySelector('.vink').click();
   controle('winkel: afgevinkt blijft eerst op zijn plek', rijVan('Bananen').classList.contains('gedaan'));
@@ -238,12 +261,12 @@ const BEGIN = [
   await slaap(2500);
   const vandaag = new Date(); const dstr = vandaag.getFullYear() + '-' + String(vandaag.getMonth() + 1).padStart(2, '0') + '-' + String(vandaag.getDate()).padStart(2, '0');
   const t5d = od.bestanden['thuis.txt'].tekst;
-  controle('winkel: in OneDrive van de lijst, met de aankoopdatum', new RegExp('^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;gekocht=2000-01-01\\|' + dstr + '$', 'm').test(t5d), t5d);
+  controle('winkel: in OneDrive van de lijst, met de aankoopdatum', new RegExp('^artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit;gekocht=2000-01-01\\|' + dstr + '$', 'm').test(t5d), t5d);
   [...d.querySelectorAll('#winkelLijst .wrij.gedaan .vink')].find((b) => b.textContent.includes('Bananen')).click();
   await slaap(2500);
   const t5e = od.bestanden['thuis.txt'].tekst;
   controle('winkel: terugtikken zet hem terug op de lijst, zonder de aankoopdatum',
-    /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=[^;]+;(opdoor=[^;]*;)?gekocht=2000-01-01$/m.test(t5e), t5e);
+    /^artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit;op=[^;]+;(opdoor=[^;]*;)?gekocht=2000-01-01$/m.test(t5e), t5e);
   rijVan('Bananen').querySelector('.vink').click();
   await slaap(1800);
   const leeg = d.querySelector('#winkelLijst .icoonknop.amber');
