@@ -14,6 +14,7 @@ MUTATIES = [
   ("vervanging niet doorgeven", "    const h = vervangIds(h0, alias);", "    const h = h0;"),
   ("verwijderde winkel blijft bij artikelen", "  if (h.soort === 'winkel') for (const a of model.artikelen.values()) a.ligt.delete(h.id);", ""),
   ("patroon al bij twee aankopen", "if (d.length < 3 || gaten.length < 2) return { laatst, interval: null };", "if (gaten.length < 1) return { laatst, interval: null };"),
+  ("zonder winkel bij onbekend", "    if (!a.plekken.length) { zonder.push(a); continue; }", ""),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

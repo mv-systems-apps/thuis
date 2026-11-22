@@ -371,14 +371,18 @@ controle('backups: laatste 14 dagen plus de eerste van elke maand (12 maanden); 
 const AL = K.artikelLijst(lees(VB));
 const WL = K.winkelLijst(lees(VB));
 const win = (id) => WL.find((w) => w.id === id);
-controle('winkel: AH — in looproute, zonder winkels (Cadeau) bovenaan, Koffie (afdeling onbekend) staat niet op de lijst', () => {
+controle('winkel: AH — in looproute, zonder winkels (Cadeau) apart, Koffie (afdeling onbekend) staat niet op de lijst', () => {
   const ind = K.winkelIndeling(AL, win('ah001'));
-  return gelijk(ind.boven.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam + ':' + g.items.map((a) => a.naam)).join() + '|' + ind.elders.map((a) => a.naam).join(),
-    'Cadeau|Zuivel:Melk|Schroeven');
+  return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.onbekend.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam + ':' + g.items.map((a) => a.naam)).join() + '|' + ind.elders.map((a) => a.naam).join(),
+    'Cadeau||Zuivel:Melk|Schroeven');
+});
+controle('winkel: te koop hier maar afdeling onbekend staat onder onbekend, niet bij zonder winkel', () => {
+  const ind = K.winkelIndeling(AL.map((a) => a.naam === 'Koffie' ? Object.assign({}, a, { op: '2026-11-20T09:00' }) : a), win('ah001'));
+  return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.onbekend.map((a) => a.naam).join(), 'Cadeau|Koffie');
 });
 controle('winkel: Gamma — geen melk, wel schroeven', () => {
   const ind = K.winkelIndeling(AL, win('gam01'));
-  return gelijk(ind.boven.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam).join() + '|' + ind.elders.map((a) => a.naam).join(), 'Cadeau|IJzerwaren|Melk');
+  return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam).join() + '|' + ind.elders.map((a) => a.naam).join(), 'Cadeau|IJzerwaren|Melk');
 });
 controle('winkelkeuze: alleen waar iets is vastgelegd, meeste eerst; na kopen valt een winkel weg', () => {
   const t1 = K.winkelTellingen(AL, WL).map((x) => x.naam + ' ' + x.aantal).join();

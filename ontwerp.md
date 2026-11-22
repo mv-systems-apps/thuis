@@ -221,8 +221,17 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 
 ### 5.2 Winkel (tabblad)
 - Per artikel leg je vast in welke winkels het te koop is, en per winkel in
-  welke afdeling het daar ligt (`ligt`). Zonder winkels staat het in elke
-  winkel bovenaan, met het speldje.
+  welke afdeling het daar ligt (`ligt`).
+- Van boven naar beneden: "Boodschappen" met de voortgang van de hele lijst
+  ("1 van 7 artikelen"; wat in een van de mandjes ligt telt als gehaald);
+  "Zonder winkel" (grijs, met per artikel een winkelicoon: te koop in deze
+  winkel, en heeft die afdelingen, meteen de afdeling kiezen); de gekozen
+  winkel als één kaart met een paarse streep links (kop met de winkelkeuze en
+  rechts "4 artikelen", dan "Afdeling onbekend" met de speld en de afdelingen
+  in looproute); los en grijs "Niet bij <winkel>" en "In het mandje".
+- Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
+  winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
+  bewerkscherm). Afdelingen maak je in de Winkels-tab.
 - Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?": de
   winkels waar je iets van de lijst kunt halen (alleen wat bij die winkel is
   vastgelegd telt), met het aantal, meeste eerst, bij gelijk aantal de laatst
@@ -230,9 +239,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   staan er niet in; ingeklapt "Alle winkels". Kruisje rechtsboven; onderaan
   "Zoeken of toevoegen" (placeholder "Winkel", + voegt toe). De laatste keuze
   geldt per telefoon. Winkels beheren komt bij Instellingen (stap 9).
-  Daaronder de voortgangsbalk met "2 van 8".
-- Bovenaan, zonder kopje: wat in deze winkel nog geen afdeling heeft, met de
-  icoonknop "Waar ligt dit?" (kaartspeld, licht paars). Die vraagt naar de
+- "Afdeling onbekend": wat hier te koop is maar nog geen afdeling heeft, met de
+  icoonknop "Waar ligt dit?" (kaartspeld). Die vraagt naar de
   afdelingen van déze winkel (looproute; zoeken of toevoegen onderaan). Kiezen
   legt vast: te koop hier, in die afdeling; een nieuwe afdeling komt achteraan
   de route.
@@ -247,11 +255,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven. Er is geen "Klaar". Later
   eventueel een instelling "na x dagen vanzelf leeg".
-- Het mandje is per winkel: de teller ("2 van 8") en "In het mandje" tonen
-  alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
+- Het mandje is per winkel: "In het mandje" toont alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
   je elders afvinkte, staat daar weer als je die winkel kiest.
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
-- Een artikel dat de ander net toevoegde, krijgt een paar minuten "nieuw".
+- Een artikel dat de ander op de lijst zette, krijgt "nieuw" tot je het gezien hebt.
 - Verversen elke 30 s zolang dit tabblad open is.
 
 ### 5.3 Doen

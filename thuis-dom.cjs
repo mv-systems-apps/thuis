@@ -200,20 +200,31 @@ const BEGIN = [
   controle('winkel: tabblad open, tabbalk blijft', !d.getElementById('scherm-winkel').hidden && w.getComputedStyle(d.querySelector('nav')).display !== 'none');
   controle('winkel: zonder winkels de vraag om er een te kiezen', d.getElementById('winkelNaam').textContent === 'Winkel kiezen');
   const rijVan = (naam) => [...d.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').textContent === naam);
-  rijVan('Bananen').querySelector('.waar').click();
+  controle('winkel: voortgang bovenaan los van de winkel, Bananen onder "Zonder winkel" met winkelicoon',
+    d.querySelector('#scherm-winkel > .voortgang h2').textContent === 'Boodschappen' && / artikelen?$/.test(d.getElementById('winkelTeller').textContent) &&
+    rijVan('Bananen').closest('.afd').querySelector('.afdkop span').textContent === 'Zonder winkel' && !!rijVan('Bananen').querySelector('.naarwinkel') && !rijVan('Bananen').closest('.winkelkaart'));
+  rijVan('Bananen').querySelector('.naarwinkel').click();
   let k = d.getElementById('keuze');
-  controle('winkel: "Waar ligt dit?" zonder winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Waar ga je heen?');
+  controle('winkel: winkelicoon zonder gekozen winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Waar ga je heen?');
   controle('keuzelijst: kopje "Zoeken of toevoegen" en placeholder Winkel',
     k.querySelector('.zoek label').textContent === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
   k.querySelector('#keuzeZoek').value = 'Albert Heijn';
   k.querySelector('.plusknop').click();
   await slaap(100);
-  controle('winkel: nieuwe winkel gekozen', d.getElementById('winkelNaam').textContent === 'Albert Heijn');
+  controle('winkel: nieuwe winkel gekozen, de winkelkop staat in de winkelkaart', d.getElementById('winkelNaam').textContent === 'Albert Heijn' && !!d.getElementById('winkelKies').closest('.winkelkaart'));
+  rijVan('Bananen').querySelector('.naarwinkel').click();
+  await slaap(50);
+  controle('winkel zonder afdelingen: winkelicoon zet het in de winkel, zonder naar een afdeling te vragen, en zonder kop of speld',
+    !d.getElementById('keuze') && !!rijVan('Bananen').closest('.winkelkaart') && !rijVan('Bananen').closest('.afd').querySelector('.afdkop') && !rijVan('Bananen').querySelector('.waar'));
+  /* De eerste afdeling komt uit de Winkels-tab; daarna wel "Afdeling onbekend" met de speld. */
+  w.eval("handelen([{ actie: 'afdErbij', soort: 'winkel', id: winkels.find((x) => x.naam === 'Albert Heijn').id, afd: { id: nieuweId(), naam: 'Groente & fruit' } }])");
+  await slaap(50);
+  controle('winkel met afdelingen: "Afdeling onbekend" in de winkelkaart, als afdeling, met speld',
+    rijVan('Bananen').closest('.afd').querySelector('.afdkop span').textContent === 'Afdeling onbekend' && !rijVan('Bananen').closest('.afd').classList.contains('grijs') && !!rijVan('Bananen').querySelector('.waar'));
   rijVan('Bananen').querySelector('.waar').click();
   k = d.getElementById('keuze');
   controle('keuzelijst afdeling: placeholder Afdeling', k.querySelector('#keuzeZoek').placeholder === 'Afdeling');
-  k.querySelector('#keuzeZoek').value = 'Groente & fruit';
-  k.querySelector('.plusknop').click();
+  [...k.querySelectorAll('.optie')].find((o) => o.textContent === 'Groente & fruit').click();
   await slaap(100);
   const kopjes = [...d.querySelectorAll('#winkelLijst .afdkop span')].map((h) => h.textContent);
   controle('winkel: Bananen staat nu onder Groente & fruit', kopjes.includes('Groente & fruit'), JSON.stringify(kopjes));
@@ -251,18 +262,15 @@ const BEGIN = [
   const bananenElders = [...d.querySelectorAll('#winkelLijst .afd.grijs .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === 'Bananen');
   controle('winkel: onder de naam in grijs waar het wel te koop is', !!bananenElders && bananenElders.querySelector('.nm .winkels').textContent === 'Albert Heijn', bananenElders && bananenElders.textContent);
   if (eldersKop) { d.querySelector('#winkelLijst .uitklap').click(); await slaap(20); }
-  const losRij = d.querySelector('#winkelLijst .wrij .waar') && d.querySelector('#winkelLijst .wrij .waar').closest('.wrij');
+  const losRij = d.querySelector('#winkelLijst .wrij .naarwinkel') && d.querySelector('#winkelLijst .wrij .naarwinkel').closest('.wrij');
   const losNaam = losRij ? losRij.querySelector('.nm').textContent : '';
   if (losRij) {
-    losRij.querySelector('.waar').click();
-    k = d.getElementById('keuze');
-    controle('waar ligt dit: titel noemt de winkel, geen regel "Niet te koop"', k.getAttribute('aria-label') === 'Waar ligt ' + losNaam + ' bij Lidl centrum?' && !/Niet te koop/.test(k.textContent), k.getAttribute('aria-label'));
-    k.querySelector('#keuzeZoek').value = 'Zuivel'; k.querySelector('.plusknop').click();
+    losRij.querySelector('.naarwinkel').click();
     await slaap(2500);
     const tl = R(od.bestanden['thuis.json'].tekst);
-    controle('waar ligt dit: ' + losNaam + ' ligt nu bij Lidl centrum in Zuivel, de afdeling staat in de route',
-      new RegExp('^artikel;' + losNaam + ';.*ligt=Lidl centrum:Zuivel', 'm').test(tl) && /^winkel;Lidl centrum;route=Zuivel$/m.test(tl) && !/niet=/.test(tl), tl);
-  } else controle('waar ligt dit: er staat iets zonder plek op de lijst', false);
+    controle('bij deze winkel: ' + losNaam + ' te koop bij Lidl centrum (geen afdelingen, dus geen vraag)',
+      !d.getElementById('keuze') && new RegExp('^artikel;' + losNaam + ';.*ligt=Lidl centrum(;|$)', 'm').test(tl) && /^winkel;Lidl centrum$/m.test(tl), tl);
+  } else controle('bij deze winkel: er staat iets zonder winkel op de lijst', false);
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Albert Heijn')).click();
@@ -274,7 +282,7 @@ const BEGIN = [
   const mandjeKop = [...d.querySelectorAll('#winkelLijst .afdkop')].find((h) => h.firstChild.textContent === 'In het mandje');
   const mandje = mandjeKop ? mandjeKop.firstChild.textContent + ' | ' + mandjeKop.querySelector('.tal').textContent : '';
   controle('winkel: na 1,5 s in het mandje', mandje === 'In het mandje | 1 artikel', mandje);
-  controle('winkel: teller "1 van n"', /^1 van \d+$/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
+  controle('winkel: teller "1 van n artikelen"', /^1 van \d+ artikelen$/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
   await slaap(2500);
   const vandaag = new Date(); const dstr = vandaag.getFullYear() + '-' + String(vandaag.getMonth() + 1).padStart(2, '0') + '-' + String(vandaag.getDate()).padStart(2, '0');
   const t5d = R(od.bestanden['thuis.json'].tekst);
@@ -292,8 +300,8 @@ const BEGIN = [
   k.querySelector('.uitklapper').click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
   await slaap(50);
-  controle('mandje per winkel: in de Lidl geen mandje van de AH, teller begint op 0',
-    ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')) && /^0 van/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
+  controle('mandje per winkel: in de Lidl geen mandje van de AH; de voortgang (hele lijst) blijft 1',
+    ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')) && /^1 van/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze'); k.querySelector('.uitklapper').click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Albert Heijn')).click();
@@ -476,7 +484,7 @@ const BEGIN = [
     const od5 = onedrive([
       'instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00',
       'winkel;Albert Heijn;route=Zuivel|Brood',
-      'winkel;Plus',
+      'winkel;Plus;route=Koeling',
       'artikel;Melk;soort=wekelijks;ligt=Albert Heijn:Zuivel|Plus;op=2026-11-14T06:00;gekocht=2026-10-25|2026-11-01|2026-11-08|2026-11-15',
       'artikel;Kaas;soort=wekelijks;op=2026-11-14T06:00'
     ].join('\n') + '\n');
@@ -530,18 +538,23 @@ const BEGIN = [
     k = d5.getElementById('keuze');
     const opties = [...k.querySelectorAll('.optie .nm')].map((x) => x.textContent).join();
     controle('artikel: winkel kiezen toont alleen winkels waar het nog niet ligt', opties === 'Plus', opties + ' / ' + k.textContent);
+    [...k.querySelectorAll('.optie')].find((o) => o.textContent === 'Plus').click(); await slaap(50);
+    k = d5.getElementById('keuze');
+    controle('artikel: winkel met afdelingen gekozen, meteen door naar de afdeling', !!k && /Waar ligt Halfvolle melk bij Plus\?/.test(k.getAttribute('aria-label')), k && k.getAttribute('aria-label'));
+    const za = k.querySelector('#keuzeZoek'); za.value = 'Diepvries'; za.dispatchEvent(new w5.Event('input'));
+    k.querySelector('.plusknop').click(); await slaap(50);
+    controle('artikel: nieuwe afdeling ingevuld', plekTekst() === 'Albert HeijnZuivel|PlusDiepvries', plekTekst());
+    d5.querySelector('#plekken .toevoegrij').click(); await slaap(20);
+    k = d5.getElementById('keuze');
     const zk = k.querySelector('#keuzeZoek'); zk.value = 'jumbo'; zk.dispatchEvent(new w5.Event('input'));
     k.querySelector('.plusknop').click(); await slaap(50);
-    k = d5.getElementById('keuze');
-    controle('artikel: nieuwe winkel gemaakt, meteen door naar de afdeling', !!k && /Waar ligt Halfvolle melk bij jumbo\?/.test(k.getAttribute('aria-label')), k && k.getAttribute('aria-label'));
-    const za = k.querySelector('#keuzeZoek'); za.value = 'Koeling'; za.dispatchEvent(new w5.Event('input'));
-    k.querySelector('.plusknop').click(); await slaap(50);
-    controle('artikel: nieuwe afdeling ingevuld', plekTekst() === 'Albert HeijnZuivel|jumboKoeling', plekTekst());
+    controle('artikel: nieuwe winkel (zonder afdelingen) gemaakt, geen vraag naar de afdeling, geen —',
+      !d5.getElementById('keuze') && plekTekst() === 'Albert HeijnZuivel|jumbo|PlusDiepvries', plekTekst());
     d5.getElementById('artikelOpslaan').click();
     await slaap(2500);
     const t5 = R(od5.bestanden['thuis.json'].tekst);
-    controle('artikel opslaan: naam, soort en plekken in OneDrive, nieuwe winkel met afdeling',
-      /^artikel;Halfvolle melk;soort=regelmatig;ligt=Albert Heijn:Zuivel\|jumbo:Koeling;/m.test(t5) && /^winkel;jumbo;route=Koeling$/m.test(t5) && !/^artikel;Melk;/m.test(t5), t5);
+    controle('artikel opslaan: naam, soort en plekken in OneDrive, nieuwe winkel en afdeling',
+      /^artikel;Halfvolle melk;soort=regelmatig;ligt=Albert Heijn:Zuivel\|Plus:Diepvries\|jumbo;/m.test(t5) && /^winkel;jumbo$/m.test(t5) && /^winkel;Plus;route=Koeling\|Diepvries$/m.test(t5) && !/^artikel;Melk;/m.test(t5), t5);
     controle('artikel opslaan: scherm dicht, lijst toont de nieuwe naam', !open() && !!rij('Halfvolle melk'));
     /* dubbele naam: melding, blijft open */
     rij('Kaas').querySelector('.tekst').click(); await slaap(20);
