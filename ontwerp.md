@@ -196,7 +196,9 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Per regel: links het soorticoon (alleen weergave), de naam, rechts het
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
-  een klein winkelsymbool.
+  een klein winkelsymbool. Wat de ander op de lijst zette, krijgt "nieuw" tot
+  je het gezien hebt (in beeld op Artikelen of Boodschappen en dat scherm
+  verlaten); per telefoon bewaard, niet in het bestand.
 - Geen knop "Naar de winkel": de winkel is een eigen tabblad.
 
 ### 5.0 Tabbladen
@@ -210,7 +212,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   prullenbak links van Opslaan). Afdelingen horen bij deze winkel alleen
   (de route, op volgorde): greep vooraan om te verslepen, potloodje als enige
-  knop (Afdeling bewerken); tik op de naam doet niets. Onderaan "Afdeling".
+  knop (Afdeling bewerken); tik op de naam doet hetzelfde. Onderaan "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
   winkel zonder afdeling. Verwijderen pas na 10 s, met Ongedaan maken.
 - Artikelen koppelen gebeurt hier niet, maar bij het artikel (stap 8).
@@ -261,9 +263,16 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   wanneer, met heropenen.
 
 ### 5.4 Bewerken
-- **Artikel:** naam, soort, afdeling, te koop bij (vinkjes per winkel; niets
-  uitgevinkt = overal), op de lijst, gekocht (gebruikelijk interval en de
-  laatste datums), verwijderen.
+- **Artikel** (tik op de naam in de lijst; geen potloodje): volledig scherm met
+  kruisje rechtsboven. Naam (loopt door over meer regels), soort (drie knoppen),
+  te koop bij (per winkel de afdeling of een grijs "—"; tik = afdeling kiezen,
+  ✕ = weghalen; "Winkel toevoegen": zoeken of toevoegen zoals in de Winkels-tab,
+  daarna meteen de afdeling), gekocht in één regel ("Laatst gekocht 15 nov ·
+  meestal elke week"; "meestal" pas vanaf drie aankopen). Onderaan prullenbak
+  (10 s Ongedaan maken) en Opslaan. Wijzigingen zijn een kladversie tot Opslaan;
+  nieuwe winkels en afdelingen bestaan wel meteen. Sluiten (kruisje, terugknop
+  van de telefoon of een ander tabblad) met wijzigingen vraagt "Wijzigingen
+  opslaan?" [Weggooien] [Opslaan]; het kruisje van die vraag = verder bewerken.
 - **Actie:** titel, wanneer (geen, dag, maand, kwartaal, jaar, met bladeren),
   herhalen, wie (Mark of partner; niets gekozen = voor wie het oppakt), notitie, link (met openen), foto,
   verwijderen.

@@ -48,6 +48,23 @@
   .dagen button[aria-checked="true"]{background:var(--paars);color:#FFFFFF}
   input.tijd{width:128px;flex:none;height:44px;border:2px solid #CFCBE6;padding:0 10px;font-size:18px;background:#FFFFFF;color:var(--tekst)}
   #scherm-instellingen.sub > :not(#backupScherm){display:none}
+  #scherm-boodschappen.sub > :not(#artikelScherm){display:none}
+  /* ---------- artikel bewerken ---------- */
+  #artikelScherm{display:flex;flex-direction:column;gap:12px}
+  #artikelScherm .wdkop{padding:0 6px 0 16px}
+  #artikelScherm .veld{padding:0}
+  #artikelScherm textarea{min-height:54px;border:2px solid #CFCBE6;padding:12px;font:inherit;font-size:19px;line-height:1.3;width:100%;box-sizing:border-box;resize:none;overflow:hidden;background:#FFFFFF;color:var(--tekst)}
+  #artikelScherm textarea:focus{outline:none;border-color:var(--paars)}
+  .soorten{display:flex;gap:6px}
+  .soorten button{flex:1;min-width:0;height:56px;border:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:15px;font-weight:600}
+  .plekrij{display:flex;align-items:center;gap:6px;padding-right:8px;background:#FFFFFF}
+  .plekrij .winkelrij{flex:1;min-width:0;padding-right:4px}
+  .plekrij .sub.leeg2{color:#8D96A6}
+  .toevoegrij{width:100%;min-height:52px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--paars);font-size:18px;font-weight:600;text-align:left}
+  .gekochtregel{padding:12px 14px;font-size:17px;color:var(--grijs)}
+  #balk-artikel .bewerkknoppen{max-width:612px;margin:0 auto;display:flex;gap:10px}
+  .bewerkknoppen .prul{width:56px;height:56px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FBE4E5}
+  #balk-artikel .knop{flex:1;min-height:56px;font-size:19px}
   .backupgroep{display:flex;flex-direction:column;gap:8px}
   .backuprij .nm{flex:1;line-height:1.3}
   .backuprij .sub{display:block;font-size:16px;color:var(--grijs)}
@@ -76,7 +93,9 @@
   /* Systeemknoppen (in meldingen) omrand, zoals Afmelden, zodat ze zich onderscheiden
      van de gewone, gevulde knoppen. Sluiten en Annuleren grijs omrand. */
   .melding .knop{background:#FFFFFF;color:var(--paars);border:2px solid var(--paars)}
-  .melding .knop.tweede{color:var(--grijs);border-color:#CFCBE6}
+  .melding .knop.tweede,.knop.grijs{color:var(--grijs);border-color:#CFCBE6}
+  /* Nieuwe versie: bovenaan, in oranje, met een gevulde oranje knop (zoals events). */
+  .melding .knop.warn{background:#E0A458;color:#2A1A02;border-color:#E0A458}
   nav{flex-shrink:0;height:64px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#FFFFFF;border-top:1px solid var(--lijn);
       padding-bottom:env(safe-area-inset-bottom)}
   nav button{border:0;border-top:3px solid transparent;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
@@ -84,11 +103,6 @@
   nav button[aria-current="page"]{border-top-color:var(--paars);background:#F1EFFB}
   nav button[aria-current="page"] svg{stroke:var(--paars)}
   /* ---------- boodschappen ---------- */
-  /* Nieuwe versie: balk boven de onderbalk en de tabbalk, zoals in trends. */
-  #update-bar{flex-shrink:0;display:none;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 14px;cursor:pointer;
-    background:rgba(20,179,191,.12);border:0;border-top:1px solid #14B3BF;color:var(--turkoois);font-size:16px;font-weight:600}
-  #update-bar svg{width:18px;height:18px;stroke:var(--turkoois);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
-  /* Invoer onderaan, boven de tabbalk: met de duim te bereiken en altijd in beeld. */
   /* Kruisje om een zoekvak leeg te maken; alleen als er iets in staat. */
   .wis{width:44px;flex-shrink:0;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
   .onderbalk{flex-shrink:0;padding:10px 14px 12px;background:#FFFFFF;border-top:1px solid var(--lijn);box-shadow:0 -4px 12px rgba(24,20,60,.06)}
@@ -97,6 +111,7 @@
   body.typen #scherm-boodschappen{min-height:100%;justify-content:flex-end}
   .invoerbalk{position:relative;display:flex;align-items:stretch;height:60px;background:#FFFFFF;border:2px solid var(--paars);box-shadow:0 4px 14px rgba(75,60,192,.14)}
   .invoerbalk input{flex:1;min-width:0;border:0;outline:none;padding:0 12px;font-size:19px;color:var(--tekst);background:transparent}
+  .terugknop{background:#F4F3FB}
   .soortknop{width:52px;flex-shrink:0;border:0;border-right:1px solid var(--lijn);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
   .plusknop{width:56px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--paars),var(--violet))}
   .menu{position:absolute;z-index:10;bottom:56px;left:-2px;width:230px;background:#FFFFFF;border:1px solid #CFCBE6;box-shadow:0 10px 28px rgba(30,20,80,.22)}
@@ -113,9 +128,11 @@
   .item{display:flex;align-items:center;gap:8px;min-height:54px;padding:4px 6px 4px 10px;border-bottom:1px solid var(--rij)}
   .item:last-child{border-bottom:0}
   .item .icoon{width:30px;flex-shrink:0;display:flex;justify-content:center}
-  .item .tekst{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;min-height:44px}
-  .item .naam{font-size:19px;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap}
-  .item .naam span{overflow:hidden;text-overflow:ellipsis}
+  .item .tekst{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;min-height:44px;border:0;background:transparent;padding:0;color:var(--tekst);text-align:left}
+  /* Lange namen lopen door op een volgende regel; winkelsymbool en "nieuw" lopen mee. */
+  .item .naam{display:block;font-size:19px;line-height:1.25;overflow-wrap:anywhere;padding:4px 0}
+  .item .naam .alleen{vertical-align:-3px;margin-left:6px}
+  .item .naam .nieuw{margin-left:6px;white-space:nowrap}
   .item .hint{font-size:17px;color:var(--grijs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item .nieuw{padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600}
   .rondje{width:44px;height:44px;flex-shrink:0;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
@@ -142,7 +159,7 @@
   .kopregel2 h3{margin:0;font-size:18px;color:var(--paars)}
   .kopregel2 span{font-size:17px;color:var(--grijs)}
   .arij{min-height:56px;display:flex;align-items:center;gap:4px;padding:4px 4px 4px 2px;background:#FFFFFF;position:relative}
-  .arij .nm{flex:1;min-width:0;font-size:19px;overflow-wrap:anywhere}
+  .arij .nm{flex:1;min-width:0;min-height:48px;border:0;background:transparent;padding:0 4px;font-size:19px;color:var(--tekst);text-align:left;overflow-wrap:anywhere}
   .arij.sleept{z-index:3;background:#F1EFFB;box-shadow:0 6px 16px rgba(24,20,60,.18)}
   .greep{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
   .potlood{width:44px;height:44px;flex-shrink:0;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
@@ -208,7 +225,12 @@
   .item.vertrekt{opacity:.55}
   .weggehaald .item{opacity:.7}
   .rondsvg{flex-shrink:0}
-  button:focus-visible,input:focus-visible{outline:3px solid #5EE0E8;outline-offset:2px}
+  button:focus-visible{outline:3px solid #5EE0E8;outline-offset:2px}
+  /* Een invoervak krijgt geen losse rand binnen de balk: de hele balk licht op,
+     en een los vak krijgt een paarse rand. */
+  input:focus,input:focus-visible{outline:none}
+  .invoerbalk:focus-within,#keuze .zoekbalk:focus-within{box-shadow:0 0 0 3px rgba(94,224,232,.55)}
+  .veld input:focus,input.tijd:focus{border-color:var(--paars)}
 </style>
 </head>
 <body>
@@ -234,6 +256,7 @@
     <div class="filters" id="filters" role="group" aria-label="Welke lijst"></div>
     <div class="kopregel"><h2 id="lijstTitel">Op de lijst</h2><span id="lijstAantal"></span></div>
     <div class="lijst" id="lijst"></div>
+    <div id="artikelScherm" hidden></div>
   </section>
 
   <section class="scherm" id="scherm-winkel" aria-labelledby="tab-winkel" hidden>
@@ -299,29 +322,32 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-007</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-008</div>
   </section>
 </main>
 
-<div id="update-bar" role="button" tabindex="0" title="Nieuwe versie beschikbaar">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg>
-  Nieuwe versie — tik om te herladen
-</div>
 <div class="onderbalk" id="balk-boodschappen">
   <div class="invoerbalk">
     <button class="soortknop" id="invoerSoort" type="button" aria-haspopup="menu" aria-expanded="false"></button>
+    <button class="soortknop terugknop" id="invoerTerug" type="button" aria-label="Annuleren" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
     <input id="invoerTekst" type="text" aria-label="Artikel zoeken of toevoegen" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
-    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     <button class="plusknop" id="invoerPlus" type="button" aria-label="Toevoegen">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
     </button>
     <div class="menu" id="soortMenu" role="menu" aria-label="Soort voor nieuw artikel" hidden></div>
   </div>
 </div>
+<div class="onderbalk" id="balk-artikel" hidden>
+  <div class="bewerkknoppen">
+    <button class="prul" id="artikelWeg" type="button" aria-label="Artikel verwijderen"></button>
+    <button class="knop" id="artikelOpslaan" type="button">Opslaan</button>
+  </div>
+</div>
 <div class="onderbalk" id="balk-winkels" hidden>
   <div class="invoerbalk">
     <input id="winkelsTekst" type="text" placeholder="Winkel" aria-label="Winkel zoeken of toevoegen" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
-    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     <button class="plusknop" id="winkelsPlus" type="button" aria-label="Toevoegen">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
     </button>
@@ -919,26 +945,35 @@ function dagNummer(datum) {
 
 /* Suggestie op basis van koopgedrag: minstens drie aankopen, en langer geleden
    dan het gebruikelijke interval (de mediaan van de tussenpozen). */
-function suggestie(gekocht, vandaag) {
+/* Koopgedrag: de laatste aankoop (dagnummer) en, vanaf drie aankopen, het
+   gebruikelijke interval (de mediaan van de tussenpozen); anders null. */
+function koopPatroon(gekocht) {
   const d = gekocht.map(dagNummer).filter((x) => !isNaN(x)).sort((a, b) => a - b);
-  if (d.length < 3) return null;
+  if (!d.length) return null;
+  const laatst = d[d.length - 1];
   const gaten = [];
   for (let i = 1; i < d.length; i++) if (d[i] > d[i - 1]) gaten.push(d[i] - d[i - 1]);
-  if (gaten.length < 2) return null;
+  if (d.length < 3 || gaten.length < 2) return { laatst, interval: null };
   gaten.sort((a, b) => a - b);
   const mid = Math.floor(gaten.length / 2);
-  const interval = gaten.length % 2 ? gaten[mid] : Math.round((gaten[mid - 1] + gaten[mid]) / 2);
-  const laatst = d[d.length - 1];
-  if (dagNummer(vandaag) - laatst < interval) return null;
-  return { laatst, interval };
+  return { laatst, interval: gaten.length % 2 ? gaten[mid] : Math.round((gaten[mid - 1] + gaten[mid]) / 2) };
+}
+function suggestie(gekocht, vandaag) {
+  const p = koopPatroon(gekocht);
+  if (!p || p.interval === null || dagNummer(vandaag) - p.laatst < p.interval) return null;
+  return p;
 }
 
-function suggestieTekst(s) {
-  const dt = new Date(s.laatst * 86400000);
-  const elke = s.interval >= 14 ? 'elke ' + Math.round(s.interval / 7) + ' weken'
-    : s.interval === 7 ? 'elke week'
-    : s.interval === 1 ? 'elke dag' : 'elke ' + s.interval + ' dagen';
-  return 'laatst ' + dt.getUTCDate() + ' ' + MAANDEN[dt.getUTCMonth()] + ' · meestal ' + elke;
+function dagLabel(dag) { const dt = new Date(dag * 86400000); return dt.getUTCDate() + ' ' + MAANDEN[dt.getUTCMonth()]; }
+function elkeTekst(n) {
+  return n >= 14 ? 'elke ' + Math.round(n / 7) + ' weken' : n === 7 ? 'elke week' : n === 1 ? 'elke dag' : 'elke ' + n + ' dagen';
+}
+function suggestieTekst(s) { return 'laatst ' + dagLabel(s.laatst) + ' · meestal ' + elkeTekst(s.interval); }
+/* Eén regel voor het bewerkscherm. */
+function gekochtTekst(gekocht) {
+  const p = koopPatroon(gekocht);
+  if (!p) return 'Nog niet gekocht';
+  return 'Laatst gekocht ' + dagLabel(p.laatst) + (p.interval === null ? '' : ' · meestal ' + elkeTekst(p.interval));
 }
 
 /* Zoeken: bevat de tekst, zonder verschil in hoofdletters, spaties en accenten. */
@@ -1086,7 +1121,7 @@ function melding(id, tekst, knoppen, soort) {
     for (const k of knoppen) {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'knop' + (k.tweede ? ' tweede' : '');
+      b.className = 'knop' + (k.tweede ? ' tweede' : '') + (k.klasse ? ' ' + k.klasse : '');
       b.textContent = k.tekst;
       b.addEventListener('click', k.actie);
       rij.appendChild(b);
@@ -1101,6 +1136,12 @@ function meldingWeg(id) {
 
 /* ---------- tabbladen ---------- */
 function toonScherm(naam) {
+  const vorig = TABS.find((n) => !$('scherm-' + n).hidden);
+  if (bw.id) {
+    if (bwGewijzigd()) { artikelVraag(() => toonScherm(naam)); return; }
+    artikelDicht(true);
+  }
+  if (vorig !== naam) nieuwGezien();
   for (const b of document.querySelectorAll('nav button')) {
     const aan = b.dataset.scherm === naam;
     if (aan) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
@@ -1108,6 +1149,7 @@ function toonScherm(naam) {
   }
   $('balk-boodschappen').hidden = naam !== 'boodschappen';
   $('balk-winkels').hidden = naam !== 'winkels';
+  $('balk-artikel').hidden = true;
   $('midden').scrollTop = 0;
   if (naam === 'winkel') { tekenWinkel(); planSync(0); }
   if (naam === 'winkels') tekenWinkels();
@@ -1338,7 +1380,9 @@ function toonUpdateBalk() {
   if (updateBarShown) return;
   if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) return;
   updateBarShown = true;
-  $('update-bar').style.display = 'flex';
+  melding('m-versie', 'Nieuwe versie beschikbaar.', [{ tekst: 'Herladen', klasse: 'warn', actie: herlaadVoorUpdate }]);
+  /* Altijd bovenaan, boven andere meldingen. */
+  $('meldingen').prepend($('m-versie'));
 }
 
 function currentVersionStamp() {
@@ -1422,11 +1466,6 @@ async function herlaadVoorUpdate() {
   await kvSet('wachtrij', wachtrij);
   herlaadMetWachtendeWorker();
 }
-$('update-bar').addEventListener('click', herlaadVoorUpdate);
-/* De balk heeft role="button", dus Enter en spatie activeren hem ook. */
-$('update-bar').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); herlaadVoorUpdate(); }
-});
 
 const SW_UPDATE_INTERVAL = 30 * 60 * 1000;
 let __swUpdateLaatst = 0;
@@ -1555,6 +1594,7 @@ function vervangLokaal(alias) {
   if (winkel.id && alias.has(winkel.id)) { winkel.id = a(winkel.id); bewaar('winkel', winkel.id); }
   if (ws.favorieten.some((f) => alias.has(f))) { ws.favorieten = Array.from(new Set(ws.favorieten.map(a))); bewaar('favorieten', ws.favorieten); }
   if (ws.open) ws.open = a(ws.open);
+  if (bw.id) { bw.id = a(bw.id); bw.plekken = new Map(Array.from(bw.plekken, ([w, d]) => [a(w), d])); }
   let mandjeAnders = false;
   for (const [id, m] of Array.from(winkel.mandje)) {
     if (!alias.has(id)) continue;
@@ -1785,6 +1825,18 @@ function weggehaaldLegen() {
   scherm.weggehaald.clear();
 }
 
+/* De soort voor een nieuw artikel volgt het filter (Op de lijst en Suggesties:
+   eenmalig); met de soortknop kies je voor één artikel een andere. */
+function soortVanFilter() { return 'EWR'.indexOf(scherm.filter) !== -1 ? scherm.filter : 'E'; }
+/* Tijdens het typen (vak actief of met tekst): links annuleren in plaats van de
+   soortknop, en het + in de kleur van de soort. */
+function invoerBijwerken() {
+  const vak = $('invoerTekst');
+  const typen = document.activeElement === vak || vak.value !== '';
+  $('invoerSoort').hidden = typen;
+  $('invoerTerug').hidden = !typen;
+  $('invoerPlus').style.background = typen ? KLEUR[scherm.nieuwSoort] : '';
+}
 function tekenSoortknop() {
   const k = scherm.nieuwSoort;
   const b = $('invoerSoort');
@@ -1838,26 +1890,21 @@ function tekenFilters() {
     b.style.background = aan ? KLEUR[k] : TINT[k];
     b.style.color = aan ? '#FFFFFF' : KLEUR[k];
     b.innerHTML = svgIcoon(PADEN[k], aan ? '#FFFFFF' : KLEUR[k], 22) + '<span>' + tel[k] + '</span>';
-    b.addEventListener('click', () => { scherm.filter = k; weggehaaldLegen(); tekenBoodschappen(); });
+    b.addEventListener('click', () => { scherm.filter = k; scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); weggehaaldLegen(); tekenBoodschappen(); });
     f.appendChild(b);
   }
 }
 
 /* Wat de lijst nu toont: zoekresultaten, of het gekozen filter. */
 function lijstVoorScherm(zoekend, vandaag) {
-  if (zoekend) {
-    const l = zoekArtikelen(artikelen, scherm.zoek);
-    return { lijst: l, titel: 'Gevonden', onder: l.length + ' · ' + l.filter((a) => a.op).length + ' op de lijst' };
-  }
-  if (scherm.filter === 'L') {
-    return { lijst: artikelen.filter((a) => a.op || scherm.vertrekt.has(a.id)), titel: 'Op de lijst', onder: artikelen.filter((a) => a.op).length + ' · a–z' };
-  }
-  if (scherm.filter === 'S') {
-    const l = artikelen.filter((a) => !a.op && suggestie(a.gekocht, vandaag));
-    return { lijst: l, titel: 'Suggesties', onder: l.length + ' · langer geleden' };
-  }
-  const l = artikelen.filter((a) => a.letter === scherm.filter);
-  return { lijst: l, titel: SOORTNAAM[scherm.filter], onder: l.length + ' · ' + l.filter((a) => a.op).length + ' op de lijst' };
+  let l, titel;
+  if (zoekend) { l = zoekArtikelen(artikelen, scherm.zoek); titel = 'Gevonden'; }
+  else if (scherm.filter === 'L') { l = artikelen.filter((a) => a.op || scherm.vertrekt.has(a.id)); titel = 'Op de lijst'; }
+  else if (scherm.filter === 'S') { l = artikelen.filter((a) => !a.op && suggestie(a.gekocht, vandaag)); titel = 'Suggesties'; }
+  else { l = artikelen.filter((a) => a.letter === scherm.filter); titel = SOORTNAAM[scherm.filter]; }
+  /* Rechts alleen het aantal; of iets op de lijst staat, zie je aan het rondje. */
+  const aantal = scherm.filter === 'L' && !zoekend ? artikelen.filter((a) => a.op).length : l.length;
+  return { lijst: l, titel, onder: String(aantal) };
 }
 
 /* Eén regel: soorticoon, naam (met winkelsymbool, "nieuw", suggestie) en het rondje. */
@@ -1865,13 +1912,13 @@ function artikelRij(a, opties) {
   const rij = document.createElement('div');
   rij.className = 'item' + (opties.vertrekt ? ' vertrekt' : '');
   rij.dataset.id = a.id;
-  const nieuw = a.op && a.opdoor && a.opdoor !== ik && Date.now() - Date.parse(a.op) < 15 * 60000;
+  const nieuw = isNieuw(a);
   rij.innerHTML =
     '<span class="icoon" role="img">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 24) + '</span>' +
-    '<span class="tekst"><span class="naam"><span></span>' +
+    '<button class="tekst" type="button"><span class="naam"><span></span>' +
     (a.plekken.length ? '<svg class="alleen" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img">' + WINKELSYMBOOL + '</svg>' : '') +
     (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
-    (opties.sug ? '<span class="hint"></span>' : '') + '</span>' +
+    (opties.sug ? '<span class="hint"></span>' : '') + '</button>' +
     '<button class="rondje" type="button" aria-pressed="' + (a.op ? 'true' : 'false') + '">' + (a.op ? RONDJE.aan : RONDJE.plus) + '</button>';
   rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter].toLowerCase());
   rij.querySelector('.naam > span').textContent = a.naam;
@@ -1934,6 +1981,8 @@ function tekenBoodschappen() {
 
 /* Eén luisteraar voor alle rondjes in de lijst. */
 function lijstKlik(e) {
+  const naam = e.target.closest('.tekst');
+  if (naam) { artikelOpenen(naam.closest('.item').dataset.id); return; }
   const knop = e.target.closest('.rondje');
   if (!knop) return;
   const id = knop.closest('.item').dataset.id;
@@ -1979,14 +2028,32 @@ function toevoegen() {
   }
   vakLeeg($('invoerTekst'));
   scherm.zoek = '';
-  scherm.nieuwSoort = 'E';
+  scherm.nieuwSoort = soortVanFilter();
   tekenSoortknop();
+  invoerBijwerken();
   tekenBoodschappen();
 }
 
+/* Annuleren: vak leeg, toetsenbord dicht, soort terug naar die van het filter. */
+function invoerAnnuleren() {
+  vakLeeg($('invoerTekst'));
+  scherm.zoek = '';
+  scherm.nieuwSoort = soortVanFilter();
+  $('invoerTekst').blur();
+  tekenSoortknop();
+  invoerBijwerken();
+  tekenBoodschappen();
+}
+$('invoerTerug').addEventListener('click', invoerAnnuleren);
+/* Niet eerst het vak laten loslaten (dan verdwijnt de knop onder je vinger). */
+$('invoerTerug').addEventListener('mousedown', (e) => e.preventDefault());
+$('invoerTerug').addEventListener('pointerdown', (e) => e.preventDefault());
+$('invoerTekst').addEventListener('focus', invoerBijwerken);
+$('invoerTekst').addEventListener('blur', () => setTimeout(invoerBijwerken, 0));
+
 $('invoerSoort').addEventListener('click', () => soortMenu($('soortMenu').hidden));
 $('invoerPlus').addEventListener('click', toevoegen);
-$('invoerTekst').addEventListener('input', () => { scherm.zoek = $('invoerTekst').value; weggehaaldLegen(); tekenBoodschappen(); });
+$('invoerTekst').addEventListener('input', () => { scherm.zoek = $('invoerTekst').value; weggehaaldLegen(); invoerBijwerken(); tekenBoodschappen(); });
 $('invoerTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegen(); } });
 /* De tabbalk gaat alleen weg zolang het toetsenbord echt open is. Op Android
    sluit je het toetsenbord vaak met terug; het vak houdt dan de focus, dus
@@ -2020,7 +2087,7 @@ async function gegevensLaden() {
      omzetting van oude formaten); ook het mandje en de keuzes niet. */
   if (kopie && kopie.formaat !== FORMAAT) {
     kopie = null; wachtrij = [];
-    for (const k of ['kopie', 'wachtrij', 'mandje', 'favorieten', 'winkel']) await kvDel(k);
+    for (const k of ['kopie', 'wachtrij', 'mandje', 'favorieten', 'winkel', 'gezien']) await kvDel(k);
   }
   const auth = await kvGet('auth');
   ik = ((auth && auth.naam) || '').split(' ')[0];
@@ -2036,7 +2103,7 @@ async function gegevensLaden() {
    lijst met alles wat past, uit alle secties. */
 const KRUIS = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
 const PIJL_RECHTS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>';
-const WIS_KNOP = '<button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>';
+const WIS_KNOP = '<button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>';
 function keuzeOptie(o, kies) {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
@@ -2146,9 +2213,30 @@ function huidigeWinkel() { return winkelOpId.get(winkel.id) || null; }
 async function winkelLaden() {
   winkel.id = (await kvGet('winkel')) || '';
   ws.favorieten = (await kvGet('favorieten')) || [];
+  gezien.klaar = new Set((await kvGet('gezien')) || []);
   const m = (await kvGet('mandje')) || [];
   winkel.mandje = new Map(m.filter((x) => x && x.id).map((x) => [x.id, x]));
 }
+/* "nieuw": door de ander op de lijst gezet en hier nog niet gezien. Gezien =
+   in beeld geweest op Artikelen of Boodschappen en dat scherm weer verlaten
+   (ander tabblad, app naar de achtergrond). Per telefoon, niet in het bestand;
+   de sleutel bevat het moment van op de lijst zetten, dus opnieuw = weer nieuw. */
+const gezien = { klaar: new Set(), inBeeld: new Set() };
+function isNieuw(a) {
+  if (!a.op || !a.opdoor || a.opdoor === ik || gezien.klaar.has(a.id + '|' + a.op)) return false;
+  gezien.inBeeld.add(a.id + '|' + a.op);
+  return true;
+}
+function nieuwGezien() {
+  if (!gezien.inBeeld.size) return;
+  for (const k of gezien.inBeeld) gezien.klaar.add(k);
+  gezien.inBeeld.clear();
+  /* Alleen bewaren wat nog op de lijst staat. */
+  const nu = new Set(artikelen.filter((a) => a.op).map((a) => a.id + '|' + a.op));
+  for (const k of gezien.klaar) if (!nu.has(k)) gezien.klaar.delete(k);
+  bewaar('gezien', Array.from(gezien.klaar));
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) nieuwGezien(); });
 function mandjeBewaren() { bewaar('mandje', Array.from(winkel.mandje.values())); }
 
 function winkelKiezen() {
@@ -2247,7 +2335,7 @@ function winkelRij(a, soort) {
   b.innerHTML = (gedaan ? RONDJE.gedaan : soort === 'elders' ? RONDJE.elders : RONDJE.leeg) + '<span class="nm"></span>';
   b.querySelector('.nm').textContent = a.naam;
   b.setAttribute('aria-label', gedaan ? a.naam + ', in het mandje; terugzetten' : a.naam + ' afvinken');
-  if (!gedaan && a.opdoor && a.opdoor !== ik && Date.now() - Date.parse(a.op) < 15 * 60000) {
+  if (!gedaan && isNieuw(a)) {
     const n = document.createElement('span'); n.className = 'nieuw'; n.textContent = 'nieuw';
     n.style.cssText = 'padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600;flex-shrink:0';
     b.appendChild(n);
@@ -2485,10 +2573,11 @@ function tekenWinkelDetail(w) {
     rij.className = 'arij';
     rij.dataset.id = a.id;
     rij.innerHTML = (z ? '<span class="greep" style="visibility:hidden"></span>' : '<span class="greep" role="img" aria-label="Verslepen">' + GREEP + '</span>') +
-      '<span class="nm"></span><button class="potlood" type="button">' + POTLOOD('#9A93C9') + '</button>';
+      '<button class="nm" type="button"></button><button class="potlood" type="button">' + POTLOOD('#9A93C9') + '</button>';
     rij.querySelector('.nm').textContent = a.naam;
     rij.querySelector('.potlood').setAttribute('aria-label', a.naam + ' bewerken');
     rij.querySelector('.potlood').addEventListener('click', () => afdelingBewerken(w, a));
+    rij.querySelector('.nm').addEventListener('click', () => afdelingBewerken(w, a));
     lijstEl.appendChild(rij);
   }
   if (!zicht.length) {
@@ -2623,9 +2712,202 @@ $('winkelsTekst').addEventListener('input', () => { $('midden').scrollTop = 0; t
 $('winkelsTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); winkelsToevoegen(); } });
 $('winkelsPlus').addEventListener('click', winkelsToevoegen);
 
+/* ---------- artikel bewerken ---------- */
+/* Een kladversie: pas bij Opslaan worden het handelingen. Nieuwe winkels en
+   afdelingen die je hier maakt, bestaan meteen (ook als je daarna weggooit). */
+const bw = { id: '', oud: null, naam: '', soort: 'E', plekken: new Map(), sluiten: false };
+function bwGewijzigd() {
+  const o = bw.oud;
+  if (!o) return false;
+  if (schoonTekst(bw.naam) !== o.naam || bw.soort !== o.letter || bw.plekken.size !== o.plekken.length) return true;
+  return o.plekken.some((p) => bw.plekken.get(p.winkel) !== p.afd);
+}
+
+function artikelOpenen(id) {
+  const a = artikelen.find((x) => x.id === id);
+  if (!a) return;
+  Object.assign(bw, { id, oud: a, naam: a.naam, soort: a.letter, plekken: new Map(a.plekken.map((p) => [p.winkel, p.afd])), sluiten: false });
+  try { history.pushState({ thuisArtikel: id }, ''); } catch (e) { /* alleen het kruisje */ }
+  $('scherm-boodschappen').classList.add('sub');
+  $('balk-boodschappen').hidden = true;
+  $('balk-artikel').hidden = false;
+  const doel = $('artikelScherm');
+  doel.hidden = false;
+  doel.innerHTML = '<div class="wdkop"><h2>Artikel</h2><button class="icoonknop" id="artikelDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
+    '<div class="veld"><label for="artikelNaam">Naam</label><textarea id="artikelNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
+    '<div class="veld"><span class="label2" id="soortLabel" style="font-weight:600;color:var(--paars)">Soort</span><div class="soorten" role="radiogroup" aria-labelledby="soortLabel"></div></div>' +
+    '<div><div class="kopregel2"><h3>Te koop bij</h3><span id="plekTal"></span></div><div class="wkaart" id="plekken"></div></div>' +
+    '<div><div class="kopregel2"><h3>Gekocht</h3></div><div class="wkaart"><div class="gekochtregel" id="gekochtRegel"></div></div></div>';
+  const naam = $('artikelNaam');
+  naam.value = bw.naam;
+  const hoogte = () => { naam.style.height = 'auto'; naam.style.height = naam.scrollHeight + 4 + 'px'; };
+  naam.addEventListener('input', () => { naam.value = naam.value.replace(/[\r\n]+/g, ' '); bw.naam = naam.value; hoogte(); });
+  naam.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); naam.blur(); } });
+  $('artikelDicht').addEventListener('click', artikelSluitKnop);
+  tekenSoorten();
+  artikelBijwerken();
+  $('midden').scrollTop = 0;
+  hoogte();
+}
+
+function tekenSoorten() {
+  const doel = $('artikelScherm').querySelector('.soorten');
+  doel.innerHTML = '';
+  for (const k of ['E', 'W', 'R']) {
+    const b = document.createElement('button');
+    const aan = bw.soort === k;
+    b.type = 'button';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(aan));
+    b.style.background = aan ? KLEUR[k] : TINT[k];
+    b.style.color = aan ? '#FFFFFF' : KLEUR[k];
+    b.innerHTML = svgIcoon(PADEN[k], aan ? '#FFFFFF' : KLEUR[k], 22) + '<span></span>';
+    b.querySelector('span').textContent = SOORTNAAM[k];
+    b.addEventListener('click', () => { bw.soort = k; tekenSoorten(); });
+    doel.appendChild(b);
+  }
+}
+
+/* Te koop bij en Gekocht; ook na een synchronisatie (namen kunnen veranderd zijn). */
+function artikelBijwerken() {
+  const a = artikelen.find((x) => x.id === bw.id);
+  if (!a) { artikelDicht(false); return; }
+  for (const w of Array.from(bw.plekken.keys())) if (!winkelOpId.has(w)) bw.plekken.delete(w);
+  const doel = $('plekken');
+  doel.innerHTML = '';
+  const rijen = winkels.filter((w) => bw.plekken.has(w.id));
+  $('plekTal').textContent = rijen.length || '';
+  for (const w of rijen) {
+    const afd = w.afdelingen.find((x) => x.id === bw.plekken.get(w.id));
+    const r = document.createElement('div'); r.className = 'plekrij';
+    r.innerHTML = '<button class="winkelrij" type="button"><span class="nm"></span>' + PIJL_IN + '</button><button class="icoonknop" type="button">' + KRUIS + '</button>';
+    r.querySelector('.nm').textContent = w.naam;
+    const s = document.createElement('span'); s.className = 'sub' + (afd ? '' : ' leeg2'); s.textContent = afd ? afd.naam : '—';
+    r.querySelector('.nm').appendChild(s);
+    r.querySelector('.icoonknop').setAttribute('aria-label', w.naam + ' weghalen');
+    r.querySelector('.winkelrij').addEventListener('click', () => artikelAfdeling(w.id));
+    r.querySelector('.icoonknop').addEventListener('click', () => { bw.plekken.delete(w.id); artikelBijwerken(); });
+    doel.appendChild(r);
+  }
+  const plus = document.createElement('button');
+  plus.type = 'button'; plus.className = 'toevoegrij';
+  plus.innerHTML = RONDJE.plus + '<span>Winkel toevoegen</span>';
+  plus.addEventListener('click', artikelWinkelKiezen);
+  doel.appendChild(plus);
+  $('gekochtRegel').textContent = gekochtTekst(a.gekocht);
+}
+
+/* Winkel kiezen of toevoegen, net als in de Winkels-tab; daarna meteen de afdeling. */
+function artikelWinkelKiezen() {
+  const vrij = winkels.filter((w) => !bw.plekken.has(w.id));
+  const fav = vrij.filter((w) => isFavoriet(w.id)), rest = vrij.filter((w) => !isFavoriet(w.id));
+  const optie = (w) => ({ id: w.id, naam: w.naam });
+  const kies = (id) => { bw.plekken.set(id, ''); artikelBijwerken(); artikelAfdeling(id); };
+  keuzeLijst({
+    titel: ['Te koop bij welke winkel?'],
+    secties: fav.length ? [{ opties: fav.map(optie) }].concat(rest.length ? [{ titel: 'Overige', ingeklapt: true, opties: rest.map(optie) }] : [])
+      : [{ opties: rest.map(optie) }],
+    kies,
+    zoek: { placeholder: 'Winkel', nieuw: (naam) => {
+      const bestaand = winkels.find((w) => normNaam(w.naam) === normNaam(naam));
+      if (bestaand) { kies(bestaand.id); return; }
+      const id = nieuweId();
+      handelen([{ actie: 'nieuw', soort: 'winkel', id, velden: { naam } }]);
+      kies(id);
+    } }
+  });
+}
+
+function artikelAfdeling(winkelId) {
+  const w = winkelOpId.get(winkelId);
+  if (!w) return;
+  const nu = bw.plekken.get(winkelId);
+  keuzeLijst({
+    titel: ['Waar ligt ', { vet: schoonTekst(bw.naam) || bw.oud.naam }, ' bij ', { vet: w.naam }, '?'],
+    secties: [{ opties: w.afdelingen.map((x) => ({ id: x.id, naam: x.naam, actief: x.id === nu })) }],
+    kies: (afd) => { bw.plekken.set(winkelId, afd); artikelBijwerken(); },
+    zoek: { placeholder: 'Afdeling', nieuw: (naam) => {
+      const afd = nieuweId();
+      bw.plekken.set(winkelId, afd);
+      handelen([{ actie: 'afdErbij', soort: 'winkel', id: winkelId, afd: { id: afd, naam } }]);
+    } }
+  });
+}
+
+/* Opslaan: alleen wat anders is, met de oude waarde erbij (voor botsingen). */
+function artikelOpslaan() {
+  const o = bw.oud;
+  const naam = schoonTekst(bw.naam);
+  if (!naam) { $('artikelNaam').focus(); return; }
+  if (naam !== o.naam && artikelen.some((x) => x.id !== o.id && x.sleutel === normNaam(naam))) {
+    melding('m-naam', ['Er is al een artikel ', { vet: naam }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
+    $('midden').scrollTop = 0;
+    return;
+  }
+  const h = [];
+  if (naam !== o.naam) h.push({ actie: 'zet', soort: 'artikel', id: o.id, veld: 'naam', oud: o.naam, nieuw: naam });
+  if (bw.soort !== o.letter) h.push({ actie: 'zet', soort: 'artikel', id: o.id, veld: 'soort', oud: LETTER_SOORT[o.letter], nieuw: LETTER_SOORT[bw.soort] });
+  for (const p of o.plekken) if (!bw.plekken.has(p.winkel)) h.push({ actie: 'plaats', soort: 'artikel', id: o.id, winkel: p.winkel, afd: null });
+  for (const [winkelId, afd] of bw.plekken) {
+    const was = o.plekken.find((p) => p.winkel === winkelId);
+    if (!was || was.afd !== afd) h.push({ actie: 'plaats', soort: 'artikel', id: o.id, winkel: winkelId, afd });
+  }
+  artikelDicht(false);
+  if (h.length) handelen(h);
+}
+
+function artikelVerwijderen() {
+  const o = bw.oud;
+  const record = recordNaarJson('artikel', model.artikelen.get(o.id));
+  artikelDicht(false);
+  handelen([{ actie: 'weg', soort: 'artikel', id: o.id }]);
+  verwijderdMelding([{ vet: o.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'artikel', id: o.id, record }]);
+}
+
+/* Sluiten met wijzigingen: eerst vragen. Het kruisje van de vraag = verder bewerken. */
+function artikelVraag(daarna) {
+  const k = keuzePaneel('Wijzigingen opslaan?', false);
+  k.querySelector('.opties').outerHTML = '<div class="bewerkknoppen" style="padding:10px 14px 14px"><button class="knop tweede grijs" type="button">Weggooien</button><button class="knop" type="button">Opslaan</button></div>';
+  const [weg, op] = k.querySelectorAll('.bewerkknoppen .knop');
+  weg.addEventListener('click', () => { sluitKeuze(); artikelDicht(false); if (daarna) daarna(); });
+  op.addEventListener('click', () => {
+    sluitKeuze();
+    artikelOpslaan();
+    if (daarna && !bw.id) daarna();
+  });
+  document.body.appendChild(k);
+}
+function artikelSluitKnop() { if (bwGewijzigd()) artikelVraag(); else artikelDicht(false); }
+
+/* stil: zonder de geschiedenis terug te zetten (bij wisselen van tabblad of na "terug"). */
+function artikelDicht(stil) {
+  if (!bw.id) return;
+  sluitKeuze();
+  bw.id = ''; bw.oud = null;
+  $('scherm-boodschappen').classList.remove('sub');
+  $('artikelScherm').hidden = true;
+  $('artikelScherm').innerHTML = '';
+  $('balk-artikel').hidden = true;
+  $('balk-boodschappen').hidden = $('scherm-boodschappen').hidden;
+  if (!stil && history.state && history.state.thuisArtikel) { bw.sluiten = true; history.back(); }
+  tekenBoodschappen();
+}
+window.addEventListener('popstate', () => {
+  if (bw.sluiten) { bw.sluiten = false; return; }
+  if (!bw.id) return;
+  if (!bwGewijzigd()) { artikelDicht(true); return; }
+  /* Terugknop van de telefoon met wijzigingen: blijven staan en vragen. */
+  try { history.pushState({ thuisArtikel: bw.id }, ''); } catch (e) { /* geen geschiedenis */ }
+  if (!$('keuze')) artikelVraag();
+});
+$('artikelOpslaan').addEventListener('click', artikelOpslaan);
+$('artikelWeg').addEventListener('click', artikelVerwijderen);
+$('artikelWeg').innerHTML = PRULLENBAK;
+
 /* Alleen tekenen wat in beeld is; een tabblad tekent zich bij het openen. */
 function tekenAlles() {
-  if (!$('scherm-boodschappen').hidden) tekenBoodschappen();
+  if (bw.id) artikelBijwerken();
+  else if (!$('scherm-boodschappen').hidden) tekenBoodschappen();
   tekenWinkel();
   tekenWinkels();
   if (!$('scherm-instellingen').hidden) tekenInstellingen();

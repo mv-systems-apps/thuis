@@ -100,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, zoekArtikelen };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -391,20 +391,23 @@ controle('suggestie: na drie aankopen en langer dan gewoonlijk geleden', () => {
 });
 controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () =>
   gelijk(K.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null && K.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true));
+controle('gekocht: één regel; "meestal" pas vanaf drie aankopen', () => gelijk([
+  K.gekochtTekst([]), K.gekochtTekst(['2026-11-08', '2026-11-15']), K.gekochtTekst(['2026-11-15', '2026-10-25', '2026-11-08', '2026-11-01'])].join('|'),
+  'Nog niet gekocht|Laatst gekocht 15 nov|Laatst gekocht 15 nov · meestal elke week'));
 controle('zoeken: deel van de naam, zonder hoofdletters en accenten', () => {
   const al = K.artikelLijst(lees({ artikelen: { a1111: { naam: 'Crème fraîche' }, a2222: { naam: 'Café-noir' }, a3333: { naam: 'Kaas' } } }));
   return gelijk(K.zoekArtikelen(al, 'creme FRAI').map((a) => a.naam).join() + '|' + K.zoekArtikelen(al, 'cafe').map((a) => a.naam).join(), 'Crème fraîche|Café-noir');
 });
 
 controle('invoer staat onderaan (boven de tabbalk), soortmenu klapt naar boven', () =>
-  (/<\/main>\s*(<div id="update-bar"[\s\S]*?<\/div>\s*)?<div class="onderbalk" id="balk-boodschappen">/.test(html) && /\.menu\{position:absolute;z-index:10;bottom:/.test(html)) || 'invoer niet onderaan');
+  (/<\/main>\s*<div class="onderbalk" id="balk-boodschappen">/.test(html) && /\.menu\{position:absolute;z-index:10;bottom:/.test(html)) || 'invoer niet onderaan');
 
 controle('tabbalk staat altijd in beeld: body vast aan de schermranden, geen 100dvh; scherm krimpt met het toetsenbord', () =>
   (/body\{[^}]*position:fixed;inset:0\}/.test(html) && !/body\{[^}]*100dvh/.test(html) && /interactive-widget=resizes-content/.test(html)) || 'opbouw klopt niet');
 
-controle('nieuwe versie: balk zoals in trends boven de onderbalk, geen melding', () =>
-  (/<\/main>\s*<div id="update-bar" role="button"[^>]*>[\s\S]*?Nieuwe versie — tik om te herladen/.test(html) && !/m-versie/.test(html)) || 'geen balk');
-
+controle('nieuwe versie: oranje melding bovenaan met gevulde knop Herladen (zoals events)', () =>
+  (/melding\('m-versie', 'Nieuwe versie beschikbaar\.', \[\{ tekst: 'Herladen', klasse: 'warn'/.test(scripts) && /\$\('meldingen'\)\.prepend\(\$\('m-versie'\)\)/.test(scripts) &&
+   /\.melding \.knop\.warn\{background:#E0A458/.test(html) && !/update-bar/.test(html)) || 'niet zoals events');
 controle('veiligheid: CSP — alleen eigen bestanden en Microsoft, geen scripts van buiten, geen formulieren of base', () => {
   const m = /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/.exec(html);
   if (!m) return 'CSP ontbreekt';
