@@ -230,7 +230,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Favorieten en Overige, inklapbaar, alfabetisch; favorieten per telefoon.
   Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
-  prullenbak links van Opslaan). Afdelingen horen bij deze winkel alleen
+  notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
+  staan notitie en link paars onder de regel, net als bij artikelen. Afdelingen horen bij deze winkel alleen
   (de route, op volgorde): greep vooraan om te verslepen; tik op de naam
   opent Afdeling bewerken (geen potloodje, net als bij artikelen). Onderaan "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
@@ -287,6 +288,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Verversen elke 30 s zolang dit tabblad open is.
 
 ### 5.3 Doen
+- Links in de invoerbalk van Winkels en Doen: een loep; met tekst in het vak een
+  terugpijl die het vak leegmaakt. Tik op de loep = invoeren.
 - Invoervak "Actie" onderaan: typen filtert, + voegt toe (een afgeronde actie
   met dezelfde naam wordt heropend). Een nieuwe actie heeft geen periode.
 - Groepen met kopbalken: Te laat (oranje), Deze week (begint uiterlijk
@@ -354,6 +357,23 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   "Ongedaan maken" en een ✕. Die blijft tot de volgende handeling of tot je hem
   wegtikt. (De review stelde 5 s voor; dat botst met de conventie.) Ongedaan
   maken is een nieuwe handeling, dus het werkt ook na synchroniseren.
+
+### 5.9 Tags
+- Een tag is `#woord` in een notitie (artikel, winkel, actie), zoals in events
+  maar zonder subtags; `_` wordt getoond als spatie. In de lijst vet.
+- In elk zoekvak: `#` toont de tags met aantal boven de balk; verder typen
+  filtert, tikken kiest. Met `#` zoekt het vak alleen op tags in de notitie
+  (begint met); zonder `#` op de naam. Een `#` in een naam mag, maar telt niet als tag.
+- Met `#` vooraan doet + niets (een tag is geen naam).
+- In een notitie (artikel, winkel, actie): `#` typen toont direct onder het vak
+  alle tags uit alle notities; verder typen filtert, tikken maakt het woord af met
+  een spatie en je typt door. Hoofdletters en accenten tellen niet mee.
+
+### 5.10 Letters
+- Namen in lijsten en invoervelden 20 px, gewoon (niet vet).
+- Kopbalken en uitklappers 18 px vet.
+- Al het overige (winkels, notitie, wanneer, aantal, knoppen) 17 px; nergens kleiner.
+  Kwartaal heet in de knoppen "Kw.".
 
 ## 6. Datums en herhalen
 

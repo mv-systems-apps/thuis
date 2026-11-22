@@ -48,7 +48,8 @@ function jsonNaarRegels(tekst) {
   for (const n of Object.keys(d.instellingen || {})) uit.push(['instelling', n].concat(Object.keys(d.instellingen[n]).map((k) => k + '=' + d.instellingen[n][k])).join(';'));
   for (const w of Object.keys(d.winkels || {})) {
     const o = d.winkels[w];
-    uit.push(['winkel', o.naam].concat(o.afdelingen ? ['route=' + o.afdelingen.map((a) => a.naam).join('|')] : []).join(';'));
+    uit.push(['winkel', o.naam].concat(o.afdelingen ? ['route=' + o.afdelingen.map((a) => a.naam).join('|')] : [],
+      Object.keys(o).filter((k) => k !== 'naam' && k !== 'afdelingen').map((k) => k + '=' + o[k])).join(';'));
   }
   for (const deel of ['artikelen', 'acties']) {
     for (const id of Object.keys(d[deel] || {})) {

@@ -22,6 +22,8 @@ MUTATIES = [
   ("link: http toegestaan", "  if (u.protocol !== 'https:' || u.username || u.password) return null;", "  if (u.username || u.password) return null;"),
   ("herhalen slaat voorbije niet over", "  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal);", ""),
   ("deze week t/m zondag vergeten", "  return g.begin <= zondag ? 'week' : 'later';", "  return g.begin <= vandaag ? 'week' : 'later';"),
+  ("tag zoekt ook in de naam", "    return tagsVan(notitie).some((g) => g.sleutel.indexOf(k) === 0);", "    return tagsVan(notitie + ' ' + naam).some((g) => g.sleutel.indexOf(k) === 0);"),
+  ("winkel-link niet gecontroleerd", "  if ((h.soort === 'artikel' || h.soort === 'winkel') && h.veld === 'link'", "  if (h.soort === 'artikel' && h.veld === 'link'"),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

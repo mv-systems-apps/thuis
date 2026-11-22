@@ -100,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, naarSoort, periodeTekst, actieLijst };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -349,6 +349,25 @@ controle('link: een onveilige link in een handeling of het bestand wordt niet aa
   const m = lees({ artikelen: { mel01: { naam: 'Melk', link: 'javascript:alert(1)' } } });
   const st = k.pasToe(m, { actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'link', oud: 'javascript:alert(1)', nieuw: 'http://ah.nl' }).status;
   return gelijk(st + '|' + JSON.stringify(k.artikelLijst(m)[0].link), 'vervallen|""');
+});
+
+/* ---------- tags ---------- */
+controle('tags: # met een letter, aan het begin of na spatie/haakje; _ is spatie; geen subtags; dubbel telt één keer', () => gelijk(
+  K.tagsVan('voor #kerst en (#Groot_Feest) #kerst a#nee #1nee #ok-2').map((g) => g.naam + '/' + g.sleutel).join(), 'kerst/kerst,Groot Feest/groot feest,ok-2/ok-2'));
+controle('tags: hoofdletters en accenten tellen niet; zoeken met of zonder accent', () => gelijk(
+  JSON.stringify([K.tagTelling(['#café', '#Cafe', '#crème_brûlée']).map((g) => g.naam + '/' + g.aantal), K.zoekPast('x', '#café', '#CAFE'), K.zoekPast('x', '#Cafe', '#café'), K.zoekPast('x', '#crème_brûlée', '#creme b')]),
+  JSON.stringify([['café/2', 'crème brûlée/1'], true, true, true])));
+controle('zoeken: met # alleen op tags in de notitie (begint met), zonder # op de naam; # in een naam telt niet als tag', () => gelijk([
+  K.zoekPast('Kaarsen', 'voor #kerst', '#ker'), K.zoekPast('Kaarsen', 'voor #kerst', '#erst'), K.zoekPast('Lampjes #kerst', '', '#kerst'), K.zoekPast('Kaarsen', '#kerst', 'kaars'),
+  K.zoekPast('Crème', '', 'creme'), K.zoekPast('X', '#Groot_Feest', '#groot_f')].join(), 'true,false,false,true,true,true'));
+controle('tags: telling per notitie, op naam', () => gelijk(K.tagTelling(['#kerst #kerst', 'voor #kerst #buiten', '', null]).map((x) => x.naam + ':' + x.aantal).join(), 'buiten:1,kerst:2'));
+controle('winkel: notitie en link in het bestand; onveilige link vervalt en wordt niet getoond', () => {
+  const k = kern();
+  const m = lees({ winkels: { w1111: { naam: 'Gamma', notitie: 'za tot 17:00 #klussen', link: 'javascript:x' } } });
+  const st = k.pasToe(m, { actie: 'zet', soort: 'winkel', id: 'w1111', veld: 'link', oud: 'javascript:x', nieuw: 'http://gamma.nl' }).status;
+  const ok = k.pasToe(m, { actie: 'zet', soort: 'winkel', id: 'w1111', veld: 'link', oud: 'javascript:x', nieuw: 'https://www.gamma.nl/' }).status;
+  return gelijk(st + '|' + ok + '|' + JSON.stringify(uit(k, m).winkels.w1111) + '|' + K.winkelLijst(lees({ winkels: { w1111: { naam: 'G', link: 'javascript:x' } } }))[0].link,
+    'vervallen|ok|{"naam":"Gamma","notitie":"za tot 17:00 #klussen","link":"https://www.gamma.nl/"}|');
 });
 
 /* ---------- acties ---------- */

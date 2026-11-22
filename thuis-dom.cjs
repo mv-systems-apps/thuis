@@ -761,10 +761,10 @@ const BEGIN = [
     const rijC = (n) => [...dC.querySelectorAll('#doenLijst .actierij')].find((r) => r.querySelector('.nm').textContent === n);
     rijC('Vuilnis buiten zetten').querySelector('.tekst').click(); await slaap(30);
     controle('doen: bewerkscherm met Actie, Notitie, Link, Wanneer (n.v.t. gekozen), geen Herhalen', !dC.getElementById('actieScherm').hidden && dC.getElementById('actieNaam').value === 'Vuilnis buiten zetten'
-      && [...dC.querySelectorAll('#wanneerSoort button')].map((b) => b.textContent).join() === 'n.v.t.,Dag,Maand,Kwartaal,Jaar' && dC.querySelector('#wanneerSoort [aria-checked="true"]').textContent === 'n.v.t.' && dC.getElementById('herhaalVeld').hidden);
+      && [...dC.querySelectorAll('#wanneerSoort button')].map((b) => b.textContent).join() === 'n.v.t.,Dag,Maand,Kw.,Jaar' && dC.querySelector('#wanneerSoort [aria-checked="true"]').textContent === 'n.v.t.' && dC.getElementById('herhaalVeld').hidden);
     [...dC.querySelectorAll('#wanneerSoort button')][1].click(); await slaap(10);
     const vandaag = wC.eval('datumTekst(new Date())');
-    controle('doen: Dag kiezen begint bij vandaag, herhalen verschijnt met Nee/Week/Maand/Kwartaal/Jaar', !dC.getElementById('herhaalVeld').hidden && [...dC.querySelectorAll('#herhaalSoort button')].map((b) => b.textContent).join() === 'Nee,Week,Maand,Kwartaal,Jaar'
+    controle('doen: Dag kiezen begint bij vandaag, herhalen verschijnt met Nee/Week/Maand/Kwartaal/Jaar', !dC.getElementById('herhaalVeld').hidden && [...dC.querySelectorAll('#herhaalSoort button')].map((b) => b.textContent).join() === 'Nee,Week,Maand,Kw.,Jaar'
       && dC.querySelector('.blader span').textContent === wC.eval("periodeTekst(datumTekst(new Date()), '', true)"));
     dC.querySelectorAll('.blader button')[0].click(); await slaap(10);
     [...dC.querySelectorAll('#herhaalSoort button')][1].click(); await slaap(10);
@@ -794,6 +794,62 @@ const BEGIN = [
     dC.getElementById('actieDicht').click(); await slaap(20);
     [...dC.getElementById('keuze').querySelectorAll('.knop')][0].click(); await slaap(20);
     controle('doen: sluiten met wijzigingen vraagt; Weggooien sluit', dC.getElementById('actieScherm').hidden);
+    const links = dC.getElementById('doenLinks'), vak = dC.getElementById('doenTekst');
+    controle('balk links: in rust een vergrootglas; tik = gaan typen', links.getAttribute('aria-label') === 'Zoeken' && (links.click(), dC.activeElement === vak) && links.getAttribute('aria-label') === 'Annuleren');
+    vak.value = 'lamp'; vak.dispatchEvent(new wC.Event('input')); await slaap(20);
+    controle('balk links: typen filtert', [...dC.querySelectorAll('#doenLijst .actierij')].length === 1);
+    links.click(); await slaap(20);
+    controle('balk links: de pijl maakt leeg, sluit het toetsenbord en toont alles weer', vak.value === '' && dC.activeElement !== vak && links.getAttribute('aria-label') === 'Zoeken' && [...dC.querySelectorAll('#doenLijst .actierij')].length === 2);
+  }
+
+  /* 5n. Tags: # in een zoekvak toont de tags; kiezen zoekt op de tag; # voegt niets toe. Winkel met notitie en link. */
+  {
+    const odD = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Plus\nartikel;Kaarsen;notitie=voor #kerst;op=2026-11-20T10:00\nartikel;Lampjes #kerst;notitie=#buiten;op=2026-11-20T10:00\nartikel;Melk;op=2026-11-20T10:00\n');
+    const wD = await start(odD);
+    await slaap(800);
+    const dD = wD.document;
+    const vak = dD.getElementById('invoerTekst');
+    vak.focus(); vak.value = '#'; vak.dispatchEvent(new wD.Event('input')); await slaap(20);
+    const opties = () => [...dD.querySelectorAll('#tagLijst .tagoptie')].map((b) => b.textContent).join(',');
+    controle('tags: # toont de tags uit de notities (niet uit namen), met aantal', !dD.getElementById('tagLijst').hidden && opties() === '#buiten1,#kerst1', opties());
+    vak.value = '#k'; vak.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('tags: verder typen filtert', opties() === '#kerst1', opties());
+    dD.querySelector('#tagLijst .tagoptie').click(); await slaap(20);
+    controle('tags: kiezen zet #kerst in het vak, sluit de lijst, toont alleen wat de tag heeft (vet)', vak.value === '#kerst' && dD.getElementById('tagLijst').hidden
+      && namenInLijst(wD).join() === 'Kaarsen' && dD.querySelector('#lijst .notitie .tag').textContent === '#kerst', namenInLijst(wD).join());
+    const voor = R(odD.bestanden['thuis.json'].tekst);
+    dD.getElementById('invoerPlus').click(); await slaap(1800);
+    controle('tags: + met een # vooraan maakt geen artikel', !/^artikel;#kerst/m.test(R(odD.bestanden['thuis.json'].tekst)) && !wD.eval("artikelen.some((a) => a.naam === '#kerst')"));
+    vak.value = ''; vak.dispatchEvent(new wD.Event('input')); vak.blur();
+    dD.getElementById('tab-winkels').click(); await slaap(50);
+    [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma')).click(); await slaap(30);
+    dD.querySelector('#winkelDetail .bewerk').click(); await slaap(20);
+    const k = dD.getElementById('keuze');
+    controle('winkel bewerken: Naam, Notitie en Link', !!k.querySelector('#bewerkNotitie') && k.querySelector('#bewerkLink').type === 'url');
+    k.querySelector('#bewerkLink').value = 'http://gamma.nl'; k.querySelector('.knop').click(); await slaap(20);
+    controle('winkel bewerken: onveilige link geweigerd, paneel blijft', !!dD.getElementById('keuze') && !!dD.getElementById('m-link'));
+    k.querySelector('#bewerkNotitie').value = 'za tot 17:00 #klussen'; k.querySelector('#bewerkLink').value = 'gamma.nl/openingstijden'; k.querySelector('.knop').click(); await slaap(30);
+    dD.querySelector('#winkelDetail .terug').click(); await slaap(30);
+    const gr = [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma'));
+    controle('winkel: notitie en link onder "geen afdelingen"', !!gr.querySelector('.notitie') && gr.querySelector('.notitie').textContent === 'za tot 17:00 #klussen gamma.nl ↗', gr && gr.textContent);
+    const wv = dD.getElementById('winkelsTekst');
+    wv.focus(); wv.value = '#kl'; wv.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('winkels: zoeken op een tag', [...dD.querySelectorAll('#winkelsOverzicht .winkelrij .nm')].map((x) => x.firstChild.textContent).join() === 'Gamma' && opties() === '#klussen1', opties());
+    wv.blur();
+    await slaap(2500);
+    controle('winkel: notitie en link in het bestand', /^winkel;Gamma;notitie=za tot 17:00 #klussen;link=https:\/\/gamma\.nl\/openingstijden$/m.test(R(odD.bestanden['thuis.json'].tekst)), R(odD.bestanden['thuis.json'].tekst));
+    dD.getElementById('tab-boodschappen').click(); await slaap(30);
+    [...dD.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.tekst').click(); await slaap(30);
+    const nt = dD.getElementById('artikelNotitie');
+    nt.focus(); nt.value = 'halfvol #'; nt.setSelectionRange(9, 9); nt.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('notitie: # toont alle tags (artikelen, winkels, acties)', !dD.getElementById('tagLijst').hidden && opties() === '#buiten1,#kerst1,#klussen1', opties());
+    nt.value = 'halfvol #ke en vers'; nt.setSelectionRange(11, 11); nt.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('notitie: woord vóór de cursor filtert', opties() === '#kerst1', opties());
+    dD.querySelector('#tagLijst .tagoptie').click(); await slaap(20);
+    controle('notitie: kiezen maakt het woord af met een spatie, cursor erachter, vak blijft actief', nt.value === 'halfvol #kerst en vers' && nt.selectionStart === 15 && dD.activeElement === nt && dD.getElementById('tagLijst').hidden, JSON.stringify(nt.value) + nt.selectionStart);
+    nt.value = 'halfvol'; nt.setSelectionRange(7, 7); nt.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('notitie: zonder # geen lijst', dD.getElementById('tagLijst').hidden);
+    nt.blur(); dD.getElementById('artikelOpslaan').click(); await slaap(30);
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
