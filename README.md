@@ -8,10 +8,17 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand: stap 7 van het bouwplan. Werkt: aanmelden, de gedeelde map koppelen,
-synchroniseren met OneDrive via `thuis.json` (lokale kopie, wachtrij, If-Match, dagbackup) en het
-boodschappenscherm (toevoegen, zoeken, filters, op en van de lijst) en de
-tabblad Winkel (per artikel in welke winkels en waar het daar ligt, winkelkeuze met aantallen, afdelingen in looproute, afvinken, mandje dat bewaard blijft tot je het leegmaakt), vijf tabbladen (Winkels, Artikelen, Boodschappen, Doen, Instellingen) met vegen rondom; tabblad Winkels met afdelingen per winkel.
+Stand (november 2026): boodschappen compleet. Werkt: aanmelden bij Microsoft,
+de gedeelde map koppelen, synchroniseren via `thuis.json` (lokale kopie,
+wachtrij, If-Match, dagbackup, backups terugzetten), vijf tabbladen met vegen
+rondom:
+- **Winkels**: favorieten en overige, afdelingen per winkel in looproute.
+- **Artikelen**: toevoegen, zoeken, filters, op en van de lijst, aantal en
+  notitie, bewerkscherm, archief voor eenmalige artikelen.
+- **Boodschappen**: winkelkeuze (Nodig, Kan ook), per afdeling afvinken, mandje
+  per winkel.
+- **Doen**: nog te bouwen.
+- **Instellingen**: wekelijks terug op de lijst, archief, backups.
 
 Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie

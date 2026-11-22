@@ -645,6 +645,54 @@ const BEGIN = [
     controle('instelling archief: 1 jaar in het bestand', /^instelling;archief;bewaren=1j$/m.test(R(od7.bestanden['thuis.json'].tekst)), R(od7.bestanden['thuis.json'].tekst));
   }
 
+  /* 5i. Aantal: tik op het icoon opent de teller; "2×" achter de naam; blijft staan na kopen. */
+  {
+    const od8 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\n');
+    const w8 = await start(od8);
+    await slaap(800);
+    const d8 = w8.document;
+    const melk = () => [...d8.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+    controle('aantal: bij 1 geen "×" en geen teller', !melk().querySelector('.aantal') && !d8.querySelector('.teller'));
+    melk().querySelector('.icoon').click(); await slaap(20);
+    controle('aantal: tik op het icoon opent de teller, minder kan niet onder 1', !!d8.querySelector('.teller') && d8.querySelector('.teller .n').textContent === '1' && d8.querySelector('.teller .min').disabled);
+    d8.querySelector('.teller .meer').click(); await slaap(20);
+    controle('aantal: + maakt er 2× van, teller blijft open', melk().querySelector('.aantal').textContent === '2×' && d8.querySelector('.teller .n').textContent === '2');
+    melk().querySelector('.icoon').click(); await slaap(20);
+    controle('aantal: nog een tik op het icoon sluit de teller', !d8.querySelector('.teller'));
+    melk().querySelector('.aantal').click(); await slaap(20);
+    controle('aantal: tik op "2×" opent de teller ook (niet het bewerkscherm)', !!d8.querySelector('.teller') && d8.getElementById('artikelScherm').hidden);
+    await slaap(2500);
+    controle('aantal: in het bestand', /^artikel;Melk;soort=wekelijks;aantal=2;/m.test(R(od8.bestanden['thuis.json'].tekst)), R(od8.bestanden['thuis.json'].tekst));
+    d8.getElementById('tab-winkel').click(); await slaap(50);
+    const wrij = [...d8.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === 'Melk');
+    controle('aantal: in de winkel "2×" achter de naam', !!wrij && wrij.querySelector('.aantal').textContent === '2×');
+    wrij.querySelector('.vink').click(); await slaap(2500);
+    controle('aantal: blijft staan na het kopen', /^artikel;Melk;soort=wekelijks;aantal=2;/m.test(R(od8.bestanden['thuis.json'].tekst)) && !/^artikel;Melk;.*;op=/m.test(R(od8.bestanden['thuis.json'].tekst)), R(od8.bestanden['thuis.json'].tekst));
+  }
+
+  /* 5j. Notitie: in het bewerkscherm, paars onder de winkels, blijft staan; HTML blijft tekst. */
+  {
+    const od9 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\n');
+    const w9 = await start(od9);
+    await slaap(800);
+    const d9 = w9.document;
+    const melk = () => [...d9.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+    melk().querySelector('.tekst').click(); await slaap(20);
+    const nt = d9.getElementById('artikelNotitie');
+    controle('notitie: veld onder Naam, leeg', !!nt && nt.value === '' && nt.closest('.veld').previousElementSibling.querySelector('#artikelNaam'));
+    nt.value = '  halfvol <b>x</b> '; nt.dispatchEvent(new w9.Event('input'));
+    d9.getElementById('artikelOpslaan').click(); await slaap(50);
+    const r = melk();
+    controle('notitie: onder de winkels, alleen platte tekst (HTML eruit)', r.querySelector('.winkels').nextElementSibling === r.querySelector('.notitie') && r.querySelector('.notitie').textContent === 'halfvol x' && !r.querySelector('.notitie b'), r.querySelector('.notitie').textContent);
+    await slaap(2500);
+    controle('notitie: in het bestand, opgeschoond', /^artikel;Melk;soort=wekelijks;notitie=halfvol x;/m.test(R(od9.bestanden['thuis.json'].tekst)), R(od9.bestanden['thuis.json'].tekst));
+    d9.getElementById('tab-winkel').click(); await slaap(50);
+    const wr = [...d9.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === 'Melk');
+    controle('notitie: ook in de winkel onder de naam', !!wr && wr.querySelector('.notitie').textContent === 'halfvol x');
+    wr.querySelector('.vink').click(); await slaap(2500);
+    controle('notitie: blijft staan na het kopen', /^artikel;Melk;soort=wekelijks;notitie=halfvol/m.test(R(od9.bestanden['thuis.json'].tekst)));
+  }
+
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
   od = onedrive(null);
   od.bestanden['thuis.json'] = { bytes: new Uint8Array([0x7B, 0x7D, 0xFF, 0x0A]), eTag: '"x1"', id: 'id-thuis.json' };

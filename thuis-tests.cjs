@@ -326,6 +326,17 @@ controle('wekelijks: eerste keer legt alleen het moment vast', () => {
   return gelijk(k.wekelijksTerug(m, NU) + '|' + JSON.stringify(uit(k, m).instellingen.wekelijks), '0|{"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}');
 });
 
+controle('aantal: 2 t/m 99 als tekst; ongeldig aantal in het bestand of in een handeling wordt niet aangenomen', () => {
+  const k = kern();
+  const m = lees({ artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', aantal: '3' } } });
+  const ok = k.pasToe(m, { actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'aantal', oud: '3', nieuw: '' }).status;
+  const fout1 = k.pasToe(m, { actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'aantal', oud: '', nieuw: '1' }).status;
+  const fout2 = k.leesBestand(JSON.stringify({ versie: k.FORMAAT, artikelen: { mel01: { naam: 'Melk', aantal: 2 } } })).ok;
+  return gelijk(ok + '|' + fout1 + '|' + fout2 + '|' + JSON.stringify(uit(k, m).artikelen.mel01), 'ok|vervallen|false|{"naam":"Melk","soort":"wekelijks"}');
+});
+
+controle('platte tekst: HTML-tags en losse < > gaan eruit', () => gelijk(K.schoonTekst(' Kaas <img src=x onerror=1> en <b>brood</b> 3 > 2 '), 'Kaas en brood 3 2'));
+
 /* ---------- opruimen ---------- */
 controle('opruimen: oude afgeronde actie; archief standaard na 1 maand niet gekocht (ook via "weg"); op de lijst of zonder datum blijft', () => {
   const k = kern();

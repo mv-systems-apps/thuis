@@ -123,7 +123,7 @@ hand te bewerken.
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen` |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
-| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
@@ -201,7 +201,12 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   wekelijks, regelmatig. Suggesties: artikelen die langer geleden
   gekocht zijn dan gewoonlijk (minstens 3 aankopen nodig). Zonder historie
   staat er uitleg.
-- Per regel: links het soorticoon (alleen weergave), de naam, rechts het
+- Aantal: tik op het soorticoon (of op "2×") en onder de regel klapt de teller
+  open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam, ook
+  in Boodschappen. Het aantal blijft staan na het kopen.
+- Notitie: in het bewerkscherm onder Naam. In de lijsten paars onder de
+  winkels (zelfde letter), in Boodschappen onder de naam. Blijft staan.
+- Per regel: links het soorticoon (knop voor het aantal), de naam, rechts het
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
   onder de naam een grijs regeltje met die winkels ("Albert Heijn · Plus");
