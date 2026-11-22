@@ -693,6 +693,60 @@ const BEGIN = [
     controle('notitie: blijft staan na het kopen', /^artikel;Melk;soort=wekelijks;notitie=halfvol/m.test(R(od9.bestanden['thuis.json'].tekst)));
   }
 
+  /* 5k. Toestand bovenaan Instellingen en het logboek. */
+  {
+    const odA = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
+    const wA = await start(odA);
+    await slaap(900);
+    const dA = wA.document;
+    dA.getElementById('tab-instellingen').click(); await slaap(50);
+    controle('toestand: Bijgewerkt om hh:mm, knop Nu synchroniseren', dA.getElementById('syncWoord').textContent === 'Bijgewerkt' && /^om \d{2}:\d{2}$/.test(dA.getElementById('syncSub').textContent) && dA.getElementById('btnSyncNu').textContent === 'Nu synchroniseren',
+      dA.getElementById('syncWoord').textContent + ' / ' + dA.getElementById('syncSub').textContent);
+    wA.eval("sync.offline = true; wachtrij.push({}, {}, {}); tekenWolk();"); await slaap(50);
+    controle('toestand: Offline in oranje met wachtende wijzigingen', dA.getElementById('syncWoord').textContent === 'Offline' && /^3 wijzigingen wachten · laatst bijgewerkt \d{2}:\d{2}$/.test(dA.getElementById('syncSub').textContent) && dA.getElementById('syncToestand').classList.contains('warn'),
+      dA.getElementById('syncSub').textContent);
+    wA.eval("wachtrij.length = 0; sync.offline = false; sync.aanmelden = true; tekenWolk();"); await slaap(50);
+    controle('toestand: opnieuw aanmelden wordt de knop', dA.getElementById('btnSyncNu').textContent === 'Opnieuw aanmelden');
+    wA.eval("sync.aanmelden = false; tekenWolk();");
+    await wA.eval("logboek(['Eerste regel', 'Tweede <b>regel</b>'])");
+    dA.getElementById('tab-boodschappen').click(); dA.getElementById('tab-instellingen').click(); await slaap(50);
+    controle('logboek: aantal bij de regel onder Gegevens', dA.getElementById('logboekAantal').textContent === '2');
+    dA.getElementById('naarLogboek').click(); await slaap(50);
+    const regels = [...dA.querySelectorAll('#backupScherm .logregel')];
+    controle('logboek: nieuwste eerst, met "vandaag hh:mm", als tekst', regels.length === 2 && /Tweede <b>regel<\/b>$/.test(regels[0].textContent) && !regels[0].querySelector('b') && /^vandaag \d{2}:\d{2}/.test(regels[0].querySelector('.tijd').textContent),
+      regels.map((r) => r.textContent).join(' | '));
+    dA.querySelector('#backupScherm .terug').click(); await slaap(50);
+  }
+
+  /* 5l. Link: apart veld; zonder https:// wordt het aangevuld; onveilig geweigerd; tikken opent apart. */
+  {
+    const odB = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;notitie=halfvol;ligt=Plus;op=2026-11-20T10:00\n');
+    const wB = await start(odB);
+    await slaap(800);
+    const dB = wB.document;
+    const geopend = [];
+    wB.open = (url, doel, opties) => { geopend.push([url, doel, opties].join(' ')); return null; };
+    const melk = () => [...dB.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+    melk().querySelector('.tekst').click(); await slaap(20);
+    const ln = dB.getElementById('artikelLink');
+    controle('link: veld onder Notitie, type url, plaatshouder https://…', !!ln && ln.type === 'url' && ln.placeholder === 'https://…' && ln.closest('.veld').previousElementSibling.querySelector('#artikelNotitie'));
+    ln.value = 'javascript:alert(1)'; ln.dispatchEvent(new wB.Event('input'));
+    dB.getElementById('artikelOpslaan').click(); await slaap(20);
+    controle('link: onveilig geweigerd met melding, scherm blijft open', !dB.getElementById('artikelScherm').hidden && /Alleen links met https:\/\/ zijn toegestaan/.test((dB.getElementById('m-link') || {}).textContent || ''));
+    ln.value = 'www.ah.nl/melk'; ln.dispatchEvent(new wB.Event('input'));
+    dB.getElementById('artikelOpslaan').click(); await slaap(50);
+    const nr = melk().querySelector('.notitie');
+    controle('link: aangevuld met https://, getoond als "ah.nl ↗" achter de notitie; melding weg', !!nr && nr.textContent === 'halfvol ah.nl ↗' && !!nr.querySelector('.link') && !dB.getElementById('m-link'), nr && nr.textContent);
+    nr.querySelector('.link').click(); await slaap(20);
+    controle('link: tikken opent in een nieuw tabblad zonder verwijzer, niet het bewerkscherm', geopend[0] === 'https://www.ah.nl/melk _blank noopener,noreferrer' && dB.getElementById('artikelScherm').hidden, geopend.join());
+    await slaap(2500);
+    controle('link: in het bestand', /^artikel;Melk;soort=wekelijks;notitie=halfvol;link=https:\/\/www\.ah\.nl\/melk;/m.test(R(odB.bestanden['thuis.json'].tekst)), R(odB.bestanden['thuis.json'].tekst));
+    dB.getElementById('tab-winkel').click(); await slaap(50);
+    const wr = [...dB.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === 'Melk');
+    wr.querySelector('.link').click(); await slaap(20);
+    controle('link: in de winkel opent tikken de link en vinkt niet af', geopend.length === 2 && !wr.classList.contains('gedaan') && !dB.querySelector('#winkelLijst .wrij.gedaan'));
+  }
+
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
   od = onedrive(null);
   od.bestanden['thuis.json'] = { bytes: new Uint8Array([0x7B, 0x7D, 0xFF, 0x0A]), eTag: '"x1"', id: 'id-thuis.json' };

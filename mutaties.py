@@ -19,6 +19,7 @@ MUTATIES = [
   ("archief negeert weg", "  return (r.weg || '') > g ? r.weg : g;", "  return g;"),
   ("archief negeert de instelling", "    const dagen = Object.prototype.hasOwnProperty.call(BEWAREN, b) ? BEWAREN[b] : BEWAREN['1m'];", "    const dagen = BEWAREN['1m'];"),
   ("aantal niet gecontroleerd", "  if (h.soort === 'artikel' && h.veld === 'aantal' && h.nieuw && !AANTAL.test(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };", ""),
+  ("link: http toegestaan", "  if (u.protocol !== 'https:' || u.username || u.password) return null;", "  if (u.username || u.password) return null;"),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

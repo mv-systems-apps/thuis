@@ -99,8 +99,8 @@ controle('service worker: eigen cachenaam en thuis.html in de verplichte lijst',
 function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
-  const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen };', ctx);
+  const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -336,6 +336,20 @@ controle('aantal: 2 t/m 99 als tekst; ongeldig aantal in het bestand of in een h
 });
 
 controle('platte tekst: HTML-tags en losse < > gaan eruit', () => gelijk(K.schoonTekst(' Kaas <img src=x onerror=1> en <b>brood</b> 3 > 2 '), 'Kaas en brood 3 2'));
+
+controle('link: alleen https; zonder schema komt https:// ervoor; http, javascript, data, naam/wachtwoord en geen domein geweigerd', () => {
+  const v = (x) => K.veiligeLink(x);
+  return gelijk([v('ah.nl/melk'), v(' https://www.ah.nl/p?x=1 '), v('http://ah.nl'), v('javascript:alert(1)'), v('JavaScript:alert(1)'), v('data:text/html,x'),
+    v('https://naam:geheim@ah.nl'), v('https://localhost'), v('https://192.168.1.1'), v('ah .nl'), v('//ah.nl'), v(''), v('https://' + 'a'.repeat(2000) + '.nl')].join('|'),
+    'https://ah.nl/melk|https://www.ah.nl/p?x=1|||||||||https://ah.nl/||');
+});
+controle('link: korte naam is het domein zonder www', () => gelijk(K.linkNaam('https://www.ah.nl/x') + '|' + K.linkNaam('https://recepten.ah.nl/') , 'ah.nl|recepten.ah.nl'));
+controle('link: een onveilige link in een handeling of het bestand wordt niet aangenomen of niet getoond', () => {
+  const k = kern();
+  const m = lees({ artikelen: { mel01: { naam: 'Melk', link: 'javascript:alert(1)' } } });
+  const st = k.pasToe(m, { actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'link', oud: 'javascript:alert(1)', nieuw: 'http://ah.nl' }).status;
+  return gelijk(st + '|' + JSON.stringify(k.artikelLijst(m)[0].link), 'vervallen|""');
+});
 
 /* ---------- opruimen ---------- */
 controle('opruimen: oude afgeronde actie; archief standaard na 1 maand niet gekocht (ook via "weg"); op de lijst of zonder datum blijft', () => {

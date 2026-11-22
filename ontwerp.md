@@ -123,7 +123,7 @@ hand te bewerken.
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen` |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
-| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
@@ -204,6 +204,11 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Aantal: tik op het soorticoon (of op "2×") en onder de regel klapt de teller
   open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam, ook
   in Boodschappen. Het aantal blijft staan na het kopen.
+- Link: apart veld onder Notitie (type url, "https://…"). Zonder https:// komt
+  dat er vanzelf voor; http, javascript, data, een naam of wachtwoord erin of
+  geen echte domeinnaam: geweigerd met "Alleen links met https:// zijn
+  toegestaan." In de lijsten "ah.nl ↗" achter de notitie; een tik opent een
+  nieuw tabblad (noopener, noreferrer). Ook bij het tonen opnieuw gecontroleerd.
 - Notitie: in het bewerkscherm onder Naam. In de lijsten paars onder de
   winkels (zelfde letter), in Boodschappen onder de naam. Blijft staan.
 - Per regel: links het soorticoon (knop voor het aantal), de naam, rechts het
@@ -323,12 +328,15 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
-### 5.6 Sync-overzicht (tik op het wolkje)
-- Toestand: bijgewerkt (tijd), bezig, offline met n wachtende wijzigingen,
-  opnieuw aanmelden nodig, geen toegang tot de gedeelde map.
-- Nu synchroniseren, opnieuw aanmelden, afmelden.
-- Ingelogd als, "Ik ben", gedeelde map, deellink maken (alleen bij de maker).
-- Backups: lijst met datum en aantal regels, met herstellen.
+### 5.6 Synchronisatie (in Instellingen; het wolkje opent Instellingen)
+- Bovenaan de kaart Synchroniseren de toestand: icoon, één woord (Bijgewerkt,
+  Bezig…, Offline, Niet gelukt, Opnieuw aanmelden, Gekoppeld) en wat het betekent
+  ("om 20:14", "3 wijzigingen wachten · laatst bijgewerkt 18:40", de reden), in
+  oranje als er iets is. Daaronder de omrande knop "Nu synchroniseren" (of
+  "Opnieuw aanmelden").
+- Gegevens › Logboek: wat de app zelf oploste of deed (rechtgezette verwijzingen,
+  samengevoegde namen, tegelijk gewijzigd, een mislukte synchronisatie — één
+  keer per nieuwe fout), per telefoon, de laatste 100, nieuwste eerst.
 
 ### 5.7 Eerste start
 - **Mark:** aanmelden → nieuwe lijst maken (map `thuis` met standaardafdelingen) → "Ik ben" → deellink maken.
