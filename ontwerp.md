@@ -58,7 +58,7 @@ scripts; de app gebruikt het systeemlettertype.
   andere eTag wordt de inhoud gedownload.
 - **Schrijven:** `PUT …/content` met `If-Match: <eTag>`. Bij 412 opnieuw
   lezen, de wachtrij opnieuw toepassen en opnieuw schrijven.
-- **Verversen:** in de winkelstand elke 30 s, elders elke 3 minuten, en bij
+- **Verversen:** op het tabblad Winkel elke 30 s, elders elke 3 minuten, en bij
   openen of terugkeren uit de achtergrond. Alleen als de app in beeld is.
 - **Netwerkgrenzen:** 10 s per verzoek, zoals in de andere apps.
 - **De service worker** laat verzoeken naar Microsoft (andere origin) ongemoeid.
@@ -154,15 +154,25 @@ eenmalige artikelen die 12 maanden niet op de lijst stonden.
 
 ## 5. Schermen
 
-Layout volgens de conventies: vaste kop, scrollend midden, vaste onderkant.
-De kop heeft een kleurverloop van kobalt naar paars, met rechts het
-sync-wolkje. Tabbalk met alleen iconen: Boodschappen, Doen, Instellingen
-(tandwiel uit events). Kleur per soort: wekelijks kobalt (een 7 in een
-cirkel), regelmatig turquoise (voorraaddoos), eenmalig paars (vakje met een 1).
-Rechte hoeken; tekst nooit kleiner dan 17 px; knoppen minstens 44 px.
+Layout volgens de conventies: vaste kop, scrollend midden, vaste tabbalk. De
+kop heeft een kleurverloop van kobalt naar paars, met rechts het sync-wolkje.
+Tabbalk met alleen iconen, vier tabbladen: **Lijst** (klembord met lijst),
+**Winkel** (winkelwagen), **Doen** (vinkvak) en **Instellingen** (tandwiel uit
+events). Wisselen kan ook door te vegen, rondom (Lijst → Winkel → Doen →
+Instellingen → Lijst, en terug); niet vanaf de rand van het scherm (terug-gebaar
+van Android), niet tijdens typen en niet in een menu of keuzelijst.
+Kleur per soort: wekelijks kobalt (een 7 in een cirkel), regelmatig turquoise
+(voorraaddoos), eenmalig paars (vakje met een 1). Rechte hoeken; tekst nooit
+kleiner dan 17 px; knoppen minstens 44 px.
+
+Maten: het rondje (op/van de lijst, afvinken) is overal 28 px en krimpt nooit;
+het gevulde rondje is even groot als de buitenkant van het open rondje (lijn
+meegerekend). Soorticoon en iconen 24 px, lijndikte 2. Een icoonknop is een
+vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
+"Waar ligt dit?"; amber alleen voor "Mandje leegmaken"). Een lange naam loopt door naar een volgende regel.
 
 ### 5.1 Boodschappen
-- Invoervak "Toevoegen of zoeken" (placeholder "Artikel"). Links een
+- Invoervak "Zoeken of toevoegen" (placeholder "Artikel"). Links een
   soortknop met menu, standaard eenmalig; rechts een +. Typen zoekt in alle
   artikelen ("Gevonden"). Een + op een bestaand artikel zet dat op de lijst.
 - Tijdens het typen verdwijnen de onderbalken, zodat er ruimte is voor de
@@ -176,28 +186,43 @@ Rechte hoeken; tekst nooit kleiner dan 17 px; knoppen minstens 44 px.
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
   een klein winkelsymbool.
-- Knop "Naar de winkel".
+- Geen knop "Naar de winkel": de winkel is een eigen tabblad.
 
-### 5.2 Winkelstand
-- Geen tabbalk. Terugpijl, winkelnaam met menu om te wisselen (de laatste
-  keuze onthoudt elke telefoon zelf), teller en voortgangsbalk.
-- **Bovenaan, zonder kopje:** artikelen zonder afdeling of met een afdeling die deze
-  winkel niet heeft, met per artikel "Waar ligt dit?" om in één tik een
-  afdeling te kiezen.
+### 5.2 Winkel (tabblad)
+- Bovenin de winkelnaam; een tik opent de keuzelijst "Winkel kiezen": bovenin
+  het vak met erboven "Zoeken of toevoegen" en als placeholder "Winkel" (typen
+  filtert, + maakt een nieuwe winkel), daaronder de favorieten (paars, gevulde
+  ster) en de overige winkels alfabetisch. Een tik op de ster maakt een winkel
+  favoriet of niet. Favorieten en de laatste keuze gelden per telefoon (niet in
+  thuis.txt). De keuzelijst voor een afdeling werkt hetzelfde, met als
+  placeholder "Afdeling" en zonder favorieten. Toevoegen is overal een +, geen
+  woord. Rechts daarvan "1 van 2": deze
+  winkel en het aantal winkels dat nodig is om alles op de lijst te halen
+  (uitgerekend uit de artikelen die alleen in bepaalde winkels liggen; tik toont
+  welke winkel nog nodig is, of "alles hier"). Daaronder de voortgangsbalk met
+  "2 van 8": afgevinkt van het totaal aan artikelen. Geen eenheden: de plek zegt
+  wat er bedoeld wordt.
+- Bovenaan, zonder kopje: artikelen zonder afdeling of met een afdeling die
+  deze winkel niet heeft, elk met een icoonknop "Waar ligt dit?" (kaartspeld
+  met vraagteken, licht paars) om in één tik een afdeling te kiezen of te maken. Een
+  nieuwe afdeling komt achteraan de route van de winkel.
 - Daarna de afdelingen in looproute.
 - Elke vink is direct een handeling (van de lijst, aankoopdatum erbij). Het
-  item schuift na een korte vertraging naar "In het mandje", zodat een tik
-  tijdens het scrollen niets laat wegspringen. Terugtikken maakt het ongedaan.
+  item blijft 1,5 s grijs op zijn plek en schuift dan naar "In het mandje".
+  Terugtikken zet het terug en haalt de aankoopdatum weg.
 - "Elders te koop": artikelen die alleen in andere winkels liggen, ingeklapt
   en grijs, wel af te vinken.
-- Een + om in de winkel iets toe te voegen.
-- Een artikel dat de ander net toevoegde, krijgt een paar minuten het label
-  "nieuw".
-- "Klaar met boodschappen" sluit de winkelstand. Er is geen apart moment van
-  vastleggen.
+- Het mandje blijft staan tot je het leegmaakt: rechts naast het kopje "In het
+  mandje" staat een icoonknop (mandje met kruis, "Mandje leegmaken"). Het mandje hoort bij de telefoon (niet in
+  thuis.txt) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
+  groepje uit beeld; de aankoopdatums blijven. Er is geen "Klaar". Later
+  eventueel een instelling "na x dagen vanzelf leeg".
+- Geen toevoegen op dit tabblad: dat gaat via Lijst.
+- Een artikel dat de ander net toevoegde, krijgt een paar minuten "nieuw".
+- Verversen elke 30 s zolang dit tabblad open is.
 
 ### 5.3 Doen
-- Invoervak "Toevoegen of zoeken" (placeholder "Actie").
+- Invoervak "Zoeken of toevoegen" (placeholder "Actie").
 - Filter Alle / Voor mij; Voor mij is uitgeschakeld als geen actie aan jou is
   toegewezen.
 - Groepen: Te laat, Deze week, Later, Zonder datum. Een actie zonder datum en

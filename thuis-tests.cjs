@@ -67,10 +67,10 @@ controle('duurTekst boven het uur', () => gelijk(laad('duurTekst').duurTekst(90 
 controle('duurTekst nooit negatief', () => gelijk(laad('duurTekst').duurTekst(-5 * 60000), '0 min'));
 
 /* ---------- opbouw van de pagina ---------- */
-controle('tabbalk heeft precies Boodschappen, Doen en Instellingen', () => {
+controle('tabbalk heeft precies Lijst, Winkel, Doen en Instellingen', () => {
   const nav = (html.match(/<nav[\s\S]*?<\/nav>/) || [''])[0];
   const labels = [...nav.matchAll(/<button[^>]*aria-label="([^"]+)"/g)].map((m) => m[1]);
-  return gelijk(labels.join('|'), 'Boodschappen|Doen|Instellingen');
+  return gelijk(labels.join('|'), 'Lijst|Winkel|Doen|Instellingen');
 });
 controle('nieuwe-versie-melding aanwezig, alleen op de eigen cache (thuis-)', () => {
   if (!/async function checkAppUpdate\s*\(/.test(scripts)) return 'checkAppUpdate ontbreekt';
@@ -81,6 +81,8 @@ controle('aanmelding niet in localStorage', () => !/localStorage\.setItem/.test(
 controle('versiestempel aanwezig', () => /Versie [0-9A-F]{7}-[0-9A-F]{3}/.test(html));
 controle('verborgen blijft verborgen, ook met een eigen display (deellinkvak na koppelen)', () =>
   /\[hidden\]\{display:none!important\}/.test(html) || 'regel [hidden]{display:none!important} ontbreekt');
+controle('opslag wordt vastgezet (navigator.storage.persist), en getoond bij App', () =>
+  (/navigator\.storage\.persist\(\)/.test(scripts) && /id="appOpslag"/.test(html)) || 'persist of de regel bij App ontbreekt');
 controle('melding bij nieuwe versie verdwijnt niet vanzelf (geen timer die hem weghaalt)', () =>
   !/setTimeout\([^)]*meldingWeg/.test(scripts) || 'een melding wordt met een timer weggehaald');
 
@@ -98,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Date });
-  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen, winkelsNodig };', ctx);
   return ctx.__k;
 }
 const NU = new Date(2026, 10, 21, 10, 0); // za 21-11-2026 10:00 lokale tijd
@@ -344,6 +346,32 @@ controle('zoeken: deel van de naam, zonder hoofdletters', () => {
   const al = k.artikelLijst(lees(WINKELS).model);
   return gelijk(k.zoekArtikelen(al, 'RO').map((a) => a.naam).join(',') + '|' + k.zoekArtikelen(al, ' BORST').map((a) => a.naam).join(','), 'Brood|Afwasborstel');
 });
+
+controle('winkels: in de Albert Heijn is ook de Lidl nodig, voor Hummus', () => {
+  const k = kern(); const m = lees(WINKELS).model;
+  const ws = k.winkelLijst(m);
+  const n = k.winkelsNodig(k.artikelLijst(m), ws.find((w) => w.naam === 'Albert Heijn'), ws);
+  return gelijk(JSON.stringify(n.extra), '[{"winkel":"Lidl","artikelen":["Hummus"]}]');
+});
+controle('winkels: in de Lidl is alles te halen', () => {
+  const k = kern(); const m = lees(WINKELS).model;
+  const ws = k.winkelLijst(m);
+  return gelijk(k.winkelsNodig(k.artikelLijst(m), ws.find((w) => w.naam === 'Lidl'), ws).extra.length, 0);
+});
+controle('winkels: zo weinig mogelijk extra winkels (één winkel die twee artikelen heeft)', () => {
+  const k = kern();
+  const m = lees('winkel;A\nwinkel;B\nwinkel;C\nartikel;x;winkel=B|C;op=1\nartikel;y;winkel=C;op=1\nartikel;z;op=1\n').model;
+  const ws = k.winkelLijst(m);
+  return gelijk(JSON.stringify(k.winkelsNodig(k.artikelLijst(m), ws[0], ws).extra), '[{"winkel":"C","artikelen":["x","y"]}]');
+});
+controle('rondjes: één definitie, gevuld even groot als de buitenkant van open (13,5 = 12,4 + 2,2/2)', () => {
+  const r = (scripts.match(/const RONDJE = \{[\s\S]*?\n\};/) || [''])[0];
+  if (!r) return 'RONDJE ontbreekt';
+  const gevuld = [...r.matchAll(/r="([\d.]+)" fill="#/g)].map((m) => +m[1]);
+  const open = [...r.matchAll(/r="([\d.]+)" fill="none" stroke="#[0-9A-F]+" stroke-width="([\d.]+)"/g)].map((m) => +m[1] + m[2] / 2);
+  return (gevuld.length >= 2 && open.length >= 2 && gevuld.concat(open).every((x) => Math.abs(x - 13.5) < 0.01)) || JSON.stringify({ gevuld, open });
+});
+controle('rondjes: krimpen nooit (flex-shrink:0)', () => /\.rondsvg\{flex-shrink:0\}/.test(html) || 'regel ontbreekt');
 
 console.log((fout ? 'FOUT' : 'OK') + ': ' + goed + ' goed, ' + fout + ' fout  (' + path.basename(path.dirname(APP)) + '/' + path.basename(APP) + ')');
 process.exit(fout ? 1 : 0);

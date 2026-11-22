@@ -182,50 +182,90 @@ const BEGIN = [
   controle('van de lijst: één tik zet hem terug', namenInLijst(w).includes('pesto') && !(wegNa && wegNa.textContent.includes('pesto')), JSON.stringify(namenInLijst(w)));
   await slaap(2500);
 
-  /* 5c. De winkelstand. */
+  /* 5c. Het tabblad Winkel. */
   const d = w.document;
-  d.getElementById('btnNaarWinkel').click();
+  d.getElementById('tab-winkel').click();
   await slaap(300);
-  controle('winkel: winkelstand open, tabbalk weg', d.body.classList.contains('winkelstand') && !d.getElementById('winkelstand').hidden);
+  controle('winkel: tabblad open, tabbalk blijft', !d.getElementById('scherm-winkel').hidden && w.getComputedStyle(d.querySelector('nav')).display !== 'none');
   controle('winkel: zonder winkels de vraag om er een te kiezen', d.getElementById('winkelNaam').textContent === 'Winkel kiezen');
-  const waarKnop = (naam) => [...d.querySelectorAll('#winkelMidden .wrij')].find((r) => r.querySelector('.nm').textContent === naam).querySelector('.waar');
-  waarKnop('Bananen').click();
+  const rijVan = (naam) => [...d.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').textContent === naam);
+  rijVan('Bananen').querySelector('.waar').click();
   let k = d.getElementById('keuze');
   controle('winkel: "Waar ligt dit?" zonder winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Winkel kiezen');
-  k.querySelector('.nieuw input').value = 'Albert Heijn';
-  k.querySelector('.nieuw button').click();
+  controle('keuzelijst: kopje "Zoeken of toevoegen" en placeholder Winkel',
+    k.querySelector('.zoek label').textContent === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
+  k.querySelector('#keuzeZoek').value = 'Albert Heijn';
+  k.querySelector('.plusknop').click();
   await slaap(100);
   controle('winkel: nieuwe winkel gekozen', d.getElementById('winkelNaam').textContent === 'Albert Heijn');
-  waarKnop('Bananen').click();
+  rijVan('Bananen').querySelector('.waar').click();
   k = d.getElementById('keuze');
-  k.querySelector('.nieuw input').value = 'Groente & fruit';
-  k.querySelector('.nieuw button').click();
+  controle('keuzelijst afdeling: placeholder Afdeling', k.querySelector('#keuzeZoek').placeholder === 'Afdeling');
+  k.querySelector('#keuzeZoek').value = 'Groente & fruit';
+  k.querySelector('.plusknop').click();
   await slaap(100);
-  const kopjes = [...d.querySelectorAll('#winkelMidden h3')].map((h) => h.textContent);
+  const kopjes = [...d.querySelectorAll('#winkelLijst .afdkop span')].map((h) => h.textContent);
   controle('winkel: Bananen staat nu onder Groente & fruit', kopjes.includes('Groente & fruit'), JSON.stringify(kopjes));
   await slaap(2500);
   const t5c = od.bestanden['thuis.txt'].tekst;
   controle('winkel: afdeling, winkel met route en artikel in OneDrive',
     /^afdeling;Groente & fruit$/m.test(t5c) && /^winkel;Albert Heijn;route=Groente & fruit$/m.test(t5c) && /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;/m.test(t5c), t5c);
 
-  const vinkVan = (naam) => [...d.querySelectorAll('#winkelMidden .wrij')].find((r) => r.querySelector('.nm').textContent === naam);
-  vinkVan('Bananen').querySelector('.vink').click();
-  controle('winkel: afgevinkt blijft eerst op zijn plek', vinkVan('Bananen').classList.contains('gedaan'));
+  /* favorieten per telefoon */
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze');
+  k.querySelector('#keuzeZoek').value = 'Lidl'; k.querySelector('.plusknop').click();
+  await slaap(100);
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze');
+  [...k.querySelectorAll('.optie')].find((o) => o.textContent.includes('Lidl')).querySelector('.ster').click();
+  await slaap(100);
+  const groepen = [...k.querySelectorAll('.groep')].map((g) => g.textContent);
+  const eerste = k.querySelector('.optie > button').textContent;
+  controle('favorieten: Lidl als favoriet bovenaan', groepen[0] === 'Favorieten' && eerste === 'Lidl', JSON.stringify({ groepen, eerste }));
+  k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
+  controle('keuzelijst: typen filtert', [...k.querySelectorAll('.optie')].map((o) => o.textContent).join() === 'Albert Heijn');
+  [...k.querySelectorAll('.optie > button')].find((b) => b.textContent === 'Albert Heijn').click();
+  await slaap(2500);
+  controle('favorieten staan niet in thuis.txt', !/favoriet/i.test(od.bestanden['thuis.txt'].tekst));
+
+  rijVan('Bananen').querySelector('.vink').click();
+  controle('winkel: afgevinkt blijft eerst op zijn plek', rijVan('Bananen').classList.contains('gedaan'));
   await slaap(1800);
-  const mandje = [...d.querySelectorAll('#winkelMidden h3')].map((h) => h.textContent).find((x) => x.startsWith('In het mandje'));
+  const mandje = [...d.querySelectorAll('#winkelLijst .afdkop span')].map((h) => h.textContent).find((x) => x.startsWith('In het mandje'));
   controle('winkel: na 1,5 s in het mandje', mandje === 'In het mandje · 1', mandje);
-  controle('winkel: teller 1 / n', /^1 \/ \d+$/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
+  controle('winkel: teller "1 van n"', /^1 van \d+$/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
   await slaap(2500);
   const vandaag = new Date(); const dstr = vandaag.getFullYear() + '-' + String(vandaag.getMonth() + 1).padStart(2, '0') + '-' + String(vandaag.getDate()).padStart(2, '0');
   const t5d = od.bestanden['thuis.txt'].tekst;
   controle('winkel: in OneDrive van de lijst, met de aankoopdatum', new RegExp('^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;gekocht=2000-01-01\\|' + dstr + '$', 'm').test(t5d), t5d);
-  [...d.querySelectorAll('#winkelMidden .wrij.gedaan .vink')].find((b) => b.textContent.includes('Bananen')).click();
+  [...d.querySelectorAll('#winkelLijst .wrij.gedaan .vink')].find((b) => b.textContent.includes('Bananen')).click();
   await slaap(2500);
   const t5e = od.bestanden['thuis.txt'].tekst;
   controle('winkel: terugtikken zet hem terug op de lijst, zonder de aankoopdatum',
-    /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=[^;]+;opdoor=[^;]*;?gekocht=2000-01-01$/m.test(t5e) || /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=[^;]+;gekocht=2000-01-01$/m.test(t5e), t5e);
-  d.getElementById('winkelKlaar').click();
-  controle('winkel: Klaar sluit de winkelstand', !d.body.classList.contains('winkelstand') && d.getElementById('winkelstand').hidden);
+    /^artikel;Bananen;soort=wekelijks;afd=Groente & fruit;op=[^;]+;(opdoor=[^;]*;)?gekocht=2000-01-01$/m.test(t5e), t5e);
+  rijVan('Bananen').querySelector('.vink').click();
+  await slaap(1800);
+  const leeg = d.querySelector('#winkelLijst .icoonknop.amber');
+  controle('mandje: leegmaakknop (mandje met kruis) bij het mandje', !!leeg && leeg.getAttribute('aria-label') === 'Mandje leegmaken');
+  leeg.click();
+  controle('mandje: leeggemaakt', ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')));
+
+  /* vegen: van Winkel naar links → Doen, en rondom van Lijst naar rechts → Instellingen */
+  const veeg = (x1, x2) => {
+    const m = d.getElementById('midden');
+    const ev = (type, x) => { const e = new w.Event(type); e.touches = type === 'touchstart' ? [{ clientX: x, clientY: 300 }] : []; e.changedTouches = [{ clientX: x, clientY: 300 }]; return e; };
+    m.dispatchEvent(ev('touchstart', x1)); m.dispatchEvent(ev('touchend', x2));
+  };
+  Object.defineProperty(w, 'innerWidth', { value: 400, configurable: true });
+  veeg(300, 150);
+  controle('vegen: van Winkel naar Doen', !d.getElementById('scherm-doen').hidden);
+  d.getElementById('tab-boodschappen').click();
+  veeg(150, 300);
+  controle('vegen: rondom van Lijst naar Instellingen', !d.getElementById('scherm-instellingen').hidden);
+  d.getElementById('tab-boodschappen').click();
+  veeg(10, 300);
+  controle('vegen: niet vanaf de rand (terug-gebaar)', !d.getElementById('scherm-boodschappen').hidden);
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
   od = onedrive(null);
