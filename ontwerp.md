@@ -224,11 +224,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   welke afdeling het daar ligt (`ligt`).
 - Van boven naar beneden: "Boodschappen" met de voortgang van de hele lijst
   ("1 van 7 artikelen"; wat in een van de mandjes ligt telt als gehaald);
-  "Zonder winkel" (een kaart in de vorm van de winkelkaart, met een lichte
-  streep; per artikel een winkelicoon: te koop in deze
-  winkel, en heeft die afdelingen, meteen de afdeling kiezen); de gekozen
-  winkel als één kaart met een paarse streep links (kop met de winkelkeuze en
-  rechts "4 artikelen", dan "Afdeling onbekend" met de speld en de afdelingen
+  "Zonder winkel" (kaart met een grijze kop en een doorgestreept winkeltje;
+  per artikel een winkelicoon dat vraagt bij welke winkel het te koop is,
+  zoeken of toevoegen; het komt daar onder "Afdeling onbekend" met de speld,
+  zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
+  (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling onbekend" met de speld en de afdelingen
   in looproute); los en grijs "Niet bij <winkel>" en "In het mandje".
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het

@@ -206,17 +206,21 @@ const BEGIN = [
     !!rijVan('Bananen').querySelector('.naarwinkel') && !rijVan('Bananen').closest('.winkelkaart').contains(d.getElementById('winkelKies')));
   rijVan('Bananen').querySelector('.naarwinkel').click();
   let k = d.getElementById('keuze');
-  controle('winkel: winkelicoon zonder gekozen winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Waar ga je heen?');
+  controle('winkel: winkelicoon vraagt bij welke winkel het te koop is', !!k && k.getAttribute('aria-label') === 'Bij welke winkel is Bananen te koop?');
   controle('keuzelijst: kopje "Zoeken of toevoegen" en placeholder Winkel',
     k.querySelector('.zoek label').textContent === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
   k.querySelector('#keuzeZoek').value = 'Albert Heijn';
   k.querySelector('.plusknop').click();
   await slaap(100);
-  controle('winkel: nieuwe winkel gekozen, de winkelkop staat in de winkelkaart', d.getElementById('winkelNaam').textContent === 'Albert Heijn' && !!d.getElementById('winkelKies').closest('.winkelkaart'));
-  rijVan('Bananen').querySelector('.naarwinkel').click();
+  controle('winkelicoon: nieuwe winkel gemaakt, Bananen staat er niet meer onder "Zonder winkel", geen vraag naar een afdeling',
+    !d.getElementById('keuze') && !rijVan('Bananen').closest('.winkelkaart.zonder') && d.getElementById('winkelNaam').textContent === 'Winkel kiezen');
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze');
+  [...k.querySelectorAll('.optie')].find((o) => o.textContent.startsWith('Albert Heijn')).click();
   await slaap(50);
-  controle('winkel zonder afdelingen: winkelicoon zet het in de winkel, zonder naar een afdeling te vragen, en zonder kop of speld',
-    !d.getElementById('keuze') && !!rijVan('Bananen').closest('.winkelkaart') && !rijVan('Bananen').closest('.afd').querySelector('.afdkop') && !rijVan('Bananen').querySelector('.waar'));
+  controle('winkel: AH gekozen; Bananen in de winkelkaart zonder kop of speld (geen afdelingen); kop gevuld paars',
+    d.getElementById('winkelNaam').textContent === 'Albert Heijn' && rijVan('Bananen').closest('.winkelkaart').contains(d.getElementById('winkelKies')) &&
+    !rijVan('Bananen').closest('.afd').querySelector('.afdkop') && !rijVan('Bananen').querySelector('.waar'));
   /* De eerste afdeling komt uit de Winkels-tab; daarna wel "Afdeling onbekend" met de speld. */
   w.eval("handelen([{ actie: 'afdErbij', soort: 'winkel', id: winkels.find((x) => x.naam === 'Albert Heijn').id, afd: { id: nieuweId(), naam: 'Groente & fruit' } }])");
   await slaap(50);
@@ -267,9 +271,11 @@ const BEGIN = [
   const losNaam = losRij ? losRij.querySelector('.nm').textContent : '';
   if (losRij) {
     losRij.querySelector('.naarwinkel').click();
+    k = d.getElementById('keuze');
+    [...k.querySelectorAll('.optie')].find((o) => o.textContent.startsWith('Lidl')).click();
     await slaap(2500);
     const tl = R(od.bestanden['thuis.json'].tekst);
-    controle('bij deze winkel: ' + losNaam + ' te koop bij Lidl centrum (geen afdelingen, dus geen vraag)',
+    controle('winkelicoon: ' + losNaam + ' te koop bij Lidl centrum (geen afdelingen, dus geen vraag)',
       !d.getElementById('keuze') && new RegExp('^artikel;' + losNaam + ';.*ligt=Lidl centrum(;|$)', 'm').test(tl) && /^winkel;Lidl centrum$/m.test(tl), tl);
   } else controle('bij deze winkel: er staat iets zonder winkel op de lijst', false);
   d.getElementById('winkelKies').click();
