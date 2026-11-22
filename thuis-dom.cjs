@@ -404,6 +404,16 @@ const BEGIN = [
   w.eval('wachtrij.pop()');
   d.getElementById('tab-boodschappen').click();
 
+  /* zoekvak leegmaken met het kruisje */
+  d.getElementById('tab-boodschappen').click();
+  const vak = d.getElementById('invoerTekst');
+  const wisKnop = vak.parentNode.querySelector('.wis');
+  controle('kruisje: verborgen zolang het vak leeg is', wisKnop.hidden);
+  vak.value = 'mel'; vak.dispatchEvent(new w.Event('input', { bubbles: true }));
+  controle('kruisje: zichtbaar met tekst, zoeken toont Gevonden', !wisKnop.hidden && d.getElementById('lijstTitel').textContent === 'Gevonden');
+  wisKnop.click();
+  controle('kruisje: vak leeg, lijst terug, kruisje weer weg', vak.value === '' && d.getElementById('lijstTitel').textContent === 'Op de lijst' && wisKnop.hidden);
+
   /* 5e. Instellingen: wekelijks, backups en terugzetten. */
   d.getElementById('tab-instellingen').click();
   await slaap(300);

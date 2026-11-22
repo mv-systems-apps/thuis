@@ -46,7 +46,7 @@
   .dagen{display:flex;gap:4px}
   .dagen button{flex:1;min-width:0;height:44px;border:0;background:#E9E6F8;color:var(--paars);font-size:17px;font-weight:600}
   .dagen button[aria-checked="true"]{background:var(--paars);color:#FFFFFF}
-  input.tijd{height:44px;border:2px solid #CFCBE6;padding:0 10px;font-size:18px;background:#FFFFFF;color:var(--tekst)}
+  input.tijd{width:128px;flex:none;height:44px;border:2px solid #CFCBE6;padding:0 10px;font-size:18px;background:#FFFFFF;color:var(--tekst)}
   #scherm-instellingen.sub > :not(#backupScherm){display:none}
   .backupgroep{display:flex;flex-direction:column;gap:8px}
   .backuprij .nm{flex:1;line-height:1.3}
@@ -73,6 +73,10 @@
   .melding .knoppen{padding:0}
   /* Knoppen in een melding vullen de breedte: één knop over de hele breedte, twee naast elkaar elk de helft. */
   .melding .knoppen .knop{flex:1 1 0;min-width:0}
+  /* Systeemknoppen (in meldingen) omrand, zoals Afmelden, zodat ze zich onderscheiden
+     van de gewone, gevulde knoppen. Sluiten en Annuleren grijs omrand. */
+  .melding .knop{background:#FFFFFF;color:var(--paars);border:2px solid var(--paars)}
+  .melding .knop.tweede{color:var(--grijs);border-color:#CFCBE6}
   nav{flex-shrink:0;height:64px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#FFFFFF;border-top:1px solid var(--lijn);
       padding-bottom:env(safe-area-inset-bottom)}
   nav button{border:0;border-top:3px solid transparent;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
@@ -85,6 +89,8 @@
     background:rgba(20,179,191,.12);border:0;border-top:1px solid #14B3BF;color:var(--turkoois);font-size:16px;font-weight:600}
   #update-bar svg{width:18px;height:18px;stroke:var(--turkoois);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
   /* Invoer onderaan, boven de tabbalk: met de duim te bereiken en altijd in beeld. */
+  /* Kruisje om een zoekvak leeg te maken; alleen als er iets in staat. */
+  .wis{width:44px;flex-shrink:0;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
   .onderbalk{flex-shrink:0;padding:10px 14px 12px;background:#FFFFFF;border-top:1px solid var(--lijn);box-shadow:0 -4px 12px rgba(24,20,60,.06)}
   .onderbalk .invoerbalk{max-width:612px;margin:0 auto;height:56px;box-shadow:none}
   /* Tijdens het typen staan de treffers onderaan, vlak boven het vak. */
@@ -180,6 +186,9 @@
   #keuze .paneel{background:#FFFFFF;max-height:80dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
   #keuze .kop{display:flex;align-items:center;gap:8px;padding:6px 6px 4px 16px}
   #keuze h3{flex:1;min-width:0;margin:0;font-size:18px;color:var(--paars)}
+  /* Een titel met namen erin: de namen vet, de rest gewoon. */
+  #keuze h3.delen{font-weight:400}
+  #keuze h3.delen b{font-weight:700}
   #keuze .kruis{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
   #keuze .opties{flex:1;min-height:120px;overflow-y:auto}
   #keuze .optie{width:100%;min-height:56px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:18px;color:var(--tekst);text-align:left}
@@ -290,7 +299,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-006</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-007</div>
   </section>
 </main>
 
@@ -302,6 +311,7 @@
   <div class="invoerbalk">
     <button class="soortknop" id="invoerSoort" type="button" aria-haspopup="menu" aria-expanded="false"></button>
     <input id="invoerTekst" type="text" aria-label="Artikel zoeken of toevoegen" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     <button class="plusknop" id="invoerPlus" type="button" aria-label="Toevoegen">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
     </button>
@@ -311,6 +321,7 @@
 <div class="onderbalk" id="balk-winkels" hidden>
   <div class="invoerbalk">
     <input id="winkelsTekst" type="text" placeholder="Winkel" aria-label="Winkel zoeken of toevoegen" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     <button class="plusknop" id="winkelsPlus" type="button" aria-label="Toevoegen">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
     </button>
@@ -1966,7 +1977,7 @@ function toevoegen() {
   } else {
     handelen([{ actie: 'nieuw', soort: 'artikel', id: nieuweId(), velden: { naam, soort: LETTER_SOORT[scherm.nieuwSoort], op: t, opdoor: ik } }]);
   }
-  $('invoerTekst').value = '';
+  vakLeeg($('invoerTekst'));
   scherm.zoek = '';
   scherm.nieuwSoort = 'E';
   tekenSoortknop();
@@ -2025,6 +2036,7 @@ async function gegevensLaden() {
    lijst met alles wat past, uit alle secties. */
 const KRUIS = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
 const PIJL_RECHTS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>';
+const WIS_KNOP = '<button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>';
 function keuzeOptie(o, kies) {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
@@ -2053,14 +2065,21 @@ function keuzePaneel(titel, metZoek) {
   k.id = 'keuze';
   k.setAttribute('role', 'dialog');
   k.setAttribute('aria-modal', 'true');
-  k.setAttribute('aria-label', titel);
+  /* titel: tekst, of stukken waarin { vet: '…' } vet wordt (zoals bij meldingen). */
+  const delen = Array.isArray(titel) ? titel : [titel];
+  k.setAttribute('aria-label', delen.map((s) => (s && typeof s === 'object' ? s.vet : s)).join(''));
   k.innerHTML = '<div class="paneel"><div class="kop"><h3></h3><button class="kruis" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
     '<div class="opties"></div>' +
     (metZoek ? '<div class="zoek"><label for="keuzeZoek">Zoeken of toevoegen</label>' +
-    '<div class="zoekbalk"><input id="keuzeZoek" type="text" autocomplete="off" enterkeyhint="done">' +
+    '<div class="zoekbalk"><input id="keuzeZoek" type="text" autocomplete="off" enterkeyhint="done">' + WIS_KNOP +
     '<button class="plusknop" type="button" aria-label="Toevoegen">' +
     '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>' : '') + '</div>';
-  k.querySelector('h3').textContent = titel;
+  const h3 = k.querySelector('h3');
+  if (Array.isArray(titel)) h3.className = 'delen';
+  for (const s of delen) {
+    if (s && typeof s === 'object') { const b = document.createElement('b'); b.textContent = s.vet; h3.appendChild(b); }
+    else h3.appendChild(document.createTextNode(s));
+  }
   k.querySelector('.kruis').addEventListener('click', sluitKeuze);
   k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
   return k;
@@ -2163,7 +2182,7 @@ function waarLigtDit(a) {
   const w = huidigeWinkel();
   if (!w) { winkelKiezen(); return; }
   keuzeLijst({
-    titel: 'Waar ligt ' + a.naam + ' bij ' + w.naam + '?',
+    titel: ['Waar ligt ', { vet: a.naam }, ' bij ', { vet: w.naam }, '?'],
     secties: [{ opties: w.afdelingen.map((x) => ({ id: x.id, naam: x.naam })) }],
     kies: (afd) => handelen([{ actie: 'plaats', soort: 'artikel', id: a.id, winkel: w.id, afd }]),
     zoek: { placeholder: 'Afdeling', nieuw: (naam) => {
@@ -2525,7 +2544,7 @@ function slepenAan(lijstEl, w) {
 
 function winkelOpenen(id) {
   ws.open = id;
-  $('winkelsTekst').value = '';
+  vakLeeg($('winkelsTekst'));
   try { history.pushState({ thuisWinkel: id }, ''); } catch (e) { /* zonder geschiedenis: alleen de terugknop */ }
   tekenWinkels();
   $('midden').scrollTop = 0;
@@ -2533,11 +2552,11 @@ function winkelOpenen(id) {
 function winkelSluiten() {
   if (history.state && history.state.thuisWinkel) { history.back(); return; }
   ws.open = '';
-  $('winkelsTekst').value = '';
+  vakLeeg($('winkelsTekst'));
   tekenWinkels();
 }
 window.addEventListener('popstate', () => {
-  if (ws.open) { ws.open = ''; $('winkelsTekst').value = ''; sluitKeuze(); tekenWinkels(); }
+  if (ws.open) { ws.open = ''; vakLeeg($('winkelsTekst')); sluitKeuze(); tekenWinkels(); }
 });
 
 function winkelBewerken(w) {
@@ -2588,7 +2607,7 @@ function winkelsToevoegen() {
   const w = winkelOpId.get(ws.open);
   const v = schoonTekst(inp.value);
   if (!v) { inp.focus(); return; }
-  inp.value = '';
+  vakLeeg(inp);
   if (w) {
     if (!w.afdelingen.some((x) => normNaam(x.naam) === normNaam(v))) handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: nieuweId(), naam: v } }]);
     else tekenWinkels();
@@ -2798,6 +2817,22 @@ async function terugzetten(tekst, voorBewaren) {
     sync.bezig = false; tekenWolk();
   }
 }
+
+function vakLeeg(inp) { inp.value = ''; const w = inp.parentNode.querySelector('.wis'); if (w) w.hidden = true; }
+/* Het kruisje in elk zoekvak: zichtbaar zolang er tekst staat; een tik maakt het
+   vak leeg (met een input-event, zodat de lijst meteen bijwerkt) en houdt de focus. */
+document.addEventListener('input', (e) => {
+  const wis = e.target.parentNode && e.target.parentNode.querySelector && e.target.parentNode.querySelector('.wis');
+  if (wis && e.target.tagName === 'INPUT') wis.hidden = e.target.value === '';
+});
+document.addEventListener('click', (e) => {
+  const wis = e.target.closest && e.target.closest('.wis');
+  if (!wis) return;
+  const inp = wis.parentNode.querySelector('input');
+  inp.value = '';
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+  inp.focus();
+});
 
 /* ---------- vegen tussen de tabbladen (rondom) ---------- */
 /* Niet vanaf de rand (daar zit het terug-gebaar van Android), niet tijdens typen,

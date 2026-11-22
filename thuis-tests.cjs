@@ -420,6 +420,9 @@ controle('veiligheid: gegevens nooit via innerHTML (alleen vaste tekst, iconen e
   return !verdacht.length || verdacht.join(' | ');
 });
 
+controle('meldingen: systeemknoppen over de breedte en omrand (zoals Afmelden), niet gevuld', () =>
+  (/\.melding \.knoppen \.knop\{flex:1 1 0/.test(html) && /\.melding \.knop\{background:#FFFFFF;color:var\(--paars\);border:2px solid var\(--paars\)\}/.test(html)) || 'stijl ontbreekt');
+
 controle('rondjes: één definitie, gevuld even groot als de buitenkant van open (13,5 = 12,4 + 2,2/2)', () => {
   const r = (scripts.match(/const RONDJE = \{[\s\S]*?\n\};/) || [''])[0];
   if (!r) return 'RONDJE ontbreekt';
