@@ -107,6 +107,7 @@ async function start(od) {
   await slaap(600);
   return dom.window;
 }
+const overigeKop = (k) => [...k.querySelectorAll('.uitklapper')].find((u) => u.textContent.startsWith('Overige'));
 const naamVanRij = (r) => r.querySelector('.naam > span').textContent;
 const namenInLijst = (w) => [...w.document.querySelectorAll('#lijst .item')].map(naamVanRij);
 async function typ(w, tekst) {
@@ -247,9 +248,9 @@ const BEGIN = [
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
-  controle('winkelkeuze: AH met "1 artikel" (en wat), "Overige winkels" met "1 winkel" ingeklapt, kruisje, zoekvak onderaan',
-    JSON.stringify(zicht) === '["Albert HeijnBananen1 artikel","Overige winkels1 winkel"]' && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
-  k.querySelector('.uitklapper').click();
+  controle('winkelkeuze: AH onder "Nodig" (Bananen alleen daar), vet met paars icoon; "Overige winkels" ingeklapt, kruisje, zoekvak onderaan',
+    JSON.stringify(zicht) === '["Nodig1 winkel","Albert HeijnBananen1 artikel","Overige winkels1 winkel"]' && k.querySelector('.optie').classList.contains('sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
+  overigeKop(k).click();
   controle('winkelkeuze: uitklappen toont de overige winkels, niet nog eens de AH', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn,Lidl centrum');
   k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
   controle('keuzelijst: typen filtert (één keer, ook al staat hij in twee secties)', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn');
@@ -258,7 +259,7 @@ const BEGIN = [
 
   /* in de Lidl: Bananen ligt alleen bij de AH, dus niet hier; wat nog geen winkels heeft staat bovenaan */
   d.getElementById('winkelKies').click();
-  k = d.getElementById('keuze'); k.querySelector('.uitklapper').click();
+  k = d.getElementById('keuze'); overigeKop(k).click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
   await slaap(100);
   const eldersKop = d.querySelector('#winkelLijst .uitklap');
@@ -304,20 +305,31 @@ const BEGIN = [
   /* mandje per winkel: in een andere winkel begint de teller op 0 en is het mandje leeg */
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
-  k.querySelector('.uitklapper').click();
+  overigeKop(k).click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
   await slaap(50);
   controle('mandje per winkel: in de Lidl geen mandje van de AH; de voortgang (hele lijst) blijft 1',
     ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')) && /^1 van/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
   d.getElementById('winkelKies').click();
-  k = d.getElementById('keuze'); k.querySelector('.uitklapper').click();
+  k = d.getElementById('keuze'); overigeKop(k).click();
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Albert Heijn')).click();
   await slaap(50);
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze');
+  const koppen = [...k.querySelectorAll('.uitklapper')].map((u) => u.querySelector('span').textContent + ':' + u.getAttribute('aria-expanded')).join();
+  controle('winkelkeuze: zonder iets nodigs heet de groep "Te koop bij" en staat open', /Te koop bij:true|Nodig:true/.test(koppen) && !/Kan ook/.test(koppen) || /Nodig:true,Kan ook:false/.test(koppen), koppen);
+  k.querySelector('.kruis').click();
   controle('mandje per winkel: terug in de AH staat het er nog', [...d.querySelectorAll('#winkelLijst .afdkop')].some((h) => h.firstChild.textContent === 'In het mandje' && h.querySelector('.tal').textContent === '1 artikel'));
   const leeg = d.querySelector('#winkelLijst .icoonknop.amber');
   controle('mandje: leegmaakknop (mandje met kruis) bij het mandje', !!leeg && leeg.getAttribute('aria-label') === 'Mandje leegmaken');
   leeg.click();
   controle('mandje: leeggemaakt', ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')));
+  const mMandje = d.getElementById('m-mandje');
+  controle('mandje leeg: melding met Ongedaan maken en aftelbalkje', !!mMandje && /Mandje leeggemaakt/.test(mMandje.textContent) && !!mMandje.querySelector('button .aftel'));
+  mMandje.querySelector('button').click(); await slaap(20);
+  controle('mandje leeg ongedaan: Bananen weer in het mandje', [...d.querySelectorAll('#winkelLijst .afdkop')].some((h) => h.firstChild.textContent === 'In het mandje' && h.querySelector('.tal').textContent === '1 artikel'));
+  d.querySelector('#winkelLijst .icoonknop.amber').click();
+  d.getElementById('m-mandje').remove();
 
   /* vegen: van Boodschappen naar links → Doen, van Artikelen naar rechts → Winkels, rondom van Winkels naar Instellingen */
   const veeg = (x1, x2) => {
@@ -375,9 +387,9 @@ const BEGIN = [
   [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.querySelector('.nm').textContent === 'Brood').querySelector('.nm').click();
   d.getElementById('keuze').querySelector('.prul').click();
   controle('afdeling verwijderd: meteen weg, met Ongedaan maken', afdNamen() === 'Zuivel,AGF' && [...d.querySelectorAll('.melding button')].some((b) => b.textContent === 'Ongedaan maken'));
-  const mWeg = [...d.querySelectorAll('.melding')].find((m) => m.textContent.includes('Ongedaan maken'));
+  const mWeg = [...d.querySelectorAll('.melding')].find((m) => m.textContent.includes('Brood verwijderd'));
   controle('melding: naam vet, Ongedaan maken als hoofdknop', mWeg.querySelector('p b').textContent === 'Brood' && !mWeg.querySelector('button').classList.contains('tweede'), mWeg.innerHTML);
-  [...d.querySelectorAll('.melding button')].find((b) => b.textContent === 'Ongedaan maken').click();
+  mWeg.querySelector('button').click();
   controle('ongedaan maken: Brood terug', afdNamen() === 'Zuivel,AGF,Brood', afdNamen());
   /* favoriet en hernoemen van de winkel */
   d.querySelector('#winkelDetail .ster').click();
@@ -629,4 +641,4 @@ const BEGIN = [
 
   console.log((fout ? 'FOUT' : 'OK') + ': ' + goed + ' goed, ' + fout + ' fout  (' + path.basename(path.dirname(APP)) + '/' + path.basename(APP) + ')');
   process.exit(fout ? 1 : 0);
-})().catch((e) => { console.log('FOUT  test kon niet draaien — ' + e.message); process.exit(1); });
+})().catch((e) => { console.log('FOUT  test kon niet draaien — ' + e.message + (process.env.STACK ? e.stack : '')); process.exit(1); });

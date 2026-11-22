@@ -384,6 +384,10 @@ controle('winkel: Gamma — geen melk, wel schroeven', () => {
   const ind = K.winkelIndeling(AL, win('gam01'));
   return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam).join() + '|' + ind.elders.map((a) => a.naam).join(), 'Cadeau|IJzerwaren|Melk');
 });
+controle('winkelkeuze: nodig = iets dat nergens anders te koop is; ook elders telt mee maar maakt niet nodig', () => {
+  const t = K.winkelTellingen(AL, WL).map((x) => x.naam + ':' + (x.moet ? 'nodig' : 'kan') + ':' + x.alleen.join('+') + '/' + x.ook.join('+')).join();
+  return gelijk(t, 'Albert Heijn:kan:/Melk,Gamma:nodig:Schroeven/,Plus:kan:/Melk');
+});
 controle('winkelkeuze: alleen waar iets is vastgelegd, meeste eerst; na kopen valt een winkel weg', () => {
   const t1 = K.winkelTellingen(AL, WL).map((x) => x.naam + ' ' + x.aantal).join();
   const t2 = K.winkelTellingen(AL.map((a) => a.naam === 'Melk' ? Object.assign({}, a, { op: '' }) : a), WL).map((x) => x.naam).join();

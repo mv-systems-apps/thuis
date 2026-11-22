@@ -233,10 +233,15 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
-- Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?": de
-  winkels waar je iets van de lijst kunt halen (alleen wat bij die winkel is
-  vastgelegd telt), met het aantal, meeste eerst, bij gelijk aantal de laatst
-  gekozen bovenaan; bij een of twee artikelen staan ze eronder. Rechts "2
+- Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?" met
+  gelijke koppen (paars op lichtpaars, rechts het aantal winkels): "Nodig"
+  (winkels met iets dat nergens anders te koop is; onder de naam die
+  artikelen, grijs "+ …" wat ook elders kan), "Kan ook" (alles ook elders;
+  artikelen grijs; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels vet met een
+  paars icoon en ingeklapt "Overige winkels". De
+  gekozen winkel heeft een lichtpaarse regel met het label "geselecteerd".
+  Alleen wat bij een winkel is vastgelegd telt, met het aantal, meeste eerst,
+  bij gelijk aantal de gekozen bovenaan; bij een of twee artikelen staan ze eronder. Rechts "2
   artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
   (alleen wat er niet al boven staat, rechts "2 winkels"). Kruisje rechtsboven; onderaan
   "Zoeken of toevoegen" (placeholder "Winkel", + voegt toe). De laatste keuze
@@ -255,7 +260,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Het mandje blijft staan tot je het leegmaakt: rechts naast het kopje "In het
   mandje" staat een icoonknop (mandje met kruis, "Mandje leegmaken"). Het mandje hoort bij de telefoon (niet in
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
-  groepje uit beeld; de aankoopdatums blijven. Er is geen "Klaar". Later
+  groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar". Later
   eventueel een instelling "na x dagen vanzelf leeg".
 - Het mandje is per winkel: "In het mandje" toont alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
   je elders afvinkte, staat daar weer als je die winkel kiest.

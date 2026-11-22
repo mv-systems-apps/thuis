@@ -226,10 +226,16 @@
   #keuze .optie{width:100%;min-height:56px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:18px;color:var(--tekst);text-align:left}
   #keuze .optie .nm{flex:1;min-width:0;line-height:1.3;overflow-wrap:anywhere}
   #keuze .optie .sub{display:block;font-size:16px;color:var(--grijs)}
-  #keuze .optie.actief{color:var(--paars);font-weight:700}
+  #keuze .optie.actief{color:var(--paars);font-weight:700;background:#F1EFFB}
   #keuze .optie.actief .sub{font-weight:400}
+  #keuze .optie.sterk .nm{font-weight:700}
+  #keuze .optie.sterk .sub{font-weight:400}
+  #keuze .optie .label{margin-left:8px;padding:1px 8px;background:var(--paars);color:#FFFFFF;font-size:14px;font-weight:600;vertical-align:2px;white-space:nowrap}
+  #keuze .optie .sub .grijs{color:var(--grijs)}
+  #keuze .optie.metsub .sub{color:var(--tekst)}
   #keuze .optie .tal,#keuze .uitklapper .tal{flex:0 0 auto;font-size:17px;font-weight:400;color:var(--grijs)}
-  #keuze .uitklapper{width:100%;min-height:48px;border:0;border-top:1px solid var(--lijn);background:#FAFAFD;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:17px;font-weight:600;color:var(--grijs);text-align:left}
+  /* Alle koppen in een keuzelijst gelijk: paars op lichtpaars, rechts het aantal. */
+  #keuze .uitklapper{width:100%;min-height:46px;border:0;border-top:1px solid var(--lijn);background:#E9E6F8;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:17px;font-weight:700;color:var(--paars);text-align:left}
   #keuze .uitklapper span{flex:1}
   #keuze .leeg{padding:14px 16px;font-size:17px;color:var(--zacht)}
   #keuze .zoek{flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:10px 14px 14px;border-top:1px solid var(--lijn);background:var(--achter)}
@@ -337,7 +343,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-012</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-013</div>
   </section>
 </main>
 
@@ -1036,7 +1042,11 @@ function winkelTellingen(artikelen, winkels) {
   const uit = [];
   for (const w of winkels) {
     const hier = artikelen.filter((a) => a.op && a.plekken.some((p) => p.winkel === w.id));
-    if (hier.length) uit.push({ id: w.id, naam: w.naam, aantal: hier.length, artikelen: hier.map((a) => a.naam) });
+    if (!hier.length) continue;
+    /* alleen: nergens anders te koop (dan moet je erlangs); ook: ook elders. */
+    const alleen = hier.filter((a) => a.plekken.length === 1).map((a) => a.naam);
+    const ook = hier.filter((a) => a.plekken.length > 1).map((a) => a.naam);
+    uit.push({ id: w.id, naam: w.naam, aantal: hier.length, artikelen: hier.map((a) => a.naam), alleen, ook, moet: alleen.length > 0 });
   }
   return uit.sort((x, y) => y.aantal - x.aantal || SORTEER.compare(x.naam, y.naam));
 }
@@ -2126,9 +2136,20 @@ const WIS_KNOP = '<button class="wis" type="button" aria-label="Leegmaken" hidde
 function keuzeOptie(o, kies) {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
-  b.innerHTML = '<span class="nm"></span>' + (o.aantal ? '<span class="tal"></span>' : '');
+  b.innerHTML = (o.icoon || '') + '<span class="nm"></span>' + (o.aantal ? '<span class="tal"></span>' : '');
+  if (o.sterk) b.classList.add('sterk');
+  if (Array.isArray(o.sub)) b.classList.add('metsub');
   b.querySelector('.nm').textContent = o.naam;
-  if (o.sub) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = o.sub; b.querySelector('.nm').appendChild(s); }
+  if (o.actief && o.label) { const l = document.createElement('span'); l.className = 'label'; l.textContent = o.label; b.querySelector('.nm').appendChild(l); }
+  /* sub: tekst, of stukken waarvan { grijs: '…' } grijs wordt. */
+  if (o.sub) {
+    const s = document.createElement('span'); s.className = 'sub';
+    for (const d of Array.isArray(o.sub) ? o.sub : [o.sub]) {
+      if (d && typeof d === 'object') { const g = document.createElement('span'); g.className = 'grijs'; g.textContent = d.grijs; s.appendChild(g); }
+      else s.appendChild(document.createTextNode(d));
+    }
+    b.querySelector('.nm').appendChild(s);
+  }
   if (o.aantal) b.querySelector('.tal').textContent = telTekst(o.aantal, 'artikel', 'artikelen');
   if (o.actief) b.setAttribute('aria-current', 'true');
   b.addEventListener('click', () => { sluitKeuze(); kies(o.id); });
@@ -2259,20 +2280,31 @@ function nieuwGezien() {
 document.addEventListener('visibilitychange', () => { if (document.hidden) nieuwGezien(); });
 function mandjeBewaren() { bewaar('mandje', Array.from(winkel.mandje.values())); }
 
+const ICOON_WINKEL = (kleur) => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="' + kleur + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M4 9l1.5-5h13L20 9"></path><path d="M4 9h16v11H4z"></path><path d="M10 20v-5h4v5"></path></svg>';
+/* "Waar ga je heen?": eerst de winkels die nodig zijn (iets dat nergens
+   anders te koop is), dan wat ook kan, dan ingeklapt de overige winkels. */
 function winkelKiezen() {
   const tel = winkelTellingen(artikelen, winkels);
-  /* Bij een gelijk aantal staat de laatst gekozen winkel bovenaan. */
+  /* Bij een gelijk aantal staat de gekozen winkel bovenaan. */
   tel.sort((x, y) => y.aantal - x.aantal || (y.id === winkel.id) - (x.id === winkel.id) || SORTEER.compare(x.naam, y.naam));
+  const optie = (x) => ({
+    id: x.id, naam: x.naam, aantal: x.aantal, actief: x.id === winkel.id, label: 'geselecteerd', sterk: true,
+    icoon: ICOON_WINKEL('#4B3CC0'),
+    /* Wat alleen hier te koop is gewoon, wat ook elders kan grijs. */
+    sub: (x.alleen.length ? [x.alleen.join(', ')] : []).concat(x.ook.length ? [{ grijs: (x.alleen.length ? ' + ' : '') + x.ook.join(', ') }] : [])
+  });
+  const moet = tel.filter((x) => x.moet), kan = tel.filter((x) => !x.moet);
+  const rest = winkels.filter((w) => !tel.some((x) => x.id === w.id));
+  const secties = [];
+  if (moet.length) secties.push({ titel: 'Nodig', tal: telTekst(moet.length, 'winkel', 'winkels'), opties: moet.map(optie) });
+  /* "Kan ook" pak je pas als het alsnog moet: ingeklapt. Is er niets nodig,
+     dan heet die groep "Te koop bij" en staat hij open. */
+  if (kan.length) secties.push({ titel: moet.length ? 'Kan ook' : 'Te koop bij', ingeklapt: moet.length > 0, tal: telTekst(kan.length, 'winkel', 'winkels'), opties: kan.map(optie) });
+  if (rest.length) secties.push({ titel: tel.length ? 'Overige winkels' : '', ingeklapt: tel.length > 0, tal: telTekst(rest.length, 'winkel', 'winkels'),
+    opties: rest.map((w) => ({ id: w.id, naam: w.naam, actief: w.id === winkel.id, label: 'geselecteerd' })) });
   keuzeLijst({
     titel: 'Waar ga je heen?',
-    secties: [
-      { opties: tel.map((x) => ({ id: x.id, naam: x.naam, aantal: x.aantal, actief: x.id === winkel.id,
-          sub: x.id === winkel.id ? 'laatst gekozen' : x.aantal <= 2 ? x.artikelen.join(', ') : '' })) },
-      /* Overige: alleen wat er niet al boven staat. */
-      { titel: tel.length ? 'Overige winkels' : '', ingeklapt: tel.length > 0,
-        tal: telTekst(winkels.length - tel.length, 'winkel', 'winkels'),
-        opties: winkels.filter((w) => !tel.some((x) => x.id === w.id)).map((w) => ({ id: w.id, naam: w.naam, actief: w.id === winkel.id })) }
-    ],
+    secties,
     kies: (id) => kiesWinkel(id),
     zoek: { placeholder: 'Winkel', nieuw: (naam) => {
       const id = nieuweId();
@@ -2353,10 +2385,20 @@ function terugOpLijst(id) {
 }
 
 function mandjeHier() { return Array.from(winkel.mandje.values()).filter((m) => m.winkel === winkel.id); }
+/* Leegmaken haalt het groepje uit beeld (de aankopen blijven); 6 s terug te zetten. */
 function mandjeLeegmaken() {
-  for (const m of mandjeHier()) if (!winkel.vertraagd.has(m.id)) winkel.mandje.delete(m.id);
+  const weg = mandjeHier().filter((m) => !winkel.vertraagd.has(m.id));
+  for (const m of weg) winkel.mandje.delete(m.id);
   mandjeBewaren();
   tekenWinkel();
+  const id = 'm-mandje';
+  melding(id, 'Mandje leeggemaakt.', [{ tekst: 'Ongedaan maken', aftel: ONGEDAAN, actie: () => {
+    meldingWeg(id);
+    for (const m of weg) if (!winkel.mandje.has(m.id)) winkel.mandje.set(m.id, m);
+    mandjeBewaren();
+    tekenWinkel();
+  } }], 'info');
+  setTimeout(() => meldingWeg(id), ONGEDAAN);
 }
 
 /* Eén definitie voor alle rondjes: 28 px; het gevulde rondje is even groot als
