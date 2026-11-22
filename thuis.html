@@ -64,9 +64,33 @@
   .plekrij .sub.leeg2{color:#8D96A6}
   .toevoegrij{width:100%;min-height:52px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--paars);font-size:18px;font-weight:600;text-align:left}
   .gekochtregel{padding:12px 14px;font-size:17px;color:var(--grijs)}
-  #balk-artikel .bewerkknoppen{max-width:612px;margin:0 auto;display:flex;gap:10px}
+  #balk-actie .bewerkknoppen,#balk-artikel .bewerkknoppen{max-width:612px;margin:0 auto;display:flex;gap:10px}
   .bewerkknoppen .prul{width:56px;height:56px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FBE4E5}
-  #balk-artikel .knop{flex:1;min-height:56px;font-size:19px}
+  #balk-artikel .knop,#balk-actie .knop{flex:1;min-height:56px;font-size:19px}
+  /* ---------- Doen ---------- */
+  #scherm-doen.sub > :not(#actieScherm){display:none}
+  #doenLijst{display:flex;flex-direction:column;gap:12px}
+  #actieScherm{display:flex;flex-direction:column;gap:12px}
+  #actieScherm .wdkop{padding:0 6px 0 16px}
+  #actieScherm .veld{padding:0}
+  #actieScherm textarea,#actieScherm input{min-height:54px;border:2px solid #CFCBE6;padding:12px;font:inherit;font-size:19px;line-height:1.3;width:100%;box-sizing:border-box;resize:none;overflow:hidden;background:#FFFFFF;color:var(--tekst)}
+  #actieScherm textarea:focus,#actieScherm input:focus{outline:none;border-color:var(--paars)}
+  .kopbalk.laat{background:#FBF0DA}
+  .kopbalk.laat h2,.kopbalk.laat .kopnaam{color:#A84A0A}
+  .actierij{display:flex;align-items:center;gap:8px;min-height:56px;padding:4px 10px 4px 8px;border-top:1px solid var(--rij);background:#FFFFFF}
+  .actierij:first-child{border-top:0}
+  .actierij .tekst{flex:1;min-width:0;min-height:44px;border:0;background:transparent;padding:4px 0;display:flex;flex-direction:column;justify-content:center;text-align:left;color:var(--tekst)}
+  .actierij .nm{font-size:19px;line-height:1.3;overflow-wrap:anywhere}
+  .actierij .wanneer{font-size:16px;color:var(--grijs);line-height:1.3}
+  .actierij .wanneer.laat{color:#A84A0A}
+  .actierij.afgerond .nm{text-decoration:line-through;color:#6B7482}
+  .actierij.vertrekt{opacity:.55}
+  .segment{display:flex;gap:4px}
+  .segment button{flex:1;min-width:0;height:44px;border:0;padding:0;background:#E9E6F8;color:var(--paars);font-size:16px;font-weight:600}
+  .segment button[aria-checked="true"]{background:var(--paars);color:#FFFFFF}
+  .blader{display:flex;align-items:center;height:52px;background:#FFFFFF;border:1px solid var(--lijn)}
+  .blader button{width:52px;height:50px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+  .blader span{flex:1;text-align:center;font-size:19px;font-weight:600}
   .backupgroep{display:flex;flex-direction:column}
   .synctoestand{padding:14px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--rij)}
   .synctoestand .regel{display:flex;align-items:center;gap:12px}
@@ -163,7 +187,7 @@
   .item .naam{display:block;font-size:19px;line-height:1.25;overflow-wrap:anywhere;padding:4px 0}
   /* De notitie onder de winkels, zelfde letter, in paars. */
   .notitie .link{font-weight:600;text-decoration:underline;cursor:pointer}
-  .item .notitie,.wrij .notitie{display:block;font-size:16px;font-weight:400;color:var(--paars);line-height:1.3;margin-top:-2px;padding-bottom:4px;overflow-wrap:anywhere}
+  .item .notitie,.wrij .notitie,.actierij .notitie{display:block;font-size:16px;font-weight:400;color:var(--paars);line-height:1.3;margin-top:-2px;padding-bottom:4px;overflow-wrap:anywhere}
   .item .winkels,.wrij .winkels{display:block;font-size:16px;font-weight:400;color:var(--grijs);line-height:1.3;margin-top:-2px;padding-bottom:4px}
   .item .naam .nieuw{margin-left:6px;white-space:nowrap}
   .item .hint{font-size:17px;color:var(--grijs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -326,10 +350,8 @@
   </section>
 
   <section class="scherm" id="scherm-doen" aria-labelledby="tab-doen" hidden>
-    <div class="kaart leeg">
-      <b>Nog geen acties</b>
-      <span>Hier komen de dingen die gedaan moeten worden.</span>
-    </div>
+    <div id="doenLijst"></div>
+    <div id="actieScherm" hidden></div>
   </section>
 
   <section class="scherm" id="scherm-instellingen" aria-labelledby="tab-instellingen" hidden>
@@ -384,7 +406,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-016</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-017</div>
   </section>
 </main>
 
@@ -404,6 +426,21 @@
   <div class="bewerkknoppen">
     <button class="prul" id="artikelWeg" type="button" aria-label="Artikel verwijderen"></button>
     <button class="knop" id="artikelOpslaan" type="button">Opslaan</button>
+  </div>
+</div>
+<div class="onderbalk" id="balk-doen" hidden>
+  <div class="invoerbalk">
+    <input id="doenTekst" type="text" placeholder="Actie" aria-label="Actie zoeken of toevoegen" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    <button class="plusknop" id="doenPlus" type="button" aria-label="Toevoegen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+    </button>
+  </div>
+</div>
+<div class="onderbalk" id="balk-actie" hidden>
+  <div class="bewerkknoppen">
+    <button class="prul" id="actieWeg" type="button" aria-label="Actie verwijderen"></button>
+    <button class="knop" id="actieOpslaan" type="button">Opslaan</button>
   </div>
 </div>
 <div class="onderbalk" id="balk-winkels" hidden>
@@ -793,6 +830,8 @@ function handelZet(model, h, verz, r) {
   if (h.soort === 'artikel' && h.veld === 'weg' && h.nieuw && !DATUM.test(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };
   if (h.soort === 'artikel' && h.veld === 'aantal' && h.nieuw && !AANTAL.test(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };
   if (h.soort === 'artikel' && h.veld === 'link' && h.nieuw && veiligeLink(h.nieuw) !== h.nieuw) return { status: 'vervallen', reden: 'ongeldig' };
+  if (h.soort === 'actie' && h.nieuw && ((h.veld === 'link' && veiligeLink(h.nieuw) !== h.nieuw) || (h.veld === 'datum' && !periodeSoort(h.nieuw))
+      || (h.veld === 'herhaal' && HERHAAL_BIJ.dag.indexOf(h.nieuw) === -1))) return { status: 'vervallen', reden: 'ongeldig' };
   const doel = h.soort === 'actie' ? r.velden : r;
   const cur = doel[h.veld] || '';
   const oud = h.oud || '', nieuw = h.nieuw || '';
@@ -1144,6 +1183,94 @@ function winkelTellingen(artikelen, winkels) {
   }
   return uit.sort((x, y) => SORTEER.compare(x.naam, y.naam));
 }
+/* ---------- acties (Doen) ---------- */
+/* Een periode is een dag (2026-11-27), maand (2026-12), kwartaal (2026-K4) of
+   jaar (2027). Herhalen kan per week, maand, kwartaal of jaar, niet fijner dan
+   de periode zelf (een maand herhaal je niet per week). */
+const PERIODE = { dag: /^\d{4}-\d{2}-\d{2}$/, maand: /^\d{4}-\d{2}$/, kwartaal: /^\d{4}-K[1-4]$/, jaar: /^\d{4}$/ };
+const HERHAAL_BIJ = { dag: ['week', 'maand', 'kwartaal', 'jaar'], maand: ['maand', 'kwartaal', 'jaar'], kwartaal: ['kwartaal', 'jaar'], jaar: ['jaar'] };
+const MAANDEN_LANG = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+const WEEKDAGEN = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
+function periodeSoort(d) {
+  for (const k of Object.keys(PERIODE)) {
+    if (!PERIODE[k].test(d || '')) continue;
+    if (k === 'dag' && datumTekst(new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10))) !== d) return '';
+    if (k === 'maand' && !(+d.slice(5, 7) >= 1 && +d.slice(5, 7) <= 12)) return '';
+    return k;
+  }
+  return '';
+}
+function dagVan(t) { return new Date(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10)); }
+/* Eerste en laatste dag van een periode (JJJJ-MM-DD). */
+function periodeGrenzen(d) {
+  const s = periodeSoort(d), j = +d.slice(0, 4);
+  if (s === 'dag') return { begin: d, eind: d };
+  const [m1, m2] = s === 'maand' ? [+d.slice(5, 7), +d.slice(5, 7)] : s === 'kwartaal' ? [3 * +d.slice(6) - 2, 3 * +d.slice(6)] : [1, 12];
+  return { begin: datumTekst(new Date(j, m1 - 1, 1)), eind: datumTekst(new Date(j, m2, 0)) };
+}
+/* n stappen verder (of terug) in eenheden van "stap" (dag, week, maand, kwartaal, jaar). */
+function verschuif(d, n, stap) {
+  const s = periodeSoort(d);
+  if (s === 'dag') {
+    const x = dagVan(d);
+    if (stap === 'dag' || stap === 'week') { x.setDate(x.getDate() + n * (stap === 'week' ? 7 : 1)); return datumTekst(x); }
+    const maanden = n * (stap === 'maand' ? 1 : stap === 'kwartaal' ? 3 : 12);
+    const doel = new Date(x.getFullYear(), x.getMonth() + maanden, 1);
+    const laatste = new Date(doel.getFullYear(), doel.getMonth() + 1, 0).getDate();
+    return datumTekst(new Date(doel.getFullYear(), doel.getMonth(), Math.min(x.getDate(), laatste)));
+  }
+  if (s === 'maand') {
+    const x = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1 + n * (stap === 'kwartaal' ? 3 : stap === 'jaar' ? 12 : 1), 1);
+    return x.getFullYear() + '-' + tweeCijfers(x.getMonth() + 1);
+  }
+  if (s === 'kwartaal') {
+    const k = +d.slice(0, 4) * 4 + (+d.slice(6) - 1) + n * (stap === 'jaar' ? 4 : 1);
+    return Math.floor(k / 4) + '-K' + (k % 4 + 1);
+  }
+  return String(+d + n);
+}
+/* De volgende keer van een herhalende actie: de eerste die niet al voorbij is. */
+function volgendeKeer(d, herhaal, vandaag) {
+  let x = verschuif(d, 1, herhaal);
+  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal);
+  return x;
+}
+/* Te laat (periode voorbij), deze week (begint uiterlijk zondag), later, of geen. */
+function actieGroep(d, vandaag) {
+  if (!periodeSoort(d)) return 'geen';
+  const g = periodeGrenzen(d);
+  if (g.eind < vandaag) return 'laat';
+  const v = dagVan(vandaag);
+  const zondag = datumTekst(new Date(v.getFullYear(), v.getMonth(), v.getDate() + (7 - v.getDay()) % 7));
+  return g.begin <= zondag ? 'week' : 'later';
+}
+/* Een andere soort periode kiezen: rond de huidige (of vandaag). */
+function naarSoort(d, soort, vandaag) {
+  const b = periodeSoort(d) ? periodeGrenzen(d).begin : vandaag;
+  if (soort === 'dag') return b;
+  if (soort === 'maand') return b.slice(0, 7);
+  if (soort === 'kwartaal') return b.slice(0, 4) + '-K' + Math.ceil(+b.slice(5, 7) / 3);
+  if (soort === 'jaar') return b.slice(0, 4);
+  return '';
+}
+/* Kort in de lijst ("do 27 nov", "december", "K4", "2027"), het jaar alleen als
+   het niet dit jaar is; lang bij het bladeren. */
+function periodeTekst(d, vandaag, lang) {
+  const s = periodeSoort(d), j = d.slice(0, 4), ander = lang || j !== vandaag.slice(0, 4);
+  if (s === 'dag') { const x = dagVan(d); return WEEKDAGEN[x.getDay()] + ' ' + x.getDate() + ' ' + (lang ? MAANDEN_LANG : MAANDEN)[x.getMonth()] + (ander ? ' ' + j : ''); }
+  if (s === 'maand') return MAANDEN_LANG[+d.slice(5, 7) - 1] + (ander ? ' ' + j : '');
+  if (s === 'kwartaal') return 'K' + d.slice(6) + (ander ? ' ' + j : '');
+  return s === 'jaar' ? j : '';
+}
+/* Open: nooit afgerond, of herhalend (klaar is dan de laatste keer). */
+function actieLijst(model) {
+  return opNaam(model.acties).map((r) => {
+    const v = r.velden, datum = periodeSoort(v.datum) ? v.datum : '';
+    const herhaal = datum && HERHAAL_BIJ[periodeSoort(datum)].indexOf(v.herhaal) !== -1 ? v.herhaal : '';
+    return { id: r.id, naam: r.naam, datum, herhaal, notitie: v.notitie || '', link: veiligeLink(v.link) || '', klaar: v.klaar || '', door: v.door || '',
+      open: !v.klaar || !!herhaal, begin: datum ? periodeGrenzen(datum).begin : '' };
+  });
+}
 /* == einde kern == */
 
 
@@ -1265,6 +1392,10 @@ function toonScherm(naam) {
     if (bwGewijzigd()) { artikelVraag(() => toonScherm(naam)); return; }
     artikelDicht(true);
   }
+  if (bd.id) {
+    if (bdGewijzigd()) { actieVraag(() => toonScherm(naam)); return; }
+    actieDicht(true);
+  }
   if (vorig !== naam) nieuwGezien();
   for (const b of document.querySelectorAll('nav button')) {
     const aan = b.dataset.scherm === naam;
@@ -1274,7 +1405,10 @@ function toonScherm(naam) {
   $('balk-boodschappen').hidden = naam !== 'boodschappen';
   $('balk-winkels').hidden = naam !== 'winkels';
   $('balk-artikel').hidden = true;
+  $('balk-doen').hidden = naam !== 'doen';
+  $('balk-actie').hidden = true;
   $('midden').scrollTop = 0;
+  if (naam === 'doen') tekenDoen();
   if (naam === 'winkel') { tekenWinkel(); planSync(0); }
   if (naam === 'winkels') tekenWinkels();
   if (naam === 'boodschappen') tekenBoodschappen();
@@ -2320,7 +2454,7 @@ function typenBijwerken() {
   const open = !!actief && h < volleHoogte.h * 0.8;
   document.body.classList.toggle('typen', open);
 }
-for (const id of ['invoerTekst', 'winkelsTekst']) {
+for (const id of ['invoerTekst', 'winkelsTekst', 'doenTekst']) {
   $(id).addEventListener('focus', () => setTimeout(typenBijwerken, 300));
   $(id).addEventListener('blur', () => setTimeout(typenBijwerken, 150));
 }
@@ -3274,8 +3408,262 @@ function tekenAlles() {
   else if (!$('scherm-boodschappen').hidden) tekenBoodschappen();
   tekenWinkel();
   tekenWinkels();
+  if (bd.id) actieBijwerken(); else if (!$('scherm-doen').hidden) tekenDoen();
   if (!$('scherm-instellingen').hidden) tekenInstellingen();
 }
+
+/* ---------- tabblad Doen ---------- */
+/* Groepen: te laat, deze week, later, zonder periode; vroegste eerst. Afvinken:
+   een herhalende actie schuift door naar de volgende keer (met Ongedaan maken),
+   een gewone blijft even grijs staan en gaat dan naar "Afgerond". */
+const doen = { afgerondOpen: false, vertrekt: new Map() };
+const HERHAAL_TEKST = { week: 'week', maand: 'maand', kwartaal: 'kwartaal', jaar: 'jaar' };
+const HERHAAL_IC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:3px"><path d="M4 12a8 8 0 0 1 14-5.3L20 9"></path><path d="M20 4v5h-5"></path><path d="M20 12a8 8 0 0 1-14 5.3L4 15"></path><path d="M4 20v-5h5"></path></svg>';
+function actieRij(a, vandaag, groep) {
+  const rij = document.createElement('div');
+  const klaar = !a.open || doen.vertrekt.has(a.id);
+  rij.className = 'actierij' + (klaar ? ' afgerond' : '') + (doen.vertrekt.has(a.id) ? ' vertrekt' : '');
+  rij.dataset.id = a.id;
+  rij.innerHTML = '<button class="rondje" type="button"></button><button class="tekst" type="button"><span class="nm"></span></button>';
+  const r = rij.querySelector('.rondje');
+  r.innerHTML = klaar ? RONDJE.gedaan : RONDJE.leeg;
+  r.setAttribute('aria-label', klaar ? a.naam + ' heropenen' : a.naam + ' afronden');
+  rij.querySelector('.nm').textContent = a.naam;
+  const tekst = rij.querySelector('.tekst');
+  if (!a.open) {
+    const w = document.createElement('span'); w.className = 'wanneer';
+    w.textContent = 'afgerond ' + periodeTekst(a.klaar.slice(0, 10), vandaag);
+    tekst.appendChild(w);
+  } else if (a.datum) {
+    const w = document.createElement('span'); w.className = 'wanneer' + (groep === 'laat' ? ' laat' : '');
+    w.textContent = periodeTekst(a.datum, vandaag);
+    if (a.herhaal) { w.appendChild(document.createTextNode(' · ')); const h = document.createElement('span'); h.innerHTML = HERHAAL_IC; w.appendChild(h); w.appendChild(document.createTextNode(HERHAAL_TEKST[a.herhaal])); }
+    tekst.appendChild(w);
+  }
+  if (a.notitie || a.link) tekst.appendChild(notitieRegel(a));
+  return rij;
+}
+function doenGroep(doel, titel, lijst, vandaag, groep, extra) {
+  const sec = document.createElement('section'); sec.className = 'blok';
+  sec.innerHTML = '<div class="kopbalk' + (groep === 'laat' ? ' laat' : '') + '"><h2></h2><span class="tal"></span></div><div class="lijst"></div>';
+  sec.querySelector('h2').textContent = titel;
+  sec.querySelector('.tal').textContent = telTekst(lijst.length, 'actie', 'acties');
+  for (const a of lijst) sec.querySelector('.lijst').appendChild(actieRij(a, vandaag, groep));
+  if (extra) extra(sec);
+  doel.appendChild(sec);
+}
+function tekenDoen() {
+  if (!model || $('scherm-doen').hidden || bd.id) return;
+  const doel = $('doenLijst');
+  doel.innerHTML = '';
+  if (!gekoppeld) { const p = document.createElement('div'); p.className = 'kaart leeg'; p.textContent = 'Nog niet gekoppeld'; doel.appendChild(p); return; }
+  const vandaag = datumTekst(new Date());
+  const z = zoekVorm($('doenTekst').value);
+  const alle = actieLijst(model).filter((a) => !z || zoekVorm(a.naam).indexOf(z) !== -1);
+  const open = alle.filter((a) => a.open || doen.vertrekt.has(a.id))
+    .sort((x, y) => (x.begin || '9') < (y.begin || '9') ? -1 : (x.begin || '9') > (y.begin || '9') ? 1 : SORTEER.compare(x.naam, y.naam));
+  for (const [g, titel] of [['laat', 'Te laat'], ['week', 'Deze week'], ['later', 'Later'], ['geen', 'Zonder periode']]) {
+    const deel = open.filter((a) => actieGroep(a.datum, vandaag) === g);
+    if (deel.length) doenGroep(doel, titel, deel, vandaag, g);
+  }
+  const af = alle.filter((a) => !a.open && !doen.vertrekt.has(a.id)).sort((x, y) => (x.klaar < y.klaar ? 1 : -1));
+  if (af.length) {
+    const sec = document.createElement('section'); sec.className = 'blok'; sec.id = 'afgerond';
+    sec.innerHTML = '<button class="kopbalk" type="button"><span class="kopnaam">Afgerond</span><span class="tal"></span>' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + (doen.afgerondOpen || z ? 90 : 0) + 'deg)"><path d="M9 5l7 7-7 7"></path></svg></button>';
+    const kop = sec.querySelector('.kopbalk');
+    kop.setAttribute('aria-expanded', String(doen.afgerondOpen || !!z));
+    sec.querySelector('.tal').textContent = telTekst(af.length, 'actie', 'acties');
+    kop.addEventListener('click', () => { doen.afgerondOpen = !doen.afgerondOpen; tekenDoen(); });
+    if (doen.afgerondOpen || z) {
+      const l = document.createElement('div'); l.className = 'lijst';
+      for (const a of af) l.appendChild(actieRij(a, vandaag, 'af'));
+      sec.appendChild(l);
+    } else kop.style.borderBottom = '1px solid var(--lijn)';
+    doel.appendChild(sec);
+  }
+  if (!doel.children.length) { const p = document.createElement('div'); p.className = 'kaart leeg'; p.textContent = z ? 'Niets gevonden' : 'Geen acties'; doel.appendChild(p); }
+}
+
+function actieAfronden(a) {
+  const t = tijdstipTekst(new Date()), vandaag = datumTekst(new Date());
+  const oud = model.acties.get(a.id).velden;
+  /* Geen eigenaar: alleen wanneer, niet wie. */
+  const hs = [{ actie: 'zet', soort: 'actie', id: a.id, veld: 'klaar', oud: oud.klaar || '', nieuw: t }];
+  if (a.herhaal) {
+    const volgende = volgendeKeer(a.datum, a.herhaal, vandaag);
+    hs.push({ actie: 'zet', soort: 'actie', id: a.id, veld: 'datum', oud: a.datum, nieuw: volgende });
+    handelen(hs);
+    const terug = hs.map((h) => Object.assign({}, h, { oud: h.nieuw, nieuw: h.oud }));
+    const id = 'm-actie-' + willekeurig(6);
+    melding(id, [{ vet: a.naam }, ' afgerond; volgende keer ', { vet: periodeTekst(volgende, vandaag) }, '.'],
+      [{ tekst: 'Ongedaan maken', aftel: ONGEDAAN, actie: () => { meldingWeg(id); handelen(terug); } }], 'info');
+    setTimeout(() => meldingWeg(id), ONGEDAAN);
+    return;
+  }
+  const timer = setTimeout(() => { doen.vertrekt.delete(a.id); tekenDoen(); }, VERTRAGING);
+  doen.vertrekt.set(a.id, timer);
+  handelen(hs);
+}
+function actieHeropenen(a) {
+  const v = doen.vertrekt.get(a.id);
+  if (v) { clearTimeout(v); doen.vertrekt.delete(a.id); }
+  const oud = model.acties.get(a.id).velden;
+  handelen([{ actie: 'zet', soort: 'actie', id: a.id, veld: 'klaar', oud: oud.klaar || '', nieuw: '' }]);
+}
+$('doenLijst').addEventListener('click', (e) => {
+  const rij = e.target.closest('.actierij');
+  if (!rij) return;
+  const a = actieLijst(model).find((x) => x.id === rij.dataset.id);
+  if (!a) return;
+  if (e.target.closest('.rondje')) { if (a.open && !doen.vertrekt.has(a.id)) actieAfronden(a); else actieHeropenen(a); }
+  else if (e.target.closest('.tekst')) actieOpenen(a.id);
+});
+function actieToevoegen() {
+  const inp = $('doenTekst');
+  const naam = schoonTekst(inp.value);
+  if (!naam) { inp.focus(); return; }
+  vakLeeg(inp);
+  const bestaand = actieLijst(model).find((a) => normNaam(a.naam) === normNaam(naam));
+  if (bestaand && !bestaand.open) actieHeropenen(bestaand);
+  else if (!bestaand) handelen([{ actie: 'nieuw', soort: 'actie', id: nieuweId(), velden: { naam } }]);
+  else tekenDoen();
+}
+$('doenTekst').addEventListener('input', tekenDoen);
+$('doenTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); actieToevoegen(); } });
+$('doenPlus').addEventListener('click', actieToevoegen);
+
+/* Actie bewerken: zoals een artikel (kladversie, Opslaan, vraag bij sluiten). */
+const bd = { id: '', oud: null, naam: '', notitie: '', link: '', datum: '', herhaal: '', sluiten: false };
+function bdGewijzigd() {
+  const o = bd.oud;
+  return !!o && (schoonTekst(bd.naam) !== o.naam || schoonTekst(bd.notitie) !== o.notitie || bd.link.trim() !== o.link || bd.datum !== o.datum || bd.herhaal !== o.herhaal);
+}
+function actieOpenen(id) {
+  const a = actieLijst(model).find((x) => x.id === id);
+  if (!a) return;
+  Object.assign(bd, { id, oud: a, naam: a.naam, notitie: a.notitie, link: a.link, datum: a.datum, herhaal: a.herhaal, sluiten: false });
+  try { history.pushState({ thuisActie: id }, ''); } catch (e) { /* alleen het kruisje */ }
+  $('scherm-doen').classList.add('sub');
+  $('balk-doen').hidden = true;
+  $('balk-actie').hidden = false;
+  const doel = $('actieScherm');
+  doel.hidden = false;
+  doel.innerHTML = '<div class="wdkop"><h2>Actie</h2><button class="icoonknop" id="actieDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
+    '<div class="veld"><label for="actieNaam">Actie</label><textarea id="actieNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
+    '<div class="veld"><label for="actieNotitie">Notitie</label><textarea id="actieNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
+    '<div class="veld"><label for="actieLink">Link</label><input id="actieLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
+    '<div class="veld"><span class="label2" id="wanneerLabel" style="font-weight:600;color:var(--paars)">Wanneer</span><div class="segment" id="wanneerSoort" role="radiogroup" aria-labelledby="wanneerLabel"></div><div id="wanneerBlader"></div></div>' +
+    '<div class="veld" id="herhaalVeld"><span class="label2" id="herhaalLabel" style="font-weight:600;color:var(--paars)">Herhalen</span><div class="segment" id="herhaalSoort" role="radiogroup" aria-labelledby="herhaalLabel"></div></div>';
+  const vakken = [[$('actieNaam'), 'naam'], [$('actieNotitie'), 'notitie']];
+  const hoogte = () => { for (const [v] of vakken) { v.style.height = 'auto'; v.style.height = v.scrollHeight + 4 + 'px'; } };
+  for (const [v, veld] of vakken) {
+    v.value = bd[veld];
+    v.addEventListener('input', () => { v.value = v.value.replace(/[\r\n]+/g, ' '); bd[veld] = v.value; hoogte(); });
+    v.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); v.blur(); } });
+  }
+  const link = $('actieLink');
+  link.value = bd.link;
+  link.addEventListener('input', () => { bd.link = link.value; });
+  link.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); link.blur(); } });
+  $('actieDicht').addEventListener('click', () => { if (bdGewijzigd()) actieVraag(); else actieDicht(false); });
+  tekenWanneer();
+  $('midden').scrollTop = 0;
+  hoogte();
+}
+function segment(doel, opties, nu, kies) {
+  doel.innerHTML = '';
+  for (const [waarde, tekst] of opties) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = tekst;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(nu === waarde));
+    b.addEventListener('click', () => kies(waarde));
+    doel.appendChild(b);
+  }
+}
+function tekenWanneer() {
+  const vandaag = datumTekst(new Date()), soort = periodeSoort(bd.datum);
+  segment($('wanneerSoort'), [['', 'n.v.t.'], ['dag', 'Dag'], ['maand', 'Maand'], ['kwartaal', 'Kwartaal'], ['jaar', 'Jaar']], soort, (s) => {
+    bd.datum = s ? naarSoort(bd.datum, s, vandaag) : '';
+    if (bd.herhaal && (!s || HERHAAL_BIJ[s].indexOf(bd.herhaal) === -1)) bd.herhaal = '';
+    tekenWanneer();
+  });
+  const bl = $('wanneerBlader');
+  bl.innerHTML = '';
+  if (soort) {
+    bl.className = 'blader';
+    bl.innerHTML = '<button type="button" aria-label="Eerder">' + PIJL_TERUG + '</button><span></span><button type="button" aria-label="Later">' + PIJL_TERUG.replace('<svg ', '<svg style="transform:rotate(180deg)" ') + '</button>';
+    bl.querySelector('span').textContent = periodeTekst(bd.datum, vandaag, true);
+    const [eerder, later] = bl.querySelectorAll('button');
+    eerder.addEventListener('click', () => { bd.datum = verschuif(bd.datum, -1, soort); tekenWanneer(); });
+    later.addEventListener('click', () => { bd.datum = verschuif(bd.datum, 1, soort); tekenWanneer(); });
+  } else bl.className = '';
+  $('herhaalVeld').hidden = !soort;
+  if (soort) segment($('herhaalSoort'), [['', 'Nee']].concat(HERHAAL_BIJ[soort].map((h) => [h, h[0].toUpperCase() + h.slice(1)])), bd.herhaal, (h) => { bd.herhaal = h; tekenWanneer(); });
+}
+function actieBijwerken() { if (!actieLijst(model).some((a) => a.id === bd.id)) actieDicht(false); }
+function actieOpslaan() {
+  const o = bd.oud;
+  const naam = schoonTekst(bd.naam);
+  if (!naam) { $('actieNaam').focus(); return; }
+  if (naam !== o.naam && actieLijst(model).some((x) => x.id !== o.id && normNaam(x.naam) === normNaam(naam))) {
+    melding('m-naam', ['Er is al een actie ', { vet: naam }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
+    $('midden').scrollTop = 0;
+    return;
+  }
+  const link = bd.link.trim() ? veiligeLink(bd.link) : '';
+  if (link === null) {
+    melding('m-link', ['Alleen links met ', { vet: 'https://' }, ' zijn toegestaan.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-link') }]);
+    $('midden').scrollTop = 0;
+    return;
+  }
+  meldingWeg('m-link');
+  const v = model.acties.get(o.id) ? model.acties.get(o.id).velden : {};
+  const h = [];
+  if (naam !== o.naam) h.push({ actie: 'zet', soort: 'actie', id: o.id, veld: 'naam', oud: o.naam, nieuw: naam });
+  const velden = { notitie: schoonTekst(bd.notitie), link, datum: bd.datum, herhaal: bd.datum ? bd.herhaal : '' };
+  for (const k of Object.keys(velden)) if (velden[k] !== (v[k] || '')) h.push({ actie: 'zet', soort: 'actie', id: o.id, veld: k, oud: v[k] || '', nieuw: velden[k] });
+  actieDicht(false);
+  if (h.length) handelen(h);
+}
+function actieVerwijderen() {
+  const o = bd.oud;
+  const record = recordNaarJson('actie', model.acties.get(o.id));
+  actieDicht(false);
+  handelen([{ actie: 'weg', soort: 'actie', id: o.id }]);
+  verwijderdMelding([{ vet: o.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'actie', id: o.id, record }]);
+}
+function actieVraag(daarna) {
+  const k = keuzePaneel('Wijzigingen opslaan?', false);
+  k.querySelector('.opties').outerHTML = '<div class="bewerkknoppen" style="padding:10px 14px 14px"><button class="knop tweede grijs" type="button">Weggooien</button><button class="knop" type="button">Opslaan</button></div>';
+  const [weg, op] = k.querySelectorAll('.bewerkknoppen .knop');
+  weg.addEventListener('click', () => { sluitKeuze(); actieDicht(false); if (daarna) daarna(); });
+  op.addEventListener('click', () => { sluitKeuze(); actieOpslaan(); if (daarna && !bd.id) daarna(); });
+  document.body.appendChild(k);
+}
+function actieDicht(stil) {
+  if (!bd.id) return;
+  sluitKeuze();
+  bd.id = ''; bd.oud = null;
+  $('scherm-doen').classList.remove('sub');
+  $('actieScherm').hidden = true;
+  $('actieScherm').innerHTML = '';
+  $('balk-actie').hidden = true;
+  $('balk-doen').hidden = $('scherm-doen').hidden;
+  if (!stil && history.state && history.state.thuisActie) { bd.sluiten = true; history.back(); }
+  tekenDoen();
+}
+window.addEventListener('popstate', () => {
+  if (bd.sluiten) { bd.sluiten = false; return; }
+  if (!bd.id) return;
+  if (!bdGewijzigd()) { actieDicht(true); return; }
+  try { history.pushState({ thuisActie: bd.id }, ''); } catch (e) { /* geen geschiedenis */ }
+  if (!$('keuze')) actieVraag();
+});
+$('actieOpslaan').addEventListener('click', actieOpslaan);
+$('actieWeg').addEventListener('click', actieVerwijderen);
+$('actieWeg').innerHTML = PRULLENBAK;
 
 /* ---------- Instellingen: wekelijks en backups ---------- */
 const DAGEN = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];

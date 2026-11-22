@@ -747,6 +747,55 @@ const BEGIN = [
     controle('link: in de winkel opent tikken de link en vinkt niet af', geopend.length === 2 && !wr.classList.contains('gedaan') && !dB.querySelector('#winkelLijst .wrij.gedaan'));
   }
 
+  /* 5m. Doen: toevoegen, groepen, afronden (herhalend schuift door), bewerken met periode en herhalen. */
+  {
+    const odC = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const wC = await start(odC);
+    await slaap(800);
+    const dC = wC.document;
+    dC.getElementById('tab-doen').click(); await slaap(50);
+    controle('doen: invoer onderaan "Actie", leeg scherm "Geen acties"', !dC.getElementById('balk-doen').hidden && dC.getElementById('doenTekst').placeholder === 'Actie' && /Geen acties/.test(dC.getElementById('doenLijst').textContent));
+    for (const n of ['Vuilnis buiten zetten', 'Lamp vervangen']) { dC.getElementById('doenTekst').value = n; dC.getElementById('doenPlus').click(); await slaap(30); }
+    const groepen = () => [...dC.querySelectorAll('#doenLijst .kopbalk')].map((k) => k.textContent.replace(/\s+/g, ' ').trim()).join('|');
+    controle('doen: nieuwe acties onder "Zonder periode"', groepen() === 'Zonder periode2 acties', groepen());
+    const rijC = (n) => [...dC.querySelectorAll('#doenLijst .actierij')].find((r) => r.querySelector('.nm').textContent === n);
+    rijC('Vuilnis buiten zetten').querySelector('.tekst').click(); await slaap(30);
+    controle('doen: bewerkscherm met Actie, Notitie, Link, Wanneer (n.v.t. gekozen), geen Herhalen', !dC.getElementById('actieScherm').hidden && dC.getElementById('actieNaam').value === 'Vuilnis buiten zetten'
+      && [...dC.querySelectorAll('#wanneerSoort button')].map((b) => b.textContent).join() === 'n.v.t.,Dag,Maand,Kwartaal,Jaar' && dC.querySelector('#wanneerSoort [aria-checked="true"]').textContent === 'n.v.t.' && dC.getElementById('herhaalVeld').hidden);
+    [...dC.querySelectorAll('#wanneerSoort button')][1].click(); await slaap(10);
+    const vandaag = wC.eval('datumTekst(new Date())');
+    controle('doen: Dag kiezen begint bij vandaag, herhalen verschijnt met Nee/Week/Maand/Kwartaal/Jaar', !dC.getElementById('herhaalVeld').hidden && [...dC.querySelectorAll('#herhaalSoort button')].map((b) => b.textContent).join() === 'Nee,Week,Maand,Kwartaal,Jaar'
+      && dC.querySelector('.blader span').textContent === wC.eval("periodeTekst(datumTekst(new Date()), '', true)"));
+    dC.querySelectorAll('.blader button')[0].click(); await slaap(10);
+    [...dC.querySelectorAll('#herhaalSoort button')][1].click(); await slaap(10);
+    dC.getElementById('actieOpslaan').click(); await slaap(50);
+    const gisteren = wC.eval("verschuif(datumTekst(new Date()), -1, 'dag')");
+    controle('doen: gisteren is te laat, met herhaalteken', /^Te laat1 actie/.test(groepen()) && /week$/.test(rijC('Vuilnis buiten zetten').querySelector('.wanneer').textContent), groepen());
+    rijC('Vuilnis buiten zetten').querySelector('.rondje').click(); await slaap(50);
+    const volgende = wC.eval("volgendeKeer('" + gisteren + "', 'week', datumTekst(new Date()))");
+    const m = [...dC.querySelectorAll('#meldingen .melding')].find((x) => /Vuilnis buiten zetten afgerond/.test(x.textContent));
+    controle('doen: herhalend afronden schuift door naar de volgende keer, met Ongedaan maken', !!m && !!rijC('Vuilnis buiten zetten') && !/Te laat/.test(groepen()) && !!m.querySelector('.aftel'), groepen());
+    await slaap(2500);
+    controle('doen: in het bestand de volgende keer en wanneer (niet wie)', new RegExp('^actie;Vuilnis buiten zetten;datum=' + volgende + ';herhaal=week;klaar=[^;]+$', 'm').test(R(odC.bestanden['thuis.json'].tekst)), R(odC.bestanden['thuis.json'].tekst));
+    m.querySelector('button').click(); await slaap(50);
+    controle('doen: ongedaan maken zet het terug op gisteren', /^Te laat/.test(groepen()));
+    rijC('Lamp vervangen').querySelector('.rondje').click(); await slaap(30);
+    controle('doen: gewoon afronden blijft eerst grijs staan', rijC('Lamp vervangen').classList.contains('vertrekt'));
+    await slaap(1800);
+    controle('doen: daarna onder "Afgerond" (ingeklapt)', /Afgerond1 actie/.test(groepen()) && !rijC('Lamp vervangen'), groepen());
+    dC.querySelector('#afgerond .kopbalk').click(); await slaap(20);
+    controle('doen: Afgerond uitgeklapt toont wanneer, niet wie', /^afgerond [a-z]{2} \d+ [a-z]+$/.test(rijC('Lamp vervangen').querySelector('.wanneer').textContent), rijC('Lamp vervangen').textContent);
+    rijC('Lamp vervangen').querySelector('.rondje').click(); await slaap(30);
+    controle('doen: heropenen zet hem terug onder Zonder periode', /Zonder periode1 actie/.test(groepen()) && !dC.getElementById('afgerond'), groepen());
+    rijC('Lamp vervangen').querySelector('.tekst').click(); await slaap(20);
+    dC.getElementById('actieLink').value = 'javascript:alert(1)'; dC.getElementById('actieLink').dispatchEvent(new wC.Event('input'));
+    dC.getElementById('actieOpslaan').click(); await slaap(20);
+    controle('doen: onveilige link geweigerd', !dC.getElementById('actieScherm').hidden && !!dC.getElementById('m-link'));
+    dC.getElementById('actieDicht').click(); await slaap(20);
+    [...dC.getElementById('keuze').querySelectorAll('.knop')][0].click(); await slaap(20);
+    controle('doen: sluiten met wijzigingen vraagt; Weggooien sluit', dC.getElementById('actieScherm').hidden);
+  }
+
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
   od = onedrive(null);
   od.bestanden['thuis.json'] = { bytes: new Uint8Array([0x7B, 0x7D, 0xFF, 0x0A]), eTag: '"x1"', id: 'id-thuis.json' };

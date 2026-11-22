@@ -287,14 +287,17 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Verversen elke 30 s zolang dit tabblad open is.
 
 ### 5.3 Doen
-- Invoervak "Zoeken of toevoegen" (placeholder "Actie").
-- Filter Alle / Voor mij; Voor mij is uitgeschakeld als geen actie aan jou is
-  toegewezen.
-- Groepen: Te laat, Deze week, Later, Zonder datum. Een actie zonder datum en
-  zonder extra's is één regel.
-- Links het rondje om af te ronden; tik op de titel opent het bewerkscherm.
-- Onderaan "Afgerond" met aantal; het Afgerond-scherm toont wie het deed en
-  wanneer, met heropenen.
+- Invoervak "Actie" onderaan: typen filtert, + voegt toe (een afgeronde actie
+  met dezelfde naam wordt heropend). Een nieuwe actie heeft geen periode.
+- Groepen met kopbalken: Te laat (oranje), Deze week (begint uiterlijk
+  zondag), Later, Zonder periode; vroegste eerst. Per regel het rondje en de
+  naam; eronder grijs de periode ("vr 27 nov", "december", "K4", "2027"; het
+  jaar alleen als het niet dit jaar is) en het herhaalteken met "week"; daaronder
+  paars de notitie en de link.
+- Afronden: een herhalende actie schuift door naar de volgende keer (melding met
+  Ongedaan maken, 6 s); een gewone blijft 1,5 s grijs en gaat naar "Afgerond"
+  (ingeklapt, met wanneer; het rondje heropent). Wie het deed wordt niet bewaard.
+- Geen eigenaar (later eventueel).
 
 ### 5.4 Bewerken
 - **Artikel** (tik op de naam in de lijst; geen potloodje): volledig scherm met
@@ -307,10 +310,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   nieuwe winkels en afdelingen bestaan wel meteen. Sluiten (kruisje, terugknop
   van de telefoon of een ander tabblad) met wijzigingen vraagt "Wijzigingen
   opslaan?" [Weggooien] [Opslaan]; het kruisje van die vraag = verder bewerken.
-- **Actie:** titel, wanneer (geen, dag, maand, kwartaal, jaar, met bladeren),
-  herhalen, wie (Mark of partner; niets gekozen = voor wie het oppakt), notitie, link (met openen), foto,
-  verwijderen.
-- Onderaan [Annuleren] [Opslaan].
+- **Actie:** zoals een artikel (kruisje, kladversie, Opslaan, prullenbak met
+  Ongedaan maken, vraag bij sluiten). Actie, Notitie, Link (alleen https),
+  Wanneer (n.v.t., Dag, Maand, Kwartaal, Jaar, met ‹ › bladeren; een andere soort
+  houdt de plek), Herhalen (alleen met een periode; Nee en niet fijner dan de
+  periode: bij Dag week/maand/kwartaal/jaar, bij Maand maand/kwartaal/jaar, …).
 
 ### 5.5 Instellingen
 - Synchroniseren: aangemeld als, gedeelde map, aanmelden/afmelden (rode rand,

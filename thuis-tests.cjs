@@ -100,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, naarSoort, periodeTekst, actieLijst };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -349,6 +349,32 @@ controle('link: een onveilige link in een handeling of het bestand wordt niet aa
   const m = lees({ artikelen: { mel01: { naam: 'Melk', link: 'javascript:alert(1)' } } });
   const st = k.pasToe(m, { actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'link', oud: 'javascript:alert(1)', nieuw: 'http://ah.nl' }).status;
   return gelijk(st + '|' + JSON.stringify(k.artikelLijst(m)[0].link), 'vervallen|""');
+});
+
+/* ---------- acties ---------- */
+controle('periode: grenzen van dag, maand, kwartaal en jaar', () => gelijk(['2026-11-27', '2026-02', '2026-K4', '2027'].map((d) => { const g = K.periodeGrenzen(d); return g.begin + '/' + g.eind; }).join(),
+  '2026-11-27/2026-11-27,2026-02-01/2026-02-28,2026-10-01/2026-12-31,2027-01-01/2027-12-31'));
+controle('periode: verschuiven, ook over het jaar en de 31e naar een kortere maand', () => gelijk([K.verschuif('2026-11-27', 1, 'week'), K.verschuif('2026-01-31', 1, 'maand'), K.verschuif('2026-12', 1, 'maand'),
+  K.verschuif('2026-K4', 1, 'kwartaal'), K.verschuif('2026-K2', 1, 'jaar'), K.verschuif('2026-11', 1, 'kwartaal'), K.verschuif('2026', -1, 'jaar'), K.verschuif('2026-03-01', -1, 'dag')].join(),
+  '2026-12-04,2026-02-28,2027-01,2027-K1,2027-K2,2027-02,2025,2026-02-28'));
+controle('herhalen: de volgende keer slaat voorbije over', () => gelijk([K.volgendeKeer('2026-11-20', 'week', '2026-11-21'), K.volgendeKeer('2026-08-10', 'week', '2026-11-21'),
+  K.volgendeKeer('2026-10', 'maand', '2026-11-21'), K.volgendeKeer('2026-K3', 'kwartaal', '2026-11-21'), K.volgendeKeer('2026-11-21', 'jaar', '2026-11-21')].join(),
+  '2026-11-27,2026-11-23,2026-11,2026-K4,2027-11-21'));
+controle('groepen: te laat, deze week (t/m zondag), later, geen', () => gelijk(['2026-11-20', '2026-11-21', '2026-11-22', '2026-11-23', '2026-11', '2026-10', '2026-K4', '2027', ''].map((d) => K.actieGroep(d, '2026-11-21')).join(),
+  'laat,week,week,later,week,laat,week,later,geen'));
+controle('periode: andere soort kiezen houdt de plek; teksten kort en lang', () => gelijk([K.naarSoort('2026-11-27', 'kwartaal', '2026-11-21'), K.naarSoort('', 'maand', '2026-11-21'), K.naarSoort('2026-K2', 'dag', '2026-11-21'),
+  K.periodeTekst('2026-11-27', '2026-11-21'), K.periodeTekst('2027-01-05', '2026-11-21'), K.periodeTekst('2026-12', '2026-11-21'), K.periodeTekst('2026-K4', '2026-11-21'), K.periodeTekst('2026-11-27', '2026-11-21', true)].join('|'),
+  '2026-K4|2026-11|2026-04-01|vr 27 nov|di 5 jan 2027|december|K4|vr 27 november 2026'));
+controle('acties: open = nooit afgerond of herhalend; ongeldige herhaling bij een periode telt niet; onveilige link niet', () => {
+  const al = K.actieLijst(lees({ acties: { a1111: { naam: 'Vuilnis', datum: '2026-11-27', herhaal: 'week', klaar: '2026-11-20T08:00' }, a2222: { naam: 'Lamp', klaar: '2026-11-20T08:00' },
+    a3333: { naam: 'Filter', datum: '2026-12', herhaal: 'week', link: 'javascript:x' } } }));
+  return gelijk(al.map((a) => a.naam + ':' + a.open + ':' + a.herhaal + ':' + a.link).join(), 'Filter:true::,Lamp:false::,Vuilnis:true:week:');
+});
+controle('acties: ongeldige datum, herhaling of link in een handeling vervalt', () => {
+  const k = kern(); const m = lees({ acties: { a1111: { naam: 'X' } } });
+  return gelijk(['2026-13-40', '2026-02-30', '2026-13', 'morgen'].map((d) => k.pasToe(m, { actie: 'zet', soort: 'actie', id: 'a1111', veld: 'datum', oud: '', nieuw: d }).status).join() + '|' +
+    k.pasToe(m, { actie: 'zet', soort: 'actie', id: 'a1111', veld: 'herhaal', oud: '', nieuw: 'dag' }).status + '|' + k.pasToe(m, { actie: 'zet', soort: 'actie', id: 'a1111', veld: 'link', oud: '', nieuw: 'http://x.nl' }).status,
+    'vervallen,vervallen,vervallen,vervallen|vervallen|vervallen');
 });
 
 /* ---------- opruimen ---------- */
