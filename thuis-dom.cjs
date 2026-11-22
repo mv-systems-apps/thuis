@@ -327,6 +327,8 @@ const BEGIN = [
   [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.dataset.afd === 'Brood').querySelector('.potlood').click();
   d.getElementById('keuze').querySelector('.prul').click();
   controle('afdeling verwijderd: meteen weg, met Ongedaan maken', afdNamen() === 'Zuivel,AGF' && [...d.querySelectorAll('.melding button')].some((b) => b.textContent === 'Ongedaan maken'));
+  const mWeg = [...d.querySelectorAll('.melding')].find((m) => m.textContent.includes('Ongedaan maken'));
+  controle('melding: naam vet, Ongedaan maken als hoofdknop', mWeg.querySelector('p b').textContent === 'Brood' && !mWeg.querySelector('button').classList.contains('tweede'), mWeg.innerHTML);
   [...d.querySelectorAll('.melding button')].find((b) => b.textContent === 'Ongedaan maken').click();
   controle('ongedaan maken: Brood terug', afdNamen() === 'Zuivel,AGF,Brood', afdNamen());
   /* favoriet en hernoemen van de winkel */

@@ -100,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Date });
-  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen, winkelTellingen, teKoopIn, afdelingIn };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen, zoekVorm, winkelTellingen, teKoopIn, afdelingIn };', ctx);
   return ctx.__k;
 }
 const NU = new Date(2026, 10, 21, 10, 0); // za 21-11-2026 10:00 lokale tijd
@@ -444,6 +444,15 @@ controle('winkel verwijderen haalt hem ook weg bij de artikelen', () => {
 });
 controle('invoer staat onderaan (boven de tabbalk), soortmenu klapt naar boven', () =>
   (/<\/main>\s*<div class="onderbalk" id="balk-boodschappen">/.test(html) && /\.menu\{position:absolute;z-index:10;bottom:/.test(html)) || 'invoer niet onderaan');
+
+controle('tabbalk staat altijd in beeld: body vast aan de schermranden, geen 100dvh; scherm krimpt met het toetsenbord', () =>
+  (/body\{[^}]*position:fixed;inset:0\}/.test(html) && !/body\{[^}]*100dvh/.test(html) && /interactive-widget=resizes-content/.test(html)) || 'opbouw klopt niet');
+
+controle('zoeken zonder accenten: creme vindt Crème fraîche, cafe vindt Café', () => {
+  const k = kern();
+  const al = k.artikelLijst(lees('artikel;Crème fraîche\nartikel;Café-noir\nartikel;Kaas\n').model);
+  return gelijk(k.zoekArtikelen(al, 'creme FRAI').map((a) => a.naam).join() + '|' + k.zoekArtikelen(al, 'cafe').map((a) => a.naam).join(), 'Crème fraîche|Café-noir');
+});
 
 controle('rondjes: één definitie, gevuld even groot als de buitenkant van open (13,5 = 12,4 + 2,2/2)', () => {
   const r = (scripts.match(/const RONDJE = \{[\s\S]*?\n\};/) || [''])[0];

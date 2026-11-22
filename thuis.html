@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#1D3FAF">
 <title>thuis</title>
 <link rel="manifest" href="manifest.json">
@@ -18,7 +18,11 @@
   [hidden]{display:none!important}
   html,body{height:100%}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:18px;color:var(--tekst);background:var(--achter);
-       display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+       display:flex;flex-direction:column;overflow:hidden;position:fixed;inset:0}
+  /* Vast aan de randen van het scherm (zoals trends) in plaats van 100dvh: die
+     hoogte klopt bij het openen van de geïnstalleerde app op Android niet altijd,
+     waardoor de tabbalk onder het scherm viel. Met resizes-content krimpt het
+     scherm mee met het toetsenbord, zodat het invoervak erboven blijft. */
   button,input{font:inherit}
   /* Vaste kop, scrollend midden, vaste tabbalk: de navigatie scrollt niet weg. */
   header{flex-shrink:0;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px;color:#FFFFFF;
@@ -254,7 +258,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-004</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-005</div>
   </section>
 </main>
 
@@ -340,6 +344,8 @@ const MAX_GEKOCHT = 6;
 const SORTEER = new Intl.Collator('nl', { sensitivity: 'base', numeric: true });
 
 /* Vergelijkingsvorm van een naam: NFC, spaties samengevoegd, zonder hoofdletters. */
+/* Voor zoeken: ook zonder accenten (creme vindt Crème), zoals in events. */
+function zoekVorm(s) { return normNaam(s).normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function normNaam(s) {
   return String(s).normalize('NFC').replace(/\s+/g, ' ').trim().toLocaleLowerCase('nl');
 }
@@ -746,7 +752,7 @@ function artikelLijst(model) {
     if (r.soort !== 'artikel') continue;
     const soort = SOORT_LETTER[r.velden.get('soort')] ? r.velden.get('soort') : 'eenmalig';
     uit.push({
-      naam: r.vast[0], sleutel: normNaam(r.vast[0]), soort, letter: SOORT_LETTER[soort],
+      naam: r.vast[0], sleutel: normNaam(r.vast[0]), zoek: zoekVorm(r.vast[0]), soort, letter: SOORT_LETTER[soort],
       plekken: plekkenVan(r),
       op: r.velden.get('op') || '', opdoor: r.velden.get('opdoor') || '',
       gekocht: lijst(r.velden.get('gekocht'))
@@ -786,9 +792,9 @@ function suggestieTekst(s) {
 
 /* Zoeken: bevat de tekst, zonder verschil in hoofdletters en spaties. */
 function zoekArtikelen(artikelen, tekst) {
-  const t = normNaam(tekst);
+  const t = zoekVorm(tekst);
   if (!t) return [];
-  return artikelen.filter((a) => a.sleutel.indexOf(t) !== -1);
+  return artikelen.filter((a) => a.zoek.indexOf(t) !== -1);
 }
 
 /* ---------- winkel (stap 7) ---------- */
@@ -929,8 +935,13 @@ function melding(id, tekst, knoppen, soort) {
   el.className = 'melding' + (soort ? ' ' + soort : '');
   el.setAttribute('role', 'status');
   el.textContent = '';
+  /* tekst: een string, of een lijst van stukken waarin { vet: '…' } vet wordt
+     (zoals een naam). */
   const p = document.createElement('p');
-  p.textContent = tekst;
+  for (const s of Array.isArray(tekst) ? tekst : [tekst]) {
+    if (s && typeof s === 'object') { const b = document.createElement('b'); b.textContent = s.vet; p.appendChild(b); }
+    else p.appendChild(document.createTextNode(s));
+  }
   el.appendChild(p);
   if (knoppen && knoppen.length) {
     const rij = document.createElement('div');
@@ -1389,7 +1400,7 @@ async function syncRonde() {
       if (opgehaald.weg) {
         if (kopie && kopie.fileId) {
           /* Een bestand dat er was en nu weg is, wordt niet stil opnieuw gemaakt. */
-          melding('m-weg', BESTAND + ' staat niet meer in de map ' + map.naam + '. Er is niets opgeslagen.', [
+          melding('m-weg', [{ vet: BESTAND }, ' staat niet meer in de map ', { vet: map.naam }, '. Er is niets opgeslagen.'], [
             { tekst: 'Nieuw bestand maken', actie: async () => { kopie = null; await kvDel('kopie'); meldingWeg('m-weg'); planSync(0); } }
           ]);
           return;
@@ -1453,13 +1464,13 @@ async function syncRonde() {
 function meldResultaten(resultaten) {
   const vervallen = resultaten.filter((r) => r.status === 'vervallen').map((r) => r.h.naam);
   if (vervallen.length) {
-    melding('m-vervallen', 'Niet doorgevoerd, want intussen verwijderd of hernoemd: ' + vervallen.join(', ') + '.',
+    melding('m-vervallen', ['Niet doorgevoerd, want intussen verwijderd of hernoemd: ', { vet: vervallen.join(', ') }, '.'],
       [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-vervallen') }]);
   }
   const botsing = resultaten.filter((r) => r.status === 'botsing');
   if (botsing.length) {
     const r = botsing[botsing.length - 1];
-    melding('m-botsing', '"' + r.h.naam + '" was intussen ook gewijzigd. Jouw versie staat erin; de andere was: "' + r.vorige + '".', [
+    melding('m-botsing', [{ vet: r.h.naam }, ' was intussen ook gewijzigd. Jouw versie staat erin; de andere was: "' + r.vorige + '".'], [
       { tekst: 'Andere terugzetten', actie: () => { meldingWeg('m-botsing'); handelen([{ actie: 'zet', soort: r.h.soort, naam: r.h.naam, veld: r.h.veld, oud: r.h.nieuw, nieuw: r.vorige }]); } },
       { tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-botsing') }
     ]);
@@ -1619,10 +1630,7 @@ function tekenBoodschappen() {
   if (!lijstNu.length) {
     const p = document.createElement('div');
     p.className = 'leeg';
-    p.textContent = zoekend ? 'Niets gevonden. Tik op + om "' + schoonTekst(scherm.zoek) + '" toe te voegen.'
-      : scherm.filter === 'L' ? 'Nog niets op de lijst. Typ hierboven een artikel.'
-      : scherm.filter === 'S' ? 'Nog geen suggesties. Die verschijnen na een paar aankopen van hetzelfde artikel.'
-      : 'Nog geen artikelen van deze soort.';
+    p.textContent = zoekend ? 'Niets gevonden' : scherm.filter === 'S' ? 'Geen suggesties' : 'Geen artikelen';
     l.appendChild(p);
   } else {
     l.appendChild(frag);
@@ -1785,14 +1793,14 @@ function keuzeLijst(opt) {
     return b;
   };
   const teken = () => {
-    const t = inp ? normNaam(inp.value) : '';
+    const t = inp ? zoekVorm(inp.value) : '';
     opties.innerHTML = '';
     if (t) {
-      const zicht = alleNamen().filter((o) => normNaam(o.naam).indexOf(t) !== -1);
+      const zicht = alleNamen().filter((o) => zoekVorm(o.naam).indexOf(t) !== -1);
       for (const o of zicht) opties.appendChild(optieKnop(o));
       if (!zicht.length) {
         const p = document.createElement('div'); p.className = 'leeg';
-        p.textContent = 'Niets gevonden. Tik op + om "' + schoonTekst(inp.value) + '" toe te voegen.';
+        p.textContent = 'Niets gevonden';
         opties.appendChild(p);
       }
       return;
@@ -1813,7 +1821,7 @@ function keuzeLijst(opt) {
     });
     if (!opties.children.length) {
       const p = document.createElement('div'); p.className = 'leeg';
-      p.textContent = 'Nog niets. Typ hieronder een naam en tik op +.';
+      p.textContent = 'Nog niets';
       opties.appendChild(p);
     }
   };
@@ -2049,7 +2057,7 @@ function tekenWinkel() {
   } else if (!open && !inMandje.length) {
     const p = document.createElement('div');
     p.className = 'kaart leeg';
-    p.innerHTML = '<b>Niets op de lijst</b><span>Zet artikelen op de lijst bij het tabblad Lijst.</span>';
+    p.textContent = 'Geen artikelen';
     doel.appendChild(p);
   }
 }
@@ -2089,7 +2097,7 @@ function uitgesteld(sleutelW, tekst, doe) {
   const id = 'm-weg-' + willekeurig(6);
   const klaar = () => { ws.wacht.delete(sleutelW); meldingWeg(id); };
   ws.wacht.set(sleutelW, setTimeout(() => { klaar(); doe(); }, ONGEDAAN));
-  melding(id, tekst, [{ tekst: 'Ongedaan maken', tweede: true, actie: () => { clearTimeout(ws.wacht.get(sleutelW)); klaar(); tekenWinkels(); tekenWinkel(); } }], 'info');
+  melding(id, tekst, [{ tekst: 'Ongedaan maken', actie: () => { clearTimeout(ws.wacht.get(sleutelW)); klaar(); tekenWinkels(); tekenWinkel(); } }], 'info');
   tekenWinkels();
   tekenWinkel();
 }
@@ -2139,8 +2147,8 @@ function tekenWinkelsOverzicht() {
     doel.innerHTML = '<div class="kaart leeg"><b>Nog niet gekoppeld</b><span>Meld je eerst aan en koppel de gedeelde map, bij Instellingen.</span></div>';
     return;
   }
-  const z = normNaam($('winkelsTekst').value);
-  const alle = zichtbareWinkels().filter((x) => !z || normNaam(x.naam).indexOf(z) !== -1);
+  const z = zoekVorm($('winkelsTekst').value);
+  const alle = zichtbareWinkels().filter((x) => !z || zoekVorm(x.naam).indexOf(z) !== -1);
   const groepen = [['fav', 'Favorieten', alle.filter((x) => isFavoriet(x.naam))], ['rest', 'Overige', alle.filter((x) => !isFavoriet(x.naam))]];
   for (const [sl, titel, rijen] of groepen) {
     if (!rijen.length) continue;
@@ -2197,8 +2205,8 @@ function tekenWinkelDetail(w) {
   doel.querySelector('.terug').addEventListener('click', winkelSluiten);
   doel.querySelector('.bewerk').addEventListener('click', () => winkelBewerken(w));
   const afd = afdelingenVan(w);
-  const z = normNaam($('winkelsTekst').value);
-  const zicht = afd.filter((a) => !z || normNaam(a).indexOf(z) !== -1);
+  const z = zoekVorm($('winkelsTekst').value);
+  const zicht = afd.filter((a) => !z || zoekVorm(a).indexOf(z) !== -1);
   doel.querySelector('.kopregel2 span').textContent = afd.length;
   const lijstEl = doel.querySelector('#afdelingen');
   for (const a of zicht) {
@@ -2285,7 +2293,7 @@ function winkelBewerken(w) {
     titel: 'Winkel bewerken', naam: w.naam, wegLabel: 'Winkel verwijderen', schoon: winkelNaamSchoon,
     opslaan: async (nieuw) => {
       if (zichtbareWinkels().some((x) => x !== w && normNaam(x.naam) === normNaam(nieuw))) {
-        melding('m-naam', 'Er is al een winkel ' + nieuw + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
+        melding('m-naam', ['Er is al een winkel ', { vet: nieuw }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
         return;
       }
       if (isFavoriet(w.naam)) {
@@ -2299,7 +2307,7 @@ function winkelBewerken(w) {
     },
     verwijder: () => {
       winkelSluiten();
-      uitgesteld('winkel:' + normNaam(w.naam), w.naam + ' verwijderd.', () => handelen([{ actie: 'weg', soort: 'winkel', naam: w.naam }]));
+      uitgesteld('winkel:' + normNaam(w.naam), [{ vet: w.naam }, ' verwijderd.'], () => handelen([{ actie: 'weg', soort: 'winkel', naam: w.naam }]));
     }
   });
 }
@@ -2309,12 +2317,12 @@ function afdelingBewerken(w, afd) {
     titel: 'Afdeling bewerken', naam: afd, wegLabel: 'Afdeling verwijderen', schoon: schoonTekst,
     opslaan: (nieuw) => {
       if (w.route.some((x) => x !== afd && normNaam(x) === normNaam(nieuw))) {
-        melding('m-naam', w.naam + ' heeft al een afdeling ' + nieuw + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
+        melding('m-naam', [{ vet: w.naam }, ' heeft al een afdeling ', { vet: nieuw }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
         return;
       }
       handelen([{ actie: 'afdHernoem', soort: 'winkel', naam: w.naam, afd, nieuw }]);
     },
-    verwijder: () => uitgesteld('afd:' + normNaam(w.naam) + ':' + normNaam(afd), afd + ' verwijderd bij ' + w.naam + '.',
+    verwijder: () => uitgesteld('afd:' + normNaam(w.naam) + ':' + normNaam(afd), [{ vet: afd }, ' verwijderd bij ', { vet: w.naam }, '.'],
       () => handelen([{ actie: 'afdWeg', soort: 'winkel', naam: w.naam, afd }]))
   });
 }
@@ -2338,7 +2346,7 @@ function winkelsToevoegen() {
   if (!bestaand) handelen([{ actie: 'nieuw', soort: 'winkel', naam: v, velden: {} }]);
   winkelOpenen(bestaand ? bestaand.naam : v);
 }
-$('winkelsTekst').addEventListener('input', tekenWinkels);
+$('winkelsTekst').addEventListener('input', () => { $('midden').scrollTop = 0; tekenWinkels(); });
 $('winkelsTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); winkelsToevoegen(); } });
 $('winkelsPlus').addEventListener('click', winkelsToevoegen);
 
