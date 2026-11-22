@@ -2,6 +2,8 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; connect-src 'self' https://login.microsoftonline.com https://graph.microsoft.com https://*.1drv.com https://*.microsoftpersonalcontent.com https://*.sharepoint.com https://*.livefilestore.com">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#1D3FAF">
 <title>thuis</title>
@@ -39,6 +41,16 @@
   .rij:last-child{border-bottom:0}
   .rij .label{flex:1}
   .rij .waarde{font-size:17px;color:var(--grijs);text-align:right}
+  .knoprij{width:100%;border:0;border-bottom:1px solid var(--rij);background:#FFFFFF;font:inherit;color:var(--tekst);text-align:left}
+  .label2{font-size:17px;color:var(--grijs)}
+  .dagen{display:flex;gap:4px}
+  .dagen button{flex:1;min-width:0;height:44px;border:0;background:#E9E6F8;color:var(--paars);font-size:17px;font-weight:600}
+  .dagen button[aria-checked="true"]{background:var(--paars);color:#FFFFFF}
+  input.tijd{height:44px;border:2px solid #CFCBE6;padding:0 10px;font-size:18px;background:#FFFFFF;color:var(--tekst)}
+  #scherm-instellingen.sub > :not(#backupScherm){display:none}
+  .backupgroep{display:flex;flex-direction:column;gap:8px}
+  .backuprij .nm{flex:1;line-height:1.3}
+  .backuprij .sub{display:block;font-size:16px;color:var(--grijs)}
   .leeg{padding:28px 18px;text-align:center;color:var(--zacht);font-size:17px;line-height:1.45}
   .leeg b{display:block;font-size:19px;color:var(--tekst);margin-bottom:6px}
   .knop{min-height:52px;border:0;padding:0 16px;font-size:18px;font-weight:600;color:#FFFFFF;background:linear-gradient(135deg,var(--paars),var(--violet))}
@@ -59,6 +71,8 @@
   .melding.info{background:#ECEAF8;color:#2E2A4F}
   .melding p{margin:0;font-size:17px;line-height:1.4}
   .melding .knoppen{padding:0}
+  /* Knoppen in een melding vullen de breedte: één knop over de hele breedte, twee naast elkaar elk de helft. */
+  .melding .knoppen .knop{flex:1 1 0;min-width:0}
   nav{flex-shrink:0;height:64px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#FFFFFF;border-top:1px solid var(--lijn);
       padding-bottom:env(safe-area-inset-bottom)}
   nav button{border:0;border-top:3px solid transparent;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
@@ -66,6 +80,10 @@
   nav button[aria-current="page"]{border-top-color:var(--paars);background:#F1EFFB}
   nav button[aria-current="page"] svg{stroke:var(--paars)}
   /* ---------- boodschappen ---------- */
+  /* Nieuwe versie: balk boven de onderbalk en de tabbalk, zoals in trends. */
+  #update-bar{flex-shrink:0;display:none;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 14px;cursor:pointer;
+    background:rgba(20,179,191,.12);border:0;border-top:1px solid #14B3BF;color:var(--turkoois);font-size:16px;font-weight:600}
+  #update-bar svg{width:18px;height:18px;stroke:var(--turkoois);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
   /* Invoer onderaan, boven de tabbalk: met de duim te bereiken en altijd in beeld. */
   .onderbalk{flex-shrink:0;padding:10px 14px 12px;background:#FFFFFF;border-top:1px solid var(--lijn);box-shadow:0 -4px 12px rgba(24,20,60,.06)}
   .onderbalk .invoerbalk{max-width:612px;margin:0 auto;height:56px;box-shadow:none}
@@ -172,7 +190,6 @@
   #keuze .optie .tal{min-width:32px;height:30px;padding:0 8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#ECEAF8;color:var(--paars);font-size:17px;font-weight:700}
   #keuze .uitklapper{width:100%;min-height:48px;border:0;border-top:1px solid var(--lijn);background:#FAFAFD;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:17px;font-weight:600;color:var(--grijs);text-align:left}
   #keuze .uitklapper span{flex:1}
-  #keuze .uitleg{padding:2px 16px 8px;font-size:17px;color:var(--grijs)}
   #keuze .leeg{padding:14px 16px;font-size:17px;color:var(--zacht)}
   #keuze .zoek{flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:10px 14px 14px;border-top:1px solid var(--lijn);background:var(--achter)}
   #keuze .zoek label{font-size:17px;font-weight:600;color:var(--paars)}
@@ -251,6 +268,20 @@
       </div>
     </div>
     <div>
+      <h2>Wekelijks terug op de lijst</h2>
+      <div class="kaart">
+        <div class="veld"><span class="label2">Dag</span><div class="dagen" id="wekDagen" role="radiogroup" aria-label="Dag"></div></div>
+        <div class="rij"><label class="label" for="wekTijd">Tijd</label><input class="tijd" id="wekTijd" type="time" step="300"></div>
+      </div>
+    </div>
+    <div>
+      <h2>Gegevens</h2>
+      <div class="kaart">
+        <button class="rij knoprij" id="naarBackups" type="button"><span class="label">Backups</span><span class="waarde" id="backupAantal"></span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A93C9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      </div>
+    </div>
+    <div>
       <h2>App</h2>
       <div class="kaart">
         <div class="rij"><span class="label">Browser</span><span class="waarde" id="appBrowser">—</span></div>
@@ -258,11 +289,16 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-005</div>
+    <div id="backupScherm" hidden></div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-006</div>
   </section>
 </main>
 
-    <div class="onderbalk" id="balk-boodschappen">
+<div id="update-bar" role="button" tabindex="0" title="Nieuwe versie beschikbaar">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path></svg>
+  Nieuwe versie — tik om te herladen
+</div>
+<div class="onderbalk" id="balk-boodschappen">
   <div class="invoerbalk">
     <button class="soortknop" id="invoerSoort" type="button" aria-haspopup="menu" aria-expanded="false"></button>
     <input id="invoerTekst" type="text" aria-label="Artikel zoeken of toevoegen" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
@@ -301,9 +337,14 @@
 
 <script>
 'use strict';
-/* thuis — app-shell (stap 2 van het bouwplan in ontwerp.md): indeling, tabbladen,
-   aanmelden bij Microsoft, de gedeelde map koppelen en de melding bij een nieuwe
-   versie. Lijsten, samenvoegen en synchroniseren volgen in de volgende stappen. */
+/* thuis — boodschappen en acties voor twee personen, via een gedeelde
+   OneDrive-map (ontwerp.md). Opbouw van dit script, van boven naar beneden:
+   kern (bestand en samenvoegen, puur en los getest) · hulpfuncties · opslag op
+   de telefoon · meldingen · tabbladen · aanmelden · map koppelen · nieuwe
+   versie · gegevens en synchroniseren · Artikelen · keuzelijst · Boodschappen ·
+   Winkels · vegen · start.
+   Veiligheid: geen code van anderen; gegevens alleen via textContent in de
+   pagina, nooit als HTML; het CSP-meta bovenin bepaalt met wie de app praat. */
 
 const APP_FILE = 'thuis.html';
 const CACHE_PREFIX = 'thuis-';
@@ -321,351 +362,443 @@ const AANMELD_GRENS = 24 * 3600 * 1000;
 const $ = (id) => document.getElementById(id);
 
 /* == kern == */
-/* De kern: thuis.json lezen en schrijven (stap 3) en handelingen samenvoegen
-   (stap 4). Alleen pure functies, zonder DOM of netwerk, zodat thuis-tests.cjs
-   dit blok los kan uitvoeren. Het formaat staat in ontwerp.md §3, het samenvoegen
-   in §4. */
+/* De kern: thuis.json lezen, streng controleren en schrijven, en handelingen
+   samenvoegen. Alleen pure functies, zonder DOM of netwerk, zodat
+   thuis-tests.cjs dit blok los kan uitvoeren. Het formaat staat in ontwerp.md
+   §3, het samenvoegen in §4.
 
-const SOORTWOORDEN = ['instelling', 'winkel', 'artikel', 'actie', 'hernoemd'];
-/* De delen van thuis.json en het soort record dat erin staat. */
-const SECTIE_SOORT = { instellingen: 'instelling', winkels: 'winkel', artikelen: 'artikel', acties: 'actie', hernoemd: 'hernoemd' };
-const FORMAAT = '1352902-3FF';
-/* Volgorde waarin bekende velden worden geschreven; onbekende volgen erna, in hun eigen volgorde. */
-const VELDVOLGORDE = {
-  winkel: ['route'],
-  artikel: ['soort', 'ligt', 'op', 'opdoor', 'gekocht'],
-  actie: ['datum', 'herhaal', 'wie', 'notitie', 'link', 'foto', 'klaar', 'door'],
-  hernoemd: ['nieuw', 'op'],
-  instelling: ['namen', 'dag', 'tijd', 'teruggezet']
-};
-/* Velden waarin | een lijstscheider is. */
-const LIJSTVELDEN = { route: true, ligt: true, gekocht: true, namen: true };
+   Alles heeft een vaste id; de naam is een gewoon veld. Hernoemen verandert
+   alleen de naam, en verwijzingen (ligt, favorieten, mandje) blijven kloppen. */
+
+/* Formaat: datum en tijd van de laatste formaatwijziging in hex, zoals het
+   versiestempel van de app: 1352902-459 = 20261122, 11:13. */
+const FORMAAT = '1352902-459';
+const SOORTEN = ['eenmalig', 'wekelijks', 'regelmatig'];
 const MAX_GEKOCHT = 6;
 const SORTEER = new Intl.Collator('nl', { sensitivity: 'base', numeric: true });
+/* Tekens voor een id: kleine letters en cijfers, zonder 0 o 1 l i. */
+const ID_TEKENS = 'abcdefghjkmnpqrstuvwxyz23456789';
+const ID_PATROON = /^[a-z0-9]{3,12}$/;
+const DATUM = /^\d{4}-\d{2}-\d{2}$/;
+/* Velden per soort record, in de volgorde waarin ze worden geschreven.
+   Onbekende velden blijven bewaard en volgen erna. */
+const VELDEN = {
+  winkel: ['naam', 'afdelingen'],
+  artikel: ['naam', 'soort', 'ligt', 'op', 'opdoor', 'gekocht'],
+  actie: ['naam', 'datum', 'herhaal', 'wie', 'notitie', 'link', 'foto', 'klaar', 'door']
+};
+const DEEL = { winkels: 'winkel', artikelen: 'artikel', acties: 'actie' };
 
 /* Vergelijkingsvorm van een naam: NFC, spaties samengevoegd, zonder hoofdletters. */
-/* Voor zoeken: ook zonder accenten (creme vindt Crème), zoals in events. */
-function zoekVorm(s) { return normNaam(s).normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function normNaam(s) {
   return String(s).normalize('NFC').replace(/\s+/g, ' ').trim().toLocaleLowerCase('nl');
 }
+/* Voor zoeken: ook zonder accenten (creme vindt Crème), zoals in events. */
+function zoekVorm(s) { return normNaam(s).normalize('NFD').replace(/[̀-ͯ]/g, ''); }
 
-/* Invoer van de gebruiker: één regel, zonder ; en |, spaties samengevoegd. */
+/* Invoer van de gebruiker: één regel, zonder stuurtekens, spaties samengevoegd. */
 function schoonTekst(s) {
-  return String(s).normalize('NFC')
-    .replace(/[\u0000-\u001F\u007F]/g, ' ')
-    .replace(/;/g, ',').replace(/\|/g, ' ')
-    .replace(/\s+/g, ' ').trim();
-}
-
-/* Een link mag ; en | bevatten: die worden gecodeerd. */
-function schoonLink(s) {
-  return String(s).trim().replace(/[\u0000-\u001F\u007F\s]/g, '').replace(/;/g, '%3B').replace(/\|/g, '%7C');
-}
-
-function sleutel(soort, vast) {
-  return soort + '\u0001' + vast.map(normNaam).join('\u0001');
+  return String(s).normalize('NFC').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function tweeCijfers(n) { return (n < 10 ? '0' : '') + n; }
 function datumTekst(d) { return d.getFullYear() + '-' + tweeCijfers(d.getMonth() + 1) + '-' + tweeCijfers(d.getDate()); }
 function tijdstipTekst(d) { return datumTekst(d) + 'T' + tweeCijfers(d.getHours()) + ':' + tweeCijfers(d.getMinutes()); }
 
-/* bytes (Uint8Array) of tekst → { ok, reden?, model, meldingen } */
+function leegModel() {
+  return { bom: false, instellingen: Object.create(null), winkels: new Map(), artikelen: new Map(), acties: new Map(),
+    extra: Object.create(null), opgelost: [] };
+}
+function verzameling(model, soort) {
+  return soort === 'winkel' ? model.winkels : soort === 'artikel' ? model.artikelen : soort === 'actie' ? model.acties : null;
+}
+function bestaatId(model, id) {
+  if (model.winkels.has(id) || model.artikelen.has(id) || model.acties.has(id)) return true;
+  for (const w of model.winkels.values()) if (w.afdelingen.some((a) => a.id === id)) return true;
+  return false;
+}
+/* Een nieuwe id: vijf willekeurige tekens (31^5, ruim 28 miljoen mogelijkheden),
+   uniek binnen het model. bytes(n) levert n willekeurige bytes. */
+function maakId(model, bytes) {
+  for (;;) {
+    let s = '';
+    for (const b of bytes(5)) s += ID_TEKENS[b % ID_TEKENS.length];
+    if (!bestaatId(model, s)) return s;
+  }
+}
+
+const isObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+const isTekst = (v) => typeof v === 'string';
+/* Kopie van een onbekende waarde, zonder prototype-trucs. */
+function kloon(v) { return v === undefined ? v : JSON.parse(JSON.stringify(v)); }
+function extraVan(obj, bekend) {
+  const e = Object.create(null);
+  for (const k of Object.keys(obj)) if (bekend.indexOf(k) === -1) e[k] = kloon(obj[k]);
+  return e;
+}
+
+/* Eén record uit JSON → model. Gooit een Error met de reden als de opbouw niet
+   klopt; dan schrijft de app niets (liever niets dan stil iets kwijt). */
+function recordUitJson(soort, id, o) {
+  const fout = (t) => { throw new Error(soort + ' ' + id + ': ' + t); };
+  if (!ID_PATROON.test(id)) fout('ongeldige id');
+  if (!isObject(o)) fout('geen object');
+  if (!isTekst(o.naam) || !schoonTekst(o.naam)) fout('geen naam');
+  const r = { id, naam: o.naam, extra: extraVan(o, VELDEN[soort]) };
+  if (soort === 'winkel') {
+    const afd = o.afdelingen === undefined ? [] : o.afdelingen;
+    if (!Array.isArray(afd)) fout('afdelingen is geen lijst');
+    const ids = new Set();
+    r.afdelingen = afd.map((a) => {
+      if (!isObject(a) || !ID_PATROON.test(a.id) || !isTekst(a.naam) || !schoonTekst(a.naam) || ids.has(a.id)) fout('ongeldige afdeling');
+      ids.add(a.id);
+      return { id: a.id, naam: a.naam, extra: extraVan(a, ['id', 'naam']) };
+    });
+  } else if (soort === 'artikel') {
+    if (o.soort !== undefined && SOORTEN.indexOf(o.soort) === -1) fout('onbekende soort');
+    r.soort = o.soort || 'eenmalig';
+    if (o.ligt !== undefined && !isObject(o.ligt)) fout('ligt is geen object');
+    r.ligt = new Map();
+    for (const w of Object.keys(o.ligt || {})) {
+      if (!ID_PATROON.test(w) || !isTekst(o.ligt[w])) fout('ongeldige plek');
+      r.ligt.set(w, o.ligt[w]);
+    }
+    for (const k of ['op', 'opdoor']) {
+      if (o[k] !== undefined && !isTekst(o[k])) fout(k + ' is geen tekst');
+      r[k] = o[k] || '';
+    }
+    if (o.gekocht !== undefined && (!Array.isArray(o.gekocht) || o.gekocht.some((d) => !isTekst(d) || !DATUM.test(d)))) fout('ongeldige aankoopdatums');
+    r.gekocht = (o.gekocht || []).slice();
+  } else {
+    r.velden = Object.create(null);
+    for (const k of VELDEN.actie.slice(1)) {
+      if (o[k] === undefined) continue;
+      if (!isTekst(o[k])) fout(k + ' is geen tekst');
+      r.velden[k] = o[k];
+    }
+  }
+  return r;
+}
+
+function recordNaarJson(soort, r) {
+  const o = { naam: r.naam };
+  if (soort === 'winkel') {
+    if (r.afdelingen.length) o.afdelingen = r.afdelingen.map((a) => Object.assign({ id: a.id, naam: a.naam }, a.extra));
+  } else if (soort === 'artikel') {
+    o.soort = r.soort;
+    if (r.ligt.size) { o.ligt = {}; for (const [w, a] of r.ligt) o.ligt[w] = a; }
+    if (r.op) o.op = r.op;
+    if (r.opdoor) o.opdoor = r.opdoor;
+    if (r.gekocht.length) o.gekocht = r.gekocht.slice();
+  } else {
+    for (const k of VELDEN.actie.slice(1)) if (r.velden[k]) o[k] = r.velden[k];
+  }
+  for (const k of Object.keys(r.extra)) if (!(k in o)) o[k] = r.extra[k];
+  return o;
+}
+
+/* bytes (Uint8Array) of tekst → { ok, reden?, detail?, model } */
 function leesBestand(invoer) {
   let tekst = invoer;
   if (typeof invoer !== 'string') {
     try { tekst = new TextDecoder('utf-8', { fatal: true }).decode(invoer); }
-    catch (e) { return { ok: false, reden: 'geen-utf8', meldingen: [] }; }
+    catch (e) { return { ok: false, reden: 'geen-utf8' }; }
   }
-  const meldingen = [];
-  const bom = tekst.charCodeAt(0) === 0xFEFF;
-  if (bom) tekst = tekst.slice(1);
-  const model = { bom, records: new Map(), extra: {} };
-  if (tekst.trim() === '') return { ok: true, model, meldingen };
+  const model = leegModel();
+  model.bom = tekst.charCodeAt(0) === 0xFEFF;
+  if (model.bom) tekst = tekst.slice(1);
+  if (tekst.trim() === '') return { ok: true, model };
   let data;
-  try { data = JSON.parse(tekst); } catch (e) { return { ok: false, reden: 'geen-json', meldingen: [] }; }
-  if (!data || typeof data !== 'object' || Array.isArray(data)) return { ok: false, reden: 'geen-json', meldingen: [] };
+  try { data = JSON.parse(tekst); } catch (e) { return { ok: false, reden: 'geen-json' }; }
+  if (!isObject(data)) return { ok: false, reden: 'geen-json' };
   const v = formaatGetal(data.versie);
-  if (v === null || v < formaatGetal(FORMAAT)) return { ok: false, reden: 'onbekend-formaat', meldingen: [] };
-  if (v > formaatGetal(FORMAAT)) return { ok: false, reden: 'nieuwer-formaat', meldingen: [] };
-  const voegToe = (soort, vast, obj) => {
-    const rec = { soort, vast: vast.map((x) => String(x).normalize('NFC').replace(/\s+/g, ' ').trim()), velden: new Map() };
-    if (rec.vast.some((x) => x === '')) return;
-    for (const k of Object.keys(obj || {})) {
-      const w = uitJson(soort, k, obj[k]);
-      if (w === '' || w === null || w === undefined) continue;
-      rec.velden.set(veldIntern(soort, k), w);
-    }
-    const s = sleutel(soort, rec.vast);
-    const bestaand = model.records.get(s);
-    if (bestaand) {
-      /* Dezelfde naam twee keer (verschil alleen in hoofdletters of spaties):
-         samenvoegen, de eerste wint bij verschil, en melden. */
-      for (const [k, w] of rec.velden) if (!bestaand.velden.has(k)) bestaand.velden.set(k, w);
-      meldingen.push({ soort: 'dubbele-naam', recordsoort: soort, naam: rec.vast[rec.vast.length - 1] });
-    } else model.records.set(s, rec);
-  };
+  if (v === null || v < formaatGetal(FORMAAT)) return { ok: false, reden: 'onbekend-formaat' };
+  if (v > formaatGetal(FORMAAT)) return { ok: false, reden: 'nieuwer-formaat' };
+  try { leesDelen(data, model); } catch (e) { return { ok: false, reden: 'onjuiste-opbouw', detail: e.message }; }
+  rechtzetten(model);
+  return { ok: true, model };
+}
+
+/* De delen van het bestand → model. Gooit bij een opbouw die niet klopt. */
+function leesDelen(data, model) {
   for (const k of Object.keys(data)) {
-    const soort = SECTIE_SOORT[k];
     const deel = data[k];
     if (k === 'versie') continue;
-    if (!soort) { model.extra[k] = deel; continue; }
-    if (soort === 'hernoemd') {
-      for (const h of Array.isArray(deel) ? deel : []) {
-        if (!h || typeof h !== 'object' || !h.soort || !h.oud) continue;
-        const rest = Object.assign({}, h); delete rest.soort; delete rest.oud;
-        voegToe('hernoemd', [h.soort, h.oud], rest);
+    if (k === 'instellingen') {
+      if (!isObject(deel)) throw new Error('instellingen is geen object');
+      for (const n of Object.keys(deel)) {
+        if (!isObject(deel[n])) throw new Error('instelling ' + n + ' is geen object');
+        model.instellingen[n] = kloon(deel[n]);
       }
       continue;
     }
-    if (!deel || typeof deel !== 'object' || Array.isArray(deel)) continue;
-    for (const naam of Object.keys(deel)) voegToe(soort, [naam], deel[naam]);
+    const soort = DEEL[k];
+    if (!soort) { model.extra[k] = kloon(deel); continue; }
+    if (!isObject(deel)) throw new Error(k + ' is geen object');
+    const verz = verzameling(model, soort);
+    for (const id of Object.keys(deel)) verz.set(id, recordUitJson(soort, id, deel[id]));
   }
-  return { ok: true, model, meldingen };
+  const w = model.instellingen.wekelijks;
+  if (w && ['dag', 'tijd', 'teruggezet'].some((x) => w[x] !== undefined && !isTekst(w[x]))) throw new Error('instelling wekelijks klopt niet');
 }
 
-/* Formaat: datum en tijd van de laatste formaatwijziging, in hex (zoals het
-   versiestempel van de app): 1352902-3FF = 20261122, 10:23. */
+/* Onschuldige afwijkingen rechtzetten: een plek in een winkel die niet meer
+   bestaat valt weg, een afdeling die die winkel niet (meer) heeft wordt leeg. */
+function rechtzetten(model) {
+  for (const a of model.artikelen.values()) {
+    for (const [w, afd] of Array.from(a.ligt)) {
+      const winkel = model.winkels.get(w);
+      if (!winkel) { a.ligt.delete(w); model.opgelost.push(a.naam + ': verwijzing naar een verwijderde winkel weggehaald'); }
+      else if (afd && !winkel.afdelingen.some((x) => x.id === afd)) { a.ligt.set(w, ''); model.opgelost.push(a.naam + ': verwijzing naar een verwijderde afdeling weggehaald'); }
+    }
+  }
+}
+
 function formaatGetal(v) {
   const m = /^([0-9A-F]{1,8})-([0-9A-F]{1,4})$/i.exec(String(v || ''));
-  return m ? parseInt(m[1], 16) * 10000 + parseInt(m[2], 16) : null;
+  return m ? parseInt(m[1], 16) * 100000 + parseInt(m[2], 16) : null;
 }
-/* JSON-waarde ↔ interne veldwaarde (tekst; lijsten met |). */
-function uitJson(soort, k, w) {
-  if (soort === 'artikel' && k === 'ligt' && w && typeof w === 'object' && !Array.isArray(w)) {
-    return plekTekst(Object.keys(w).map((winkel) => ({ winkel, afd: typeof w[winkel] === 'string' ? w[winkel] : '' })));
-  }
-  if (Array.isArray(w) && LIJSTVELDEN[veldIntern(soort, k)]) return w.map(String).filter((x) => x !== '').join('|');
-  if (typeof w === 'string') return w;
-  return w; // onbekend: ongewijzigd bewaren
+
+function opNaam(verz) {
+  return Array.from(verz.values()).sort((a, b) => SORTEER.compare(a.naam, b.naam) || (a.id < b.id ? -1 : 1));
 }
-function naarJson(soort, k, w) {
-  if (typeof w !== 'string') return w;
-  if (soort === 'artikel' && k === 'ligt') {
-    const o = {};
-    for (const p of plekLijst(w)) o[p.winkel] = p.afd;
-    return o;
-  }
-  if (LIJSTVELDEN[k]) return lijst(w);
-  return w;
-}
-function veldIntern(soort, k) { return soort === 'winkel' && k === 'afdelingen' ? 'route' : k; }
-function veldExtern(soort, k) { return soort === 'winkel' && k === 'route' ? 'afdelingen' : k; }
 
 /* model → JSON-tekst: één record per regel, op naam, velden in vaste volgorde. */
 function schrijfBestand(model) {
-  const perSoort = {};
-  for (const r of model.records.values()) (perSoort[r.soort] = perSoort[r.soort] || []).push(r);
-  const velden = (r) => {
-    const volgorde = VELDVOLGORDE[r.soort] || [];
-    const ks = volgorde.filter((k) => r.velden.has(k)).concat(Array.from(r.velden.keys()).filter((k) => volgorde.indexOf(k) === -1));
-    const o = {};
-    for (const k of ks) {
-      const w = r.velden.get(k);
-      if (w === undefined || w === null || w === '') continue;
-      o[veldExtern(r.soort, k)] = naarJson(r.soort, k, w);
-    }
-    return o;
-  };
   const delen = ['"versie": ' + JSON.stringify(FORMAAT)];
-  for (const sectie of Object.keys(SECTIE_SOORT)) {
-    const soort = SECTIE_SOORT[sectie];
-    const recs = (perSoort[soort] || []).sort((a, b) => {
-      for (let i = 0; i < a.vast.length; i++) { const c = SORTEER.compare(a.vast[i] || '', b.vast[i] || ''); if (c) return c; }
-      return 0;
-    });
-    let regels;
-    if (soort === 'hernoemd') {
-      regels = recs.map((r) => JSON.stringify(Object.assign({ soort: r.vast[0], oud: r.vast[1] }, velden(r))));
-      delen.push(JSON.stringify(sectie) + ': ' + (regels.length ? '[\n ' + regels.join(',\n ') + '\n]' : '[]'));
-    } else {
-      regels = recs.map((r) => JSON.stringify(r.vast[0]) + ': ' + JSON.stringify(velden(r)));
-      delen.push(JSON.stringify(sectie) + ': ' + (regels.length ? '{\n ' + regels.join(',\n ') + '\n}' : '{}'));
-    }
+  const inst = Object.keys(model.instellingen).sort();
+  delen.push('"instellingen": ' + (inst.length ? '{\n' + inst.map((n) => ' ' + JSON.stringify(n) + ': ' + JSON.stringify(model.instellingen[n])).join(',\n') + '\n}' : '{}'));
+  for (const deel of Object.keys(DEEL)) {
+    const soort = DEEL[deel];
+    const regels = opNaam(verzameling(model, soort)).map((r) => ' ' + JSON.stringify(r.id) + ': ' + JSON.stringify(recordNaarJson(soort, r)));
+    delen.push(JSON.stringify(deel) + ': ' + (regels.length ? '{\n' + regels.join(',\n') + '\n}' : '{}'));
   }
-  for (const k of Object.keys(model.extra || {})) delen.push(JSON.stringify(k) + ': ' + JSON.stringify(model.extra[k]));
+  for (const k of Object.keys(model.extra)) delen.push(JSON.stringify(k) + ': ' + JSON.stringify(model.extra[k]));
   return '{\n' + delen.join(',\n') + '\n}\n';
 }
 
-function lijst(w) { return w ? String(w).split('|').filter((x) => x !== '') : []; }
-
-/* Waar een artikel te koop is: ligt=Albert Heijn:Zuivel|Plus:Koeling|Jumbo
-   (winkel, dan na de eerste : de afdeling in die winkel; zonder : nog onbekend).
-   Leeg = nog nergens vastgelegd: dan staat het in elke winkel bovenaan. */
-function plekLijst(w) {
-  return lijst(w).map((x) => { const i = x.indexOf(':'); return i < 0 ? { winkel: x, afd: '' } : { winkel: x.slice(0, i), afd: x.slice(i + 1) }; });
-}
-function plekTekst(plekken) { return plekken.map((p) => p.afd ? p.winkel + ':' + p.afd : p.winkel).join('|'); }
-function plekkenVan(r) { return plekLijst(r.velden.get('ligt')); }
-function zetPlekken(r, plekken) {
-  if (plekken.length) r.velden.set('ligt', plekTekst(plekken)); else r.velden.delete('ligt');
-}
-
-/* Zoekt een record; via een hernoemd-spoor ook onder een oude naam. */
-function vindRecord(model, soort, naam) {
-  let n = naam;
-  for (let stap = 0; stap < 6; stap++) {
-    const r = model.records.get(sleutel(soort, [n]));
-    if (r) return r;
-    const spoor = model.records.get(sleutel('hernoemd', [soort, n]));
-    if (!spoor || !spoor.velden.get('nieuw')) return null;
-    n = spoor.velden.get('nieuw');
-  }
+function zoekOpNaam(verz, naam, behalve) {
+  const n = normNaam(naam);
+  for (const r of verz.values()) if (r.id !== behalve && normNaam(r.naam) === n) return r;
   return null;
 }
 
-/* Hernoemen: verwijzingen meenemen en een spoor achterlaten. */
-function hernoem(model, rec, nieuweNaam, nu) {
-  const oud = rec.vast[0];
-  model.records.delete(sleutel(rec.soort, rec.vast));
-  rec.vast = [nieuweNaam];
-  model.records.set(sleutel(rec.soort, rec.vast), rec);
-  const oudN = normNaam(oud);
-  for (const r of model.records.values()) {
-    if (rec.soort === 'winkel' && r.soort === 'artikel' && r.velden.has('ligt')) {
-      r.velden.set('ligt', plekTekst(plekLijst(r.velden.get('ligt')).map((p) =>
-        normNaam(p.winkel) === oudN ? { winkel: nieuweNaam, afd: p.afd } : p)));
-    }
-  }
-  if (normNaam(oud) === normNaam(nieuweNaam)) return; // alleen hoofdletters of spaties: geen spoor nodig
-  model.records.set(sleutel('hernoemd', [rec.soort, oud]), {
-    soort: 'hernoemd', vast: [rec.soort, oud], velden: new Map([['nieuw', nieuweNaam], ['op', datumTekst(nu)]]), los: []
-  });
+/* Past één handeling toe. Geeft { status, ... }: ok, al (er gebeurde al
+   hetzelfde), samengevoegd (bestond al onder deze naam; id = de bestaande),
+   botsing (toegepast; vorige waarde erbij), vervallen (bestaat niet meer, of
+   de naam is al bezet). Per handeling een eigen functie in HANDELINGEN; voor
+   de meeste moet het record bestaan en van de juiste soort zijn. */
+const VERVALLEN = { status: 'vervallen' };
+const HANDELINGEN = {
+  nieuw: { soort: null, bestaand: false, doe: handelNieuw },
+  terug: { soort: null, bestaand: false, doe: handelTerug },
+  weg: { soort: null, bestaand: false, doe: handelWeg },
+  zet: { soort: null, bestaand: true, doe: handelZet },
+  gekocht: { soort: 'artikel', bestaand: true, doe: handelGekocht },
+  nietGekocht: { soort: 'artikel', bestaand: true, doe: handelGekocht },
+  plaats: { soort: 'artikel', bestaand: true, doe: handelPlaats },
+  afdErbij: { soort: 'winkel', bestaand: true, doe: handelAfdErbij },
+  afdHernoem: { soort: 'winkel', bestaand: true, doe: handelAfdHernoem },
+  afdWeg: { soort: 'winkel', bestaand: true, doe: handelAfdWeg },
+  volgorde: { soort: 'winkel', bestaand: true, doe: handelVolgorde },
+  instelling: { soort: null, bestaand: false, doe: handelInstelling }
+};
+function pasToe(model, h) {
+  const regel = HANDELINGEN[h.actie];
+  if (!regel || (regel.soort && regel.soort !== h.soort)) return { status: 'vervallen', reden: 'onbekend' };
+  const verz = verzameling(model, h.soort);
+  if (!regel.bestaand) return regel.doe(model, h, verz);
+  const r = verz && verz.get(h.id);
+  return r ? regel.doe(model, h, verz, r) : VERVALLEN;
 }
 
-/* Past één handeling toe op het model. Geeft { status, vorige? }:
-   ok, al (er gebeurde al hetzelfde), heropend, botsing (toegepast; vorige
-   waarde erbij voor 'andere versie terugzetten'), vervallen (bestaat niet
-   meer of de nieuwe naam is al bezet). */
-function pasToe(model, h, nu) {
-  const nuD = nu || new Date();
-  if (h.actie === 'nieuw') {
-    const r = vindRecord(model, h.soort, h.naam);
-    if (r) {
-      if (h.soort === 'artikel') {
-        if (r.velden.get('op')) return { status: 'al' };
-        r.velden.set('op', h.t);
-        if (h.wie) r.velden.set('opdoor', h.wie);
-        return { status: 'ok' };
-      }
-      if (h.soort === 'actie' && r.velden.get('klaar')) {
-        r.velden.delete('klaar'); r.velden.delete('door');
-        return { status: 'heropend' };
-      }
-      return { status: 'al' };
-    }
-    const velden = new Map();
-    for (const k of Object.keys(h.velden || {})) if (h.velden[k] !== '' && h.velden[k] != null) velden.set(k, String(h.velden[k]));
-    model.records.set(sleutel(h.soort, [h.naam]), { soort: h.soort, vast: [h.naam], velden, los: [] });
-    return { status: 'ok' };
+function handelNieuw(model, h, verz) {
+  if (!verz) return { status: 'vervallen', reden: 'onbekend' };
+  const v = h.velden || {};
+  const zelfde = verz.get(h.id) || zoekOpNaam(verz, v.naam);
+  if (zelfde) {
+    /* Twee telefoons maakten hetzelfde aan (zelfde naam): samenvoegen. Een
+       artikel dat erop moest, komt op de lijst. */
+    if (h.soort === 'artikel' && v.op && !zelfde.op) { zelfde.op = v.op; zelfde.opdoor = v.opdoor || ''; }
+    return zelfde.id === h.id ? { status: 'al' } : { status: 'samengevoegd', id: zelfde.id };
   }
-  const r = vindRecord(model, h.soort, h.naam);
-  if (h.actie === 'weg') {
-    if (!r) return { status: 'al' };
-    model.records.delete(sleutel(r.soort, r.vast));
-    if (r.soort === 'winkel') {
-      /* Een verwijderde winkel verdwijnt ook bij de artikelen. */
-      const n = normNaam(r.vast[0]);
-      for (const a of model.records.values()) {
-        if (a.soort !== 'artikel') continue;
-        const voor = plekkenVan(a);
-        const na = voor.filter((p) => normNaam(p.winkel) !== n);
-        if (na.length !== voor.length) zetPlekken(a, na);
-      }
+  const o = Object.assign({}, v);
+  if (h.soort === 'winkel') o.afdelingen = [];
+  try { verz.set(h.id, recordUitJson(h.soort, h.id, o)); } catch (e) { return { status: 'vervallen', reden: 'ongeldig' }; }
+  return { status: 'ok' };
+}
+
+/* Ongedaan maken van verwijderen: hetzelfde record met dezelfde id terug, met
+   de plekken die ernaar verwezen. */
+function handelTerug(model, h, verz) {
+  if (h.soort === 'afdeling') {
+    const w = model.winkels.get(h.winkel);
+    if (!w) return VERVALLEN;
+    if (w.afdelingen.some((a) => a.id === h.afd.id)) return { status: 'al' };
+    w.afdelingen.splice(Math.min(h.plaats, w.afdelingen.length), 0, { id: h.afd.id, naam: h.afd.naam, extra: Object.create(null) });
+    for (const id of h.artikelen || []) {
+      const a = model.artikelen.get(id);
+      if (a && a.ligt.get(h.winkel) === '') a.ligt.set(h.winkel, h.afd.id);
     }
     return { status: 'ok' };
   }
-  if (!r) return { status: 'vervallen' };
-  if (h.actie === 'hernoem') {
-    if (normNaam(r.vast[0]) === normNaam(h.nieuw)) {
-      if (r.vast[0] === h.nieuw) return { status: 'al' };
-    } else if (model.records.has(sleutel(h.soort, [h.nieuw]))) {
-      return { status: 'vervallen', reden: 'naam-bezet' };
+  if (!verz || !h.record) return { status: 'vervallen', reden: 'onbekend' };
+  if (verz.has(h.id)) return { status: 'al' };
+  if (zoekOpNaam(verz, h.record.naam)) return { status: 'vervallen', reden: 'naam-bezet' };
+  try { verz.set(h.id, recordUitJson(h.soort, h.id, h.record)); } catch (e) { return { status: 'vervallen', reden: 'ongeldig' }; }
+  if (h.soort === 'winkel') {
+    const afd = verz.get(h.id).afdelingen;
+    for (const id of Object.keys(h.ligt || {})) {
+      const a = model.artikelen.get(id);
+      if (a && !a.ligt.has(h.id)) a.ligt.set(h.id, afd.some((x) => x.id === h.ligt[id]) ? h.ligt[id] : '');
     }
-    hernoem(model, r, h.nieuw, nuD);
-    return { status: 'ok' };
   }
-  if (h.actie === 'gekocht') {
-    const data = lijst(r.velden.get('gekocht'));
-    if (data.indexOf(h.datum) === -1) data.push(h.datum);
-    data.sort();
-    r.velden.set('gekocht', data.slice(-MAX_GEKOCHT).join('|'));
-    return { status: 'ok' };
-  }
-  if (h.actie === 'nietGekocht') {
-    const data = lijst(r.velden.get('gekocht')).filter((d) => d !== h.datum);
-    if (data.length) r.velden.set('gekocht', data.join('|')); else r.velden.delete('gekocht');
-    return { status: 'ok' };
-  }
-  if (h.actie === 'plaats') {
-    /* Te koop in deze winkel, eventueel met de afdeling daar. Botst niet met
-       een plaatsing in een andere winkel. */
-    const plekken = plekkenVan(r);
-    const oud = plekken.find((p) => normNaam(p.winkel) === normNaam(h.winkel));
-    if (oud && oud.afd === (h.afd || '')) return { status: 'al' };
-    zetPlekken(r, plekken.filter((p) => p !== oud).concat([{ winkel: oud ? oud.winkel : h.winkel, afd: h.afd || '' }]));
-    return { status: 'ok' };
-  }
-  if (h.actie === 'volgorde') {
-    /* Nieuwe volgorde van de afdelingen van een winkel. Wat de ander intussen
-       toevoegde blijft achteraan staan; wat hij weghaalde blijft weg. */
-    const cur = lijst(r.velden.get('route'));
-    const curN = cur.map(normNaam);
-    const nieuw = h.volgorde.filter((x) => curN.indexOf(normNaam(x)) !== -1).map((x) => cur[curN.indexOf(normNaam(x))]);
-    for (const x of cur) if (!nieuw.some((y) => normNaam(y) === normNaam(x))) nieuw.push(x);
-    if (nieuw.join('|') === cur.join('|')) return { status: 'al' };
-    r.velden.set('route', nieuw.join('|'));
-    return { status: 'ok' };
-  }
-  if (h.actie === 'afdHernoem' || h.actie === 'afdWeg') {
-    /* Een afdeling van één winkel hernoemen of weghalen; de artikelen die daar
-       liggen gaan mee (bij weghalen: nog te koop in die winkel, afdeling onbekend). */
-    const cur = lijst(r.velden.get('route'));
-    const i = cur.findIndex((x) => normNaam(x) === normNaam(h.afd));
-    if (i === -1) return { status: h.actie === 'afdWeg' ? 'al' : 'vervallen' };
-    if (h.actie === 'afdHernoem') {
-      if (cur.some((x, j) => j !== i && normNaam(x) === normNaam(h.nieuw))) return { status: 'vervallen', reden: 'naam-bezet' };
-      if (cur[i] === h.nieuw) return { status: 'al' };
-      cur[i] = h.nieuw;
-    } else cur.splice(i, 1);
-    if (cur.length) r.velden.set('route', cur.join('|')); else r.velden.delete('route');
-    const w = normNaam(r.vast[0]), oud = normNaam(h.afd);
-    for (const a of model.records.values()) {
-      if (a.soort !== 'artikel' || !a.velden.has('ligt')) continue;
-      const pl = plekLijst(a.velden.get('ligt'));
-      let veranderd = false;
-      for (const p of pl) if (normNaam(p.winkel) === w && normNaam(p.afd) === oud) { p.afd = h.actie === 'afdHernoem' ? h.nieuw : ''; veranderd = true; }
-      if (veranderd) a.velden.set('ligt', plekTekst(pl));
-    }
-    return { status: 'ok' };
-  }
-  if (h.actie === 'lijstErbij') {
-    /* Een element aan een lijstveld toevoegen (zoals een afdeling aan een route);
-       botst nooit, ook niet als de ander tegelijk iets toevoegt. */
-    const items = lijst(r.velden.get(h.veld));
-    if (items.some((x) => normNaam(x) === normNaam(h.waarde))) return { status: 'al' };
-    items.push(h.waarde);
-    r.velden.set(h.veld, items.join('|'));
-    return { status: 'ok' };
-  }
-  if (h.actie === 'zet') {
-    const cur = r.velden.get(h.veld) || '';
-    const oud = h.oud || '', nieuw = h.nieuw || '';
-    const zet = () => { if (nieuw === '') r.velden.delete(h.veld); else r.velden.set(h.veld, nieuw); };
-    if (cur === nieuw) return { status: 'al' };
-    if (cur === oud) { zet(); return { status: 'ok' }; }
-    if (h.veld === 'op' || h.veld === 'opdoor') {
-      /* Op of van de lijst: staat het er bij beiden op, dan is er niets te doen;
-         anders wint de laatste handeling, zonder melding. */
-      if (h.veld === 'op' && cur !== '' && nieuw !== '') return { status: 'al' };
-      zet();
-      return { status: 'ok' };
-    }
+  return { status: 'ok' };
+}
+
+function handelWeg(model, h, verz) {
+  if (!verz) return { status: 'vervallen', reden: 'onbekend' };
+  if (!verz.has(h.id)) return { status: 'al' };
+  verz.delete(h.id);
+  if (h.soort === 'winkel') for (const a of model.artikelen.values()) a.ligt.delete(h.id);
+  return { status: 'ok' };
+}
+
+/* Velden die met "zet" mogen veranderen; de rest (afdelingen, plekken,
+   aankopen) alleen via hun eigen handeling. */
+const ZET_VELDEN = { winkel: [], artikel: ['soort', 'op', 'opdoor'], actie: VELDEN.actie.slice(1) };
+function handelZet(model, h, verz, r) {
+  if (h.veld === 'naam') return zetNaam(verz, h, r);
+  if ((ZET_VELDEN[h.soort] || []).indexOf(h.veld) === -1) return { status: 'vervallen', reden: 'onbekend' };
+  if (h.soort === 'artikel' && h.veld === 'soort' && SOORTEN.indexOf(h.nieuw) === -1) return { status: 'vervallen', reden: 'ongeldig' };
+  const doel = h.soort === 'actie' ? r.velden : r;
+  const cur = doel[h.veld] || '';
+  const oud = h.oud || '', nieuw = h.nieuw || '';
+  const zet = () => { if (h.soort === 'actie' && nieuw === '') delete doel[h.veld]; else doel[h.veld] = nieuw; };
+  if (cur === nieuw) return { status: 'al' };
+  if (cur === oud) { zet(); return { status: 'ok' }; }
+  if (h.veld === 'op' || h.veld === 'opdoor') {
+    /* Op of van de lijst: staat het er bij beiden op, dan is er niets te doen;
+       anders wint de laatste handeling, zonder melding. */
+    if (h.veld === 'op' && cur !== '' && nieuw !== '') return { status: 'al' };
     zet();
-    return { status: 'botsing', vorige: cur };
+    return { status: 'ok' };
   }
-  return { status: 'vervallen', reden: 'onbekende-handeling' };
+  zet();
+  return { status: 'botsing', vorige: cur };
+}
+function zetNaam(verz, h, r) {
+  const nieuw = schoonTekst(h.nieuw || '');
+  if (!nieuw) return { status: 'vervallen', reden: 'ongeldig' };
+  if (r.naam === nieuw) return { status: 'al' };
+  if (zoekOpNaam(verz, nieuw, r.id)) return { status: 'vervallen', reden: 'naam-bezet' };
+  const vorige = r.naam;
+  r.naam = nieuw;
+  return vorige === (h.oud || '') ? { status: 'ok' } : { status: 'botsing', vorige };
+}
+
+function handelGekocht(model, h, verz, r) {
+  if (h.actie === 'gekocht') { if (r.gekocht.indexOf(h.datum) === -1) r.gekocht.push(h.datum); }
+  else r.gekocht = r.gekocht.filter((d) => d !== h.datum);
+  r.gekocht.sort();
+  r.gekocht = r.gekocht.slice(-MAX_GEKOCHT);
+  return { status: 'ok' };
+}
+
+/* Te koop in deze winkel, eventueel met de afdeling daar; afd null = daar niet
+   (meer) te koop. Botst niet met een plaatsing in een andere winkel. */
+function handelPlaats(model, h, verz, r) {
+  const w = model.winkels.get(h.winkel);
+  if (!w) return VERVALLEN;
+  if (h.afd === null) {
+    if (!r.ligt.has(h.winkel)) return { status: 'al' };
+    r.ligt.delete(h.winkel);
+    return { status: 'ok' };
+  }
+  const afd = h.afd && w.afdelingen.some((a) => a.id === h.afd) ? h.afd : '';
+  if (r.ligt.has(h.winkel) && r.ligt.get(h.winkel) === afd) return { status: 'al' };
+  r.ligt.set(h.winkel, afd);
+  return { status: 'ok' };
+}
+
+function handelAfdErbij(model, h, verz, r) {
+  if (r.afdelingen.some((a) => a.id === h.afd.id)) return { status: 'al' };
+  const naam = schoonTekst(h.afd.naam || '');
+  if (!naam || !ID_PATROON.test(h.afd.id)) return { status: 'vervallen', reden: 'ongeldig' };
+  const zelfde = r.afdelingen.find((a) => normNaam(a.naam) === normNaam(naam));
+  if (zelfde) return { status: 'samengevoegd', id: zelfde.id };
+  r.afdelingen.push({ id: h.afd.id, naam, extra: Object.create(null) });
+  return { status: 'ok' };
+}
+
+function handelAfdHernoem(model, h, verz, r) {
+  const i = r.afdelingen.findIndex((a) => a.id === h.afd);
+  if (i === -1) return VERVALLEN;
+  const naam = schoonTekst(h.naam || '');
+  if (!naam) return { status: 'vervallen', reden: 'ongeldig' };
+  if (r.afdelingen.some((a, j) => j !== i && normNaam(a.naam) === normNaam(naam))) return { status: 'vervallen', reden: 'naam-bezet' };
+  if (r.afdelingen[i].naam === naam) return { status: 'al' };
+  r.afdelingen[i].naam = naam;
+  return { status: 'ok' };
+}
+
+/* Artikelen die daar lagen, blijven te koop in de winkel; afdeling onbekend. */
+function handelAfdWeg(model, h, verz, r) {
+  const i = r.afdelingen.findIndex((a) => a.id === h.afd);
+  if (i === -1) return { status: 'al' };
+  const weg = r.afdelingen.splice(i, 1)[0];
+  for (const a of model.artikelen.values()) if (a.ligt.get(r.id) === weg.id) a.ligt.set(r.id, '');
+  return { status: 'ok' };
+}
+
+/* Een instelling voor beiden (nu: wekelijks dag en tijd). Laatste wint. */
+const INSTELLING_GELDIG = {
+  wekelijks: { dag: (v) => v in WEEKDAG, tijd: (v) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v) }
+};
+function handelInstelling(model, h) {
+  const geldig = INSTELLING_GELDIG[h.naam] && INSTELLING_GELDIG[h.naam][h.veld];
+  if (!geldig || !geldig(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };
+  const inst = model.instellingen[h.naam] || (model.instellingen[h.naam] = {});
+  if (inst[h.veld] === h.nieuw) return { status: 'al' };
+  inst[h.veld] = h.nieuw;
+  return { status: 'ok' };
+}
+
+/* Nieuwe volgorde. Wat de ander intussen toevoegde blijft achteraan staan;
+   wat hij weghaalde blijft weg. */
+function handelVolgorde(model, h, verz, r) {
+  const nieuw = [];
+  for (const id of h.volgorde) { const a = r.afdelingen.find((x) => x.id === id); if (a && nieuw.indexOf(a) === -1) nieuw.push(a); }
+  for (const a of r.afdelingen) if (nieuw.indexOf(a) === -1) nieuw.push(a);
+  if (nieuw.every((a, j) => a === r.afdelingen[j])) return { status: 'al' };
+  r.afdelingen = nieuw;
+  return { status: 'ok' };
+}
+
+/* Alle id's in een handeling, via de vervangingen (samengevoegd) die eerder in
+   dezelfde reeks ontstonden. */
+function vervangIds(h, alias) {
+  if (!alias.size) return h;
+  const a = (id) => (typeof id === 'string' && alias.has(id) ? alias.get(id) : id);
+  const n = Object.assign({}, h, { id: a(h.id) });
+  if ('winkel' in h) n.winkel = a(h.winkel);
+  if (typeof h.afd === 'string') n.afd = a(h.afd);
+  if (h.volgorde) n.volgorde = h.volgorde.map(a);
+  if (h.artikelen) n.artikelen = h.artikelen.map(a);
+  return n;
+}
+
+/* Een reeks handelingen toepassen. Geeft de resultaten en de vervangingen:
+   een id die samenviel met een bestaande (bv. twee keer "Melk" offline). */
+function pasAllesToe(model, reeks) {
+  const alias = new Map();
+  const resultaten = reeks.map((h0) => {
+    const h = vervangIds(h0, alias);
+    const res = pasToe(model, h);
+    if (res.status === 'samengevoegd') alias.set(h.actie === 'afdErbij' ? h.afd.id : h.id, res.id);
+    return Object.assign({ h }, res);
+  });
+  return { resultaten, alias };
 }
 
 /* Het laatste moment (dag + tijd) op of vóór nu, in lokale tijd. */
@@ -683,82 +816,89 @@ function laatsteMoment(nu, dag, tijd) {
    telefoon rekent het uit tegen het bestand, zodat een telefoon die offline was
    net gekochte artikelen niet opnieuw op de lijst zet. Geeft het aantal. */
 function wekelijksTerug(model, nu) {
-  const inst = model.records.get(sleutel('instelling', ['wekelijks']));
+  const inst = model.instellingen.wekelijks;
   if (!inst) return 0;
-  const moment = laatsteMoment(nu, inst.velden.get('dag'), inst.velden.get('tijd'));
+  const moment = laatsteMoment(nu, inst.dag, inst.tijd);
   if (!moment) return 0;
   const mTekst = tijdstipTekst(moment), mDatum = datumTekst(moment);
-  const vorige = inst.velden.get('teruggezet') || '';
+  const vorige = inst.teruggezet || '';
   if (vorige >= mTekst) return 0;
-  inst.velden.set('teruggezet', mTekst);
+  inst.teruggezet = mTekst;
   if (vorige === '') return 0; // eerste keer: alleen het moment vastleggen
   let n = 0;
-  for (const r of model.records.values()) {
-    if (r.soort !== 'artikel' || r.velden.get('soort') !== 'wekelijks' || r.velden.get('op')) continue;
-    if (lijst(r.velden.get('gekocht')).some((d) => d >= mDatum)) continue;
-    r.velden.set('op', mTekst);
-    r.velden.delete('opdoor');
+  for (const r of model.artikelen.values()) {
+    if (r.soort !== 'wekelijks' || r.op) continue;
+    if (r.gekocht.some((d) => d >= mDatum)) continue;
+    r.op = mTekst;
+    r.opdoor = '';
     n++;
   }
   return n;
 }
 
-/* Opruimen: sporen van hernoemen na 30 dagen, afgeronde acties zonder herhaling
-   na 92 dagen, eenmalige artikelen die 365 dagen niet gekocht zijn. */
+/* Opruimen: afgeronde acties zonder herhaling na 92 dagen, eenmalige artikelen
+   die 365 dagen niet gekocht zijn. */
 function opruimen(model, nu) {
   const grens = (dagen) => datumTekst(new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() - dagen));
   let n = 0;
-  for (const [s, r] of Array.from(model.records)) {
-    let weg = false;
-    if (r.soort === 'hernoemd') weg = (r.velden.get('op') || '') < grens(30);
-    else if (r.soort === 'actie' && r.velden.get('klaar') && !r.velden.get('herhaal')) weg = r.velden.get('klaar') < grens(92);
-    else if (r.soort === 'artikel' && r.velden.get('soort') === 'eenmalig' && !r.velden.get('op')) {
-      const g = lijst(r.velden.get('gekocht'));
-      weg = g.length > 0 && g[g.length - 1] < grens(365);
-    }
-    if (weg) { model.records.delete(s); n++; }
+  for (const r of Array.from(model.acties.values())) {
+    if (r.velden.klaar && !r.velden.herhaal && r.velden.klaar < grens(92)) { model.acties.delete(r.id); n++; }
+  }
+  for (const r of Array.from(model.artikelen.values())) {
+    if (r.soort === 'eenmalig' && !r.op && r.gekocht.length && r.gekocht[r.gekocht.length - 1] < grens(365)) { model.artikelen.delete(r.id); n++; }
   }
   return n;
 }
 
 /* Eén synchronisatieronde, zonder netwerk: de nieuwste tekst uit OneDrive plus de
-   wachtrij → de tekst om terug te schrijven. Geeft { ok, tekst, resultaten,
-   gewijzigd } of { ok: false, reden }. */
+   wachtrij → de tekst om terug te schrijven. */
 function synchroniseer(remote, wachtrij, nu) {
   const gelezen = leesBestand(remote);
-  if (!gelezen.ok) return { ok: false, reden: gelezen.reden };
+  if (!gelezen.ok) return { ok: false, reden: gelezen.reden, detail: gelezen.detail };
   const model = gelezen.model;
   const voor = schrijfBestand(model);
-  if (!model.records.has(sleutel('instelling', ['wekelijks']))) {
-    model.records.set(sleutel('instelling', ['wekelijks']), { soort: 'instelling', vast: ['wekelijks'], velden: new Map([['dag', 'za'], ['tijd', '06:00']]) });
-  }
-  const resultaten = wachtrij.map((h) => Object.assign({ h }, pasToe(model, h, nu)));
+  if (!model.instellingen.wekelijks) model.instellingen.wekelijks = { dag: 'za', tijd: '06:00' };
+  const { resultaten, alias } = pasAllesToe(model, wachtrij);
   const terug = wekelijksTerug(model, nu);
   opruimen(model, nu);
   const tekst = schrijfBestand(model);
-  return { ok: true, tekst, resultaten, terug, meldingen: gelezen.meldingen, gewijzigd: tekst !== voor || model.bom };
+  return { ok: true, tekst, resultaten, alias, terug, opgelost: model.opgelost, gewijzigd: tekst !== voor || model.bom };
 }
 
-/* ---------- weergave van artikelen (stap 6) ---------- */
+/* Backups: de laatste 14 dagen, plus de eerste van elke maand van de laatste
+   12 maanden. Geeft de namen die weg mogen; alleen exacte backupnamen. */
+function backupsWeg(namen, vandaag) {
+  const lijstB = [];
+  for (const n of namen) {
+    const m = /^thuis_backup_(\d{4})(\d{2})(\d{2})\.json$/.exec(n);
+    if (m) lijstB.push({ n, d: m[1] + '-' + m[2] + '-' + m[3], maand: m[1] + '-' + m[2] });
+  }
+  const v = new Date(+vandaag.slice(0, 4), +vandaag.slice(5, 7) - 1, +vandaag.slice(8, 10));
+  const grensDag = datumTekst(new Date(v.getFullYear(), v.getMonth(), v.getDate() - 13));
+  const grensMaand = datumTekst(new Date(v.getFullYear(), v.getMonth() - 11, 1)).slice(0, 7);
+  lijstB.sort((a, b) => (a.d < b.d ? -1 : 1));
+  const eersteVanMaand = new Set();
+  const gezien = new Set();
+  for (const b of lijstB) if (!gezien.has(b.maand)) { gezien.add(b.maand); eersteVanMaand.add(b.n); }
+  return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);
+}
+
+/* ---------- weergave ---------- */
 const SOORT_LETTER = { eenmalig: 'E', wekelijks: 'W', regelmatig: 'R' };
 const LETTER_SOORT = { E: 'eenmalig', W: 'wekelijks', R: 'regelmatig' };
 const MAANDEN = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
 
-/* Alle artikelen, op naam gesorteerd, met de velden die het scherm nodig heeft.
-   Een artikel zonder (bekende) soort telt als eenmalig. */
+/* Alle artikelen, op naam gesorteerd, met wat het scherm nodig heeft. Eén keer
+   per wijziging uitgerekend. */
 function artikelLijst(model) {
-  const uit = [];
-  for (const r of model.records.values()) {
-    if (r.soort !== 'artikel') continue;
-    const soort = SOORT_LETTER[r.velden.get('soort')] ? r.velden.get('soort') : 'eenmalig';
-    uit.push({
-      naam: r.vast[0], sleutel: normNaam(r.vast[0]), zoek: zoekVorm(r.vast[0]), soort, letter: SOORT_LETTER[soort],
-      plekken: plekkenVan(r),
-      op: r.velden.get('op') || '', opdoor: r.velden.get('opdoor') || '',
-      gekocht: lijst(r.velden.get('gekocht'))
-    });
-  }
-  return uit.sort((a, b) => SORTEER.compare(a.naam, b.naam));
+  return opNaam(model.artikelen).map((r) => ({
+    id: r.id, naam: r.naam, sleutel: normNaam(r.naam), zoek: zoekVorm(r.naam), soort: r.soort, letter: SOORT_LETTER[r.soort],
+    plekken: Array.from(r.ligt, ([winkel, afd]) => ({ winkel, afd })),
+    op: r.op, opdoor: r.opdoor, gekocht: r.gekocht.slice()
+  }));
+}
+function winkelLijst(model) {
+  return opNaam(model.winkels).map((w) => ({ id: w.id, naam: w.naam, afdelingen: w.afdelingen.map((a) => ({ id: a.id, naam: a.naam })) }));
 }
 
 function dagNummer(datum) {
@@ -790,31 +930,20 @@ function suggestieTekst(s) {
   return 'laatst ' + dt.getUTCDate() + ' ' + MAANDEN[dt.getUTCMonth()] + ' · meestal ' + elke;
 }
 
-/* Zoeken: bevat de tekst, zonder verschil in hoofdletters en spaties. */
+/* Zoeken: bevat de tekst, zonder verschil in hoofdletters, spaties en accenten. */
 function zoekArtikelen(artikelen, tekst) {
   const t = zoekVorm(tekst);
   if (!t) return [];
   return artikelen.filter((a) => a.zoek.indexOf(t) !== -1);
 }
 
-/* ---------- winkel (stap 7) ---------- */
-function winkelLijst(model) {
-  const uit = [];
-  for (const r of model.records.values()) {
-    if (r.soort === 'winkel') uit.push({ naam: r.vast[0], route: lijst(r.velden.get('route')) });
-  }
-  return uit.sort((a, b) => SORTEER.compare(a.naam, b.naam));
+/* Te koop in deze winkel? Zonder winkels: overal (dan staat het bovenaan). */
+function teKoopIn(a, winkelId) {
+  return !a.plekken.length || a.plekken.some((p) => p.winkel === winkelId);
 }
-
-
-/* Is dit artikel te koop in deze winkel? */
-function teKoopIn(a, winkelNaam) {
-  const n = normNaam(winkelNaam);
-  return !a.plekken.length || a.plekken.some((p) => normNaam(p.winkel) === n);
-}
-/* De afdeling van dit artikel in deze winkel ('' = nog onbekend). */
-function afdelingIn(a, winkelNaam) {
-  const p = a.plekken.find((x) => normNaam(x.winkel) === normNaam(winkelNaam));
+/* De afdeling (id) van dit artikel in deze winkel; '' = nog onbekend. */
+function afdelingIn(a, winkelId) {
+  const p = a.plekken.find((x) => x.winkel === winkelId);
   return p ? p.afd : '';
 }
 
@@ -823,18 +952,16 @@ function afdelingIn(a, winkelNaam) {
    groepen — per afdeling, in looproute
    elders — niet te koop in deze winkel */
 function winkelIndeling(artikelen, winkel) {
-  const route = winkel ? winkel.route : [];
-  const routeN = route.map(normNaam);
+  const afd = winkel ? winkel.afdelingen : [];
   const boven = [], elders = [];
-  const perAfd = route.map(() => []);
+  const per = new Map(afd.map((a) => [a.id, []]));
   for (const a of artikelen) {
     if (!a.op) continue;
-    if (winkel && !teKoopIn(a, winkel.naam)) { elders.push(a); continue; }
-    const afd = winkel ? afdelingIn(a, winkel.naam) : '';
-    const i = afd ? routeN.indexOf(normNaam(afd)) : -1;
-    if (i === -1) boven.push(a); else perAfd[i].push(a);
+    if (winkel && !teKoopIn(a, winkel.id)) { elders.push(a); continue; }
+    const id = winkel ? afdelingIn(a, winkel.id) : '';
+    if (id && per.has(id)) per.get(id).push(a); else boven.push(a);
   }
-  const groepen = route.map((afd, i) => ({ afd, items: perAfd[i] })).filter((g) => g.items.length);
+  const groepen = afd.map((a) => ({ afd: a, items: per.get(a.id) })).filter((g) => g.items.length);
   return { boven, groepen, elders };
 }
 
@@ -844,9 +971,8 @@ function winkelIndeling(artikelen, winkel) {
 function winkelTellingen(artikelen, winkels) {
   const uit = [];
   for (const w of winkels) {
-    const n = normNaam(w.naam);
-    const hier = artikelen.filter((a) => a.op && a.plekken.some((p) => normNaam(p.winkel) === n));
-    if (hier.length) uit.push({ naam: w.naam, aantal: hier.length, artikelen: hier.map((a) => a.naam) });
+    const hier = artikelen.filter((a) => a.op && a.plekken.some((p) => p.winkel === w.id));
+    if (hier.length) uit.push({ id: w.id, naam: w.naam, aantal: hier.length, artikelen: hier.map((a) => a.naam) });
   }
   return uit.sort((x, y) => y.aantal - x.aantal || SORTEER.compare(x.naam, y.naam));
 }
@@ -974,6 +1100,8 @@ function toonScherm(naam) {
   $('midden').scrollTop = 0;
   if (naam === 'winkel') { tekenWinkel(); planSync(0); }
   if (naam === 'winkels') tekenWinkels();
+  if (naam === 'boodschappen') tekenBoodschappen();
+  if (naam === 'instellingen') { backupSluiten(true); tekenInstellingen(); backupsTellen(); }
 }
 for (const b of document.querySelectorAll('nav button')) {
   b.addEventListener('click', () => toonScherm(b.dataset.scherm));
@@ -1123,8 +1251,17 @@ async function afmelden() {
 }
 
 /* ---------- gedeelde map ---------- */
-async function mapKoppelen() {
+async function mapKoppelen(toch) {
   const link = $('deellink').value.trim();
+  /* Wijzigingen die nog niet in OneDrive staan, horen bij de oude map: niet
+     meenemen naar de nieuwe. */
+  if (wachtrij.length && toch !== true) {
+    melding('m-koppelen', wachtrij.length + (wachtrij.length === 1 ? ' wijziging staat' : ' wijzigingen staan') + ' nog niet in OneDrive.', [
+      { tekst: 'Toch koppelen', actie: () => { meldingWeg('m-koppelen'); mapKoppelen(true); } },
+      { tekst: 'Annuleren', tweede: true, actie: () => meldingWeg('m-koppelen') }
+    ]);
+    return;
+  }
   if (!/^https:\/\//.test(link)) { melding('m-map', 'Plak een deellink die met https:// begint.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-map') }]); return; }
   $('btnMap').disabled = true;
   try {
@@ -1133,8 +1270,12 @@ async function mapKoppelen() {
     const item = await res.json();
     if (!item.folder) throw new Error('"' + item.name + '" is geen map');
     await kvSet('map', { driveId: item.parentReference.driveId, itemId: item.id, naam: item.name });
-    await kvDel('kopie');
-    kopie = null;
+    /* Alles van de vorige map weg: kopie, wachtrij, mandje en keuzes. */
+    for (const k of ['kopie', 'wachtrij', 'mandje', 'favorieten', 'winkel', 'backupDag']) await kvDel(k);
+    kopie = null; wachtrij = [];
+    winkel.id = ''; winkel.mandje.clear(); ws.favorieten = []; ws.open = '';
+    bouwModel();
+    tekenAlles();
     $('deellink').value = '';
     planSync(0);
     meldingWeg('m-map');
@@ -1176,7 +1317,7 @@ async function wieBenIk() {
 
 $('btnAanmelden').addEventListener('click', aanmelden);
 $('btnAfmelden').addEventListener('click', afmelden);
-$('btnMap').addEventListener('click', mapKoppelen);
+$('btnMap').addEventListener('click', () => mapKoppelen(false));
 $('appBrowser').textContent = browserNaam(navigator.userAgent) +
   (matchMedia('(display-mode: standalone)').matches ? ' · geïnstalleerd' : ' · in de browser');
 
@@ -1186,7 +1327,7 @@ function toonUpdateBalk() {
   if (updateBarShown) return;
   if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) return;
   updateBarShown = true;
-  melding('m-versie', 'Er is een nieuwe versie van thuis.', [{ tekst: 'Nu laden', actie: herlaadMetWachtendeWorker }], 'info');
+  $('update-bar').style.display = 'flex';
 }
 
 function currentVersionStamp() {
@@ -1262,6 +1403,20 @@ function herlaadMetWachtendeWorker() {
   wachtend.postMessage({ type: 'nuOverstappen' });
 }
 
+/* Herladen pas als er niets meer wordt weggeschreven: de wachtrij staat dan
+   veilig in IndexedDB. Hooguit 5 s wachten. */
+async function herlaadVoorUpdate() {
+  const tot = Date.now() + 5000;
+  while (sync.bezig && Date.now() < tot) await new Promise((r) => setTimeout(r, 200));
+  await kvSet('wachtrij', wachtrij);
+  herlaadMetWachtendeWorker();
+}
+$('update-bar').addEventListener('click', herlaadVoorUpdate);
+/* De balk heeft role="button", dus Enter en spatie activeren hem ook. */
+$('update-bar').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); herlaadVoorUpdate(); }
+});
+
 const SW_UPDATE_INTERVAL = 30 * 60 * 1000;
 let __swUpdateLaatst = 0;
 let __swRegistratie = null;
@@ -1317,34 +1472,87 @@ const SYNC_PAUZE = 1500;
 const VERVERS_GEWOON = 3 * 60 * 1000;
 const BESTAND = 'thuis.json';
 
-let kopie = null;          // { tekst, eTag, fileId, tijd }
+let kopie = null;          // { formaat, tekst, eTag, fileId, tijd }
 let wachtrij = [];         // handelingen, oudste eerst
 let model = null;          // kopie + wachtrij, voor de weergave
 let artikelen = [];        // artikelLijst(model), één keer per wijziging
+let winkels = [];          // winkelLijst(model), één keer per wijziging
+let winkelOpId = new Map();
 let ik = '';
 let gekoppeld = false;
 const sync = { bezig: false, opnieuw: false, klok: null, laatst: 0, fout: '', offline: false };
 
+function nieuweId() { return maakId(model, (n) => crypto.getRandomValues(new Uint8Array(n))); }
+
+function afgeleid() {
+  artikelen = artikelLijst(model);
+  winkels = winkelLijst(model);
+  winkelOpId = new Map(winkels.map((w) => [w.id, w]));
+}
+
 function bouwModel() {
   const gelezen = leesBestand(kopie ? kopie.tekst : '');
-  model = gelezen.ok ? gelezen.model : leesBestand('').model;
-  const nu = new Date();
-  for (const h of wachtrij) pasToe(model, h, nu);
-  artikelen = artikelLijst(model);
+  model = gelezen.ok ? gelezen.model : leegModel();
+  const { alias } = pasAllesToe(model, wachtrij);
+  if (alias.size) vervangLokaal(alias);
+  afgeleid();
+}
+
+/* Bewaren op de telefoon. Mislukt het, dan een melding die blijft staan tot het
+   weer lukt: wat niet bewaard is, gaat verloren als de app sluit. */
+const nietBewaard = new Set();
+async function bewaar(sleutelKv, waarde) {
+  try {
+    await kvSet(sleutelKv, waarde);
+    nietBewaard.delete(sleutelKv);
+  } catch (e) {
+    nietBewaard.add(sleutelKv);
+  }
+  if (nietBewaard.size) {
+    melding('m-opslag', 'Opslaan niet gelukt', [{ tekst: 'Opnieuw proberen', actie: () => bewaarOpnieuw() }]);
+  } else meldingWeg('m-opslag');
+}
+function bewaarOpnieuw() {
+  for (const k of Array.from(nietBewaard)) {
+    if (k === 'wachtrij') bewaar('wachtrij', wachtrij);
+    else if (k === 'kopie') bewaar('kopie', kopie);
+    else if (k === 'mandje') bewaar('mandje', Array.from(winkel.mandje.values()));
+    else if (k === 'favorieten') bewaar('favorieten', ws.favorieten);
+    else if (k === 'winkel') bewaar('winkel', winkel.id);
+  }
 }
 
 async function handelen(lijstVanHandelingen) {
   const t = tijdstipTekst(new Date());
-  for (const h of lijstVanHandelingen) {
-    const volledig = Object.assign({ t, wie: ik }, h);
-    wachtrij.push(volledig);
-    pasToe(model, volledig, new Date());
-  }
-  artikelen = artikelLijst(model);
+  const nieuw = lijstVanHandelingen.map((h) => Object.assign({ t, wie: ik }, h));
+  wachtrij.push(...nieuw);
+  const { alias } = pasAllesToe(model, nieuw);
+  if (alias.size) vervangLokaal(alias);
+  afgeleid();
   /* Eerst tekenen, dan opslaan: de tik is meteen zichtbaar. */
   tekenAlles();
   planSync(SYNC_PAUZE);
-  await kvSet('wachtrij', wachtrij);
+  await bewaar('wachtrij', wachtrij);
+}
+
+/* Een id die bij het samenvoegen in een bestaande opging (twee keer "Melk"):
+   ook de wachtrij en wat deze telefoon bewaart, wijzen voortaan naar de
+   bestaande. */
+function vervangLokaal(alias) {
+  wachtrij = wachtrij.map((h) => vervangIds(h, alias));
+  const a = (id) => (alias.has(id) ? alias.get(id) : id);
+  if (winkel.id && alias.has(winkel.id)) { winkel.id = a(winkel.id); bewaar('winkel', winkel.id); }
+  if (ws.favorieten.some((f) => alias.has(f))) { ws.favorieten = Array.from(new Set(ws.favorieten.map(a))); bewaar('favorieten', ws.favorieten); }
+  if (ws.open) ws.open = a(ws.open);
+  let mandjeAnders = false;
+  for (const [id, m] of Array.from(winkel.mandje)) {
+    if (!alias.has(id)) continue;
+    winkel.mandje.delete(id);
+    winkel.mandje.set(a(id), Object.assign({}, m, { id: a(id) }));
+    mandjeAnders = true;
+  }
+  for (const m of winkel.mandje.values()) if (alias.has(m.winkel)) { m.winkel = a(m.winkel); mandjeAnders = true; }
+  if (mandjeAnders) bewaar('mandje', Array.from(winkel.mandje.values()));
 }
 
 function planSync(ms) {
@@ -1377,14 +1585,68 @@ async function bestandOphalen(map) {
   return { item, bytes: new Uint8Array(await inhoud.arrayBuffer()) };
 }
 
+/* Elke dag één backup van de versie van vóór het eerste schrijven; daarna de
+   oude opruimen (backupsWeg). Opruimen mag mislukken: dan de volgende dag. */
 async function dagbackup(map, tekst) {
-  const vandaag = datumTekst(new Date()).replace(/-/g, '');
-  if ((await kvGet('backupDag')) === vandaag) return;
-  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/thuis_backup_' + vandaag + '.json:/content?@microsoft.graph.conflictBehavior=fail', {
-    method: 'PUT', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: tekst
+  const vandaag = datumTekst(new Date());
+  const kort = vandaag.replace(/-/g, '');
+  if ((await kvGet('backupDag')) === kort) return;
+  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/thuis_backup_' + kort + '.json:/content?@microsoft.graph.conflictBehavior=fail', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: tekst
   });
   /* 409: de andere telefoon maakte de backup van vandaag al. */
-  if (res.ok || res.status === 409) await kvSet('backupDag', vandaag);
+  if (!res.ok && res.status !== 409) return;
+  await bewaar('backupDag', kort);
+  try {
+    const lijstRes = await graph('/drives/' + map.driveId + '/items/' + map.itemId + '/children?$select=id,name&$top=999');
+    if (!lijstRes.ok) return;
+    const items = (await lijstRes.json()).value || [];
+    const weg = new Set(backupsWeg(items.map((i) => i.name), vandaag));
+    for (const i of items) {
+      if (weg.has(i.name)) await graph('/drives/' + map.driveId + '/items/' + i.id, { method: 'DELETE' });
+    }
+  } catch (e) { /* volgende dag opnieuw */ }
+}
+
+/* Logboek van wat de app stil rechtzette (voor het sync-overzicht, stap 9). */
+async function logboek(regels) {
+  if (!regels.length) return;
+  const tijd = tijdstipTekst(new Date()).replace('T', ' ');
+  const oud = (await kvGet('logboek')) || [];
+  await bewaar('logboek', oud.concat(regels.map((r) => tijd + ' · ' + r)).slice(-100));
+}
+
+const LEESREDEN = {
+  'geen-utf8': 'is niet in UTF-8 opgeslagen.',
+  'geen-json': 'is beschadigd.',
+  'onjuiste-opbouw': 'heeft een opbouw die de app niet kent.',
+  'nieuwer-formaat': 'is gemaakt door een nieuwere versie van de app. Werk de app bij.',
+  'onbekend-formaat': 'heeft een onbekend formaat.'
+};
+
+/* Nog geen bestand: een leeg aanmaken. Een bestand dat er was en nu weg is,
+   wordt niet stil opnieuw gemaakt (dan een melding; geeft false). */
+async function bestandMaken(map) {
+  if (kopie && kopie.fileId) {
+    melding('m-weg', [{ vet: BESTAND }, ' staat niet meer in de map ', { vet: map.naam }, '. Er is niets opgeslagen.'], [
+      { tekst: 'Nieuw bestand maken', actie: async () => { kopie = null; await kvDel('kopie'); meldingWeg('m-weg'); planSync(0); } }
+    ]);
+    return false;
+  }
+  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + BESTAND + ':/content?@microsoft.graph.conflictBehavior=fail', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: schrijfBestand(leegModel())
+  });
+  if (!res.ok && res.status !== 409) throw new Error('aanmaken: code ' + res.status);
+  return true;
+}
+
+/* Na een geslaagde ronde: wat verstuurd is uit de wachtrij, vervangen id's
+   doorvoeren, en wat stil is rechtgezet in het logboek. */
+function rondeKlaar(ronde, aantal) {
+  wachtrij = wachtrij.slice(aantal);
+  if (ronde.alias.size) vervangLokaal(ronde.alias);
+  logboek(ronde.opgelost.concat(ronde.resultaten.filter((r) => r.status === 'samengevoegd')
+    .map((r) => (r.h.velden && r.h.velden.naam || (r.h.afd && r.h.afd.naam) || '') + ': dubbel, samengevoegd')));
 }
 
 async function syncRonde() {
@@ -1396,19 +1658,9 @@ async function syncRonde() {
   sync.bezig = true; sync.fout = ''; sync.offline = false; tekenWolk();
   try {
     for (let poging = 0; poging < 4; poging++) {
-      let opgehaald = await bestandOphalen(map);
+      const opgehaald = await bestandOphalen(map);
       if (opgehaald.weg) {
-        if (kopie && kopie.fileId) {
-          /* Een bestand dat er was en nu weg is, wordt niet stil opnieuw gemaakt. */
-          melding('m-weg', [{ vet: BESTAND }, ' staat niet meer in de map ', { vet: map.naam }, '. Er is niets opgeslagen.'], [
-            { tekst: 'Nieuw bestand maken', actie: async () => { kopie = null; await kvDel('kopie'); meldingWeg('m-weg'); planSync(0); } }
-          ]);
-          return;
-        }
-        const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + BESTAND + ':/content?@microsoft.graph.conflictBehavior=fail', {
-          method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: schrijfBestand(leesBestand('').model)
-        });
-        if (!res.ok && res.status !== 409) throw new Error('aanmaken: code ' + res.status);
+        if (!(await bestandMaken(map))) return;
         continue;
       }
       meldingWeg('m-weg');
@@ -1417,18 +1669,15 @@ async function syncRonde() {
       const remoteTekst = typeof remote === 'string' ? remote : new TextDecoder().decode(remote);
       const ronde = synchroniseer(remote, inBehandeling, new Date());
       if (!ronde.ok) {
-        melding('m-utf8', BESTAND + ' ' + ({
-          'geen-utf8': 'is niet in UTF-8 opgeslagen.',
-          'geen-json': 'is beschadigd.',
-          'nieuwer-formaat': 'is gemaakt door een nieuwere versie van de app. Werk de app bij.',
-          'onbekend-formaat': 'heeft een onbekend formaat.'
-        }[ronde.reden] || 'is niet te lezen.') + ' De app schrijft er niets in.', []);
+        /* Liever niets schrijven dan stil iets kwijtraken: de app werkt verder op
+           de laatste goede kopie op deze telefoon. */
+        melding('m-bestand', [{ vet: BESTAND }, ' ' + (LEESREDEN[ronde.reden] || 'is niet te lezen.') + ' De app schrijft er niets in.'], []);
         return;
       }
-      meldingWeg('m-utf8');
+      meldingWeg('m-bestand');
       if (!ronde.gewijzigd) {
-        kopie = { bestand: BESTAND, tekst: remoteTekst, eTag: opgehaald.item.eTag, fileId: opgehaald.item.id, tijd: Date.now() };
-        wachtrij = wachtrij.slice(inBehandeling.length);
+        kopie = { formaat: FORMAAT, tekst: remoteTekst, eTag: opgehaald.item.eTag, fileId: opgehaald.item.id, tijd: Date.now() };
+        rondeKlaar(ronde, inBehandeling.length);
         break;
       }
       await dagbackup(map, remoteTekst);
@@ -1440,13 +1689,13 @@ async function syncRonde() {
       if (res.status === 412) continue; // intussen gewijzigd: opnieuw lezen en toepassen
       if (!res.ok) throw new Error('schrijven: code ' + res.status);
       const item = await res.json();
-      kopie = { bestand: BESTAND, tekst: ronde.tekst, eTag: item.eTag, fileId: item.id, tijd: Date.now() };
-      wachtrij = wachtrij.slice(inBehandeling.length);
+      kopie = { formaat: FORMAAT, tekst: ronde.tekst, eTag: item.eTag, fileId: item.id, tijd: Date.now() };
+      rondeKlaar(ronde, inBehandeling.length);
       meldResultaten(ronde.resultaten);
       break;
     }
-    await kvSet('kopie', kopie);
-    await kvSet('wachtrij', wachtrij);
+    await bewaar('kopie', kopie);
+    await bewaar('wachtrij', wachtrij);
     sync.laatst = Date.now();
     bouwModel();
     tekenAlles();
@@ -1461,17 +1710,26 @@ async function syncRonde() {
   }
 }
 
+/* De naam bij een handeling, voor een melding. */
+function naamVan(h) {
+  if (h.velden && h.velden.naam) return h.velden.naam;
+  if (h.record && h.record.naam) return h.record.naam;
+  const verz = model && verzameling(model, h.soort);
+  const r = verz && verz.get(h.id);
+  return r ? r.naam : (h.naam || 'iets');
+}
+
 function meldResultaten(resultaten) {
-  const vervallen = resultaten.filter((r) => r.status === 'vervallen').map((r) => r.h.naam);
+  const vervallen = resultaten.filter((r) => r.status === 'vervallen').map((r) => naamVan(r.h));
   if (vervallen.length) {
-    melding('m-vervallen', ['Niet doorgevoerd, want intussen verwijderd of hernoemd: ', { vet: vervallen.join(', ') }, '.'],
+    melding('m-vervallen', ['Niet doorgevoerd, want intussen verwijderd of de naam bestond al: ', { vet: Array.from(new Set(vervallen)).join(', ') }, '.'],
       [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-vervallen') }]);
   }
   const botsing = resultaten.filter((r) => r.status === 'botsing');
   if (botsing.length) {
     const r = botsing[botsing.length - 1];
-    melding('m-botsing', [{ vet: r.h.naam }, ' was intussen ook gewijzigd. Jouw versie staat erin; de andere was: "' + r.vorige + '".'], [
-      { tekst: 'Andere terugzetten', actie: () => { meldingWeg('m-botsing'); handelen([{ actie: 'zet', soort: r.h.soort, naam: r.h.naam, veld: r.h.veld, oud: r.h.nieuw, nieuw: r.vorige }]); } },
+    melding('m-botsing', [{ vet: naamVan(r.h) }, ' was intussen ook gewijzigd. Jouw versie staat erin; de andere was: "' + r.vorige + '".'], [
+      { tekst: 'Andere terugzetten', actie: () => { meldingWeg('m-botsing'); handelen([{ actie: 'zet', soort: r.h.soort, id: r.h.id, veld: r.h.veld, oud: r.h.nieuw, nieuw: r.vorige }]); } },
       { tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-botsing') }
     ]);
   }
@@ -1574,58 +1832,76 @@ function tekenFilters() {
   }
 }
 
+/* Wat de lijst nu toont: zoekresultaten, of het gekozen filter. */
+function lijstVoorScherm(zoekend, vandaag) {
+  if (zoekend) {
+    const l = zoekArtikelen(artikelen, scherm.zoek);
+    return { lijst: l, titel: 'Gevonden', onder: l.length + ' · ' + l.filter((a) => a.op).length + ' op de lijst' };
+  }
+  if (scherm.filter === 'L') {
+    return { lijst: artikelen.filter((a) => a.op || scherm.vertrekt.has(a.id)), titel: 'Op de lijst', onder: artikelen.filter((a) => a.op).length + ' · a–z' };
+  }
+  if (scherm.filter === 'S') {
+    const l = artikelen.filter((a) => !a.op && suggestie(a.gekocht, vandaag));
+    return { lijst: l, titel: 'Suggesties', onder: l.length + ' · langer geleden' };
+  }
+  const l = artikelen.filter((a) => a.letter === scherm.filter);
+  return { lijst: l, titel: SOORTNAAM[scherm.filter], onder: l.length + ' · ' + l.filter((a) => a.op).length + ' op de lijst' };
+}
+
+/* Eén regel: soorticoon, naam (met winkelsymbool, "nieuw", suggestie) en het rondje. */
+function artikelRij(a, opties) {
+  const rij = document.createElement('div');
+  rij.className = 'item' + (opties.vertrekt ? ' vertrekt' : '');
+  rij.dataset.id = a.id;
+  const nieuw = a.op && a.opdoor && a.opdoor !== ik && Date.now() - Date.parse(a.op) < 15 * 60000;
+  rij.innerHTML =
+    '<span class="icoon" role="img">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 24) + '</span>' +
+    '<span class="tekst"><span class="naam"><span></span>' +
+    (a.plekken.length ? '<svg class="alleen" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img">' + WINKELSYMBOOL + '</svg>' : '') +
+    (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
+    (opties.sug ? '<span class="hint"></span>' : '') + '</span>' +
+    '<button class="rondje" type="button" aria-pressed="' + (a.op ? 'true' : 'false') + '">' + (a.op ? RONDJE.aan : RONDJE.plus) + '</button>';
+  rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter].toLowerCase());
+  rij.querySelector('.naam > span').textContent = a.naam;
+  if (a.plekken.length) rij.querySelector('.alleen').setAttribute('aria-label', 'alleen bij ' + a.plekken.map((p) => (winkelOpId.get(p.winkel) || { naam: '?' }).naam).join(', '));
+  if (opties.sug) rij.querySelector('.hint').textContent = suggestieTekst(opties.sug);
+  rij.querySelector('.rondje').setAttribute('aria-label', a.op ? a.naam + ' staat op de lijst; van de lijst halen'
+    : opties.weg ? a.naam + ' weer op de lijst zetten' : a.naam + ' op de lijst zetten');
+  return rij;
+}
+
+/* "Van de lijst gehaald": wat je net weghaalde, om het makkelijk terug te zetten. */
+function tekenWeggehaald(zoekend) {
+  const weg = (!zoekend && scherm.filter === 'L') ? artikelen.filter((a) => !a.op && scherm.weggehaald.has(a.id)) : [];
+  let sec = $('weggehaald');
+  if (sec) sec.remove();
+  if (!weg.length) return;
+  sec = document.createElement('div');
+  sec.id = 'weggehaald';
+  sec.className = 'weggehaald';
+  sec.innerHTML = '<div class="kopregel" style="padding-top:10px"><h2 style="color:#5A6472">Van de lijst gehaald</h2><span>' + weg.length + '</span></div><div class="lijst"></div>';
+  for (const a of weg) sec.querySelector('.lijst').appendChild(artikelRij(a, { weg: true }));
+  $('lijst').after(sec);
+}
+
 function tekenBoodschappen() {
   if (!model) return;
   if (!gekoppeld) {
     $('filters').hidden = true;
     $('lijstTitel').textContent = 'Op de lijst';
     $('lijstAantal').textContent = '';
-    $('lijst').innerHTML = '<div class="leeg">Meld je eerst aan en koppel de gedeelde map, bij Instellingen.</div>';
+    $('lijst').innerHTML = '<div class="leeg">Nog niet gekoppeld</div>';
     return;
   }
   const zoekend = normNaam(scherm.zoek) !== '';
   $('filters').hidden = zoekend;
   if (!zoekend) tekenFilters();
   const vandaag = datumTekst(new Date());
-  let lijstNu, titel, onder;
-  if (zoekend) {
-    lijstNu = zoekArtikelen(artikelen, scherm.zoek);
-    titel = 'Gevonden';
-    onder = lijstNu.length + ' · ' + lijstNu.filter((a) => a.op).length + ' op de lijst';
-  } else if (scherm.filter === 'L') {
-    lijstNu = artikelen.filter((a) => a.op || scherm.vertrekt.has(a.naam));
-    titel = 'Op de lijst'; onder = artikelen.filter((a) => a.op).length + ' · a–z';
-  } else if (scherm.filter === 'S') {
-    lijstNu = artikelen.filter((a) => !a.op && suggestie(a.gekocht, vandaag));
-    titel = 'Suggesties'; onder = lijstNu.length + ' · langer geleden';
-  } else {
-    lijstNu = artikelen.filter((a) => a.letter === scherm.filter);
-    titel = SOORTNAAM[scherm.filter];
-    onder = lijstNu.length + ' · ' + lijstNu.filter((a) => a.op).length + ' op de lijst';
-  }
+  const { lijst: lijstNu, titel, onder } = lijstVoorScherm(zoekend, vandaag);
   $('lijstTitel').textContent = titel;
   $('lijstAantal').textContent = onder;
   const l = $('lijst');
-  const frag = document.createDocumentFragment();
-  for (const a of lijstNu) {
-    const rij = document.createElement('div');
-    const vertrekt = scherm.vertrekt.has(a.naam) && !a.op;
-    rij.className = 'item' + (vertrekt ? ' vertrekt' : '');
-    rij.dataset.naam = a.naam;
-    const sug = scherm.filter === 'S' && !zoekend ? suggestie(a.gekocht, vandaag) : null;
-    const nieuw = a.op && a.opdoor && a.opdoor !== ik && Date.now() - Date.parse(a.op) < 15 * 60000;
-    rij.innerHTML =
-      '<span class="icoon" role="img" aria-label="' + SOORTNAAM[a.letter].toLowerCase() + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 24) + '</span>' +
-      '<span class="tekst"><span class="naam"><span></span>' +
-      (a.plekken.length ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="alleen bij ' + a.plekken.map((p) => p.winkel).join(', ').replace(/"/g, '') + '">' + WINKELSYMBOOL + '</svg>' : '') +
-      (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
-      (sug ? '<span class="hint"></span>' : '') + '</span>' +
-      '<button class="rondje" type="button" aria-pressed="' + (a.op ? 'true' : 'false') + '">' + (a.op ? RONDJE.aan : RONDJE.plus) + '</button>';
-    rij.querySelector('.naam > span').textContent = a.naam;
-    if (sug) rij.querySelector('.hint').textContent = suggestieTekst(sug);
-    rij.querySelector('.rondje').setAttribute('aria-label', a.op ? a.naam + ' staat op de lijst; van de lijst halen' : a.naam + ' op de lijst zetten');
-    frag.appendChild(rij);
-  }
   l.innerHTML = '';
   if (!lijstNu.length) {
     const p = document.createElement('div');
@@ -1633,57 +1909,45 @@ function tekenBoodschappen() {
     p.textContent = zoekend ? 'Niets gevonden' : scherm.filter === 'S' ? 'Geen suggesties' : 'Geen artikelen';
     l.appendChild(p);
   } else {
+    const frag = document.createDocumentFragment();
+    for (const a of lijstNu) {
+      frag.appendChild(artikelRij(a, {
+        vertrekt: scherm.vertrekt.has(a.id) && !a.op,
+        sug: scherm.filter === 'S' && !zoekend ? suggestie(a.gekocht, vandaag) : null
+      }));
+    }
     l.appendChild(frag);
   }
-  const weg = (!zoekend && scherm.filter === 'L') ? artikelen.filter((a) => !a.op && scherm.weggehaald.has(a.naam)) : [];
-  let sec = $('weggehaald');
-  if (sec) sec.remove();
-  if (weg.length) {
-    sec = document.createElement('div');
-    sec.id = 'weggehaald';
-    sec.className = 'weggehaald';
-    sec.innerHTML = '<div class="kopregel" style="padding-top:10px"><h2 style="color:#5A6472">Van de lijst gehaald</h2><span>' + weg.length + '</span></div><div class="lijst"></div>';
-    for (const a of weg) {
-      const rij = document.createElement('div');
-      rij.className = 'item';
-      rij.dataset.naam = a.naam;
-      rij.innerHTML = '<span class="icoon" role="img" aria-label="' + SOORTNAAM[a.letter].toLowerCase() + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 24) + '</span>' +
-        '<span class="tekst"><span class="naam"><span></span></span></span><button class="rondje" type="button" aria-pressed="false">' + RONDJE.plus + '</button>';
-      rij.querySelector('.naam > span').textContent = a.naam;
-      rij.querySelector('.rondje').setAttribute('aria-label', a.naam + ' weer op de lijst zetten');
-      sec.querySelector('.lijst').appendChild(rij);
-    }
-    l.after(sec);
-  }
+  tekenWeggehaald(zoekend);
 }
 
 /* Eén luisteraar voor alle rondjes in de lijst. */
 function lijstKlik(e) {
   const knop = e.target.closest('.rondje');
   if (!knop) return;
-  const naam = knop.closest('.item').dataset.naam;
-  const a = artikelen.find((x) => x.naam === naam);
+  const id = knop.closest('.item').dataset.id;
+  const a = artikelen.find((x) => x.id === id);
   if (!a) return;
   const t = tijdstipTekst(new Date());
   if (a.op) {
     if (scherm.filter === 'L' && normNaam(scherm.zoek) === '') {
       /* Even grijs op zijn plek, dan naar "Van de lijst gehaald". */
       const timer = setTimeout(() => {
-        scherm.vertrekt.delete(naam);
-        scherm.weggehaald.set(naam, true);
+        scherm.vertrekt.delete(id);
+        scherm.weggehaald.set(id, true);
         tekenBoodschappen();
       }, VERTRAGING);
-      scherm.vertrekt.set(naam, { timer });
+      scherm.vertrekt.set(id, { timer });
     }
-    handelen([{ actie: 'zet', soort: 'artikel', naam, veld: 'op', oud: a.op, nieuw: '' },
-              { actie: 'zet', soort: 'artikel', naam, veld: 'opdoor', oud: a.opdoor, nieuw: '' }]);
+    handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: a.op, nieuw: '' },
+              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: '' }]);
   } else {
-    const v = scherm.vertrekt.get(naam);
+    const v = scherm.vertrekt.get(id);
     if (v) clearTimeout(v.timer);
-    scherm.vertrekt.delete(naam);
-    scherm.weggehaald.delete(naam);
-    handelen([{ actie: 'zet', soort: 'artikel', naam, veld: 'op', oud: '', nieuw: t },
-              { actie: 'zet', soort: 'artikel', naam, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]);
+    scherm.vertrekt.delete(id);
+    scherm.weggehaald.delete(id);
+    handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
+              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]);
   }
 }
 $('lijst').addEventListener('click', lijstKlik);
@@ -1696,11 +1960,11 @@ function toevoegen() {
   const t = tijdstipTekst(new Date());
   if (bestaand) {
     if (!bestaand.op) {
-      handelen([{ actie: 'zet', soort: 'artikel', naam: bestaand.naam, veld: 'op', oud: '', nieuw: t },
-                { actie: 'zet', soort: 'artikel', naam: bestaand.naam, veld: 'opdoor', oud: bestaand.opdoor, nieuw: ik }]);
+      handelen([{ actie: 'zet', soort: 'artikel', id: bestaand.id, veld: 'op', oud: '', nieuw: t },
+                { actie: 'zet', soort: 'artikel', id: bestaand.id, veld: 'opdoor', oud: bestaand.opdoor, nieuw: ik }]);
     }
   } else {
-    handelen([{ actie: 'nieuw', soort: 'artikel', naam, velden: { soort: LETTER_SOORT[scherm.nieuwSoort], op: t, opdoor: ik } }]);
+    handelen([{ actie: 'nieuw', soort: 'artikel', id: nieuweId(), velden: { naam, soort: LETTER_SOORT[scherm.nieuwSoort], op: t, opdoor: ik } }]);
   }
   $('invoerTekst').value = '';
   scherm.zoek = '';
@@ -1740,9 +2004,13 @@ window.addEventListener('offline', () => { sync.offline = true; tekenWolk(); });
 
 async function gegevensLaden() {
   kopie = await kvGet('kopie');
-  /* Een kopie van een ander bestand (het oude thuis.txt) telt niet. */
-  if (kopie && kopie.bestand !== BESTAND) { kopie = null; wachtrij = []; await kvDel('kopie'); await kvSet('wachtrij', []); }
   wachtrij = (await kvGet('wachtrij')) || [];
+  /* Een kopie en wachtrij van een ander bestandsformaat tellen niet (er is geen
+     omzetting van oude formaten); ook het mandje en de keuzes niet. */
+  if (kopie && kopie.formaat !== FORMAAT) {
+    kopie = null; wachtrij = [];
+    for (const k of ['kopie', 'wachtrij', 'mandje', 'favorieten', 'winkel']) await kvDel(k);
+  }
   const auth = await kvGet('auth');
   ik = ((auth && auth.naam) || '').split(' ')[0];
   bouwModel();
@@ -1751,94 +2019,91 @@ async function gegevensLaden() {
 }
 
 /* ---------- keuzelijst van onderen (winkel, afdeling) ---------- */
-/* opt: { titel, secties: [{ uitleg?, titel?, ingeklapt?, opties: [{ naam, sub?, aantal?, actief? }] }],
-   kies(naam), zoek?: { placeholder, extra: [namen], nieuw(naam) } }.
+/* opt: { titel, secties: [{ titel?, ingeklapt?, opties: [{ id, naam, sub?, aantal?, actief? }] }],
+   kies(id), zoek?: { placeholder, nieuw(naam) } }.
    Kruisje rechtsboven; "Zoeken of toevoegen" onderaan. Tijdens het typen één
    lijst met alles wat past, uit alle secties. */
 const KRUIS = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
 const PIJL_RECHTS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>';
-function keuzeLijst(opt) {
-  sluitKeuze();
+function keuzeOptie(o, kies) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
+  b.innerHTML = '<span class="nm"></span>' + (o.aantal ? '<span class="tal"></span>' : '');
+  b.querySelector('.nm').textContent = o.naam;
+  if (o.sub) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = o.sub; b.querySelector('.nm').appendChild(s); }
+  if (o.aantal) b.querySelector('.tal').textContent = o.aantal;
+  if (o.actief) b.setAttribute('aria-current', 'true');
+  b.addEventListener('click', () => { sluitKeuze(); kies(o.id); });
+  return b;
+}
+function keuzeUitklapper(titel, open, wissel) {
+  const kb = document.createElement('button');
+  kb.type = 'button'; kb.className = 'uitklapper';
+  kb.setAttribute('aria-expanded', String(open));
+  kb.innerHTML = '<span></span>' + PIJL_RECHTS;
+  kb.querySelector('span').textContent = titel;
+  kb.querySelector('svg').style.transform = 'rotate(' + (open ? 90 : 0) + 'deg)';
+  kb.addEventListener('click', wissel);
+  return kb;
+}
+function keuzeLeeg(tekst) { const p = document.createElement('div'); p.className = 'leeg'; p.textContent = tekst; return p; }
+
+function keuzePaneel(titel, metZoek) {
   const k = document.createElement('div');
   k.id = 'keuze';
   k.setAttribute('role', 'dialog');
   k.setAttribute('aria-modal', 'true');
-  k.setAttribute('aria-label', opt.titel);
+  k.setAttribute('aria-label', titel);
   k.innerHTML = '<div class="paneel"><div class="kop"><h3></h3><button class="kruis" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
     '<div class="opties"></div>' +
-    (opt.zoek ? '<div class="zoek"><label for="keuzeZoek">Zoeken of toevoegen</label>' +
+    (metZoek ? '<div class="zoek"><label for="keuzeZoek">Zoeken of toevoegen</label>' +
     '<div class="zoekbalk"><input id="keuzeZoek" type="text" autocomplete="off" enterkeyhint="done">' +
     '<button class="plusknop" type="button" aria-label="Toevoegen">' +
     '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>' : '') + '</div>';
-  k.querySelector('h3').textContent = opt.titel;
+  k.querySelector('h3').textContent = titel;
+  k.querySelector('.kruis').addEventListener('click', sluitKeuze);
+  k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
+  return k;
+}
+
+function keuzeLijst(opt) {
+  sluitKeuze();
+  const k = keuzePaneel(opt.titel, !!opt.zoek);
   const inp = k.querySelector('input');
   if (inp) inp.placeholder = opt.zoek.placeholder;
   const opties = k.querySelector('.opties');
   const open = opt.secties.map((s) => !s.ingeklapt);
-  const alleNamen = () => {
-    const gezien = new Set(), uit = [];
-    for (const s of opt.secties) for (const o of s.opties) if (!gezien.has(normNaam(o.naam))) { gezien.add(normNaam(o.naam)); uit.push(o); }
-    for (const n of (opt.zoek && opt.zoek.extra) || []) if (!gezien.has(normNaam(n))) { gezien.add(normNaam(n)); uit.push({ naam: n }); }
-    return uit;
-  };
-  const optieKnop = (o) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
-    b.innerHTML = '<span class="nm"></span>' + (o.aantal ? '<span class="tal"></span>' : '');
-    b.querySelector('.nm').textContent = o.naam;
-    if (o.sub) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = o.sub; b.querySelector('.nm').appendChild(s); }
-    if (o.aantal) b.querySelector('.tal').textContent = o.aantal;
-    if (o.actief) b.setAttribute('aria-current', 'true');
-    b.addEventListener('click', () => { sluitKeuze(); opt.kies(o.naam); });
-    return b;
-  };
+  /* Alle opties één keer (een winkel kan in twee secties staan). */
+  const alle = [];
+  const gezien = new Set();
+  for (const s of opt.secties) for (const o of s.opties) if (!gezien.has(o.id)) { gezien.add(o.id); alle.push(o); }
   const teken = () => {
     const t = inp ? zoekVorm(inp.value) : '';
     opties.innerHTML = '';
     if (t) {
-      const zicht = alleNamen().filter((o) => zoekVorm(o.naam).indexOf(t) !== -1);
-      for (const o of zicht) opties.appendChild(optieKnop(o));
-      if (!zicht.length) {
-        const p = document.createElement('div'); p.className = 'leeg';
-        p.textContent = 'Niets gevonden';
-        opties.appendChild(p);
-      }
+      const zicht = alle.filter((o) => zoekVorm(o.naam).indexOf(t) !== -1);
+      for (const o of zicht) opties.appendChild(keuzeOptie(o, opt.kies));
+      if (!zicht.length) opties.appendChild(keuzeLeeg('Niets gevonden'));
       return;
     }
     opt.secties.forEach((s, i) => {
-      if (s.titel) {
-        const kb = document.createElement('button');
-        kb.type = 'button'; kb.className = 'uitklapper';
-        kb.setAttribute('aria-expanded', String(open[i]));
-        kb.innerHTML = '<span></span>' + PIJL_RECHTS;
-        kb.querySelector('span').textContent = s.titel;
-        kb.querySelector('svg').style.transform = 'rotate(' + (open[i] ? 90 : 0) + 'deg)';
-        kb.addEventListener('click', () => { open[i] = !open[i]; teken(); });
-        opties.appendChild(kb);
-      }
-      if (s.uitleg) { const u = document.createElement('div'); u.className = 'uitleg'; u.textContent = s.uitleg; opties.appendChild(u); }
-      if (open[i]) for (const o of s.opties) opties.appendChild(optieKnop(o));
+      if (s.titel) opties.appendChild(keuzeUitklapper(s.titel, open[i], () => { open[i] = !open[i]; teken(); }));
+      if (open[i]) for (const o of s.opties) opties.appendChild(keuzeOptie(o, opt.kies));
     });
-    if (!opties.children.length) {
-      const p = document.createElement('div'); p.className = 'leeg';
-      p.textContent = 'Nog niets';
-      opties.appendChild(p);
-    }
+    if (!opties.children.length) opties.appendChild(keuzeLeeg('Nog niets'));
   };
   const toevoegenNu = () => {
     const v = schoonTekst(inp.value);
     if (!v) { inp.focus(); return; }
-    const bestaand = alleNamen().find((o) => normNaam(o.naam) === normNaam(v));
+    const bestaand = alle.find((o) => normNaam(o.naam) === normNaam(v));
     sluitKeuze();
-    if (bestaand) opt.kies(bestaand.naam); else opt.zoek.nieuw(v);
+    if (bestaand) opt.kies(bestaand.id); else opt.zoek.nieuw(v);
   };
   if (inp) {
     inp.addEventListener('input', teken);
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegenNu(); } });
     k.querySelector('.plusknop').addEventListener('click', toevoegenNu);
   }
-  k.querySelector('.kruis').addEventListener('click', sluitKeuze);
-  k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
   teken();
   document.body.appendChild(k);
 }
@@ -1851,101 +2116,92 @@ function sluitKeuze() { const k = $('keuze'); if (k) k.remove(); }
    en wordt alleen leeggemaakt met de knop. */
 const VERTRAGING = 1500;
 const VERVERS_WINKEL = 30 * 1000;
-const winkel = { naam: '', mandje: new Map(), vertraagd: new Map(), eldersOpen: false };
+/* winkel.id: de gekozen winkel (per telefoon). Het mandje: artikel-id → { id, naam, winkel, op, opdoor, datum, alGekocht };
+   per winkel apart, zodat er niets doorloopt van de ene winkel naar de andere. */
+const winkel = { id: '', mandje: new Map(), vertraagd: new Map(), eldersOpen: false };
 
 function winkelOpen() { return !$('scherm-winkel').hidden; }
 
-function huidigeWinkel() {
-  return winkelLijst(model).find((w) => normNaam(w.naam) === normNaam(winkel.naam)) || null;
-}
+function huidigeWinkel() { return winkelOpId.get(winkel.id) || null; }
 
 async function winkelLaden() {
-  winkel.naam = (await kvGet('winkel')) || '';
+  winkel.id = (await kvGet('winkel')) || '';
   ws.favorieten = (await kvGet('favorieten')) || [];
   const m = (await kvGet('mandje')) || [];
-  winkel.mandje = new Map(m.map((x) => [x.naam, x]));
+  winkel.mandje = new Map(m.filter((x) => x && x.id).map((x) => [x.id, x]));
 }
-function mandjeBewaren() {
-  kvSet('mandje', Array.from(winkel.mandje.values()));
-}
-
-/* Een winkelnaam mag geen : bevatten (dat scheidt winkel en afdeling in ligt=). */
-function winkelNaamSchoon(s) { return schoonTekst(String(s).replace(/:/g, ' ')); }
+function mandjeBewaren() { bewaar('mandje', Array.from(winkel.mandje.values())); }
 
 function winkelKiezen() {
-  const wl = zichtbareWinkels();
-  const tel = winkelTellingen(artikelen, wl);
-  const laatst = normNaam(winkel.naam);
+  const tel = winkelTellingen(artikelen, winkels);
   /* Bij een gelijk aantal staat de laatst gekozen winkel bovenaan. */
-  tel.sort((x, y) => y.aantal - x.aantal || (normNaam(y.naam) === laatst) - (normNaam(x.naam) === laatst) || SORTEER.compare(x.naam, y.naam));
+  tel.sort((x, y) => y.aantal - x.aantal || (y.id === winkel.id) - (x.id === winkel.id) || SORTEER.compare(x.naam, y.naam));
   keuzeLijst({
     titel: 'Waar ga je heen?',
     secties: [
-      { opties: tel.map((x) => ({ naam: x.naam, aantal: x.aantal, actief: normNaam(x.naam) === laatst,
-          sub: normNaam(x.naam) === laatst ? 'laatst gekozen' : x.aantal <= 2 ? x.artikelen.join(', ') : '' })) },
-      { titel: 'Alle winkels · ' + wl.length, ingeklapt: tel.length > 0,
-        opties: wl.map((w) => ({ naam: w.naam, actief: normNaam(w.naam) === laatst })) }
+      { opties: tel.map((x) => ({ id: x.id, naam: x.naam, aantal: x.aantal, actief: x.id === winkel.id,
+          sub: x.id === winkel.id ? 'laatst gekozen' : x.aantal <= 2 ? x.artikelen.join(', ') : '' })) },
+      { titel: 'Alle winkels · ' + winkels.length, ingeklapt: tel.length > 0,
+        opties: winkels.map((w) => ({ id: w.id, naam: w.naam, actief: w.id === winkel.id })) }
     ],
-    kies: (naam) => kiesWinkel(naam),
-    zoek: { placeholder: 'Winkel', extra: [], nieuw: (v) => {
-      const naam = winkelNaamSchoon(v);
-      handelen([{ actie: 'nieuw', soort: 'winkel', naam, velden: {} }]);
-      kiesWinkel(naam);
+    kies: (id) => kiesWinkel(id),
+    zoek: { placeholder: 'Winkel', nieuw: (naam) => {
+      const id = nieuweId();
+      handelen([{ actie: 'nieuw', soort: 'winkel', id, velden: { naam } }]);
+      kiesWinkel(id);
     } }
   });
 }
-function kiesWinkel(naam) {
-  winkel.naam = naam;
-  kvSet('winkel', naam);
+function kiesWinkel(id) {
+  winkel.id = id;
+  bewaar('winkel', id);
   tekenWinkel();
 }
 
-/* Waar ligt dit, in déze winkel? Kiezen legt vast: te koop hier, en in die
-   afdeling. Of: niet te koop hier. */
+/* Waar ligt dit, in déze winkel? Kiezen legt vast: te koop hier, en in die afdeling. */
 function waarLigtDit(a) {
-  if (!winkel.naam) { winkelKiezen(); return; }
   const w = huidigeWinkel();
-  const route = w ? w.route : [];
-  const kies = (afd) => {
-    const hs = [{ actie: 'plaats', soort: 'artikel', naam: a.naam, winkel: winkel.naam, afd }];
-    if (!route.some((r) => normNaam(r) === normNaam(afd))) hs.push({ actie: 'lijstErbij', soort: 'winkel', naam: winkel.naam, veld: 'route', waarde: afd });
-    handelen(hs);
-  };
+  if (!w) { winkelKiezen(); return; }
   keuzeLijst({
-    titel: 'Waar ligt ' + a.naam + ' bij ' + winkel.naam + '?',
-    secties: [{ opties: route.map((x) => ({ naam: x })) }],
-    kies,
-    zoek: { placeholder: 'Afdeling', extra: [], nieuw: kies }
+    titel: 'Waar ligt ' + a.naam + ' bij ' + w.naam + '?',
+    secties: [{ opties: w.afdelingen.map((x) => ({ id: x.id, naam: x.naam })) }],
+    kies: (afd) => handelen([{ actie: 'plaats', soort: 'artikel', id: a.id, winkel: w.id, afd }]),
+    zoek: { placeholder: 'Afdeling', nieuw: (naam) => {
+      const afd = nieuweId();
+      handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: afd, naam } },
+                { actie: 'plaats', soort: 'artikel', id: a.id, winkel: w.id, afd }]);
+    } }
   });
 }
 
 function afvinken(a) {
   const datum = datumTekst(new Date());
   const al = a.gekocht.indexOf(datum) !== -1;
-  winkel.mandje.set(a.naam, { naam: a.naam, op: a.op, opdoor: a.opdoor, datum, alGekocht: al });
+  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al });
   mandjeBewaren();
-  const hs = [{ actie: 'zet', soort: 'artikel', naam: a.naam, veld: 'op', oud: a.op, nieuw: '' },
-              { actie: 'zet', soort: 'artikel', naam: a.naam, veld: 'opdoor', oud: a.opdoor, nieuw: '' }];
-  if (!al) hs.push({ actie: 'gekocht', soort: 'artikel', naam: a.naam, datum });
-  winkel.vertraagd.set(a.naam, setTimeout(() => { winkel.vertraagd.delete(a.naam); if (winkelOpen()) tekenWinkel(); }, VERTRAGING));
+  const hs = [{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' },
+              { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: a.opdoor, nieuw: '' }];
+  if (!al) hs.push({ actie: 'gekocht', soort: 'artikel', id: a.id, datum });
+  winkel.vertraagd.set(a.id, setTimeout(() => { winkel.vertraagd.delete(a.id); if (winkelOpen()) tekenWinkel(); }, VERTRAGING));
   handelen(hs);
 }
 
-function terugOpLijst(naam) {
-  const m = winkel.mandje.get(naam);
+function terugOpLijst(id) {
+  const m = winkel.mandje.get(id);
   if (!m) return;
-  clearTimeout(winkel.vertraagd.get(naam));
-  winkel.vertraagd.delete(naam);
-  winkel.mandje.delete(naam);
+  clearTimeout(winkel.vertraagd.get(id));
+  winkel.vertraagd.delete(id);
+  winkel.mandje.delete(id);
   mandjeBewaren();
-  const hs = [{ actie: 'zet', soort: 'artikel', naam, veld: 'op', oud: '', nieuw: m.op || tijdstipTekst(new Date()) },
-              { actie: 'zet', soort: 'artikel', naam, veld: 'opdoor', oud: '', nieuw: m.opdoor }];
-  if (!m.alGekocht) hs.push({ actie: 'nietGekocht', soort: 'artikel', naam, datum: m.datum });
+  const hs = [{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: m.op || tijdstipTekst(new Date()) },
+              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: '', nieuw: m.opdoor }];
+  if (!m.alGekocht) hs.push({ actie: 'nietGekocht', soort: 'artikel', id, datum: m.datum });
   handelen(hs);
 }
 
+function mandjeHier() { return Array.from(winkel.mandje.values()).filter((m) => m.winkel === winkel.id); }
 function mandjeLeegmaken() {
-  for (const n of Array.from(winkel.mandje.keys())) if (!winkel.vertraagd.has(n)) winkel.mandje.delete(n);
+  for (const m of mandjeHier()) if (!winkel.vertraagd.has(m.id)) winkel.mandje.delete(m.id);
   mandjeBewaren();
   tekenWinkel();
 }
@@ -1977,7 +2233,7 @@ function winkelRij(a, soort) {
     n.style.cssText = 'padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600;flex-shrink:0';
     b.appendChild(n);
   }
-  b.addEventListener('click', () => gedaan ? terugOpLijst(a.naam) : afvinken(a));
+  b.addEventListener('click', () => gedaan ? terugOpLijst(a.id) : afvinken(a));
   rij.appendChild(b);
   if (soort === 'boven') {
     const w = document.createElement('button');
@@ -1989,75 +2245,84 @@ function winkelRij(a, soort) {
   }
   if (soort === 'elders') {
     const s = document.createElement('span'); s.className = 'elders';
-    s.textContent = a.plekken.length ? 'alleen ' + a.plekken.map((p) => p.winkel).join(', ') : '';
+    s.textContent = a.plekken.length ? 'alleen ' + a.plekken.map((p) => (winkelOpId.get(p.winkel) || { naam: '?' }).naam).join(', ') : '';
     rij.appendChild(s);
   }
   return rij;
 }
 
+/* Een blok in de winkel: optioneel een kop (tekst of knop) met rechts een knop. */
+function winkelSectie(doel, titel, grijs, rechts) {
+  const sec = document.createElement('section'); sec.className = 'afd' + (grijs ? ' grijs' : '');
+  if (titel !== null) {
+    const kop = document.createElement('div'); kop.className = 'afdkop';
+    if (typeof titel === 'string') { const s = document.createElement('span'); s.textContent = titel; kop.appendChild(s); }
+    else kop.appendChild(titel);
+    if (rechts) kop.appendChild(rechts);
+    sec.appendChild(kop);
+  }
+  doel.appendChild(sec);
+  return sec;
+}
+
+/* "Niet bij <winkel>": ingeklapt, wat hier niet te koop is. */
+function eldersSectie(doel, w, elders, soortVan) {
+  const kop = document.createElement('button');
+  kop.type = 'button'; kop.className = 'uitklap';
+  kop.setAttribute('aria-expanded', String(winkel.eldersOpen));
+  kop.innerHTML = '<span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + (winkel.eldersOpen ? 90 : 0) + 'deg)"><path d="M9 5l7 7-7 7"></path></svg>';
+  kop.querySelector('span').textContent = 'Niet bij ' + w.naam + ' · ' + elders.length;
+  kop.addEventListener('click', () => { winkel.eldersOpen = !winkel.eldersOpen; tekenWinkel(); });
+  const sec = winkelSectie(doel, kop, true);
+  if (winkel.eldersOpen) for (const a of elders) sec.appendChild(winkelRij(a, soortVan(a) || 'elders'));
+}
+
+/* "In het mandje", met rechts de knop om het leeg te maken. */
+function mandjeSectie(doel, inMandje) {
+  const leeg = document.createElement('button');
+  leeg.type = 'button'; leeg.className = 'icoonknop amber';
+  leeg.setAttribute('aria-label', 'Mandje leegmaken');
+  leeg.innerHTML = MANDJE_WEG;
+  leeg.addEventListener('click', mandjeLeegmaken);
+  const sec = winkelSectie(doel, 'In het mandje · ' + inMandje.length, true, leeg);
+  for (const m of inMandje) sec.appendChild(winkelRij({ id: m.id, naam: m.naam, plekken: [] }, 'gedaan'));
+}
+
 function tekenWinkel() {
   if (!model || !winkelOpen()) return;
   const w = huidigeWinkel();
-  $('winkelNaam').textContent = winkel.naam || 'Winkel kiezen';
+  $('winkelNaam').textContent = w ? w.naam : 'Winkel kiezen';
+  /* Net afgevinkt (1,5 s): nog op zijn plek, als gedaan. */
   const weergave = artikelen.map((a) => {
-    const m = winkel.vertraagd.has(a.naam) && winkel.mandje.get(a.naam);
+    const m = winkel.vertraagd.has(a.id) && winkel.mandje.get(a.id);
     return m ? Object.assign({}, a, { op: m.op || 'x', opdoor: m.opdoor }) : a;
   });
   const ind = winkelIndeling(weergave, w);
+  const soortVan = (a) => winkel.vertraagd.has(a.id) ? 'gedaan' : null;
   const doel = $('winkelLijst');
   doel.innerHTML = '';
-  const soortVan = (a) => winkel.vertraagd.has(a.naam) ? 'gedaan' : null;
-  const sectie = (titel, grijs, rechts) => {
-    const sec = document.createElement('section'); sec.className = 'afd' + (grijs ? ' grijs' : '');
-    if (titel !== null) {
-      const kop = document.createElement('div'); kop.className = 'afdkop';
-      if (typeof titel === 'string') { const s = document.createElement('span'); s.textContent = titel; kop.appendChild(s); }
-      else kop.appendChild(titel);
-      if (rechts) kop.appendChild(rechts);
-      sec.appendChild(kop);
-    }
-    doel.appendChild(sec);
-    return sec;
-  };
   if (ind.boven.length) {
-    const sec = sectie(null);
+    const sec = winkelSectie(doel, null);
     for (const a of ind.boven) sec.appendChild(winkelRij(a, soortVan(a) || 'boven'));
   }
   for (const g of ind.groepen) {
-    const sec = sectie(g.afd);
+    const sec = winkelSectie(doel, g.afd.naam);
     for (const a of g.items) sec.appendChild(winkelRij(a, soortVan(a) || 'gewoon'));
   }
-  if (ind.elders.length) {
-    const kop = document.createElement('button');
-    kop.type = 'button'; kop.className = 'uitklap';
-    kop.setAttribute('aria-expanded', String(winkel.eldersOpen));
-    kop.innerHTML = '<span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + (winkel.eldersOpen ? 90 : 0) + 'deg)"><path d="M9 5l7 7-7 7"></path></svg>';
-    kop.querySelector('span').textContent = 'Niet bij ' + winkel.naam + ' · ' + ind.elders.length;
-    kop.addEventListener('click', () => { winkel.eldersOpen = !winkel.eldersOpen; tekenWinkel(); });
-    const sec = sectie(kop, true);
-    if (winkel.eldersOpen) for (const a of ind.elders) sec.appendChild(winkelRij(a, soortVan(a) || 'elders'));
-  }
-  const inMandje = Array.from(winkel.mandje.keys()).filter((n) => !winkel.vertraagd.has(n));
-  if (inMandje.length) {
-    const leeg = document.createElement('button');
-    leeg.type = 'button'; leeg.className = 'icoonknop amber';
-    leeg.setAttribute('aria-label', 'Mandje leegmaken');
-    leeg.innerHTML = MANDJE_WEG;
-    leeg.addEventListener('click', mandjeLeegmaken);
-    const sec = sectie('In het mandje · ' + inMandje.length, true, leeg);
-    for (const n of inMandje) sec.appendChild(winkelRij({ naam: n, plekken: [] }, 'gedaan'));
-  }
+  if (ind.elders.length) eldersSectie(doel, w, ind.elders, soortVan);
+  const hier = mandjeHier();
+  const inMandje = hier.filter((m) => !winkel.vertraagd.has(m.id));
+  if (inMandje.length) mandjeSectie(doel, inMandje);
   const open = ind.boven.length + ind.groepen.reduce((s, g) => s + g.items.length, 0) + ind.elders.length;
-  const klaarAantal = winkel.mandje.size;
+  const klaarAantal = hier.length;
   const totaal = open - winkel.vertraagd.size + klaarAantal;
   $('winkelTeller').textContent = klaarAantal + ' van ' + totaal;
   $('winkelVoortgang').style.width = (totaal ? Math.round(100 * klaarAantal / totaal) : 0) + '%';
-  if (!gekoppeld) {
-    doel.innerHTML = '<div class="kaart leeg"><b>Nog niet gekoppeld</b><span>Meld je eerst aan en koppel de gedeelde map, bij Instellingen.</span></div>';
-  } else if (!open && !inMandje.length) {
+  if (!gekoppeld || (!open && !inMandje.length)) {
+    doel.innerHTML = '';
     const p = document.createElement('div');
     p.className = 'kaart leeg';
-    p.textContent = 'Geen artikelen';
+    p.textContent = gekoppeld ? 'Geen artikelen' : 'Nog niet gekoppeld';
     doel.appendChild(p);
   }
 }
@@ -2066,10 +2331,11 @@ $('winkelKies').addEventListener('click', winkelKiezen);
 setInterval(() => { if (winkelOpen() && !document.hidden) planSync(0); }, VERVERS_WINKEL);
 
 /* ---------- tabblad Winkels: winkels en hun afdelingen ---------- */
-/* Afdelingen horen bij één winkel (de route, op volgorde). Favorieten gelden
-   per telefoon. Verwijderen gaat pas na 10 s, met Ongedaan maken. */
+/* Afdelingen horen bij één winkel, op volgorde (de looproute). Favorieten
+   gelden per telefoon. Verwijderen gebeurt meteen; Ongedaan maken zet het met
+   dezelfde id terug, met de plekken van de artikelen. */
 const ONGEDAAN = 10 * 1000;
-const ws = { open: '', favorieten: [], dicht: { fav: false, rest: false }, wacht: new Map() };
+const ws = { open: '', favorieten: [], dicht: { fav: false, rest: false } };
 const ICOON_PUI = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M4 9l1.5-5h13L20 9"></path><path d="M4 9h16v11H4z"></path><path d="M10 20v-5h4v5"></path></svg>';
 const PIJL_IN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A93C9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M9 5l7 7-7 7"></path></svg>';
 const PIJL_TERUG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>';
@@ -2078,28 +2344,14 @@ const STER = (aan) => '<svg width="22" height="22" viewBox="0 0 24 24" fill="' +
 const GREEP = '<svg width="22" height="22" viewBox="0 0 24 24" fill="#9A93C9" aria-hidden="true"><circle cx="9" cy="6" r="1.7"></circle><circle cx="15" cy="6" r="1.7"></circle><circle cx="9" cy="12" r="1.7"></circle><circle cx="15" cy="12" r="1.7"></circle><circle cx="9" cy="18" r="1.7"></circle><circle cx="15" cy="18" r="1.7"></circle></svg>';
 const PRULLENBAK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4232A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path><path d="M10 11v5M14 11v5"></path></svg>';
 
-function isFavoriet(naam) { return ws.favorieten.some((f) => normNaam(f) === normNaam(naam)); }
-function zichtbareWinkels() {
-  return winkelLijst(model).filter((w) => !ws.wacht.has('winkel:' + normNaam(w.naam)));
-}
-function openWinkel() {
-  if (!ws.open || !model) return null;
-  const w = zichtbareWinkels().find((x) => normNaam(x.naam) === normNaam(ws.open));
-  return w || null;
-}
-function afdelingenVan(w) {
-  return w.route.filter((a) => !ws.wacht.has('afd:' + normNaam(w.naam) + ':' + normNaam(a)));
-}
+function isFavoriet(id) { return ws.favorieten.indexOf(id) !== -1; }
 function aantalTekst(n) { return n === 0 ? 'geen afdelingen' : n === 1 ? '1 afdeling' : n + ' afdelingen'; }
 
-/* Iets later echt doen, met Ongedaan maken in een melding. */
-function uitgesteld(sleutelW, tekst, doe) {
+/* Melding na verwijderen, met Ongedaan maken zolang hij in beeld is. */
+function verwijderdMelding(tekst, terug) {
   const id = 'm-weg-' + willekeurig(6);
-  const klaar = () => { ws.wacht.delete(sleutelW); meldingWeg(id); };
-  ws.wacht.set(sleutelW, setTimeout(() => { klaar(); doe(); }, ONGEDAAN));
-  melding(id, tekst, [{ tekst: 'Ongedaan maken', actie: () => { clearTimeout(ws.wacht.get(sleutelW)); klaar(); tekenWinkels(); tekenWinkel(); } }], 'info');
-  tekenWinkels();
-  tekenWinkel();
+  melding(id, tekst, [{ tekst: 'Ongedaan maken', actie: () => { meldingWeg(id); handelen(terug); } }], 'info');
+  setTimeout(() => meldingWeg(id), ONGEDAAN);
 }
 
 function bewerkPaneel(opt) {
@@ -2117,7 +2369,7 @@ function bewerkPaneel(opt) {
   const inp = k.querySelector('input');
   inp.value = opt.naam;
   const opslaan = () => {
-    const v = opt.schoon(inp.value);
+    const v = schoonTekst(inp.value);
     if (!v) { inp.focus(); return; }
     sluitKeuze();
     if (v !== opt.naam) opt.opslaan(v);
@@ -2132,7 +2384,7 @@ function bewerkPaneel(opt) {
 
 function tekenWinkels() {
   if (!model || $('scherm-winkels').hidden) return;
-  const w = openWinkel();
+  const w = winkelOpId.get(ws.open) || null;
   if (ws.open && !w) ws.open = '';
   $('winkelsOverzicht').hidden = !!w;
   $('winkelDetail').hidden = !w;
@@ -2144,12 +2396,13 @@ function tekenWinkelsOverzicht() {
   const doel = $('winkelsOverzicht');
   doel.innerHTML = '';
   if (!gekoppeld) {
-    doel.innerHTML = '<div class="kaart leeg"><b>Nog niet gekoppeld</b><span>Meld je eerst aan en koppel de gedeelde map, bij Instellingen.</span></div>';
+    const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Nog niet gekoppeld';
+    doel.appendChild(p);
     return;
   }
   const z = zoekVorm($('winkelsTekst').value);
-  const alle = zichtbareWinkels().filter((x) => !z || zoekVorm(x.naam).indexOf(z) !== -1);
-  const groepen = [['fav', 'Favorieten', alle.filter((x) => isFavoriet(x.naam))], ['rest', 'Overige', alle.filter((x) => !isFavoriet(x.naam))]];
+  const alle = winkels.filter((x) => !z || zoekVorm(x.naam).indexOf(z) !== -1);
+  const groepen = [['fav', 'Favorieten', alle.filter((x) => isFavoriet(x.id))], ['rest', 'Overige', alle.filter((x) => !isFavoriet(x.id))]];
   for (const [sl, titel, rijen] of groepen) {
     if (!rijen.length) continue;
     const sec = document.createElement('section'); sec.className = 'wsectie';
@@ -2169,9 +2422,9 @@ function tekenWinkelsOverzicht() {
         b.type = 'button'; b.className = 'winkelrij';
         b.innerHTML = ICOON_PUI + '<span class="nm"></span>' + PIJL_IN;
         b.querySelector('.nm').textContent = x.naam;
-        const s = document.createElement('span'); s.className = 'sub'; s.textContent = aantalTekst(afdelingenVan(x).length);
+        const s = document.createElement('span'); s.className = 'sub'; s.textContent = aantalTekst(x.afdelingen.length);
         b.querySelector('.nm').appendChild(s);
-        b.addEventListener('click', () => winkelOpenen(x.naam));
+        b.addEventListener('click', () => winkelOpenen(x.id));
         kaart.appendChild(b);
       }
       sec.appendChild(kaart);
@@ -2191,32 +2444,31 @@ function tekenWinkelDetail(w) {
     '<button class="icoonknop ster" type="button"></button><button class="icoonknop bewerk" type="button" aria-label="Winkel bewerken">' + POTLOOD() + '</button></div>' +
     '<div class="kopregel2"><h3>Afdelingen in looproute</h3><span></span></div><div class="wkaart" id="afdelingen"></div>';
   doel.querySelector('h2').textContent = w.naam;
-  const fav = isFavoriet(w.naam);
+  const fav = isFavoriet(w.id);
   const ster = doel.querySelector('.ster');
   ster.innerHTML = STER(fav);
   ster.setAttribute('aria-pressed', String(fav));
   ster.setAttribute('aria-label', fav ? 'Favoriet, weghalen' : 'Favoriet maken');
-  ster.addEventListener('click', async () => {
-    ws.favorieten = ws.favorieten.filter((f) => normNaam(f) !== normNaam(w.naam));
-    if (!fav) ws.favorieten.push(w.naam);
+  ster.addEventListener('click', () => {
+    ws.favorieten = ws.favorieten.filter((f) => f !== w.id);
+    if (!fav) ws.favorieten.push(w.id);
     tekenWinkels();
-    await kvSet('favorieten', ws.favorieten);
+    bewaar('favorieten', ws.favorieten);
   });
   doel.querySelector('.terug').addEventListener('click', winkelSluiten);
   doel.querySelector('.bewerk').addEventListener('click', () => winkelBewerken(w));
-  const afd = afdelingenVan(w);
   const z = zoekVorm($('winkelsTekst').value);
-  const zicht = afd.filter((a) => !z || zoekVorm(a).indexOf(z) !== -1);
-  doel.querySelector('.kopregel2 span').textContent = afd.length;
+  const zicht = w.afdelingen.filter((a) => !z || zoekVorm(a.naam).indexOf(z) !== -1);
+  doel.querySelector('.kopregel2 span').textContent = w.afdelingen.length;
   const lijstEl = doel.querySelector('#afdelingen');
   for (const a of zicht) {
     const rij = document.createElement('div');
     rij.className = 'arij';
-    rij.dataset.afd = a;
+    rij.dataset.id = a.id;
     rij.innerHTML = (z ? '<span class="greep" style="visibility:hidden"></span>' : '<span class="greep" role="img" aria-label="Verslepen">' + GREEP + '</span>') +
       '<span class="nm"></span><button class="potlood" type="button">' + POTLOOD('#9A93C9') + '</button>';
-    rij.querySelector('.nm').textContent = a;
-    rij.querySelector('.potlood').setAttribute('aria-label', a + ' bewerken');
+    rij.querySelector('.nm').textContent = a.naam;
+    rij.querySelector('.potlood').setAttribute('aria-label', a.naam + ' bewerken');
     rij.querySelector('.potlood').addEventListener('click', () => afdelingBewerken(w, a));
     lijstEl.appendChild(rij);
   }
@@ -2241,7 +2493,7 @@ function slepenAan(lijstEl, w) {
     const hoogte = rij.getBoundingClientRect().height || 56;
     const y0 = e.clientY;
     let naar = van;
-    greep.setPointerCapture && greep.setPointerCapture(e.pointerId);
+    if (greep.setPointerCapture && e.pointerId !== undefined) try { greep.setPointerCapture(e.pointerId); } catch (x) { /* niet nodig */ }
     rij.classList.add('sleept');
     const beweeg = (ev) => {
       const dy = ev.clientY - y0;
@@ -2260,9 +2512,9 @@ function slepenAan(lijstEl, w) {
       rijen.forEach((r) => { r.style.transform = ''; });
       rij.classList.remove('sleept');
       if (naar !== van) {
-        const volgorde = rijen.map((r) => r.dataset.afd);
+        const volgorde = rijen.map((r) => r.dataset.id);
         volgorde.splice(naar, 0, volgorde.splice(van, 1)[0]);
-        handelen([{ actie: 'volgorde', soort: 'winkel', naam: w.naam, volgorde }]);
+        handelen([{ actie: 'volgorde', soort: 'winkel', id: w.id, volgorde }]);
       }
     };
     greep.addEventListener('pointermove', beweeg);
@@ -2271,10 +2523,10 @@ function slepenAan(lijstEl, w) {
   });
 }
 
-function winkelOpenen(naam) {
-  ws.open = naam;
+function winkelOpenen(id) {
+  ws.open = id;
   $('winkelsTekst').value = '';
-  try { history.pushState({ thuisWinkel: naam }, ''); } catch (e) { /* zonder geschiedenis: alleen de terugknop */ }
+  try { history.pushState({ thuisWinkel: id }, ''); } catch (e) { /* zonder geschiedenis: alleen de terugknop */ }
   tekenWinkels();
   $('midden').scrollTop = 0;
 }
@@ -2290,70 +2542,261 @@ window.addEventListener('popstate', () => {
 
 function winkelBewerken(w) {
   bewerkPaneel({
-    titel: 'Winkel bewerken', naam: w.naam, wegLabel: 'Winkel verwijderen', schoon: winkelNaamSchoon,
-    opslaan: async (nieuw) => {
-      if (zichtbareWinkels().some((x) => x !== w && normNaam(x.naam) === normNaam(nieuw))) {
+    titel: 'Winkel bewerken', naam: w.naam, wegLabel: 'Winkel verwijderen',
+    opslaan: (nieuw) => {
+      if (winkels.some((x) => x.id !== w.id && normNaam(x.naam) === normNaam(nieuw))) {
         melding('m-naam', ['Er is al een winkel ', { vet: nieuw }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
         return;
       }
-      if (isFavoriet(w.naam)) {
-        ws.favorieten = ws.favorieten.map((f) => normNaam(f) === normNaam(w.naam) ? nieuw : f);
-        kvSet('favorieten', ws.favorieten);
-      }
-      if (normNaam(winkel.naam) === normNaam(w.naam)) { winkel.naam = nieuw; kvSet('winkel', nieuw); }
-      ws.open = nieuw;
-      if (history.state && history.state.thuisWinkel) try { history.replaceState({ thuisWinkel: nieuw }, ''); } catch (e) { /* niet erg */ }
-      handelen([{ actie: 'hernoem', soort: 'winkel', naam: w.naam, nieuw }]);
+      handelen([{ actie: 'zet', soort: 'winkel', id: w.id, veld: 'naam', oud: w.naam, nieuw }]);
     },
     verwijder: () => {
+      /* Wat terug moet bij Ongedaan maken: de winkel zelf en de plekken. */
+      const record = recordNaarJson('winkel', model.winkels.get(w.id));
+      const ligt = {};
+      for (const a of model.artikelen.values()) if (a.ligt.has(w.id)) ligt[a.id] = a.ligt.get(w.id);
       winkelSluiten();
-      uitgesteld('winkel:' + normNaam(w.naam), [{ vet: w.naam }, ' verwijderd.'], () => handelen([{ actie: 'weg', soort: 'winkel', naam: w.naam }]));
+      handelen([{ actie: 'weg', soort: 'winkel', id: w.id }]);
+      verwijderdMelding([{ vet: w.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'winkel', id: w.id, record, ligt }]);
     }
   });
 }
 
 function afdelingBewerken(w, afd) {
   bewerkPaneel({
-    titel: 'Afdeling bewerken', naam: afd, wegLabel: 'Afdeling verwijderen', schoon: schoonTekst,
+    titel: 'Afdeling bewerken', naam: afd.naam, wegLabel: 'Afdeling verwijderen',
     opslaan: (nieuw) => {
-      if (w.route.some((x) => x !== afd && normNaam(x) === normNaam(nieuw))) {
+      if (w.afdelingen.some((x) => x.id !== afd.id && normNaam(x.naam) === normNaam(nieuw))) {
         melding('m-naam', [{ vet: w.naam }, ' heeft al een afdeling ', { vet: nieuw }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
         return;
       }
-      handelen([{ actie: 'afdHernoem', soort: 'winkel', naam: w.naam, afd, nieuw }]);
+      handelen([{ actie: 'afdHernoem', soort: 'winkel', id: w.id, afd: afd.id, naam: nieuw }]);
     },
-    verwijder: () => uitgesteld('afd:' + normNaam(w.naam) + ':' + normNaam(afd), [{ vet: afd }, ' verwijderd bij ', { vet: w.naam }, '.'],
-      () => handelen([{ actie: 'afdWeg', soort: 'winkel', naam: w.naam, afd }]))
+    verwijder: () => {
+      const plaats = w.afdelingen.findIndex((x) => x.id === afd.id);
+      const daar = [];
+      for (const a of model.artikelen.values()) if (a.ligt.get(w.id) === afd.id) daar.push(a.id);
+      handelen([{ actie: 'afdWeg', soort: 'winkel', id: w.id, afd: afd.id }]);
+      verwijderdMelding([{ vet: afd.naam }, ' verwijderd bij ', { vet: w.naam }, '.'],
+        [{ actie: 'terug', soort: 'afdeling', winkel: w.id, afd: { id: afd.id, naam: afd.naam }, plaats, artikelen: daar }]);
+    }
   });
 }
 
 function winkelsToevoegen() {
   const inp = $('winkelsTekst');
-  const w = openWinkel();
+  const w = winkelOpId.get(ws.open);
+  const v = schoonTekst(inp.value);
+  if (!v) { inp.focus(); return; }
+  inp.value = '';
   if (w) {
-    const v = schoonTekst(inp.value);
-    if (!v) { inp.focus(); return; }
-    inp.value = '';
-    if (!w.route.some((x) => normNaam(x) === normNaam(v))) handelen([{ actie: 'lijstErbij', soort: 'winkel', naam: w.naam, veld: 'route', waarde: v }]);
+    if (!w.afdelingen.some((x) => normNaam(x.naam) === normNaam(v))) handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: nieuweId(), naam: v } }]);
     else tekenWinkels();
     return;
   }
-  const v = winkelNaamSchoon(inp.value);
-  if (!v) { inp.focus(); return; }
-  inp.value = '';
   inp.blur();
-  const bestaand = zichtbareWinkels().find((x) => normNaam(x.naam) === normNaam(v));
-  if (!bestaand) handelen([{ actie: 'nieuw', soort: 'winkel', naam: v, velden: {} }]);
-  winkelOpenen(bestaand ? bestaand.naam : v);
+  const bestaand = winkels.find((x) => normNaam(x.naam) === normNaam(v));
+  const id = bestaand ? bestaand.id : nieuweId();
+  if (!bestaand) handelen([{ actie: 'nieuw', soort: 'winkel', id, velden: { naam: v } }]);
+  winkelOpenen(id);
 }
 $('winkelsTekst').addEventListener('input', () => { $('midden').scrollTop = 0; tekenWinkels(); });
 $('winkelsTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); winkelsToevoegen(); } });
 $('winkelsPlus').addEventListener('click', winkelsToevoegen);
 
+/* Alleen tekenen wat in beeld is; een tabblad tekent zich bij het openen. */
 function tekenAlles() {
-  tekenBoodschappen();
+  if (!$('scherm-boodschappen').hidden) tekenBoodschappen();
   tekenWinkel();
   tekenWinkels();
+  if (!$('scherm-instellingen').hidden) tekenInstellingen();
+}
+
+/* ---------- Instellingen: wekelijks en backups ---------- */
+const DAGEN = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
+function tekenInstellingen() {
+  if (!model) return;
+  const w = model.instellingen.wekelijks || { dag: 'za', tijd: '06:00' };
+  const doel = $('wekDagen');
+  doel.innerHTML = '';
+  for (const d of DAGEN) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = d;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(w.dag === d));
+    b.disabled = !gekoppeld;
+    b.addEventListener('click', () => { if (w.dag !== d) handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'dag', oud: w.dag, nieuw: d }]).then(tekenInstellingen); });
+    doel.appendChild(b);
+  }
+  if (document.activeElement !== $('wekTijd')) $('wekTijd').value = w.tijd || '06:00';
+  $('wekTijd').disabled = !gekoppeld;
+}
+$('wekTijd').addEventListener('change', () => {
+  const w = model.instellingen.wekelijks || {};
+  const v = $('wekTijd').value;
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(v) && v !== w.tijd) handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'tijd', oud: w.tijd || '', nieuw: v }]);
+});
+
+/* Backups in de gedeelde map: alleen de naam en grootte; de inhoud pas als je
+   er een aantikt. */
+const BACKUP_NAAM = /^thuis_backup_(\d{4})(\d{2})(\d{2})\.json$/;
+const VOOR_TERUGZETTEN = 'thuis_voor_terugzetten.json';
+async function backupLijst() {
+  const map = await kvGet('map');
+  if (!map) return [];
+  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + '/children?$select=id,name,size&$top=999');
+  if (!res.ok) throw new Error('code ' + res.status);
+  return ((await res.json()).value || []).filter((i) => BACKUP_NAAM.test(i.name))
+    .map((i) => { const m = BACKUP_NAAM.exec(i.name); return { id: i.id, naam: i.name, grootte: i.size || 0, datum: m[1] + '-' + m[2] + '-' + m[3] }; })
+    .sort((a, b) => (a.datum < b.datum ? 1 : -1));
+}
+async function backupsTellen() {
+  if (!gekoppeld || !navigator.onLine) { $('backupAantal').textContent = ''; return; }
+  try { $('backupAantal').textContent = (await backupLijst()).length; } catch (e) { $('backupAantal').textContent = ''; }
+}
+function datumLabel(datum) {
+  const d = new Date(+datum.slice(0, 4), +datum.slice(5, 7) - 1, +datum.slice(8, 10));
+  const t = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][d.getDay()] + ' ' + d.getDate() + ' ' + MAANDEN[d.getMonth()];
+  return datum === datumTekst(new Date()) ? 'Vandaag · ' + t.toLowerCase() : t;
+}
+
+async function backupsOpenen() {
+  $('scherm-instellingen').classList.add('sub');
+  const doel = $('backupScherm');
+  doel.hidden = false;
+  doel.innerHTML = '<div class="wdkop"><button class="terug" type="button" aria-label="Terug naar Instellingen">' + PIJL_TERUG + '</button><h2>Backups</h2></div><div class="leegregel">Laden…</div>';
+  doel.querySelector('.terug').addEventListener('click', () => backupSluiten(false));
+  try { history.pushState({ thuisBackups: true }, ''); } catch (e) { /* alleen de terugknop */ }
+  $('midden').scrollTop = 0;
+  let lijstB;
+  try { lijstB = await backupLijst(); } catch (e) { doel.querySelector('.leegregel').textContent = 'Niet gelukt (' + e.message + ')'; return; }
+  doel.querySelector('.leegregel').remove();
+  const grens = datumTekst(new Date(Date.now() - 13 * 86400000));
+  for (const [titel, deel] of [['Laatste 14 dagen', lijstB.filter((b) => b.datum >= grens)], ['Eerste van de maand', lijstB.filter((b) => b.datum < grens)]]) {
+    if (!deel.length) continue;
+    const g = document.createElement('section'); g.className = 'backupgroep';
+    const h = document.createElement('h3'); h.className = 'kopregel2'; h.textContent = titel; g.appendChild(h);
+    const kaart = document.createElement('div'); kaart.className = 'wkaart';
+    for (const b of deel) {
+      const r = document.createElement('button');
+      r.type = 'button'; r.className = 'winkelrij backuprij';
+      r.innerHTML = '<span class="nm"></span>' + PIJL_IN;
+      r.querySelector('.nm').textContent = datumLabel(b.datum);
+      const s = document.createElement('span'); s.className = 'sub'; s.textContent = Math.max(1, Math.round(b.grootte / 1024)) + ' kB';
+      r.querySelector('.nm').appendChild(s);
+      r.addEventListener('click', () => backupBekijken(b));
+      kaart.appendChild(r);
+    }
+    g.appendChild(kaart);
+    doel.appendChild(g);
+  }
+  if (!lijstB.length) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = 'Nog geen backups'; doel.appendChild(p); }
+}
+function backupSluiten(stil) {
+  if (!stil && history.state && history.state.thuisBackups) { history.back(); return; }
+  $('scherm-instellingen').classList.remove('sub');
+  $('backupScherm').hidden = true;
+  $('backupScherm').innerHTML = '';
+}
+window.addEventListener('popstate', () => { if (!$('backupScherm').hidden) { sluitKeuze(); backupSluiten(true); } });
+$('naarBackups').addEventListener('click', backupsOpenen);
+
+async function bestandInhoud(map, itemId) {
+  const res = await graph('/drives/' + map.driveId + '/items/' + itemId);
+  if (!res.ok) throw new Error('code ' + res.status);
+  const inhoud = await metGrens((await res.json())['@microsoft.graph.downloadUrl'], { cache: 'no-store' });
+  if (!inhoud.ok) throw new Error('downloaden: code ' + inhoud.status);
+  return new Uint8Array(await inhoud.arrayBuffer());
+}
+
+/* Eén backup: downloaden, laten zien wat erin zit, en terugzetten. */
+async function backupBekijken(b) {
+  sluitKeuze();
+  const k = document.createElement('div');
+  k.id = 'keuze';
+  k.setAttribute('role', 'dialog'); k.setAttribute('aria-modal', 'true');
+  k.setAttribute('aria-label', 'Backup van ' + datumLabel(b.datum));
+  k.innerHTML = '<div class="paneel"><div class="kop"><h3></h3><button class="kruis" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
+    '<div class="naamveld"><div class="kaart" id="backupInhoud"><div class="rij"><span class="label">Laden…</span></div></div></div>' +
+    '<div class="bewerkknoppen"><button class="knop" type="button" disabled>Terugzetten</button></div></div>';
+  k.querySelector('h3').textContent = 'Backup van ' + datumLabel(b.datum).replace('Vandaag · ', 'vandaag, ');
+  k.querySelector('.kruis').addEventListener('click', sluitKeuze);
+  k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
+  document.body.appendChild(k);
+  const inhoudEl = k.querySelector('#backupInhoud');
+  const regel = (label, waarde) => { const r = document.createElement('div'); r.className = 'rij'; r.innerHTML = '<span class="label"></span><span class="waarde"></span>'; r.children[0].textContent = label; r.children[1].textContent = waarde; return r; };
+  let bytes, gelezen;
+  try {
+    bytes = await bestandInhoud(await kvGet('map'), b.id);
+    gelezen = leesBestand(bytes);
+  } catch (e) { inhoudEl.innerHTML = ''; inhoudEl.appendChild(regel('Niet gelukt', e.message)); return; }
+  inhoudEl.innerHTML = '';
+  if (!gelezen.ok) { inhoudEl.appendChild(regel('Niet terug te zetten', gelezen.reden === 'onbekend-formaat' ? 'ouder formaat' : 'niet te lezen')); return; }
+  const m = gelezen.model;
+  inhoudEl.appendChild(regel('Winkels', m.winkels.size));
+  inhoudEl.appendChild(regel('Artikelen', m.artikelen.size));
+  inhoudEl.appendChild(regel('Op de lijst', Array.from(m.artikelen.values()).filter((a) => a.op).length));
+  inhoudEl.appendChild(regel('Acties', m.acties.size));
+  const knop = k.querySelector('.knop');
+  knop.disabled = false;
+  knop.addEventListener('click', async () => {
+    sluitKeuze();
+    if (await terugzetten(new TextDecoder().decode(bytes), true)) {
+      backupSluiten(false);
+      const id = 'm-terug';
+      melding(id, ['Backup van ', { vet: datumLabel(b.datum).replace('Vandaag · ', '') }, ' teruggezet.'], [{ tekst: 'Ongedaan maken', actie: async () => {
+        meldingWeg(id);
+        try { if (await terugzetten(new TextDecoder().decode(await bestandInhoudOpNaam(VOOR_TERUGZETTEN)), false)) melding(id, 'Terugzetten ongedaan gemaakt.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg(id) }], 'info'); }
+        catch (e) { melding(id, 'Ongedaan maken niet gelukt (' + e.message + ').', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg(id) }]); }
+      } }], 'info');
+    }
+  });
+}
+async function bestandInhoudOpNaam(naam) {
+  const map = await kvGet('map');
+  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + naam);
+  if (!res.ok) throw new Error('code ' + res.status);
+  return bestandInhoud(map, (await res.json()).id);
+}
+
+/* De inhoud van een backup in thuis.json zetten. Eerst de huidige stand
+   bewaren (zodat ook terugzetten terug te draaien is), alleen als er geen
+   wijzigingen meer klaarstaan, en met If-Match: is het bestand intussen
+   veranderd, dan gebeurt er niets. */
+async function terugzetten(tekst, voorBewaren) {
+  const fout = (t) => { melding('m-terug', t, [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-terug') }]); return false; };
+  if (!leesBestand(tekst).ok) return fout('Deze backup is niet te lezen.');
+  if (wachtrij.length) { planSync(0); return fout('Er staan nog wijzigingen klaar. Probeer het zo opnieuw.'); }
+  if (sync.bezig) return fout('Even geduld: de app is aan het synchroniseren.');
+  sync.bezig = true; tekenWolk();
+  try {
+    const map = await kvGet('map');
+    const opgehaald = await bestandOphalen(map);
+    if (opgehaald.weg) return fout(BESTAND + ' staat niet in de map.');
+    const huidig = opgehaald.tekst || new TextDecoder().decode(opgehaald.bytes);
+    if (voorBewaren) {
+      const r = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + VOOR_TERUGZETTEN + ':/content', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: huidig
+      });
+      if (!r.ok) return fout('De huidige stand kon niet worden bewaard; er is niets teruggezet.');
+    }
+    const res = await graph('/drives/' + map.driveId + '/items/' + opgehaald.item.id + '/content', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8', 'If-Match': opgehaald.item.eTag }, body: tekst
+    });
+    if (res.status === 412) return fout('Het bestand is net gewijzigd. Probeer het opnieuw.');
+    if (!res.ok) return fout('Terugzetten niet gelukt (code ' + res.status + ').');
+    const item = await res.json();
+    kopie = { formaat: FORMAAT, tekst, eTag: item.eTag, fileId: item.id, tijd: Date.now() };
+    await bewaar('kopie', kopie);
+    bouwModel();
+    tekenAlles();
+    tekenInstellingen();
+    return true;
+  } catch (e) {
+    return fout('Terugzetten niet gelukt (' + e.message + ').');
+  } finally {
+    sync.bezig = false; tekenWolk();
+  }
 }
 
 /* ---------- vegen tussen de tabbladen (rondom) ---------- */

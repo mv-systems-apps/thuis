@@ -54,10 +54,12 @@ function onedrive(begintekst) {
         return antwoord(201, item(naam));
       }
     }
+    if (/^\/drives\/D\/items\/MAP\/children/.test(g)) return antwoord(200, { value: Object.keys(od.bestanden).map((n) => ({ id: od.bestanden[n].id, name: n })) });
     m = /^\/drives\/D\/items\/([^/?]+)(\/content)?/.exec(g);
     if (m) {
       const naam = naamVanId(m[1]);
       if (!naam) return antwoord(404, {});
+      if (methode === 'DELETE') { delete od.bestanden[naam]; od.gewist = (od.gewist || []).concat(naam); return antwoord(204, {}); }
       if (methode === 'GET') return antwoord(200, item(naam));
       if (methode === 'PUT') {
         od.puts++;
@@ -105,7 +107,8 @@ async function start(od) {
   await slaap(600);
   return dom.window;
 }
-const namenInLijst = (w) => [...w.document.querySelectorAll('#lijst .item')].map((r) => r.dataset.naam);
+const naamVanRij = (r) => r.querySelector('.naam > span').textContent;
+const namenInLijst = (w) => [...w.document.querySelectorAll('#lijst .item')].map(naamVanRij);
 async function typ(w, tekst) {
   const i = w.document.getElementById('invoerTekst');
   i.value = tekst;
@@ -113,7 +116,7 @@ async function typ(w, tekst) {
 }
 async function plus(w) { w.document.getElementById('invoerPlus').click(); }
 
-const { regelsNaarJson: J, jsonNaarRegels: R } = require('./test-hulp.cjs');
+const { regelsNaarJson: J, jsonNaarRegels: R, FORMAAT } = require('./test-hulp.cjs');
 const BEGIN = [
   'instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2000-01-01T06:00',
   'artikel;Bananen;soort=wekelijks;gekocht=2000-01-01',
@@ -124,6 +127,10 @@ const BEGIN = [
 (async () => {
   /* 1. Openen: lezen, wekelijks terug, wegschrijven met dagbackup. */
   let od = onedrive(BEGIN);
+  /* oude backups: één van vorig jaar (weg) en één van gisteren (blijft) */
+  const gisteren = new Date(Date.now() - 86400000);
+  const naamGisteren = 'thuis_backup_' + gisteren.getFullYear() + String(gisteren.getMonth() + 1).padStart(2, '0') + String(gisteren.getDate()).padStart(2, '0') + '.json';
+  od.zet('thuis_backup_20200105.json', '{}'); od.zet(naamGisteren, '{}'); od.zet('notities.txt', 'x');
   let w = await start(od);
   await slaap(800);
   const lijst1 = namenInLijst(w);
@@ -133,6 +140,8 @@ const BEGIN = [
   controle('openen: teruggezet weggeschreven naar OneDrive', /artikel;Bananen;soort=wekelijks;op=/.test(R(od.bestanden['thuis.json'].tekst)), R(od.bestanden['thuis.json'].tekst));
   controle('openen: dagbackup gemaakt met de versie van vóór het schrijven',
     Object.keys(od.bestanden).some((n) => /^thuis_backup_\d{8}\.json$/.test(n) && R(od.bestanden[n].tekst) === BEGIN));
+  controle('backups: oude opgeruimd, recente en andere bestanden blijven',
+    JSON.stringify(od.gewist) === '["thuis_backup_20200105.json"]' && !!od.bestanden[naamGisteren] && !!od.bestanden['notities.txt'], JSON.stringify(od.gewist));
   const wolk = w.document.getElementById('wolkTekst').textContent;
   controle('openen: het wolkje toont een tijd', /^\d{2}:\d{2}$/.test(wolk), wolk);
 
@@ -159,8 +168,8 @@ const BEGIN = [
   await typ(w, '');
 
   /* 5. Tegelijk gewijzigd: de ander voegt Hagelslag toe vlak voor ons schrijven (412). */
-  od.botsBijVolgendePut = (tekst) => J(R(tekst) + 'artikel;Hagelslag;soort=eenmalig;op=2026-11-21T09:00;opdoor=Medespeler\n');
-  const melkRondje = [...w.document.querySelectorAll('#lijst .item')].find((r) => r.dataset.naam === 'Melk').querySelector('.rondje');
+  od.botsBijVolgendePut = (tekst) => { const d = JSON.parse(tekst); d.artikelen.hag01 = { naam: 'Hagelslag', soort: 'eenmalig', op: '2026-11-21T09:00', opdoor: 'Medespeler' }; return JSON.stringify(d); };
+  const melkRondje = [...w.document.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk').querySelector('.rondje');
   melkRondje.click();
   await slaap(3000);
   const t5 = R(od.bestanden['thuis.json'].tekst);
@@ -170,9 +179,9 @@ const BEGIN = [
   controle('botsing 412: Melk van de lijst', !namenInLijst(w).includes('Melk'));
 
   /* 5b. Van de lijst halen: even grijs op zijn plek, dan onder "Van de lijst gehaald". */
-  const rondjeVan = (naam) => [...w.document.querySelectorAll('.item')].find((r) => r.dataset.naam === naam).querySelector('.rondje');
+  const rondjeVan = (naam) => [...w.document.querySelectorAll('.item')].find((r) => naamVanRij(r) === naam).querySelector('.rondje');
   rondjeVan('pesto').click();
-  const direct = [...w.document.querySelectorAll('#lijst .item')].find((r) => r.dataset.naam === 'pesto');
+  const direct = [...w.document.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'pesto');
   controle('van de lijst: blijft eerst grijs op zijn plek', !!direct && direct.classList.contains('vertrekt'));
   await slaap(1800);
   const inLijst = namenInLijst(w).includes('pesto');
@@ -215,9 +224,9 @@ const BEGIN = [
   /* winkel kiezen: alleen waar iets is vastgelegd, met aantal; de rest onder "Alle winkels" */
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
-  k.querySelector('#keuzeZoek').value = 'Lidl: centrum'; k.querySelector('.plusknop').click();
+  k.querySelector('#keuzeZoek').value = 'Lidl centrum'; k.querySelector('.plusknop').click();
   await slaap(100);
-  controle('winkel: : in een winkelnaam wordt een spatie', d.getElementById('winkelNaam').textContent === 'Lidl centrum', d.getElementById('winkelNaam').textContent);
+  controle('winkel: nieuwe winkel gekozen', d.getElementById('winkelNaam').textContent === 'Lidl centrum', d.getElementById('winkelNaam').textContent);
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
@@ -271,6 +280,19 @@ const BEGIN = [
     /^artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit;op=[^;]+;(opdoor=[^;]*;)?gekocht=2000-01-01$/m.test(t5e), t5e);
   rijVan('Bananen').querySelector('.vink').click();
   await slaap(1800);
+  /* mandje per winkel: in een andere winkel begint de teller op 0 en is het mandje leeg */
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze');
+  k.querySelector('.uitklapper').click();
+  [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
+  await slaap(50);
+  controle('mandje per winkel: in de Lidl geen mandje van de AH, teller begint op 0',
+    ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')) && /^0 van/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
+  d.getElementById('winkelKies').click();
+  k = d.getElementById('keuze'); k.querySelector('.uitklapper').click();
+  [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Albert Heijn')).click();
+  await slaap(50);
+  controle('mandje per winkel: terug in de AH staat het er nog', [...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent === 'In het mandje · 1'));
   const leeg = d.querySelector('#winkelLijst .icoonknop.amber');
   controle('mandje: leegmaakknop (mandje met kruis) bij het mandje', !!leeg && leeg.getAttribute('aria-label') === 'Mandje leegmaken');
   leeg.click();
@@ -315,7 +337,7 @@ const BEGIN = [
   controle('verslepen: Zuivel bovenaan', afdNamen() === 'Zuivel,Groente & fruit,Brood', afdNamen());
   controle('tik op de naam van een afdeling doet niets', (() => { d.querySelector('#afdelingen .arij .nm').click(); return !d.getElementById('keuze'); })());
   /* hernoemen via het potloodje */
-  [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.dataset.afd === 'Groente & fruit').querySelector('.potlood').click();
+  [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.querySelector('.nm').textContent === 'Groente & fruit').querySelector('.potlood').click();
   let p = d.getElementById('keuze');
   controle('potloodje opent "Afdeling bewerken" met de naam, prullenbak links van Opslaan',
     !!p && p.getAttribute('aria-label') === 'Afdeling bewerken' && p.querySelector('#bewerkNaam').value === 'Groente & fruit' && p.querySelector('.bewerkknoppen').firstElementChild.classList.contains('prul'));
@@ -324,7 +346,7 @@ const BEGIN = [
   const t5f = R(od.bestanden['thuis.json'].tekst);
   controle('afdeling hernoemd in route en bij Bananen', /^winkel;Albert Heijn;route=Zuivel\|AGF\|Brood$/m.test(t5f) && /^artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:AGF;/m.test(t5f), t5f);
   /* verwijderen met ongedaan maken */
-  [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.dataset.afd === 'Brood').querySelector('.potlood').click();
+  [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.querySelector('.nm').textContent === 'Brood').querySelector('.potlood').click();
   d.getElementById('keuze').querySelector('.prul').click();
   controle('afdeling verwijderd: meteen weg, met Ongedaan maken', afdNamen() === 'Zuivel,AGF' && [...d.querySelectorAll('.melding button')].some((b) => b.textContent === 'Ongedaan maken'));
   const mWeg = [...d.querySelectorAll('.melding')].find((m) => m.textContent.includes('Ongedaan maken'));
@@ -346,6 +368,68 @@ const BEGIN = [
   controle('terug: overzicht met AH onder Favorieten', d.getElementById('winkelDetail').hidden &&
     d.querySelector('#winkelsOverzicht .kop span').textContent === 'Favorieten' && winkelRijen()[0] === 'AH', winkelRijen().join());
   controle('favorieten staan niet in thuis.json', !/favoriet/i.test(R(od.bestanden['thuis.json'].tekst)));
+
+  /* winkel verwijderen: meteen echt weg (ook in OneDrive), Ongedaan maken zet hem terug met de plekken */
+  [...d.querySelectorAll('#winkelsOverzicht .winkelrij')].find((b) => b.textContent.startsWith('AH')).click();
+  await slaap(50);
+  d.querySelector('#winkelDetail .bewerk').click();
+  d.getElementById('keuze').querySelector('.prul').click();
+  await slaap(2500);
+  const tWeg = R(od.bestanden['thuis.json'].tekst);
+  controle('winkel verwijderen: meteen weg in OneDrive, ook bij Bananen', !/^winkel;AH/m.test(tWeg) && /^artikel;Bananen;soort=wekelijks;(op|gekocht)/m.test(tWeg) && !/Bananen;[^\n]*ligt=/.test(tWeg), tWeg);
+  const ongedaan = [...d.querySelectorAll('.melding button')].find((b) => b.textContent === 'Ongedaan maken');
+  ongedaan.click();
+  await slaap(2500);
+  const tTerug = R(od.bestanden['thuis.json'].tekst);
+  controle('ongedaan maken: AH terug met afdelingen, Bananen weer in AGF', /^winkel;AH;route=Zuivel\|AGF\|Brood$/m.test(tTerug) && /^artikel;Bananen;soort=wekelijks;ligt=AH:AGF;/m.test(tTerug), tTerug);
+
+  /* opslaan op de telefoon mislukt: melding, en weg zodra het weer lukt */
+  const echtKvSet = w.kvSet;
+  w.kvSet = async () => { throw new Error('vol'); };
+  d.getElementById('winkelsTekst').value = 'Kruidvat'; d.getElementById('winkelsPlus').click();
+  await slaap(50);
+  const mOpslag = d.getElementById('m-opslag');
+  controle('opslaan mislukt: melding "Opslaan niet gelukt" met Opnieuw proberen', !!mOpslag && mOpslag.querySelector('p').textContent === 'Opslaan niet gelukt' && mOpslag.querySelector('button').textContent === 'Opnieuw proberen');
+  w.kvSet = echtKvSet;
+  mOpslag.querySelector('button').click();
+  await slaap(100);
+  controle('opslaan weer gelukt: melding weg', !d.getElementById('m-opslag'));
+  await slaap(2500);
+
+  /* andere map koppelen met wijzigingen in de wachtrij: eerst bevestigen */
+  w.eval("wachtrij.push({ actie: 'zet', soort: 'artikel', id: 'nietbestaand', veld: 'op', oud: '', nieuw: 'x' })");
+  await w.mapKoppelen(false);
+  controle('andere map koppelen met openstaande wijzigingen: eerst een vraag', !!d.getElementById('m-koppelen') && /1 wijziging staat nog niet in OneDrive/.test(d.getElementById('m-koppelen').textContent));
+  w.meldingWeg('m-koppelen');
+  w.eval('wachtrij.pop()');
+  d.getElementById('tab-boodschappen').click();
+
+  /* 5e. Instellingen: wekelijks, backups en terugzetten. */
+  d.getElementById('tab-instellingen').click();
+  await slaap(300);
+  const dagKnop = (dag) => [...d.querySelectorAll('#wekDagen button')].find((b) => b.textContent === dag);
+  controle('instellingen: zaterdag gekozen', dagKnop('za').getAttribute('aria-checked') === 'true');
+  dagKnop('vr').click();
+  const tijd = d.getElementById('wekTijd'); tijd.value = '18:30'; tijd.dispatchEvent(new w.Event('change'));
+  await slaap(2500);
+  controle('instellingen: dag en tijd in OneDrive', /^instelling;wekelijks;dag=vr;tijd=18:30;/m.test(R(od.bestanden['thuis.json'].tekst)), R(od.bestanden['thuis.json'].tekst).split('\n')[0]);
+  const voorTerug = od.bestanden['thuis.json'].tekst;
+  d.getElementById('naarBackups').click();
+  await slaap(300);
+  const brijen = [...d.querySelectorAll('#backupScherm .backuprij')];
+  controle('backups: lijst met de backup van vandaag bovenaan', brijen.length >= 1 && /^Vandaag · /.test(brijen[0].textContent), brijen.map((b) => b.textContent).join(' | '));
+  brijen[0].click();
+  await slaap(300);
+  const paneel = d.getElementById('keuze');
+  controle('backup bekijken: inhoud geteld, Terugzetten beschikbaar', /Artikelen\s*3/.test(paneel.textContent) && !paneel.querySelector('.knop').disabled, paneel.textContent);
+  paneel.querySelector('.knop').click();
+  await slaap(500);
+  controle('terugzetten: backup staat in thuis.json, huidige stand bewaard, melding met Ongedaan maken',
+    R(od.bestanden['thuis.json'].tekst) === BEGIN && od.bestanden['thuis_voor_terugzetten.json'].tekst === voorTerug && !!d.getElementById('m-terug') && /Ongedaan maken/.test(d.getElementById('m-terug').textContent),
+    R(od.bestanden['thuis.json'].tekst));
+  [...d.getElementById('m-terug').querySelectorAll('button')].find((b) => b.textContent === 'Ongedaan maken').click();
+  await slaap(500);
+  controle('ongedaan maken: de stand van voor het terugzetten is terug', od.bestanden['thuis.json'].tekst === voorTerug && /dag=vr;tijd=18:30/.test(R(od.bestanden['thuis.json'].tekst)));
   d.getElementById('tab-boodschappen').click();
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
@@ -353,16 +437,17 @@ const BEGIN = [
   od.bestanden['thuis.json'] = { bytes: new Uint8Array([0x7B, 0x7D, 0xFF, 0x0A]), eTag: '"x1"', id: 'id-thuis.json' };
   w = await start(od);
   await slaap(800);
-  controle('geen UTF-8: melding en geen schrijfactie', !!w.document.getElementById('m-utf8') && od.puts === 0,
-    'puts=' + od.puts + ' melding=' + !!w.document.getElementById('m-utf8'));
+  controle('geen UTF-8: melding en geen schrijfactie', !!w.document.getElementById('m-bestand') && od.puts === 0,
+    'puts=' + od.puts + ' melding=' + !!w.document.getElementById('m-bestand'));
 
   /* 6b. Kapotte JSON en een nieuwer formaat: melding, niets geschreven. */
-  for (const [naam, tekst, woord] of [['kapot', '{"versie": "1352902-3FF", "artikelen": {', 'beschadigd'], ['nieuwer', '{"versie": "1352903-000"}', 'nieuwere versie']]) {
+  for (const [naam, tekst, woord] of [['kapot', '{"versie": "' + FORMAAT + '", "artikelen": {', 'beschadigd'], ['nieuwer', '{"versie": "1352903-000"}', 'nieuwere versie'],
+    ['verkeerde opbouw', '{"versie": "' + FORMAAT + '", "artikelen": []}', 'opbouw']]) {
     od = onedrive(null);
     od.bestanden['thuis.json'] = { tekst, eTag: '"x1"', id: 'id-thuis.json' };
     w = await start(od);
     await slaap(800);
-    const m = w.document.getElementById('m-utf8');
+    const m = w.document.getElementById('m-bestand');
     controle(naam + ': melding en geen schrijfactie', !!m && m.textContent.includes(woord) && od.puts === 0, 'puts=' + od.puts + ' ' + (m && m.textContent));
   }
 

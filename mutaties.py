@@ -3,13 +3,17 @@ welke controles rood worden. Faalt (exitcode 1) als een mutatie niet meer aangri
 of door geen enkele controle wordt gevangen.   python3 mutaties.py"""
 import subprocess, os, shutil, sys, tempfile
 MUTATIES = [
-  ("BOM-markering vergeten", "  const bom = tekst.charCodeAt(0) === 0xFEFF;", "  const bom = false;"),
+  ("BOM-markering vergeten", "  model.bom = tekst.charCodeAt(0) === 0xFEFF;", "  model.bom = false;"),
   ("allebei op de lijst = botsing", "if (h.veld === 'op' && cur !== '' && nieuw !== '') return { status: 'al' };", ""),
-  ("na het moment gekocht telt niet", "if (lijst(r.velden.get('gekocht')).some((d) => d >= mDatum)) continue;", ""),
-  ("hernoemd-spoor genegeerd", "if (!spoor || !spoor.velden.get('nieuw')) return null;", "return null;"),
-  ("verwijderd artikel weer aanmaken", "  if (!r) return { status: 'vervallen' };", "  if (!r) return { status: 'ok' };"),
+  ("na het moment gekocht telt niet", "if (r.gekocht.some((d) => d >= mDatum)) continue;", ""),
+  ("verwijderd artikel weer aanmaken", "  return r ? regel.doe(model, h, verz, r) : VERVALLEN;", "  return r ? regel.doe(model, h, verz, r) : { status: 'ok' };"),
   ("geen UTF-8-controle", "new TextDecoder('utf-8', { fatal: true })", "new TextDecoder('utf-8')"),
-  ("nieuwer formaat toch lezen", "if (v > formaatGetal(FORMAAT)) return { ok: false, reden: 'nieuwer-formaat', meldingen: [] };", ""),
+  ("nieuwer formaat toch lezen", "if (v > formaatGetal(FORMAAT)) return { ok: false, reden: 'nieuwer-formaat' };", ""),
+  ("verkeerde opbouw stil overslaan", "    if (!isObject(deel)) throw new Error(k + ' is geen object');", "    if (!isObject(deel)) continue;"),
+  ("dubbele naam niet samenvoegen", "const zelfde = verz.get(h.id) || zoekOpNaam(verz, v.naam);", "const zelfde = verz.get(h.id);"),
+  ("vervanging niet doorgeven", "    const h = vervangIds(h0, alias);", "    const h = h0;"),
+  ("verwijderde winkel blijft bij artikelen", "  if (h.soort === 'winkel') for (const a of model.artikelen.values()) a.ligt.delete(h.id);", ""),
+  ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))
 t = open(os.path.join(hier, 'thuis.html'), encoding='utf-8').read()

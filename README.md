@@ -17,7 +17,7 @@ Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie
 - `NODE_PATH=<map> node thuis-dom.cjs` — rooktest in jsdom met een gesimuleerde
   OneDrive (`npm i jsdom fake-indexeddb` in die map). Geen echte browser.
-- `test-hulp.cjs` — korte regelopmaak voor testgegevens, omgezet naar en van JSON (alleen voor de tests)
+- `test-hulp.cjs` — korte regelopmaak met namen voor de testgegevens van de rooktest, omgezet naar en van thuis.json met id's (alleen voor de tests)
 - `python3 mutaties.py` — sloopt de kern op bekende plekken; elke mutatie moet worden gevangen
 
 Na elke wijziging aan de app ook:

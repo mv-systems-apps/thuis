@@ -95,363 +95,329 @@ controle('service worker: eigen cachenaam en thuis.html in de verplichte lijst',
 });
 
 
-/* ================= kern: bestand (stap 3) en samenvoegen (stap 4) ================= */
+/* ================= kern: bestand en samenvoegen ================= */
 function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
-  const ctx = vm.createContext({ TextDecoder, Intl, Map, Date });
-  vm.runInContext(m[1] + '\n;this.__k = { normNaam, schoonTekst, schoonLink, leesBestand, schrijfBestand, pasToe, wekelijksTerug, opruimen, synchroniseer, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, suggestie, suggestieTekst, zoekArtikelen, zoekVorm, winkelTellingen, teKoopIn, afdelingIn };', ctx);
+  const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON });
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, zoekArtikelen };', ctx);
   return ctx.__k;
 }
+const K = kern();
 const NU = new Date(2026, 10, 21, 10, 0); // za 21-11-2026 10:00 lokale tijd
-const VOORBEELD = [
-  'instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2026-11-14T06:00',
-  'winkel;Albert Heijn;route=Groente & fruit|Zuivel & eieren',
-  'artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit;gekocht=2026-11-07|2026-11-14',
-  'artikel;Koffie;soort=regelmatig;gekocht=2026-10-03|2026-10-24',
-  'artikel;Melk;soort=wekelijks;ligt=Albert Heijn:Zuivel & eieren;op=2026-11-14T06:00',
-  'actie;Schilder bellen'
-].join('\n') + '\n';
-const { regelsNaarJson: J, jsonNaarRegels: R, FORMAAT } = require('./test-hulp.cjs');
-const lees = (tekst) => { const r = kern().leesBestand(J(tekst)); if (!r.ok) throw new Error(r.reden); return r; };
-const rec = (model, soort, naam) => { for (const r of model.records.values()) if (r.soort === soort && r.vast[0] === naam) return r; return null; };
+/* Een bestand opbouwen: B({ winkels, artikelen, ... }) → JSON-tekst met versie. */
+const B = (delen) => JSON.stringify(Object.assign({ versie: K.FORMAAT }, delen));
+const lees = (delen) => { const r = kern().leesBestand(typeof delen === 'string' ? delen : B(delen)); if (!r.ok) throw new Error(r.reden + ' ' + (r.detail || '')); return r.model; };
+const uit = (k, m) => JSON.parse(k.schrijfBestand(m));
+const H = (x) => Object.assign({ t: '2026-11-21T10:00', wie: 'Mark' }, x);
+const VB = {
+  instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
+  winkels: {
+    ah001: { naam: 'Albert Heijn', afdelingen: [{ id: 'agf01', naam: 'Groente & fruit' }, { id: 'zui01', naam: 'Zuivel' }] },
+    plu01: { naam: 'Plus', afdelingen: [{ id: 'koe02', naam: 'Koeling' }] },
+    gam01: { naam: 'Gamma', afdelingen: [{ id: 'ijz03', naam: 'IJzerwaren' }] }
+  },
+  artikelen: {
+    ban01: { naam: 'Bananen', soort: 'wekelijks', ligt: { ah001: 'agf01' }, gekocht: ['2026-11-07', '2026-11-14'] },
+    mel01: { naam: 'Melk', soort: 'wekelijks', ligt: { ah001: 'zui01', plu01: 'koe02' }, op: '2026-11-14T06:00' },
+    sch01: { naam: 'Schroeven', soort: 'eenmalig', ligt: { gam01: 'ijz03' }, op: '2026-11-20T09:00' },
+    cad01: { naam: 'Cadeau', soort: 'eenmalig', op: '2026-11-20T09:00' },
+    kof01: { naam: 'Koffie', soort: 'regelmatig', ligt: { ah001: '' }, gekocht: ['2026-10-03', '2026-10-24'] }
+  },
+  acties: { act01: { naam: 'Schilder bellen', notitie: 'na 17 uur' } }
+};
 
-controle('bestand: lezen en terugschrijven verliest niets', () => gelijk(R(kern().schrijfBestand(lees(VOORBEELD).model)), VOORBEELD));
-controle('bestand: precies deze opmaak (versie, één record per regel, lege delen kort)', () => {
-  const k = kern();
-  return gelijk(k.schrijfBestand(lees('winkel;AH;route=Zuivel|Brood\nartikel;Melk;soort=wekelijks;ligt=AH:Zuivel|Plus;gekocht=2026-11-14\nartikel;Kaas\n').model),
-    '{\n"versie": "' + FORMAAT + '",\n"instellingen": {},\n"winkels": {\n "AH": {"afdelingen":["Zuivel","Brood"]}\n},\n' +
-    '"artikelen": {\n "Kaas": {},\n "Melk": {"soort":"wekelijks","ligt":{"AH":"Zuivel","Plus":""},"gekocht":["2026-11-14"]}\n},\n"acties": {},\n"hernoemd": []\n}\n');
+/* ---------- bestand ---------- */
+controle('bestand: lezen en terugschrijven verliest niets', () => {
+  const o = uit(K, lees(VB));
+  const opSleutel = (x) => Object.keys(x).sort().map((k) => k + JSON.stringify(x[k])).join();
+  return gelijk(['winkels', 'artikelen', 'acties', 'instellingen'].map((d) => opSleutel(o[d])).join('|'), ['winkels', 'artikelen', 'acties', 'instellingen'].map((d) => opSleutel(VB[d])).join('|'));
 });
-controle('bestand: schrijven is stabiel (nog een keer lezen en schrijven geeft hetzelfde)', () => {
-  const k = kern(); const een = k.schrijfBestand(lees(VOORBEELD).model);
-  return gelijk(k.schrijfBestand(k.leesBestand(een).model), een);
+controle('bestand: precies deze opmaak (versie, één record per regel op naam, lege delen kort)', () => gelijk(
+  K.schrijfBestand(lees({ winkels: { w2222: { naam: 'Plus' }, w1111: { naam: 'AH', afdelingen: [{ id: 'a1111', naam: 'Zuivel' }] } }, artikelen: { p1111: { naam: 'Melk', soort: 'wekelijks', ligt: { w1111: 'a1111', w2222: '' }, gekocht: ['2026-11-14'] } } })),
+  '{\n"versie": "' + K.FORMAAT + '",\n"instellingen": {},\n"winkels": {\n "w1111": {"naam":"AH","afdelingen":[{"id":"a1111","naam":"Zuivel"}]},\n "w2222": {"naam":"Plus"}\n},\n' +
+  '"artikelen": {\n "p1111": {"naam":"Melk","soort":"wekelijks","ligt":{"w1111":"a1111","w2222":""},"gekocht":["2026-11-14"]}\n},\n"acties": {}\n}\n'));
+controle('bestand: schrijven is stabiel', () => { const een = K.schrijfBestand(lees(VB)); return gelijk(K.schrijfBestand(K.leesBestand(een).model), een); });
+controle('bestand: BOM herkend', () => { const r = K.leesBestand('﻿' + B({})); return gelijk(r.ok + '|' + r.model.bom, 'true|true'); });
+controle('bestand: geen geldige UTF-8 wordt niet gelezen', () => gelijk(K.leesBestand(new Uint8Array([0x7B, 0x7D, 0xFF])).reden, 'geen-utf8'));
+controle('bestand: kapotte JSON wordt niet gelezen', () => gelijk([K.leesBestand('{"versie": "' + K.FORMAAT + '", "artikelen": {').reden, K.leesBestand('[1]').reden].join(), 'geen-json,geen-json'));
+controle('bestand: versie — nieuwer weigert (melding bijwerken), ouder of ontbrekend ook, leeg is een begin', () => gelijk(
+  [K.leesBestand('{"versie": "1352903-000"}').reden, K.leesBestand('{"versie": "1352902-3FF"}').reden, K.leesBestand('{}').reden, K.leesBestand('').ok].join(),
+  'nieuwer-formaat,onbekend-formaat,onbekend-formaat,true'));
+const OPBOUW = [
+  ['artikelen is een lijst', { artikelen: [] }],
+  ['artikel is tekst', { artikelen: { p1111: 'Melk' } }],
+  ['artikel zonder naam', { artikelen: { p1111: { soort: 'eenmalig' } } }],
+  ['onbekende soort', { artikelen: { p1111: { naam: 'Melk', soort: 'maandelijks' } } }],
+  ['op is een getal', { artikelen: { p1111: { naam: 'Melk', op: 5 } } }],
+  ['gekocht geen datums', { artikelen: { p1111: { naam: 'Melk', gekocht: ['gisteren'] } } }],
+  ['ligt is een lijst', { artikelen: { p1111: { naam: 'Melk', ligt: ['w1111'] } } }],
+  ['afdelingen geen lijst', { winkels: { w1111: { naam: 'AH', afdelingen: 'Zuivel' } } }],
+  ['dubbele afdeling-id', { winkels: { w1111: { naam: 'AH', afdelingen: [{ id: 'a1111', naam: 'X' }, { id: 'a1111', naam: 'Y' }] } } }],
+  ['ongeldige id (__proto__)', { winkels: { __proto__x: { naam: 'AH' } } }],
+  ['actie-veld geen tekst', { acties: { a1111: { naam: 'Bellen', notitie: 3 } } }],
+  ['instelling geen object', { instellingen: { wekelijks: 'za' } }]
+];
+for (const [naam, delen] of OPBOUW) {
+  controle('bestand: verkeerde opbouw wordt niet gelezen (dan schrijft de app niets) — ' + naam, () => gelijk(K.leesBestand(B(delen)).reden, 'onjuiste-opbouw'));
+}
+controle('bestand: een id "__proto__" (ook als sleutel in JSON) wordt geweigerd, niets vervuild', () => {
+  const r = K.leesBestand('{"versie": "' + K.FORMAAT + '", "winkels": {"__proto__": {"naam": "X"}}}');
+  return gelijk(r.reden + '|' + ({}).naam, 'onjuiste-opbouw|undefined');
 });
-controle('bestand: een BOM wordt herkend (en gaat er bij schrijven uit)', () => {
-  const r = kern().leesBestand('﻿' + J('winkel;Brood\n'));
-  return gelijk(r.ok + '|' + r.model.bom + '|' + R(kern().schrijfBestand(r.model)), 'true|true|winkel;Brood\n');
+controle('bestand: onbekende delen en velden blijven staan', () => {
+  const o = uit(K, lees({ artikelen: { p1111: { naam: 'Thee', kleur: 'groen', maat: { l: 2 } } }, winkels: { w1111: { naam: 'AH', afdelingen: [{ id: 'a1111', naam: 'Z', kleur: 'rood' }], open: '8-20' } }, toekomst: [1, 2] }));
+  return gelijk(JSON.stringify([o.artikelen.p1111, o.winkels.w1111, o.toekomst]),
+    '[{"naam":"Thee","soort":"eenmalig","kleur":"groen","maat":{"l":2}},{"naam":"AH","afdelingen":[{"id":"a1111","naam":"Z","kleur":"rood"}],"open":"8-20"},[1,2]]');
 });
-controle('bestand: geen geldige UTF-8 wordt niet gelezen', () => {
-  const r = kern().leesBestand(new Uint8Array([0x7B, 0x7D, 0xFF, 0x0A]));
-  return gelijk(r.ok + '/' + r.reden, 'false/geen-utf8');
+controle('bestand: verwijzing naar een verdwenen winkel of afdeling wordt stil rechtgezet (en gelogd)', () => {
+  const m = lees({ winkels: { w1111: { naam: 'AH', afdelingen: [{ id: 'a1111', naam: 'Z' }] } }, artikelen: { p1111: { naam: 'Melk', ligt: { w1111: 'a9999', w9999: '' } } } });
+  return gelijk(JSON.stringify(uit(K, m).artikelen.p1111.ligt) + '|' + m.opgelost.length, '{"w1111":""}|2');
 });
-controle('bestand: kapotte JSON wordt niet gelezen', () => {
-  const k = kern();
-  return gelijk([k.leesBestand('{"versie": "' + FORMAAT + '", "artikelen": {').reden, k.leesBestand('[1,2]').reden].join(','), 'geen-json,geen-json');
+controle('bestand: ; | : = en " in namen zijn geen probleem', () => {
+  const n = 'AH: 1+1=2; "x" | y';
+  return gelijk(uit(K, K.leesBestand(K.schrijfBestand(lees({ winkels: { w1111: { naam: n } } }))).model).winkels.w1111.naam, n);
 });
-controle('bestand: versie — nieuwer weigert, ontbrekend of ouder ook, leeg bestand is een begin', () => {
-  const k = kern();
-  return gelijk([k.leesBestand('{"versie": "1352902-400"}').reden, k.leesBestand('{"versie": "1352903-000"}').reden,
-    k.leesBestand('{"artikelen": {}}').reden, k.leesBestand('{"versie": "1352902-3FE"}').reden, k.leesBestand('').ok].join(','),
-    'nieuwer-formaat,nieuwer-formaat,onbekend-formaat,onbekend-formaat,true');
+controle('id: vijf tekens zonder 0 o 1 l i, uniek binnen het model', () => {
+  const m = lees({ winkels: { aaaaa: { naam: 'X' } } });
+  let i = 0; const reeks = [[0, 0, 0, 0, 0], [1, 2, 3, 4, 5]];
+  const id = K.maakId(m, () => reeks[i++]);
+  return gelijk(id + '|' + /^[a-hj-km-np-z2-9]{5}$/.test(id), 'bcdef|true');
 });
-controle('bestand: onbekende delen en velden blijven staan, ook als het geen tekst is', () => {
-  const k = kern();
-  const t = '{"versie": "' + FORMAAT + '", "artikelen": {"Thee": {"soort": "regelmatig", "kleur": "groen", "maat": {"l": 2}}}, "boodschappenlijst2": [1, 2]}';
-  const uit = JSON.parse(k.schrijfBestand(k.leesBestand(t).model));
-  return gelijk(JSON.stringify([uit.artikelen.Thee, uit.boodschappenlijst2]), '[{"soort":"regelmatig","kleur":"groen","maat":{"l":2}},[1,2]]');
-});
-controle('bestand: namen op volgorde en velden in vaste volgorde', () => {
-  const k = kern();
-  const t = '{"versie": "' + FORMAAT + '", "artikelen": {"melk": {"op": "2026-11-20T10:00", "soort": "wekelijks"}, "Appels": {"soort": "eenmalig"}}}';
-  return gelijk(R(k.schrijfBestand(k.leesBestand(t).model)), 'artikel;Appels;soort=eenmalig\nartikel;melk;soort=wekelijks;op=2026-11-20T10:00\n');
-});
-controle('bestand: lege velden verdwijnen', () => gelijk(R(kern().schrijfBestand(lees('artikel;Kaas;soort=wekelijks;ligt=;op=\n').model)), 'artikel;Kaas;soort=wekelijks\n'));
-controle('bestand: dubbele naam (hoofdletters, spaties) wordt samengevoegd en gemeld', () => {
-  const k = kern();
-  const r = k.leesBestand('{"versie": "' + FORMAAT + '", "artikelen": {"Kaas": {"soort": "wekelijks"}, "  kaas ": {"ligt": {"AH": ""}}}}');
-  return gelijk(R(k.schrijfBestand(r.model)) + '|' + r.meldingen.map((m) => m.soort).join(','), 'artikel;Kaas;soort=wekelijks;ligt=AH\n|dubbele-naam');
-});
-controle('bestand: ; | = en " in een naam zijn geen probleem', () => {
-  const k = kern();
-  const t = '{"versie": "' + FORMAAT + '", "artikelen": {"1+1=2; \\"actie\\" | x": {"soort": "eenmalig"}}}';
-  return gelijk(Object.keys(JSON.parse(k.schrijfBestand(k.leesBestand(t).model)).artikelen).join(), '1+1=2; "actie" | x');
-});
-controle('invoer: ; en | en regeleindes worden opgeschoond', () => gelijk(kern().schoonTekst('  Melk;\nhalfvol | 1 L  '), 'Melk, halfvol 1 L'));
-controle('link: ; en | gecodeerd', () => gelijk(kern().schoonLink(' https://x.nl/a;b|c '), 'https://x.nl/a%3Bb%7Cc'));
-controle('naam vergelijken: hoofdletters, spaties en NFC', () => {
-  const k = kern();
-  return gelijk(k.normNaam('  Crème   Fraîche ') === k.normNaam('crème fraîche') &&
-    k.normNaam('Crème') === k.normNaam('Crème'), true);
-});
+controle('invoer: stuurtekens en spaties opgeschoond', () => gelijk(K.schoonTekst('  Melk;\nhalfvol | 1 L  '), 'Melk; halfvol | 1 L'));
+controle('naam vergelijken: hoofdletters, spaties en NFC', () => gelijk(K.normNaam('  Crème   Fraîche ') === K.normNaam('crème fraîche'), true));
 
 /* ---------- samenvoegen ---------- */
-const H = (x) => Object.assign({ t: '2026-11-21T10:00', wie: 'Mark' }, x);
-controle('samenvoegen: nieuw artikel komt erin', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  const r = k.pasToe(m, H({ actie: 'nieuw', soort: 'artikel', naam: 'Pesto', velden: { soort: 'eenmalig', op: '2026-11-21T10:00', opdoor: 'Mark' } }), NU);
-  return gelijk(r.status + '|' + rec(m, 'artikel', 'Pesto').velden.get('soort'), 'ok|eenmalig');
+controle('nieuw: artikel komt erin met id', () => {
+  const k = kern(); const m = lees(VB);
+  const r = k.pasToe(m, H({ actie: 'nieuw', soort: 'artikel', id: 'pes01', velden: { naam: 'Pesto', soort: 'eenmalig', op: '2026-11-21T10:00', opdoor: 'Mark' } }));
+  return gelijk(r.status + '|' + JSON.stringify(uit(k, m).artikelen.pes01), 'ok|{"naam":"Pesto","soort":"eenmalig","op":"2026-11-21T10:00","opdoor":"Mark"}');
 });
-controle('samenvoegen: + op een bestaand artikel zet het op de lijst (geen dubbele)', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  const r = k.pasToe(m, H({ actie: 'nieuw', soort: 'artikel', naam: 'koffie', velden: { soort: 'eenmalig' } }), NU);
-  const kof = rec(m, 'artikel', 'Koffie');
-  return gelijk(r.status + '|' + kof.velden.get('op') + '|' + kof.velden.get('soort') + '|' + m.records.size, 'ok|2026-11-21T10:00|regelmatig|6');
+controle('nieuw: twee telefoons maken offline allebei "melk" → samengevoegd, en hij komt op de lijst', () => {
+  const k = kern(); const m = lees({ artikelen: { mel01: { naam: 'Melk' } } });
+  const { resultaten, alias } = k.pasAllesToe(m, [
+    H({ actie: 'nieuw', soort: 'artikel', id: 'xyz99', velden: { naam: ' melk ', op: '2026-11-21T10:00', opdoor: 'Mark' } }),
+    H({ actie: 'gekocht', soort: 'artikel', id: 'xyz99', datum: '2026-11-21' })
+  ]);
+  return gelijk(resultaten.map((r) => r.status).join() + '|' + alias.get('xyz99') + '|' + JSON.stringify(uit(k, m).artikelen),
+    'samengevoegd,ok|mel01|{"mel01":{"naam":"Melk","soort":"eenmalig","op":"2026-11-21T10:00","opdoor":"Mark","gekocht":["2026-11-21"]}}');
 });
-controle('samenvoegen: allebei Melk op de lijst is geen botsing', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  const r = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', naam: 'Melk', veld: 'op', oud: '', nieuw: '2026-11-21T09:58' }), NU);
-  return gelijk(r.status, 'al');
+controle('nieuw: zelfde id nogmaals is "al"', () => {
+  const k = kern(); const m = lees(VB);
+  return gelijk(k.pasToe(m, H({ actie: 'nieuw', soort: 'winkel', id: 'ah001', velden: { naam: 'Albert Heijn' } })).status, 'al');
 });
-controle('samenvoegen: ander veld van hetzelfde artikel botst niet', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', naam: 'Melk', veld: 'op', oud: '2026-11-14T06:00', nieuw: '' }), NU);
-  const r = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', naam: 'Melk', veld: 'soort', oud: 'wekelijks', nieuw: 'regelmatig' }), NU);
-  const melk = rec(m, 'artikel', 'Melk');
-  return gelijk(r.status + '|' + melk.velden.get('soort') + '|' + (melk.velden.get('op') || ''), 'ok|regelmatig|');
+controle('zet: allebei op de lijst is geen botsing', () => gelijk(kern().pasToe(lees(VB), H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:58' })).status, 'al'));
+controle('zet: echte botsing wint de laatste, met de vorige waarde', () => {
+  const k = kern(); const m = lees(VB);
+  const r = k.pasToe(m, H({ actie: 'zet', soort: 'actie', id: 'act01', veld: 'notitie', oud: '', nieuw: 'nummer in mail' }));
+  return gelijk(r.status + '|' + r.vorige + '|' + uit(k, m).acties.act01.notitie, 'botsing|na 17 uur|nummer in mail');
 });
-controle('samenvoegen: echte botsing in tekst wint de laatste, met de vorige waarde erbij', () => {
-  const k = kern(); const m = lees('actie;Schilder bellen;notitie=na 17 uur\n').model;
-  const r = k.pasToe(m, H({ actie: 'zet', soort: 'actie', naam: 'Schilder bellen', veld: 'notitie', oud: '', nieuw: 'nummer in mail' }), NU);
-  return gelijk(r.status + '|' + r.vorige + '|' + rec(m, 'actie', 'Schilder bellen').velden.get('notitie'), 'botsing|na 17 uur|nummer in mail');
+controle('zet: alleen bekende velden (geen afdelingen overschrijven met tekst)', () => {
+  const k = kern(); const m = lees(VB);
+  return gelijk([k.pasToe(m, H({ actie: 'zet', soort: 'winkel', id: 'ah001', veld: 'afdelingen', oud: '', nieuw: 'x' })).status,
+    k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'soort', oud: 'wekelijks', nieuw: 'soms' })).status].join(), 'vervallen,vervallen');
 });
-controle('samenvoegen: handeling op een verwijderd artikel vervalt (geen zombie)', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  k.pasToe(m, H({ actie: 'weg', soort: 'artikel', naam: 'Koffie' }), NU);
-  const r = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', naam: 'Koffie', veld: 'op', oud: '', nieuw: '2026-11-21T10:00' }), NU);
-  return gelijk(r.status + '|' + (rec(m, 'artikel', 'Koffie') === null), 'vervallen|true');
+controle('hernoemen: alleen de naam verandert, verwijzingen blijven kloppen (zelfde id)', () => {
+  const k = kern(); const m = lees(VB);
+  k.pasToe(m, H({ actie: 'zet', soort: 'winkel', id: 'ah001', veld: 'naam', oud: 'Albert Heijn', nieuw: 'AH' }));
+  const o = uit(k, m);
+  return gelijk(o.winkels.ah001.naam + '|' + JSON.stringify(o.artikelen.mel01.ligt), 'AH|{"ah001":"zui01","plu01":"koe02"}');
 });
-controle('samenvoegen: hernoemen neemt verwijzingen mee en laat een spoor', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  k.pasToe(m, H({ actie: 'hernoem', soort: 'winkel', naam: 'Albert Heijn', nieuw: 'AH' }), NU);
-  const uit = R(k.schrijfBestand(m));
-  return (/winkel;AH;route=Groente & fruit\|Zuivel & eieren\n/.test(uit) && /artikel;Melk;soort=wekelijks;ligt=AH:Zuivel & eieren;/.test(uit) &&
-    /hernoemd;winkel;Albert Heijn;nieuw=AH;op=2026-11-21/.test(uit)) || uit;
+controle('hernoemen naar een bezette naam vervalt', () => gelijk(kern().pasToe(lees(VB), H({ actie: 'zet', soort: 'winkel', id: 'plu01', veld: 'naam', oud: 'Plus', nieuw: 'albert heijn' })).reden, 'naam-bezet'));
+controle('handeling op een verwijderd artikel vervalt (geen zombie)', () => {
+  const k = kern(); const m = lees(VB);
+  k.pasToe(m, H({ actie: 'weg', soort: 'artikel', id: 'kof01' }));
+  const r = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'kof01', veld: 'op', oud: '', nieuw: '2026-11-21T10:00' }));
+  return gelijk(r.status + '|' + ('kof01' in uit(k, m).artikelen), 'vervallen|false');
 });
-controle('samenvoegen: handeling met de oude naam vindt het hernoemde artikel', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  k.pasToe(m, H({ actie: 'hernoem', soort: 'artikel', naam: 'Koffie', nieuw: 'Koffiebonen' }), NU);
-  const r = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', naam: 'Koffie', veld: 'op', oud: '', nieuw: '2026-11-21T10:05' }), NU);
-  return gelijk(r.status + '|' + rec(m, 'artikel', 'Koffiebonen').velden.get('op'), 'ok|2026-11-21T10:05');
+controle('gekocht: laatste zes, gesorteerd, zonder dubbele; nietGekocht haalt weg', () => {
+  const k = kern(); const m = lees({ artikelen: { kaa01: { naam: 'Kaas', gekocht: ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'] } } });
+  k.pasToe(m, H({ actie: 'gekocht', soort: 'artikel', id: 'kaa01', datum: '2026-11-21' }));
+  k.pasToe(m, H({ actie: 'gekocht', soort: 'artikel', id: 'kaa01', datum: '2026-11-21' }));
+  const a = uit(k, m).artikelen.kaa01.gekocht.join();
+  k.pasToe(m, H({ actie: 'nietGekocht', soort: 'artikel', id: 'kaa01', datum: '2026-11-21' }));
+  return gelijk(a + '|' + uit(k, m).artikelen.kaa01.gekocht.length, '2026-02-01,2026-03-01,2026-04-01,2026-05-01,2026-06-01,2026-11-21|5');
 });
-controle('samenvoegen: hernoemen naar een bezette naam vervalt', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
-  const r = k.pasToe(m, H({ actie: 'hernoem', soort: 'artikel', naam: 'Koffie', nieuw: 'melk' }), NU);
-  return gelijk(r.status + '|' + r.reden, 'vervallen|naam-bezet');
+
+/* ---------- winkels en afdelingen ---------- */
+controle('plaats: in een tweede winkel, afdeling vervangen; onbekende afdeling wordt leeg; verwijderde winkel vervalt', () => {
+  const k = kern(); const m = lees(VB);
+  const s = [k.pasToe(m, H({ actie: 'plaats', soort: 'artikel', id: 'ban01', winkel: 'plu01', afd: 'koe02' })).status,
+    k.pasToe(m, H({ actie: 'plaats', soort: 'artikel', id: 'ban01', winkel: 'ah001', afd: 'bestaatniet' })).status,
+    k.pasToe(m, H({ actie: 'plaats', soort: 'artikel', id: 'ban01', winkel: 'weg99', afd: '' })).status];
+  return gelijk(s.join() + '|' + JSON.stringify(uit(k, m).artikelen.ban01.ligt), 'ok,ok,vervallen|{"ah001":"","plu01":"koe02"}');
 });
-controle('samenvoegen: afgeronde actie opnieuw invoeren heropent hem', () => {
-  const k = kern(); const m = lees('actie;Pakket ophalen;klaar=2026-11-20;door=Mark\n').model;
-  const r = k.pasToe(m, H({ actie: 'nieuw', soort: 'actie', naam: 'pakket ophalen', velden: {} }), NU);
-  return gelijk(r.status + '|' + R(k.schrijfBestand(m)), 'heropend|actie;Pakket ophalen\n');
+controle('plaats: twee telefoons in verschillende winkels botst niet', () => {
+  const k = kern(); const m = lees(VB);
+  const s = k.pasAllesToe(m, [H({ actie: 'plaats', soort: 'artikel', id: 'cad01', winkel: 'ah001', afd: 'zui01' }), H({ actie: 'plaats', soort: 'artikel', id: 'cad01', winkel: 'plu01', afd: '' })]);
+  return gelijk(s.resultaten.map((r) => r.status).join() + '|' + JSON.stringify(uit(k, m).artikelen.cad01.ligt), 'ok,ok|{"ah001":"zui01","plu01":""}');
 });
-controle('samenvoegen: gekocht houdt de laatste zes, gesorteerd, zonder dubbele', () => {
-  const k = kern(); const m = lees('artikel;Kaas;gekocht=2026-01-01|2026-02-01|2026-03-01|2026-04-01|2026-05-01|2026-06-01\n').model;
-  k.pasToe(m, H({ actie: 'gekocht', soort: 'artikel', naam: 'Kaas', datum: '2026-11-21' }), NU);
-  k.pasToe(m, H({ actie: 'gekocht', soort: 'artikel', naam: 'Kaas', datum: '2026-11-21' }), NU);
-  return gelijk(rec(m, 'artikel', 'Kaas').velden.get('gekocht'), '2026-02-01|2026-03-01|2026-04-01|2026-05-01|2026-06-01|2026-11-21');
+controle('afdeling erbij: achteraan; dezelfde naam bestaat al → samengevoegd, de plaatsing erna gebruikt de bestaande', () => {
+  const k = kern(); const m = lees(VB);
+  const s = k.pasAllesToe(m, [
+    H({ actie: 'afdErbij', soort: 'winkel', id: 'ah001', afd: { id: 'bro01', naam: 'Brood' } }),
+    H({ actie: 'afdErbij', soort: 'winkel', id: 'ah001', afd: { id: 'zzz99', naam: 'zuivel' } }),
+    H({ actie: 'plaats', soort: 'artikel', id: 'cad01', winkel: 'ah001', afd: 'zzz99' })]);
+  const o = uit(k, m);
+  return gelijk(s.resultaten.map((r) => r.status).join() + '|' + o.winkels.ah001.afdelingen.map((a) => a.naam).join() + '|' + o.artikelen.cad01.ligt.ah001,
+    'ok,samengevoegd,ok|Groente & fruit,Zuivel,Brood|zui01');
+});
+controle('afdeling hernoemen: alleen in die winkel; bezette naam vervalt', () => {
+  const k = kern(); const m = lees(VB);
+  const r1 = k.pasToe(m, H({ actie: 'afdHernoem', soort: 'winkel', id: 'ah001', afd: 'zui01', naam: 'Zuivel & eieren' })).status;
+  const r2 = k.pasToe(m, H({ actie: 'afdHernoem', soort: 'winkel', id: 'ah001', afd: 'agf01', naam: 'zuivel & eieren' })).reden;
+  return gelijk(r1 + '|' + r2 + '|' + uit(k, m).winkels.ah001.afdelingen[1].naam + '|' + uit(k, m).winkels.plu01.afdelingen[0].naam, 'ok|naam-bezet|Zuivel & eieren|Koeling');
+});
+controle('afdeling weghalen: artikel blijft te koop in die winkel, afdeling onbekend; ongedaan maken zet het terug', () => {
+  const k = kern(); const m = lees(VB);
+  k.pasToe(m, H({ actie: 'afdWeg', soort: 'winkel', id: 'ah001', afd: 'zui01' }));
+  const tussen = JSON.stringify(uit(k, m).artikelen.mel01.ligt);
+  k.pasToe(m, H({ actie: 'terug', soort: 'afdeling', winkel: 'ah001', afd: { id: 'zui01', naam: 'Zuivel' }, plaats: 1, artikelen: ['mel01'] }));
+  const o = uit(k, m);
+  return gelijk(tussen + '|' + o.winkels.ah001.afdelingen.map((a) => a.id).join() + '|' + o.artikelen.mel01.ligt.ah001, '{"ah001":"","plu01":"koe02"}|agf01,zui01|zui01');
+});
+controle('volgorde: wat de ander intussen toevoegde blijft achteraan', () => {
+  const k = kern(); const m = lees({ winkels: { w1111: { naam: 'AH', afdelingen: [{ id: 'aaaaa', naam: 'A' }, { id: 'bbbbb', naam: 'B' }, { id: 'ccccc', naam: 'C' }] } } });
+  k.pasToe(m, H({ actie: 'afdErbij', soort: 'winkel', id: 'w1111', afd: { id: 'ddddd', naam: 'D' } }));
+  const r = k.pasToe(m, H({ actie: 'volgorde', soort: 'winkel', id: 'w1111', volgorde: ['ccccc', 'aaaaa', 'bbbbb', 'xxxxx'] }));
+  return gelijk(r.status + '|' + uit(k, m).winkels.w1111.afdelingen.map((a) => a.naam).join(''), 'ok|CABD');
+});
+controle('winkel verwijderen haalt hem ook weg bij de artikelen; ongedaan maken zet winkel en plekken terug (zelfde id)', () => {
+  const k = kern(); const m = lees(VB);
+  const record = k.recordNaarJson('winkel', m.winkels.get('plu01'));
+  k.pasToe(m, H({ actie: 'weg', soort: 'winkel', id: 'plu01' }));
+  const tussen = JSON.stringify(uit(k, m).artikelen.mel01.ligt);
+  const r = k.pasToe(m, H({ actie: 'terug', soort: 'winkel', id: 'plu01', record, ligt: { mel01: 'koe02' } }));
+  return gelijk(tussen + '|' + r.status + '|' + JSON.stringify(uit(k, m).artikelen.mel01.ligt) + '|' + uit(k, m).winkels.plu01.naam,
+    '{"ah001":"zui01"}|ok|{"ah001":"zui01","plu01":"koe02"}|Plus');
+});
+controle('vervangIds: alle id-velden van een handeling', () => {
+  const k = kern();
+  const h = k.vervangIds({ actie: 'plaats', id: 'x', winkel: 'w', afd: 'a', volgorde: ['a'], artikelen: ['x'] }, new Map([['x', 'X'], ['w', 'W'], ['a', 'A']]));
+  return gelijk([h.id, h.winkel, h.afd, h.volgorde[0], h.artikelen[0]].join(''), 'XWAAX');
+});
+
+controle('instelling: wekelijks dag en tijd zetten; ongeldige waarden vervallen', () => {
+  const k = kern(); const m = lees(VB);
+  const r = [k.pasToe(m, H({ actie: 'instelling', naam: 'wekelijks', veld: 'dag', oud: 'za', nieuw: 'vr' })).status,
+    k.pasToe(m, H({ actie: 'instelling', naam: 'wekelijks', veld: 'tijd', oud: '06:00', nieuw: '18:30' })).status,
+    k.pasToe(m, H({ actie: 'instelling', naam: 'wekelijks', veld: 'dag', nieuw: 'vrijdag' })).status,
+    k.pasToe(m, H({ actie: 'instelling', naam: 'wekelijks', veld: 'tijd', nieuw: '25:00' })).status,
+    k.pasToe(m, H({ actie: 'instelling', naam: 'iets', veld: 'x', nieuw: 'y' })).status];
+  const w = uit(k, m).instellingen.wekelijks;
+  return gelijk(r.join() + '|' + w.dag + ' ' + w.tijd, 'ok,ok,vervallen,vervallen,vervallen|vr 18:30');
 });
 
 /* ---------- wekelijks terug ---------- */
-controle('wekelijks: laatste zaterdag 06:00 wordt goed berekend', () =>
-  gelijk(kern().tijdstipTekst(kern().laatsteMoment(NU, 'za', '06:00')), '2026-11-21T06:00'));
-controle('wekelijks: vóór 06:00 telt nog de vorige zaterdag', () =>
-  gelijk(kern().tijdstipTekst(kern().laatsteMoment(new Date(2026, 10, 21, 5, 59), 'za', '06:00')), '2026-11-14T06:00'));
+controle('wekelijks: laatste zaterdag 06:00 wordt goed berekend', () => gelijk(K.tijdstipTekst(K.laatsteMoment(NU, 'za', '06:00')), '2026-11-21T06:00'));
+controle('wekelijks: vóór 06:00 telt nog de vorige zaterdag', () => gelijk(K.tijdstipTekst(K.laatsteMoment(new Date(2026, 10, 21, 5, 59), 'za', '06:00')), '2026-11-14T06:00'));
 controle('wekelijks: niet-gekochte wekelijkse artikelen komen terug, één keer', () => {
-  const k = kern(); const m = lees(VOORBEELD).model;
+  const k = kern(); const m = lees(VB);
   const n1 = k.wekelijksTerug(m, NU), n2 = k.wekelijksTerug(m, NU);
-  return gelijk(n1 + '|' + n2 + '|' + rec(m, 'artikel', 'Bananen').velden.get('op'), '1|0|2026-11-21T06:00');
+  return gelijk(n1 + '|' + n2 + '|' + uit(k, m).artikelen.ban01.op, '1|0|2026-11-21T06:00');
 });
 controle('wekelijks: na het moment gekocht komt niet terug (telefoon die offline was)', () => {
-  const k = kern(); const m = lees(VOORBEELD.replace('gekocht=2026-11-07|2026-11-14', 'gekocht=2026-11-14|2026-11-21')).model;
-  return gelijk(k.wekelijksTerug(m, NU) + '|' + (rec(m, 'artikel', 'Bananen').velden.get('op') || ''), '0|');
+  const k = kern(); const vb = JSON.parse(JSON.stringify(VB)); vb.artikelen.ban01.gekocht = ['2026-11-14', '2026-11-21'];
+  const m = lees(vb);
+  return gelijk(k.wekelijksTerug(m, NU) + '|' + (uit(k, m).artikelen.ban01.op || ''), '0|');
 });
 controle('wekelijks: eerste keer legt alleen het moment vast', () => {
-  const k = kern(); const m = lees('instelling;wekelijks;dag=za;tijd=06:00\nartikel;Brood;soort=wekelijks\n').model;
-  return gelijk(k.wekelijksTerug(m, NU) + '|' + R(k.schrijfBestand(m)), '0|instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2026-11-21T06:00\nartikel;Brood;soort=wekelijks\n');
+  const k = kern(); const m = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00' } }, artikelen: { bro01: { naam: 'Brood', soort: 'wekelijks' } } });
+  return gelijk(k.wekelijksTerug(m, NU) + '|' + JSON.stringify(uit(k, m).instellingen.wekelijks), '0|{"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}');
 });
 
 /* ---------- opruimen ---------- */
-controle('opruimen: oud spoor, oude afgeronde actie en oud eenmalig artikel', () => {
+controle('opruimen: oude afgeronde actie en oud eenmalig artikel', () => {
   const k = kern();
-  const m = lees([
-    'hernoemd;artikel;Thee;nieuw=Groene thee;op=2026-10-01',
-    'hernoemd;artikel;Cola;nieuw=Cola zero;op=2026-11-10',
-    'actie;Oud klusje;klaar=2026-08-01',
-    'actie;Filter;herhaal=maand;klaar=2026-01-01',
-    'artikel;Batterijen;soort=eenmalig;gekocht=2025-10-01',
-    'artikel;Lampje;soort=eenmalig;gekocht=2025-10-01;op=2026-11-20T10:00'
-  ].join('\n') + '\n').model;
+  const m = lees({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] }, lam02: { naam: 'Lampje2', soort: 'eenmalig', op: '2026-11-20T10:00', gekocht: ['2025-10-01'] }, bat01: { naam: 'Batterij', soort: 'eenmalig', gekocht: ['2026-01-01'] } },
+    acties: { a1111: { naam: 'Pakket', klaar: '2026-01-01' }, a2222: { naam: 'Filter', herhaal: 'maand', klaar: '2026-01-01' } } });
   const n = k.opruimen(m, NU);
-  return gelijk(n + '|' + R(k.schrijfBestand(m)), '3|artikel;Lampje;soort=eenmalig;op=2026-11-20T10:00;gekocht=2025-10-01\nactie;Filter;herhaal=maand;klaar=2026-01-01\nhernoemd;artikel;Cola;nieuw=Cola zero;op=2026-11-10\n');
+  const o = uit(k, m);
+  return gelijk(n + '|' + Object.keys(o.artikelen).join() + '|' + Object.keys(o.acties).join(), '2|bat01,lam02|a2222');
 });
 
 /* ---------- een hele ronde ---------- */
 controle('ronde: wachtrij toepassen op de nieuwste versie, met resultaten', () => {
-  const k = kern();
-  const r = k.synchroniseer(J(VOORBEELD), [
-    H({ actie: 'zet', soort: 'artikel', naam: 'Melk', veld: 'op', oud: '2026-11-14T06:00', nieuw: '' }),
-    H({ actie: 'gekocht', soort: 'artikel', naam: 'Melk', datum: '2026-11-21' }),
-    H({ actie: 'zet', soort: 'artikel', naam: 'Pindakaas', veld: 'op', oud: '', nieuw: '2026-11-21T10:00' })
+  const r = K.synchroniseer(B(VB), [
+    H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '' }),
+    H({ actie: 'gekocht', soort: 'artikel', id: 'mel01', datum: '2026-11-21' }),
+    H({ actie: 'zet', soort: 'artikel', id: 'weg99', veld: 'op', oud: '', nieuw: '2026-11-21T10:00' })
   ], NU);
-  return gelijk(r.resultaten.map((x) => x.status).join(',') + '|' + r.terug + '|' + r.gewijzigd, 'ok,ok,vervallen|1|true');
+  return gelijk(r.resultaten.map((x) => x.status).join() + '|' + r.terug + '|' + r.gewijzigd, 'ok,ok,vervallen|1|true');
 });
 controle('ronde: zonder wachtrij en zonder terugzetten is er niets te schrijven', () => {
-  const k = kern();
-  const t = VOORBEELD.replace('teruggezet=2026-11-14T06:00', 'teruggezet=2026-11-21T06:00');
-  return gelijk(k.synchroniseer(J(t), [], NU).gewijzigd, false);
+  const vb = JSON.parse(JSON.stringify(VB)); vb.instellingen.wekelijks.teruggezet = '2026-11-21T06:00';
+  return gelijk(K.synchroniseer(B(vb), [], NU).gewijzigd, false);
 });
-controle('ronde: alleen een BOM is reden om te schrijven (dan gaat hij eruit)', () => {
-  const t = VOORBEELD.replace('teruggezet=2026-11-14T06:00', 'teruggezet=2026-11-21T06:00');
-  const r = kern().synchroniseer('\uFEFF' + J(t), [], NU);
-  return gelijk(r.gewijzigd + '|' + (R(r.tekst) === t), 'true|true');
+controle('ronde: alleen een BOM is reden om te schrijven', () => {
+  const vb = JSON.parse(JSON.stringify(VB)); vb.instellingen.wekelijks.teruggezet = '2026-11-21T06:00';
+  return gelijk(K.synchroniseer('﻿' + B(vb), [], NU).gewijzigd, true);
 });
 controle('ronde: ontbreekt de instelling voor wekelijks, dan komt de standaard erin', () => {
-  const r = kern().synchroniseer('', [], NU);
-  return gelijk(r.gewijzigd + '|' + R(r.tekst).split('\n')[0], 'true|instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2026-11-21T06:00');
+  const r = K.synchroniseer('', [], NU);
+  return gelijk(r.gewijzigd + '|' + JSON.stringify(JSON.parse(r.tekst).instellingen.wekelijks), 'true|{"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}');
 });
-controle('ronde: een bestand dat geen UTF-8 is, wordt nooit verwerkt', () =>
-  gelijk(kern().synchroniseer(new Uint8Array([0xC3, 0x28]), [], NU).ok, false));
+controle('ronde: een bestand dat geen UTF-8 is of een verkeerde opbouw heeft, wordt nooit verwerkt', () =>
+  gelijk(K.synchroniseer(new Uint8Array([0xC3, 0x28]), [], NU).ok + '|' + K.synchroniseer(B({ artikelen: [] }), [], NU).reden, 'false|onjuiste-opbouw'));
 
+/* ---------- backups ---------- */
+controle('backups: laatste 14 dagen plus de eerste van elke maand (12 maanden); alleen exacte namen', () => {
+  const namen = ['thuis_backup_20261122.json', 'thuis_backup_20261109.json', 'thuis_backup_20261108.json', 'thuis_backup_20261101.json', 'thuis_backup_20261102.json',
+    'thuis_backup_20261015.json', 'thuis_backup_20261020.json', 'thuis_backup_20251201.json', 'thuis_backup_20251105.json', 'thuis.json', 'thuis_backup_20251105.json.bak', 'mijn_backup_20251105.json'];
+  return gelijk(K.backupsWeg(namen, '2026-11-22').sort().join(), 'thuis_backup_20251105.json,thuis_backup_20261020.json,thuis_backup_20261102.json,thuis_backup_20261108.json');
+});
 
-/* ================= stap 6 en 7: weergave, winkelstand ================= */
-const WINKELS = [
-  'winkel;Albert Heijn;route=Groente & fruit|Brood|Zuivel',
-  'winkel;Lidl;route=Zuivel',
-  'artikel;Bananen;ligt=Albert Heijn:Groente & fruit;op=2026-11-21T06:00',
-  'artikel;Brood;ligt=Albert Heijn:Brood|Lidl;op=2026-11-21T06:00',
-  'artikel;Hummus;ligt=Lidl:Zuivel;op=2026-11-21T06:00',
-  'artikel;Kattenvoer;ligt=Albert Heijn;op=2026-11-21T06:00',
-  'artikel;Afwasborstel;op=2026-11-21T06:00',
-  'artikel;Melk;ligt=Albert Heijn:Zuivel|Lidl:Zuivel;op=2026-11-21T06:00',
-  'artikel;Rijst;ligt=Albert Heijn:Brood'
-].join('\n') + '\n';
-controle('winkel: indeling in looproute, zonder afdeling of winkels bovenaan, elders apart', () => {
-  const k = kern(); const m = lees(WINKELS).model;
-  const ah = k.winkelLijst(m).find((w) => w.naam === 'Albert Heijn');
-  const ind = k.winkelIndeling(k.artikelLijst(m), ah);
-  return gelijk(ind.boven.map((a) => a.naam).join(',') + '|' + ind.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam).join('+')).join(',') + '|' + ind.elders.map((a) => a.naam).join(','),
-    'Afwasborstel,Kattenvoer|Groente & fruit:Bananen,Brood:Brood,Zuivel:Melk|Hummus');
+/* ---------- weergave ---------- */
+const AL = K.artikelLijst(lees(VB));
+const WL = K.winkelLijst(lees(VB));
+const win = (id) => WL.find((w) => w.id === id);
+controle('winkel: AH — in looproute, zonder winkels (Cadeau) bovenaan, Koffie (afdeling onbekend) staat niet op de lijst', () => {
+  const ind = K.winkelIndeling(AL, win('ah001'));
+  return gelijk(ind.boven.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam + ':' + g.items.map((a) => a.naam)).join() + '|' + ind.elders.map((a) => a.naam).join(),
+    'Cadeau|Zuivel:Melk|Schroeven');
 });
-controle('winkel: in de Lidl Hummus en Melk in de route, Brood (afdeling onbekend) en Afwasborstel (geen winkels) bovenaan', () => {
-  const k = kern(); const m = lees(WINKELS).model;
-  const lidl = k.winkelLijst(m).find((w) => w.naam === 'Lidl');
-  const ind = k.winkelIndeling(k.artikelLijst(m), lidl);
-  return gelijk(ind.boven.map((a) => a.naam).join(',') + '|' + ind.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam).join('+')).join(','),
-    'Afwasborstel,Brood|Zuivel:Hummus+Melk');
+controle('winkel: Gamma — geen melk, wel schroeven', () => {
+  const ind = K.winkelIndeling(AL, win('gam01'));
+  return gelijk(ind.boven.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam).join() + '|' + ind.elders.map((a) => a.naam).join(), 'Cadeau|IJzerwaren|Melk');
 });
-controle('winkel: een afdeling aan de route toevoegen botst niet en geeft geen dubbele', () => {
-  const k = kern(); const m = lees(WINKELS).model;
-  const r1 = k.pasToe(m, H({ actie: 'lijstErbij', soort: 'winkel', naam: 'Lidl', veld: 'route', waarde: 'Brood' }), NU);
-  const r2 = k.pasToe(m, H({ actie: 'lijstErbij', soort: 'winkel', naam: 'Lidl', veld: 'route', waarde: 'brood' }), NU);
-  return gelijk(r1.status + '|' + r2.status + '|' + k.winkelLijst(m).find((w) => w.naam === 'Lidl').route.join('|'), 'ok|al|Zuivel|Brood');
-});
-controle('winkel: terugzetten haalt de aankoopdatum weer weg', () => {
-  const k = kern(); const m = lees('artikel;Kaas;gekocht=2026-11-14\n').model;
-  k.pasToe(m, H({ actie: 'gekocht', soort: 'artikel', naam: 'Kaas', datum: '2026-11-21' }), NU);
-  k.pasToe(m, H({ actie: 'nietGekocht', soort: 'artikel', naam: 'Kaas', datum: '2026-11-21' }), NU);
-  return gelijk(R(k.schrijfBestand(m)), 'artikel;Kaas;gekocht=2026-11-14\n');
+controle('winkelkeuze: alleen waar iets is vastgelegd, meeste eerst; na kopen valt een winkel weg', () => {
+  const t1 = K.winkelTellingen(AL, WL).map((x) => x.naam + ' ' + x.aantal).join();
+  const t2 = K.winkelTellingen(AL.map((a) => a.naam === 'Melk' ? Object.assign({}, a, { op: '' }) : a), WL).map((x) => x.naam).join();
+  return gelijk(t1 + '|' + t2, 'Albert Heijn 1,Gamma 1,Plus 1|Gamma');
 });
 controle('suggestie: na drie aankopen en langer dan gewoonlijk geleden', () => {
-  const k = kern();
-  const s = k.suggestie(['2026-10-03', '2026-10-24', '2026-10-10', '2026-10-17'], '2026-11-21');
-  return gelijk(s && k.suggestieTekst(s), 'laatst 24 okt · meestal elke week');
+  const s = K.suggestie(['2026-10-03', '2026-10-24', '2026-10-10', '2026-10-17'], '2026-11-21');
+  return gelijk(s && K.suggestieTekst(s), 'laatst 24 okt · meestal elke week');
 });
-controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () => {
-  const k = kern();
-  return gelijk(k.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null &&
-    k.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true);
-});
-controle('zoeken: deel van de naam, zonder hoofdletters', () => {
-  const k = kern();
-  const al = k.artikelLijst(lees(WINKELS).model);
-  return gelijk(k.zoekArtikelen(al, 'RO').map((a) => a.naam).join(',') + '|' + k.zoekArtikelen(al, ' BORST').map((a) => a.naam).join(','), 'Brood|Afwasborstel');
+controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () =>
+  gelijk(K.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null && K.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true));
+controle('zoeken: deel van de naam, zonder hoofdletters en accenten', () => {
+  const al = K.artikelLijst(lees({ artikelen: { a1111: { naam: 'Crème fraîche' }, a2222: { naam: 'Café-noir' }, a3333: { naam: 'Kaas' } } }));
+  return gelijk(K.zoekArtikelen(al, 'creme FRAI').map((a) => a.naam).join() + '|' + K.zoekArtikelen(al, 'cafe').map((a) => a.naam).join(), 'Crème fraîche|Café-noir');
 });
 
-const PLEKKEN = [
-  'winkel;Albert Heijn;route=Zuivel', 'winkel;Plus;route=Koeling', 'winkel;Gamma;route=IJzerwaren', 'winkel;Lidl',
-  'artikel;Melk;ligt=Albert Heijn:Zuivel|Plus:Koeling;op=1',
-  'artikel;Schroeven;ligt=Gamma:IJzerwaren;op=1',
-  'artikel;Cadeau;op=1',
-  'artikel;Hummus;ligt=Lidl;op=1',
-  'artikel;Brood;ligt=Albert Heijn|Plus;op=1'
-].join('\n') + '\n';
-controle('plekken: melk ligt bij de AH in Zuivel en bij de Plus in Koeling', () => {
-  const k = kern(); const m = lees(PLEKKEN).model; const ws = k.winkelLijst(m); const as = k.artikelLijst(m);
-  const ah = k.winkelIndeling(as, ws.find((w) => w.naam === 'Albert Heijn'));
-  const plus = k.winkelIndeling(as, ws.find((w) => w.naam === 'Plus'));
-  return gelijk(JSON.stringify([ah.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam)), plus.groepen.map((g) => g.afd + ':' + g.items.map((a) => a.naam))]),
-    '[["Zuivel:Melk"],["Koeling:Melk"]]');
-});
-controle('plekken: in de Gamma geen melk en brood, wel schroeven; zonder winkels staat bovenaan', () => {
-  const k = kern(); const m = lees(PLEKKEN).model; const ws = k.winkelLijst(m);
-  const g = k.winkelIndeling(k.artikelLijst(m), ws.find((w) => w.naam === 'Gamma'));
-  return gelijk(JSON.stringify({ boven: g.boven.map((a) => a.naam), groepen: g.groepen.map((x) => x.afd), elders: g.elders.map((a) => a.naam) }),
-    '{"boven":["Cadeau"],"groepen":["IJzerwaren"],"elders":["Brood","Hummus","Melk"]}');
-});
-controle('winkelkeuze: alleen winkels waar iets is vastgelegd, meeste eerst; overal-artikelen tellen niet', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  return gelijk(k.winkelTellingen(k.artikelLijst(m), k.winkelLijst(m)).map((x) => x.naam + ' ' + x.aantal).join(', '),
-    'Albert Heijn 2, Plus 2, Gamma 1, Lidl 1');
-});
-controle('winkelkeuze: na het kopen bij de AH valt de Plus weg', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  const as = k.artikelLijst(m).map((a) => a.naam === 'Melk' || a.naam === 'Brood' ? Object.assign({}, a, { op: '' }) : a);
-  return gelijk(k.winkelTellingen(as, k.winkelLijst(m)).map((x) => x.naam).join(','), 'Gamma,Lidl');
-});
-controle('plaats: in een tweede winkel erbij, afdeling vervangen', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Hummus', winkel: 'Plus', afd: 'Koeling' });
-  k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'Plus', afd: 'Zuivel' });
-  const t2 = R(k.schrijfBestand(m));
-  return gelijk([/^artikel;Hummus;.*$/m.exec(t2)[0], /^artikel;Melk;.*$/m.exec(t2)[0]].join('\n'),
-    'artikel;Hummus;ligt=Lidl|Plus:Koeling;op=1\nartikel;Melk;ligt=Albert Heijn:Zuivel|Plus:Zuivel;op=1');
-});
-controle('plaats: twee telefoons plaatsen in verschillende winkels, botst niet', () => {
-  const k = kern(); const m = lees('artikel;Melk;op=1\n').model;
-  const r1 = k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'AH', afd: 'Zuivel' });
-  const r2 = k.pasToe(m, { actie: 'plaats', soort: 'artikel', naam: 'Melk', winkel: 'Plus', afd: '' });
-  return gelijk(r1.status + r2.status + ' ' + R(k.schrijfBestand(m)), 'okok artikel;Melk;ligt=AH:Zuivel|Plus;op=1\n');
-});
-controle('hernoemen van winkel en afdeling gaat mee in ligt=', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  k.pasToe(m, { actie: 'hernoem', soort: 'winkel', naam: 'Plus', nieuw: 'Plus Oost' });
-  k.pasToe(m, { actie: 'afdHernoem', soort: 'winkel', naam: 'Albert Heijn', afd: 'Zuivel', nieuw: 'Zuivel & eieren' });
-  const t2 = R(k.schrijfBestand(m));
-  return gelijk([/^artikel;Melk;.*$/m.exec(t2)[0], /^artikel;Brood;.*$/m.exec(t2)[0]].join('\n'),
-    'artikel;Melk;ligt=Albert Heijn:Zuivel & eieren|Plus Oost:Koeling;op=1\nartikel;Brood;ligt=Albert Heijn|Plus Oost;op=1');
-});
-controle('afdelingen per winkel: volgorde, met wat de ander intussen toevoegde achteraan', () => {
-  const k = kern(); const m = lees('winkel;AH;route=A|B|C\n').model;
-  k.pasToe(m, { actie: 'lijstErbij', soort: 'winkel', naam: 'AH', veld: 'route', waarde: 'D' });
-  const r = k.pasToe(m, { actie: 'volgorde', soort: 'winkel', naam: 'AH', volgorde: ['C', 'A', 'B', 'X'] });
-  return gelijk(r.status + ' ' + R(k.schrijfBestand(m)), 'ok winkel;AH;route=C|A|B|D\n');
-});
-controle('afdeling hernoemen: alleen in die winkel, artikelen gaan mee', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  k.pasToe(m, { actie: 'afdHernoem', soort: 'winkel', naam: 'Albert Heijn', afd: 'Zuivel', nieuw: 'Zuivel & eieren' });
-  const t2 = R(k.schrijfBestand(m));
-  return gelijk([/^winkel;Albert Heijn.*$/m.exec(t2)[0], /^artikel;Melk;.*$/m.exec(t2)[0]].join('\n'),
-    'winkel;Albert Heijn;route=Zuivel & eieren\nartikel;Melk;ligt=Albert Heijn:Zuivel & eieren|Plus:Koeling;op=1');
-});
-controle('afdeling hernoemen naar een naam die de winkel al heeft vervalt', () => {
-  const k = kern(); const m = lees('winkel;AH;route=A|B\n').model;
-  return gelijk(k.pasToe(m, { actie: 'afdHernoem', soort: 'winkel', naam: 'AH', afd: 'A', nieuw: 'b' }).status, 'vervallen');
-});
-controle('afdeling weghalen: artikel blijft te koop in die winkel, afdeling onbekend', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  k.pasToe(m, { actie: 'afdWeg', soort: 'winkel', naam: 'Plus', afd: 'Koeling' });
-  const t2 = R(k.schrijfBestand(m));
-  return gelijk([/^winkel;Plus.*$/m.exec(t2)[0], /^artikel;Melk;.*$/m.exec(t2)[0]].join('\n'),
-    'winkel;Plus\nartikel;Melk;ligt=Albert Heijn:Zuivel|Plus;op=1');
-});
-controle('winkel verwijderen haalt hem ook weg bij de artikelen', () => {
-  const k = kern(); const m = lees(PLEKKEN).model;
-  k.pasToe(m, { actie: 'weg', soort: 'winkel', naam: 'Plus' });
-  k.pasToe(m, { actie: 'weg', soort: 'winkel', naam: 'Lidl' });
-  const t2 = R(k.schrijfBestand(m));
-  return gelijk([/^artikel;Melk;.*$/m.exec(t2)[0], /^artikel;Hummus;.*$/m.exec(t2)[0], /^artikel;Brood;.*$/m.exec(t2)[0], String(/^winkel;Plus/m.test(t2))].join('\n'),
-    'artikel;Melk;ligt=Albert Heijn:Zuivel;op=1\nartikel;Hummus;op=1\nartikel;Brood;ligt=Albert Heijn;op=1\nfalse');
-});
 controle('invoer staat onderaan (boven de tabbalk), soortmenu klapt naar boven', () =>
-  (/<\/main>\s*<div class="onderbalk" id="balk-boodschappen">/.test(html) && /\.menu\{position:absolute;z-index:10;bottom:/.test(html)) || 'invoer niet onderaan');
+  (/<\/main>\s*(<div id="update-bar"[\s\S]*?<\/div>\s*)?<div class="onderbalk" id="balk-boodschappen">/.test(html) && /\.menu\{position:absolute;z-index:10;bottom:/.test(html)) || 'invoer niet onderaan');
 
 controle('tabbalk staat altijd in beeld: body vast aan de schermranden, geen 100dvh; scherm krimpt met het toetsenbord', () =>
   (/body\{[^}]*position:fixed;inset:0\}/.test(html) && !/body\{[^}]*100dvh/.test(html) && /interactive-widget=resizes-content/.test(html)) || 'opbouw klopt niet');
 
-controle('zoeken zonder accenten: creme vindt Crème fraîche, cafe vindt Café', () => {
-  const k = kern();
-  const al = k.artikelLijst(lees('artikel;Crème fraîche\nartikel;Café-noir\nartikel;Kaas\n').model);
-  return gelijk(k.zoekArtikelen(al, 'creme FRAI').map((a) => a.naam).join() + '|' + k.zoekArtikelen(al, 'cafe').map((a) => a.naam).join(), 'Crème fraîche|Café-noir');
+controle('nieuwe versie: balk zoals in trends boven de onderbalk, geen melding', () =>
+  (/<\/main>\s*<div id="update-bar" role="button"[^>]*>[\s\S]*?Nieuwe versie — tik om te herladen/.test(html) && !/m-versie/.test(html)) || 'geen balk');
+
+controle('veiligheid: CSP — alleen eigen bestanden en Microsoft, geen scripts van buiten, geen formulieren of base', () => {
+  const m = /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/.exec(html);
+  if (!m) return 'CSP ontbreekt';
+  const c = m[1];
+  const regels = ["default-src 'none'", "script-src 'self' 'unsafe-inline'", "base-uri 'none'", "form-action 'none'", 'connect-src \'self\' https://login.microsoftonline.com https://graph.microsoft.com'];
+  const mist = regels.filter((r) => c.indexOf(r) === -1);
+  const vreemd = (/connect-src([^;]*)/.exec(c)[1].match(/https:\/\/[^\s;]+/g) || []).filter((h) => !/(microsoftonline\.com|graph\.microsoft\.com|1drv\.com|microsoftpersonalcontent\.com|sharepoint\.com|livefilestore\.com)$/.test(h));
+  return (!mist.length && !vreemd.length) || JSON.stringify({ mist, vreemd });
+});
+controle('veiligheid: geen verwijzer meesturen', () => /<meta name="referrer" content="no-referrer">/.test(html) || 'referrer-regel ontbreekt');
+controle('veiligheid: gegevens nooit via innerHTML (alleen vaste tekst, iconen en getallen)', () => {
+  const verdacht = (scripts.match(/innerHTML\s*[+]?=\s*[^;]+;/g) || []).filter((r) => /\.naam|\.tekst|\.notitie|\.link|titel\b|opt\.(titel|naam)|naam\s*\+|\+\s*naam/.test(r));
+  return !verdacht.length || verdacht.join(' | ');
 });
 
 controle('rondjes: één definitie, gevuld even groot als de buitenkant van open (13,5 = 12,4 + 2,2/2)', () => {

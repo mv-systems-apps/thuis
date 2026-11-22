@@ -73,86 +73,95 @@ daarvoor niet te veranderen.
 
 ## 3. Bestand
 
-Eén bestand `thuis.json` in de gedeelde map, plus een dagbackup
+Eén bestand `thuis.json` in de gedeelde map, plus dagbackups
 (`thuis_backup_JJJJMMDD.json`) en een submap `fotos/`. Niet bedoeld om met de
 hand te bewerken.
 
-- UTF-8; een bestand dat geen geldige UTF-8 of geen geldige JSON is, wordt
-  niet gelezen en nooit overschreven. Een BOM gaat eruit.
+- UTF-8, geldige JSON, en de opbouw hieronder. Klopt een van die drie niet,
+  dan leest de app het bestand niet en schrijft hij er nooit in; hij werkt
+  verder op de laatste goede kopie op de telefoon, met een melding. Een BOM
+  gaat eruit.
 - `versie`: datum en tijd van de laatste formaatwijziging in hex, zoals het
-  versiestempel (`1352902-3FF` = 22-11-2026 10:23). Een nieuwer formaat dan de
-  app kent: niets schrijven, melding om bij te werken. Ouder of ontbrekend:
-  niet lezen (geen omzetting van oude formaten).
-- Delen: `instellingen`, `winkels`, `artikelen`, `acties` (objecten met de naam
-  als sleutel) en `hernoemd` (lijst). Namen vergelijkt de app na
-  normaliseren: trim, spaties samenvoegen, NFC, hoofdletterongevoelig.
-- De app schrijft één record per regel, op naam, velden in vaste volgorde;
-  wat leeg is, staat er niet. Onbekende delen en velden blijven bewaard.
+  versiestempel (`1352902-459` = 22-11-2026 11:13). Nieuwer dan de app kent:
+  niets schrijven, melding om bij te werken. Ouder of ontbrekend: niet lezen
+  (geen omzetting van oude formaten).
+- **Vaste id's.** Winkels, afdelingen, artikelen en acties hebben een id van
+  vijf willekeurige tekens (kleine letters en cijfers zonder 0 o 1 l i; via
+  `crypto.getRandomValues`, uniek binnen het bestand). De naam is een gewoon
+  veld: hernoemen verandert alleen de naam, verwijzingen blijven kloppen. Er
+  is geen hernoem-spoor meer.
+- Afdelingen horen bij één winkel, als lijst op volgorde (de looproute).
+- De app schrijft één record per regel, op naam; wat leeg is, staat er niet.
+  Onbekende delen en velden blijven bewaard (een oudere app op de andere
+  telefoon gooit niets weg). Namen mogen elk teken bevatten.
+- Onschuldige afwijkingen zet de app stil recht en logt ze (sync-overzicht,
+  stap 9): een plek in een verwijderde winkel valt weg, een verwijderde
+  afdeling wordt "onbekend".
 
 ```json
 {
-"versie": "1352902-3FF",
+"versie": "1352902-459",
 "instellingen": {
  "wekelijks": {"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}
 },
 "winkels": {
- "Albert Heijn": {"afdelingen":["Groente & fruit","Brood","Zuivel"]},
- "Plus": {"afdelingen":["Koeling","Brood"]}
+ "k7f2q": {"naam":"Albert Heijn","afdelingen":[{"id":"a3xm9","naam":"Groente & fruit"},{"id":"z8pd4","naam":"Zuivel"}]},
+ "p4hw2": {"naam":"Plus","afdelingen":[{"id":"c2nt7","naam":"Koeling"}]}
 },
 "artikelen": {
- "Cadeau voor Eva": {"soort":"eenmalig","op":"2026-11-22T09:12"},
- "Melk": {"soort":"wekelijks","ligt":{"Albert Heijn":"Zuivel","Plus":"Koeling"},"op":"2026-11-22T10:04","opdoor":"Mark","gekocht":["2026-11-08","2026-11-15"]}
+ "e5gk8": {"naam":"Cadeau voor Eva","soort":"eenmalig","op":"2026-11-22T09:12"},
+ "m9rb3": {"naam":"Melk","soort":"wekelijks","ligt":{"k7f2q":"z8pd4","p4hw2":"c2nt7"},"op":"2026-11-22T10:04","opdoor":"Mark","gekocht":["2026-11-08","2026-11-15"]}
 },
 "acties": {
- "Filter afzuigkap vervangen": {"datum":"2026-11-19","herhaal":"maand"}
-},
-"hernoemd": [
- {"soort":"artikel","oud":"Koffie","nieuw":"Koffiebonen","op":"2026-11-21"}
-]
+ "f6jq2": {"naam":"Filter afzuigkap vervangen","datum":"2026-11-19","herhaal":"maand"}
+}
 }
 ```
 
 | deel | velden |
 |---|---|
-| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen`: `namen` |
-| `winkels` | `afdelingen`: de afdelingen van déze winkel, in looproute |
-| `artikelen` | `soort` (eenmalig, wekelijks, regelmatig), `ligt` (winkel → afdeling; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan), `op` (sinds wanneer op de lijst), `opdoor`, `gekocht` (laatste zes) |
-| `acties` | `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
-| `hernoemd` | `soort`, `oud`, `nieuw`, `op` (30 dagen bewaard) |
-
-Een winkelnaam bevat geen `:` (de app vervangt hem door een spatie).
+| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen` |
+| `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `gekocht` (laatste zes datums) |
+| `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
 tijdstippen `2026-11-21T10:12` in lokale tijd (Europe/Amsterdam).
 
-Opruimen door de app: afgeronde acties na 3 maanden; `hernoemd` na 30 dagen;
+Opruimen door de app: afgeronde acties na 3 maanden;
 eenmalige artikelen die 12 maanden niet op de lijst stonden.
 
 ## 4. Samenvoegen
 
-- Een **handeling** beschrijft één veldwijziging: record, veld, oude waarde,
-  nieuwe waarde, tijdstip en wie. Daarnaast toevoegen en verwijderen.
+- Een **handeling** verwijst met een id naar wat ze raakt: aanmaken, een veld
+  zetten (met oude en nieuwe waarde), verwijderen, ongedaan maken, gekocht of
+  niet, plaatsen (artikel in winkel/afdeling), en voor een winkel: afdeling
+  erbij, hernoemen, weghalen en volgorde.
 - Toepassen op de nieuwste versie van het bestand:
-  - staat er in het bestand de oude waarde, dan wordt het de nieuwe;
+  - staat er de oude waarde, dan wordt het de nieuwe;
   - staat er al de nieuwe waarde (jullie deden hetzelfde), dan gebeurt er niets;
-  - staat er iets anders, dan is het een **botsing**.
-- **Botsingen:**
-  - op of van de lijst: de laatste handeling wint (op tijdstip);
-  - tekstvelden (naam, notitie, link): de laatste wint, met achteraf een rustige
-    melding boven de lijst, met "andere versie terugzetten". Nooit een venster
-    in de winkel.
-- **Een record dat niet meer bestaat:** de handeling vervalt, met een melding.
-  Alleen "toevoegen" maakt iets aan. Een verwijderd artikel komt dus niet
-  ongemerkt terug.
-- **Hernoemen:** de app herschrijft alle verwijzingen (afdeling in artikelen en
-  routes, winkel in artikelen) en laat een regel `hernoemd` achter. Handelingen
-  met de oude naam worden via die regel naar de nieuwe geleid.
+  - staat er iets anders, dan is het een **botsing**: de laatste wint; bij
+    tekst met een rustige melding en "Andere terugzetten". Op of van de lijst:
+    zonder melding.
+- **Iets wat niet meer bestaat:** de handeling vervalt, met een melding. Een
+  verwijderd artikel komt dus niet ongemerkt terug. Een naam die al bestaat
+  (hernoemen) vervalt ook.
+- **Twee keer hetzelfde aangemaakt** (jullie voegen offline allebei "Melk"
+  toe, of dezelfde afdeling): de tweede gaat op in de eerste. De telefoon die
+  dat merkt, zet in zijn wachtrij, mandje, favorieten en gekozen winkel de
+  nieuwe id om naar de bestaande.
+- **Verwijderen** gebeurt meteen, via de wachtrij. "Ongedaan maken" (10 s, zolang
+  de melding staat) zet het terug met dezelfde id, inclusief de plekken van de
+  artikelen.
+- **Volgorde van afdelingen:** wat de ander intussen toevoegde, komt achteraan;
+  wat hij weghaalde, blijft weg.
 - **Wekelijks terugzetten** is geen handeling in de wachtrij. Elke telefoon
   berekent het bij het lezen: is `teruggezet` ouder dan de laatste dag/tijd uit
   de instelling, dan gaan de wekelijkse artikelen die sindsdien niet gekocht
   zijn op de lijst, en wordt `teruggezet` bijgewerkt. Zo zet een telefoon die
   offline was, net gekochte bananen niet opnieuw op de lijst.
-- **Een afgeronde actie opnieuw invoeren** (dezelfde naam) heropent die actie.
+- Acties (Doen, stap 8): een afgeronde actie opnieuw invoeren heropent hem —
+  bij het bouwen van Doen uitwerken.
 
 ## 5. Schermen
 
@@ -234,6 +243,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven. Er is geen "Klaar". Later
   eventueel een instelling "na x dagen vanzelf leeg".
+- Het mandje is per winkel: de teller ("2 van 8") en "In het mandje" tonen
+  alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
+  je elders afvinkte, staat daar weer als je die winkel kiest.
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
 - Een artikel dat de ander net toevoegde, krijgt een paar minuten "nieuw".
 - Verversen elke 30 s zolang dit tabblad open is.
@@ -258,12 +270,19 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Onderaan [Annuleren] [Opslaan].
 
 ### 5.5 Instellingen
-- Winkels (lijst, per winkel naam en looproute met slepen én ↑/↓, vinkjes voor
-  welke afdelingen er zijn).
-- Afdelingen (gedeeld; hernoemen geldt overal; aantal artikelen).
-- Wekelijks terug op (dag en tijd).
-- Synchroniseren: zie 5.6.
-- Versiestempel onderaan.
+- Synchroniseren: aangemeld als, gedeelde map, aanmelden/afmelden (rode rand,
+  volle breedte).
+- Wekelijks terug op de lijst: de dag als knoppen (ma–zo), de tijd. Geldt voor
+  beiden (in thuis.json).
+- Gegevens › Backups: lijst (laatste 14 dagen, eerste van de maand) met datum
+  en grootte. Een tik downloadt die ene backup en toont winkels, artikelen, op
+  de lijst en acties, met "Terugzetten" (geen extra bevestiging). Eerst bewaart
+  de app de huidige stand als `thuis_voor_terugzetten.json`; daarna een melding
+  met "Ongedaan maken". Alleen als er geen wijzigingen klaarstaan, met
+  If-Match. Een backup in een ouder formaat is niet terug te zetten.
+- App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
+- Winkels en afdelingen: tabblad Winkels (5.1b). Later: bewaartermijnen
+  (archief, backups), personen (Doen).
 
 ### 5.6 Sync-overzicht (tik op het wolkje)
 - Toestand: bijgewerkt (tijd), bezig, offline met n wachtende wijzigingen,
@@ -296,14 +315,35 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 
 ## 7. Backup en herstel
 
-- Dagbackup `thuis_backup_<jjjjmmdd>.txt`, gemaakt met
-  `conflictBehavior=fail`, zodat maar één telefoon hem maakt.
-- Bewaren: 14 dagen plus de eerste van elke maand.
-- Is een nieuwe dagbackup veel kleiner dan de vorige (leeg, of van 10 of meer
-  naar minder dan de helft), dan gaat de vorige eerst naar
-  `thuis_backup_groot.txt`.
+- Dagbackup `thuis_backup_JJJJMMDD.json`: de versie van vóór het eerste
+  schrijven die dag, gemaakt met `conflictBehavior=fail`, zodat maar één
+  telefoon hem maakt.
+- Bewaren: de laatste 14 dagen plus de eerste van elke maand van de laatste 12
+  maanden. De app ruimt op na het maken van de dagbackup (hooguit één keer per
+  dag) en verwijdert alleen bestanden met precies die naam. De termijnen komen
+  later als instelling.
+- Terugzetten (Instellingen, stap 9): lijst met backups, per backup de datum en
+  het aantal winkels, artikelen en acties; vóór het terugzetten eerst een backup
+  van de huidige stand.
 - Een `thuis.json` die er was en nu weg is, wordt niet stil opnieuw gemaakt.
-- Herstellen gaat via het sync-overzicht.
+- Opslaan op de telefoon mislukt (wachtrij, mandje, keuzes): melding "Opslaan
+  niet gelukt" met "Opnieuw proberen", tot het weer lukt.
+- Een andere map koppelen met wijzigingen in de wachtrij: eerst bevestigen; de
+  wachtrij, kopie, het mandje en de keuzes horen bij de oude map en gaan weg.
+
+## 7b. Veiligheid
+
+- Geen code van anderen (geen bibliotheken, CDN, analytics). Gegevens alleen via
+  `textContent` in de pagina, nooit als HTML.
+- Content-Security-Policy in de pagina: alleen eigen bestanden; verbindingen
+  alleen met Microsoft (aanmelden, Graph, OneDrive-downloads). Geen verwijzer.
+- Rechten: `Files.ReadWrite.All` blijft, bewust: nodig voor de gedeelde map
+  van de ander. De map wordt alleen gedeeld met specifieke personen, niet met
+  "iedereen met de koppeling".
+- Bekend risico: de vier apps delen het domein mv-systems-apps.github.io en dus
+  de opslag in de browser. Later een eigen subdomein per app. Tot dan: CSP in
+  alle apps en geen code van anderen; tweestapsverificatie op GitHub.
+- Links bij acties (stap 8) alleen als ze met `https://` beginnen.
 
 ## 8. Foto's
 Verkleind tot ±1600 px JPEG voordat ze worden opgeslagen, onder een vrije naam
