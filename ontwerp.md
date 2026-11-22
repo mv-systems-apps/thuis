@@ -73,52 +73,54 @@ daarvoor niet te veranderen.
 
 ## 3. Bestand
 
-Eén bestand `thuis.txt` in de gedeelde map, plus een dagbackup en een submap
-`fotos/`.
+Eén bestand `thuis.json` in de gedeelde map, plus een dagbackup
+(`thuis_backup_JJJJMMDD.json`) en een submap `fotos/`. Niet bedoeld om met de
+hand te bewerken.
 
-- UTF-8; een bestand dat geen geldige UTF-8 is, wordt niet gelezen en nooit
-  overschreven. Een BOM gaat eruit (zoals trends; geen ander programma leest
-  het bestand mee). CRLF/LF en het slotregeleinde blijven zoals ze waren.
-- Eén regel per record, velden gescheiden door `;`.
-- Vast zijn alleen het eerste veld (het soortwoord) en het tweede (de naam).
-  Al het andere is `naam=waarde`, gesplitst op de eerste `=`. Wat leeg is,
-  staat er niet.
-- Lijsten binnen een waarde scheidt `|`.
-- `;` en `|` mogen in geen enkel tekstveld voorkomen. Bij invoer worden ze een
-  komma of spatie; in een link worden ze gecodeerd (`%3B`, `%7C`).
-- De naam is de sleutel, uniek per soort record (een artikel en een actie mogen
-  dezelfde naam hebben). Namen vergelijkt de app na normaliseren: trim,
-  meervoudige spaties samenvoegen, NFC, hoofdletterongevoelig.
-- De app schrijft de regels in een vaste volgorde (soortwoord, dan naam), zodat
-  verschillen klein en leesbaar blijven.
-- Onbekende regels en velden schrijft de app ongewijzigd terug.
+- UTF-8; een bestand dat geen geldige UTF-8 of geen geldige JSON is, wordt
+  niet gelezen en nooit overschreven. Een BOM gaat eruit.
+- `versie`: datum en tijd van de laatste formaatwijziging in hex, zoals het
+  versiestempel (`1352902-3FF` = 22-11-2026 10:23). Een nieuwer formaat dan de
+  app kent: niets schrijven, melding om bij te werken. Ouder of ontbrekend:
+  niet lezen (geen omzetting van oude formaten).
+- Delen: `instellingen`, `winkels`, `artikelen`, `acties` (objecten met de naam
+  als sleutel) en `hernoemd` (lijst). Namen vergelijkt de app na
+  normaliseren: trim, spaties samenvoegen, NFC, hoofdletterongevoelig.
+- De app schrijft één record per regel, op naam, velden in vaste volgorde;
+  wat leeg is, staat er niet. Onbekende delen en velden blijven bewaard.
 
+```json
+{
+"versie": "1352902-3FF",
+"instellingen": {
+ "wekelijks": {"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}
+},
+"winkels": {
+ "Albert Heijn": {"afdelingen":["Groente & fruit","Brood","Zuivel"]},
+ "Plus": {"afdelingen":["Koeling","Brood"]}
+},
+"artikelen": {
+ "Cadeau voor Eva": {"soort":"eenmalig","op":"2026-11-22T09:12"},
+ "Melk": {"soort":"wekelijks","ligt":{"Albert Heijn":"Zuivel","Plus":"Koeling"},"op":"2026-11-22T10:04","opdoor":"Mark","gekocht":["2026-11-08","2026-11-15"]}
+},
+"acties": {
+ "Filter afzuigkap vervangen": {"datum":"2026-11-19","herhaal":"maand"}
+},
+"hernoemd": [
+ {"soort":"artikel","oud":"Koffie","nieuw":"Koffiebonen","op":"2026-11-21"}
+]
+}
 ```
-instelling;personen;namen=Mark|Partner
-instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2026-11-21T06:00
-afdeling;Groente & fruit
-afdeling;Zuivel & eieren
-winkel;Albert Heijn;route=Groente & fruit|Brood|Zuivel & eieren
-winkel;Lidl;route=Groente & fruit|Zuivel & eieren
-artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit|Lidl:Groente & fruit;op=2026-11-21T06:00;gekocht=2026-11-07|2026-11-14
-artikel;Hummus;soort=eenmalig;ligt=Lidl:Zuivel & eieren;op=2026-11-20T18:12;opdoor=Partner
-artikel;Koffie;soort=regelmatig;niet=Gamma;gekocht=2026-09-12|2026-10-03|2026-10-24
-actie;Filter afzuigkap vervangen;datum=2026-11-19;herhaal=maand
-actie;Dakgoot laten reinigen;datum=2027-K1;herhaal=jaar
-actie;Fietsband plakken;wie=Mark
-actie;Fotolijst ophangen;foto=k7f2q.jpg
-actie;Pakket ophalen;klaar=2026-11-20;door=Mark
-hernoemd;artikel;Koffie;nieuw=Koffiebonen;op=2026-11-21
-```
 
-| woord | betekenis | velden |
-|---|---|---|
-| `instelling` | instelling voor beide | `personen`: `namen`; `wekelijks`: `dag`, `tijd`, `teruggezet` |
-| `afdeling` | gedeelde afdeling | — |
-| `winkel` | winkel | `route`: de afdelingen in looproute; een afdeling die er niet in staat, heeft die winkel niet |
-| `artikel` | boodschap | `soort` (wekelijks, regelmatig, eenmalig), `ligt` (waar te koop: `winkel:afdeling` of alleen `winkel`, met `|` ertussen; leeg = overal), `niet` (winkels waar het niet te koop is), `afd` en `winkel` (oud, worden nog gelezen), `op` (sinds wanneer op de lijst; afwezig = niet op de lijst), `opdoor`, `gekocht` (laatste zes) |
-| `actie` | taak | `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
-| `hernoemd` | spoor van een hernoeming, 30 dagen | soort record, oude naam, `nieuw`, `op` |
+| deel | velden |
+|---|---|
+| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen`: `namen` |
+| `winkels` | `afdelingen`: de afdelingen van déze winkel, in looproute |
+| `artikelen` | `soort` (eenmalig, wekelijks, regelmatig), `ligt` (winkel → afdeling; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan), `op` (sinds wanneer op de lijst), `opdoor`, `gekocht` (laatste zes) |
+| `acties` | `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
+| `hernoemd` | `soort`, `oud`, `nieuw`, `op` (30 dagen bewaard) |
+
+Een winkelnaam bevat geen `:` (de app vervangt hem door een spatie).
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
 tijdstippen `2026-11-21T10:12` in lokale tijd (Europe/Amsterdam).
@@ -188,10 +190,26 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   een klein winkelsymbool.
 - Geen knop "Naar de winkel": de winkel is een eigen tabblad.
 
+### 5.0 Tabbladen
+Winkels, Artikelen, Boodschappen, Doen, Instellingen (alleen iconen, vegen
+rondom). De app opent op Artikelen. Invoervakken staan onderaan, boven de
+tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
+
+### 5.1b Winkels (tabblad)
+- Favorieten en Overige, inklapbaar, alfabetisch; favorieten per telefoon.
+  Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
+- Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
+  prullenbak links van Opslaan). Afdelingen horen bij deze winkel alleen
+  (de route, op volgorde): greep vooraan om te verslepen, potloodje als enige
+  knop (Afdeling bewerken); tik op de naam doet niets. Onderaan "Afdeling".
+  Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
+  winkel zonder afdeling. Verwijderen pas na 10 s, met Ongedaan maken.
+- Artikelen koppelen gebeurt hier niet, maar bij het artikel (stap 8).
+
 ### 5.2 Winkel (tabblad)
 - Per artikel leg je vast in welke winkels het te koop is, en per winkel in
-  welke afdeling het daar ligt (`ligt=`). Geen winkels = overal te koop, behalve
-  bij de winkels in `niet=`. Een winkelnaam bevat geen `:`.
+  welke afdeling het daar ligt (`ligt`). Zonder winkels staat het in elke
+  winkel bovenaan, met het speldje.
 - Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?": de
   winkels waar je iets van de lijst kunt halen (alleen wat bij die winkel is
   vastgelegd telt), met het aantal, meeste eerst, bij gelijk aantal de laatst
@@ -202,8 +220,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   Daaronder de voortgangsbalk met "2 van 8".
 - Bovenaan, zonder kopje: wat in deze winkel nog geen afdeling heeft, met de
   icoonknop "Waar ligt dit?" (kaartspeld, licht paars). Die vraagt naar de
-  afdelingen van déze winkel (looproute; andere afdelingen ingeklapt; zoeken of
-  toevoegen onderaan) en heeft de regel "Niet te koop bij <winkel>". Kiezen
+  afdelingen van déze winkel (looproute; zoeken of toevoegen onderaan). Kiezen
   legt vast: te koop hier, in die afdeling; een nieuwe afdeling komt achteraan
   de route.
 - Daarna de afdelingen in looproute.
@@ -214,7 +231,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   en grijs, wel af te vinken.
 - Het mandje blijft staan tot je het leegmaakt: rechts naast het kopje "In het
   mandje" staat een icoonknop (mandje met kruis, "Mandje leegmaken"). Het mandje hoort bij de telefoon (niet in
-  thuis.txt) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
+  thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven. Er is geen "Klaar". Later
   eventueel een instelling "na x dagen vanzelf leeg".
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
@@ -285,7 +302,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Is een nieuwe dagbackup veel kleiner dan de vorige (leeg, of van 10 of meer
   naar minder dan de helft), dan gaat de vorige eerst naar
   `thuis_backup_groot.txt`.
-- Een `thuis.txt` die er was en nu weg is, wordt niet stil opnieuw gemaakt.
+- Een `thuis.json` die er was en nu weg is, wordt niet stil opnieuw gemaakt.
 - Herstellen gaat via het sync-overzicht.
 
 ## 8. Foto's

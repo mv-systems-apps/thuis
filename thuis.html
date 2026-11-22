@@ -55,20 +55,23 @@
   .melding.info{background:#ECEAF8;color:#2E2A4F}
   .melding p{margin:0;font-size:17px;line-height:1.4}
   .melding .knoppen{padding:0}
-  nav{flex-shrink:0;height:64px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#FFFFFF;border-top:1px solid var(--lijn);
+  nav{flex-shrink:0;height:64px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#FFFFFF;border-top:1px solid var(--lijn);
       padding-bottom:env(safe-area-inset-bottom)}
   nav button{border:0;border-top:3px solid transparent;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
   nav button svg{width:28px;height:28px;stroke:#6B7482;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   nav button[aria-current="page"]{border-top-color:var(--paars);background:#F1EFFB}
   nav button[aria-current="page"] svg{stroke:var(--paars)}
   /* ---------- boodschappen ---------- */
-  .invoer{display:flex;flex-direction:column;gap:6px}
-  .invoer > label{font-size:17px;font-weight:600;color:var(--paars);padding-left:2px}
+  /* Invoer onderaan, boven de tabbalk: met de duim te bereiken en altijd in beeld. */
+  .onderbalk{flex-shrink:0;padding:10px 14px 12px;background:#FFFFFF;border-top:1px solid var(--lijn);box-shadow:0 -4px 12px rgba(24,20,60,.06)}
+  .onderbalk .invoerbalk{max-width:612px;margin:0 auto;height:56px;box-shadow:none}
+  /* Tijdens het typen staan de treffers onderaan, vlak boven het vak. */
+  body.typen #scherm-boodschappen{min-height:100%;justify-content:flex-end}
   .invoerbalk{position:relative;display:flex;align-items:stretch;height:60px;background:#FFFFFF;border:2px solid var(--paars);box-shadow:0 4px 14px rgba(75,60,192,.14)}
   .invoerbalk input{flex:1;min-width:0;border:0;outline:none;padding:0 12px;font-size:19px;color:var(--tekst);background:transparent}
   .soortknop{width:52px;flex-shrink:0;border:0;border-right:1px solid var(--lijn);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
   .plusknop{width:56px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--paars),var(--violet))}
-  .menu{position:absolute;z-index:10;top:60px;left:-2px;width:230px;background:#FFFFFF;border:1px solid #CFCBE6;box-shadow:0 10px 28px rgba(30,20,80,.22)}
+  .menu{position:absolute;z-index:10;bottom:56px;left:-2px;width:230px;background:#FFFFFF;border:1px solid #CFCBE6;box-shadow:0 10px 28px rgba(30,20,80,.22)}
   .menu button{width:100%;height:52px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:12px;padding:0 14px;font-size:18px;color:var(--tekst);text-align:left}
   .menu button:first-child{border-top:0}
   .menu button span{flex:1}
@@ -91,6 +94,37 @@
   .lijst .leeg{padding:16px 14px;text-align:left}
   /* Tijdens het typen de onderbalk weg: dan is er ruimte voor de zoekresultaten. */
   body.typen nav{display:none}
+  /* ---------- tabblad Winkels ---------- */
+  .wsectie{display:flex;flex-direction:column;gap:8px}
+  .wsectie > button.kop{min-height:44px;border:0;background:transparent;display:flex;align-items:center;gap:8px;padding:0 2px;color:var(--paars);font-size:18px;font-weight:700;text-align:left}
+  .wsectie > button.kop span{flex:1}
+  .wsectie > button.kop .tal{flex:0;font-size:17px;font-weight:400;color:var(--grijs)}
+  .wkaart{background:#FFFFFF;border:1px solid var(--lijn)}
+  .wkaart > *{border-top:1px solid var(--rij)}
+  .wkaart > *:first-child{border-top:0}
+  .winkelrij{width:100%;min-height:60px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:12px;padding:6px 12px 6px 14px;text-align:left;color:var(--tekst)}
+  .winkelrij .nm{flex:1;min-width:0;font-size:19px;line-height:1.3;overflow-wrap:anywhere}
+  .winkelrij .sub{display:block;font-size:16px;color:var(--grijs)}
+  .wdkop{position:sticky;top:-14px;z-index:2;margin:-14px -14px 0;height:60px;display:flex;align-items:center;gap:6px;padding:0 8px 0 4px;background:#FFFFFF;border-bottom:1px solid var(--lijn)}
+  #winkelDetail{display:flex;flex-direction:column;gap:12px}
+  #winkelsOverzicht{display:flex;flex-direction:column;gap:12px}
+  .wdkop h2{flex:1;min-width:0;margin:0;font-size:21px;font-weight:700;color:var(--tekst);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wdkop .terug{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+  .kopregel2{display:flex;align-items:baseline;justify-content:space-between;padding:0 2px}
+  .kopregel2 h3{margin:0;font-size:18px;color:var(--paars)}
+  .kopregel2 span{font-size:17px;color:var(--grijs)}
+  .arij{min-height:56px;display:flex;align-items:center;gap:4px;padding:4px 4px 4px 2px;background:#FFFFFF;position:relative}
+  .arij .nm{flex:1;min-width:0;font-size:19px;overflow-wrap:anywhere}
+  .arij.sleept{z-index:3;background:#F1EFFB;box-shadow:0 6px 16px rgba(24,20,60,.18)}
+  .greep{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
+  .potlood{width:44px;height:44px;flex-shrink:0;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
+  .leegregel{padding:16px 14px;font-size:18px;color:var(--grijs)}
+  #keuze .naamveld{display:flex;flex-direction:column;gap:6px;padding:8px 16px 14px}
+  #keuze .naamveld label{font-size:17px;font-weight:600;color:var(--paars)}
+  #keuze .naamveld input{height:54px;border:2px solid var(--paars);padding:0 12px;font-size:19px;outline:none}
+  #keuze .bewerkknoppen{display:flex;gap:10px;padding:0 16px 14px}
+  #keuze .bewerkknoppen .prul{width:54px;height:54px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FBE4E5}
+  #keuze .bewerkknoppen .knop{flex:1;min-height:54px;font-size:19px}
   /* ---------- tabblad Winkel ---------- */
   .winkelbalk{background:#FFFFFF;border:1px solid var(--lijn)}
   .winkelbalk .boven{height:56px;display:flex;align-items:center;gap:6px;padding:0 6px 0 14px}
@@ -132,7 +166,6 @@
   #keuze .optie.actief{color:var(--paars);font-weight:700}
   #keuze .optie.actief .sub{font-weight:400}
   #keuze .optie .tal{min-width:32px;height:30px;padding:0 8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#ECEAF8;color:var(--paars);font-size:17px;font-weight:700}
-  #keuze .optie.amber{border-top:1px solid var(--lijn);background:#FAFAFD;color:#7A4A05;font-weight:600}
   #keuze .uitklapper{width:100%;min-height:48px;border:0;border-top:1px solid var(--lijn);background:#FAFAFD;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:17px;font-weight:600;color:var(--grijs);text-align:left}
   #keuze .uitklapper span{flex:1}
   #keuze .uitleg{padding:2px 16px 8px;font-size:17px;color:var(--grijs)}
@@ -162,18 +195,12 @@
 
 <main id="midden">
   <div id="meldingen" aria-live="polite"></div>
+  <section class="scherm" id="scherm-winkels" aria-labelledby="tab-winkels" hidden>
+    <div id="winkelsOverzicht"></div>
+    <div id="winkelDetail" hidden></div>
+  </section>
+
   <section class="scherm" id="scherm-boodschappen" aria-labelledby="tab-boodschappen">
-    <div class="invoer">
-      <label for="invoerTekst">Zoeken of toevoegen</label>
-      <div class="invoerbalk">
-        <button class="soortknop" id="invoerSoort" type="button" aria-haspopup="menu" aria-expanded="false"></button>
-        <input id="invoerTekst" type="text" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
-        <button class="plusknop" id="invoerPlus" type="button" aria-label="Toevoegen">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
-        </button>
-        <div class="menu" id="soortMenu" role="menu" aria-label="Soort voor nieuw artikel" hidden></div>
-      </div>
-    </div>
     <div class="filters" id="filters" role="group" aria-label="Welke lijst"></div>
     <div class="kopregel"><h2 id="lijstTitel">Op de lijst</h2><span id="lijstAantal"></span></div>
     <div class="lijst" id="lijst"></div>
@@ -227,15 +254,37 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352902-003</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352902-004</div>
   </section>
 </main>
 
+    <div class="onderbalk" id="balk-boodschappen">
+  <div class="invoerbalk">
+    <button class="soortknop" id="invoerSoort" type="button" aria-haspopup="menu" aria-expanded="false"></button>
+    <input id="invoerTekst" type="text" aria-label="Artikel zoeken of toevoegen" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <button class="plusknop" id="invoerPlus" type="button" aria-label="Toevoegen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+    </button>
+    <div class="menu" id="soortMenu" role="menu" aria-label="Soort voor nieuw artikel" hidden></div>
+  </div>
+</div>
+<div class="onderbalk" id="balk-winkels" hidden>
+  <div class="invoerbalk">
+    <input id="winkelsTekst" type="text" placeholder="Winkel" aria-label="Winkel zoeken of toevoegen" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <button class="plusknop" id="winkelsPlus" type="button" aria-label="Toevoegen">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+    </button>
+  </div>
+</div>
+
 <nav aria-label="Onderdelen">
-  <button id="tab-boodschappen" type="button" data-scherm="boodschappen" aria-label="Lijst" aria-current="page">
+  <button id="tab-winkels" type="button" data-scherm="winkels" aria-label="Winkels">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"></path><path d="M4 9h16v11H4z"></path><path d="M10 20v-5h4v5"></path></svg>
+  </button>
+  <button id="tab-boodschappen" type="button" data-scherm="boodschappen" aria-label="Artikelen" aria-current="page">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H5v17h14V4h-3"></path><path d="M8 3h8v3H8z"></path><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"></path></svg>
   </button>
-  <button id="tab-winkel" type="button" data-scherm="winkel" aria-label="Winkel">
+  <button id="tab-winkel" type="button" data-scherm="winkel" aria-label="Boodschappen">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2"></path><circle cx="9.5" cy="20" r="1.4"></circle><circle cx="17" cy="20" r="1.4"></circle></svg>
   </button>
   <button id="tab-doen" type="button" data-scherm="doen" aria-label="Doen">
@@ -268,24 +317,25 @@ const AANMELD_GRENS = 24 * 3600 * 1000;
 const $ = (id) => document.getElementById(id);
 
 /* == kern == */
-/* De kern: thuis.txt lezen en schrijven (stap 3) en handelingen samenvoegen
+/* De kern: thuis.json lezen en schrijven (stap 3) en handelingen samenvoegen
    (stap 4). Alleen pure functies, zonder DOM of netwerk, zodat thuis-tests.cjs
    dit blok los kan uitvoeren. Het formaat staat in ontwerp.md §3, het samenvoegen
    in §4. */
 
-const SOORTWOORDEN = ['instelling', 'afdeling', 'winkel', 'artikel', 'actie', 'hernoemd'];
-/* Hoeveel velden na het soortwoord vast zijn (de naam; bij hernoemd soort en oude naam). */
-const VASTE_VELDEN = { hernoemd: 2 };
+const SOORTWOORDEN = ['instelling', 'winkel', 'artikel', 'actie', 'hernoemd'];
+/* De delen van thuis.json en het soort record dat erin staat. */
+const SECTIE_SOORT = { instellingen: 'instelling', winkels: 'winkel', artikelen: 'artikel', acties: 'actie', hernoemd: 'hernoemd' };
+const FORMAAT = '1352902-3FF';
 /* Volgorde waarin bekende velden worden geschreven; onbekende volgen erna, in hun eigen volgorde. */
 const VELDVOLGORDE = {
   winkel: ['route'],
-  artikel: ['soort', 'ligt', 'niet', 'afd', 'winkel', 'op', 'opdoor', 'gekocht'],
+  artikel: ['soort', 'ligt', 'op', 'opdoor', 'gekocht'],
   actie: ['datum', 'herhaal', 'wie', 'notitie', 'link', 'foto', 'klaar', 'door'],
   hernoemd: ['nieuw', 'op'],
   instelling: ['namen', 'dag', 'tijd', 'teruggezet']
 };
 /* Velden waarin | een lijstscheider is. */
-const LIJSTVELDEN = { route: true, winkel: true, ligt: true, niet: true, gekocht: true, namen: true };
+const LIJSTVELDEN = { route: true, ligt: true, gekocht: true, namen: true };
 const MAX_GEKOCHT = 6;
 const SORTEER = new Intl.Collator('nl', { sensitivity: 'base', numeric: true });
 
@@ -325,92 +375,124 @@ function leesBestand(invoer) {
   const meldingen = [];
   const bom = tekst.charCodeAt(0) === 0xFEFF;
   if (bom) tekst = tekst.slice(1);
-  const eol = /\r\n/.test(tekst) ? '\r\n' : '\n';
-  const slot = tekst === '' || /\n$/.test(tekst);
-  const model = { eol, slot, bom, records: new Map(), los: [] };
-  const regels = tekst.split(/\r?\n/);
-  for (const regel of regels) {
-    if (regel.trim() === '') continue;
-    const velden = regel.split(';');
-    const soort = velden[0].trim().toLowerCase();
-    const nVast = VASTE_VELDEN[soort] || 1;
-    if (SOORTWOORDEN.indexOf(soort) === -1 || velden.length < 1 + nVast ||
-        velden.slice(1, 1 + nVast).some((v) => v.trim() === '')) {
-      model.los.push(regel);
-      continue;
+  const model = { bom, records: new Map(), extra: {} };
+  if (tekst.trim() === '') return { ok: true, model, meldingen };
+  let data;
+  try { data = JSON.parse(tekst); } catch (e) { return { ok: false, reden: 'geen-json', meldingen: [] }; }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return { ok: false, reden: 'geen-json', meldingen: [] };
+  const v = formaatGetal(data.versie);
+  if (v === null || v < formaatGetal(FORMAAT)) return { ok: false, reden: 'onbekend-formaat', meldingen: [] };
+  if (v > formaatGetal(FORMAAT)) return { ok: false, reden: 'nieuwer-formaat', meldingen: [] };
+  const voegToe = (soort, vast, obj) => {
+    const rec = { soort, vast: vast.map((x) => String(x).normalize('NFC').replace(/\s+/g, ' ').trim()), velden: new Map() };
+    if (rec.vast.some((x) => x === '')) return;
+    for (const k of Object.keys(obj || {})) {
+      const w = uitJson(soort, k, obj[k]);
+      if (w === '' || w === null || w === undefined) continue;
+      rec.velden.set(veldIntern(soort, k), w);
     }
-    const vast = velden.slice(1, 1 + nVast).map((v) => v.normalize('NFC').replace(/\s+/g, ' ').trim());
-    const rec = { soort, vast, velden: new Map(), los: [] };
-    for (const v of velden.slice(1 + nVast)) {
-      const i = v.indexOf('=');
-      if (i <= 0) { if (v !== '') rec.los.push(v); continue; }
-      const k = v.slice(0, i).trim(), w = v.slice(i + 1);
-      if (w === '') continue;
-      if (rec.velden.has(k)) { meldingen.push({ soort: 'dubbel-veld', regel: vast[0], veld: k }); continue; }
-      rec.velden.set(k, w);
-    }
-    const s = sleutel(soort, vast);
+    const s = sleutel(soort, rec.vast);
     const bestaand = model.records.get(s);
     if (bestaand) {
-      /* Dezelfde naam twee keer (na bewerken in een editor): samenvoegen, de
-         eerste regel wint bij verschil, en melden. */
+      /* Dezelfde naam twee keer (verschil alleen in hoofdletters of spaties):
+         samenvoegen, de eerste wint bij verschil, en melden. */
       for (const [k, w] of rec.velden) if (!bestaand.velden.has(k)) bestaand.velden.set(k, w);
-      bestaand.los.push(...rec.los);
-      meldingen.push({ soort: 'dubbele-naam', recordsoort: soort, naam: vast[vast.length - 1] });
-    } else {
-      model.records.set(s, rec);
+      meldingen.push({ soort: 'dubbele-naam', recordsoort: soort, naam: rec.vast[rec.vast.length - 1] });
+    } else model.records.set(s, rec);
+  };
+  for (const k of Object.keys(data)) {
+    const soort = SECTIE_SOORT[k];
+    const deel = data[k];
+    if (k === 'versie') continue;
+    if (!soort) { model.extra[k] = deel; continue; }
+    if (soort === 'hernoemd') {
+      for (const h of Array.isArray(deel) ? deel : []) {
+        if (!h || typeof h !== 'object' || !h.soort || !h.oud) continue;
+        const rest = Object.assign({}, h); delete rest.soort; delete rest.oud;
+        voegToe('hernoemd', [h.soort, h.oud], rest);
+      }
+      continue;
     }
+    if (!deel || typeof deel !== 'object' || Array.isArray(deel)) continue;
+    for (const naam of Object.keys(deel)) voegToe(soort, [naam], deel[naam]);
   }
   return { ok: true, model, meldingen };
 }
 
-function veiligeWaarde(k, w) {
-  let s = String(w).replace(/[\r\n]+/g, ' ').replace(/;/g, ',');
-  if (!LIJSTVELDEN[k]) s = s.replace(/\|/g, ' ');
-  return s;
+/* Formaat: datum en tijd van de laatste formaatwijziging, in hex (zoals het
+   versiestempel van de app): 1352902-3FF = 20261122, 10:23. */
+function formaatGetal(v) {
+  const m = /^([0-9A-F]{1,8})-([0-9A-F]{1,4})$/i.exec(String(v || ''));
+  return m ? parseInt(m[1], 16) * 10000 + parseInt(m[2], 16) : null;
 }
+/* JSON-waarde ↔ interne veldwaarde (tekst; lijsten met |). */
+function uitJson(soort, k, w) {
+  if (soort === 'artikel' && k === 'ligt' && w && typeof w === 'object' && !Array.isArray(w)) {
+    return plekTekst(Object.keys(w).map((winkel) => ({ winkel, afd: typeof w[winkel] === 'string' ? w[winkel] : '' })));
+  }
+  if (Array.isArray(w) && LIJSTVELDEN[veldIntern(soort, k)]) return w.map(String).filter((x) => x !== '').join('|');
+  if (typeof w === 'string') return w;
+  return w; // onbekend: ongewijzigd bewaren
+}
+function naarJson(soort, k, w) {
+  if (typeof w !== 'string') return w;
+  if (soort === 'artikel' && k === 'ligt') {
+    const o = {};
+    for (const p of plekLijst(w)) o[p.winkel] = p.afd;
+    return o;
+  }
+  if (LIJSTVELDEN[k]) return lijst(w);
+  return w;
+}
+function veldIntern(soort, k) { return soort === 'winkel' && k === 'afdelingen' ? 'route' : k; }
+function veldExtern(soort, k) { return soort === 'winkel' && k === 'route' ? 'afdelingen' : k; }
 
-/* model → tekst. Vaste volgorde: soortwoord, dan naam; onbekende regels achteraan. */
+/* model → JSON-tekst: één record per regel, op naam, velden in vaste volgorde. */
 function schrijfBestand(model) {
-  const recs = Array.from(model.records.values()).sort((a, b) => {
-    const s = SOORTWOORDEN.indexOf(a.soort) - SOORTWOORDEN.indexOf(b.soort);
-    if (s) return s;
-    for (let i = 0; i < Math.max(a.vast.length, b.vast.length); i++) {
-      const c = SORTEER.compare(a.vast[i] || '', b.vast[i] || '');
-      if (c) return c;
-    }
-    return 0;
-  });
-  const regels = recs.map((r) => {
-    const delen = [r.soort].concat(r.vast.map((v) => veiligeWaarde('', v)));
+  const perSoort = {};
+  for (const r of model.records.values()) (perSoort[r.soort] = perSoort[r.soort] || []).push(r);
+  const velden = (r) => {
     const volgorde = VELDVOLGORDE[r.soort] || [];
-    const sleutels = volgorde.filter((k) => r.velden.has(k))
-      .concat(Array.from(r.velden.keys()).filter((k) => volgorde.indexOf(k) === -1));
-    for (const k of sleutels) {
+    const ks = volgorde.filter((k) => r.velden.has(k)).concat(Array.from(r.velden.keys()).filter((k) => volgorde.indexOf(k) === -1));
+    const o = {};
+    for (const k of ks) {
       const w = r.velden.get(k);
       if (w === undefined || w === null || w === '') continue;
-      delen.push(k + '=' + veiligeWaarde(k, w));
+      o[veldExtern(r.soort, k)] = naarJson(r.soort, k, w);
     }
-    return delen.concat(r.los).join(';');
-  }).concat(model.los);
-  return regels.join(model.eol) + (model.slot && regels.length ? model.eol : '');
+    return o;
+  };
+  const delen = ['"versie": ' + JSON.stringify(FORMAAT)];
+  for (const sectie of Object.keys(SECTIE_SOORT)) {
+    const soort = SECTIE_SOORT[sectie];
+    const recs = (perSoort[soort] || []).sort((a, b) => {
+      for (let i = 0; i < a.vast.length; i++) { const c = SORTEER.compare(a.vast[i] || '', b.vast[i] || ''); if (c) return c; }
+      return 0;
+    });
+    let regels;
+    if (soort === 'hernoemd') {
+      regels = recs.map((r) => JSON.stringify(Object.assign({ soort: r.vast[0], oud: r.vast[1] }, velden(r))));
+      delen.push(JSON.stringify(sectie) + ': ' + (regels.length ? '[\n ' + regels.join(',\n ') + '\n]' : '[]'));
+    } else {
+      regels = recs.map((r) => JSON.stringify(r.vast[0]) + ': ' + JSON.stringify(velden(r)));
+      delen.push(JSON.stringify(sectie) + ': ' + (regels.length ? '{\n ' + regels.join(',\n ') + '\n}' : '{}'));
+    }
+  }
+  for (const k of Object.keys(model.extra || {})) delen.push(JSON.stringify(k) + ': ' + JSON.stringify(model.extra[k]));
+  return '{\n' + delen.join(',\n') + '\n}\n';
 }
 
 function lijst(w) { return w ? String(w).split('|').filter((x) => x !== '') : []; }
 
 /* Waar een artikel te koop is: ligt=Albert Heijn:Zuivel|Plus:Koeling|Jumbo
    (winkel, dan na de eerste : de afdeling in die winkel; zonder : nog onbekend).
-   Leeg = overal te koop, behalve in de winkels bij niet=. Het oudere veld
-   winkel= telt mee zolang ligt= er nog niet is. */
+   Leeg = nog nergens vastgelegd: dan staat het in elke winkel bovenaan. */
 function plekLijst(w) {
   return lijst(w).map((x) => { const i = x.indexOf(':'); return i < 0 ? { winkel: x, afd: '' } : { winkel: x.slice(0, i), afd: x.slice(i + 1) }; });
 }
 function plekTekst(plekken) { return plekken.map((p) => p.afd ? p.winkel + ':' + p.afd : p.winkel).join('|'); }
-function plekkenVan(r) {
-  return r.velden.has('ligt') ? plekLijst(r.velden.get('ligt')) : lijst(r.velden.get('winkel')).map((w) => ({ winkel: w, afd: '' }));
-}
+function plekkenVan(r) { return plekLijst(r.velden.get('ligt')); }
 function zetPlekken(r, plekken) {
-  r.velden.delete('winkel');
   if (plekken.length) r.velden.set('ligt', plekTekst(plekken)); else r.velden.delete('ligt');
 }
 
@@ -435,22 +517,9 @@ function hernoem(model, rec, nieuweNaam, nu) {
   model.records.set(sleutel(rec.soort, rec.vast), rec);
   const oudN = normNaam(oud);
   for (const r of model.records.values()) {
-    if (rec.soort === 'afdeling') {
-      if (r.soort === 'artikel' && r.velden.has('afd') && normNaam(r.velden.get('afd')) === oudN) r.velden.set('afd', nieuweNaam);
-      if (r.soort === 'winkel' && r.velden.has('route')) {
-        r.velden.set('route', lijst(r.velden.get('route')).map((a) => normNaam(a) === oudN ? nieuweNaam : a).join('|'));
-      }
-    }
-    if (rec.soort === 'winkel' && r.soort === 'artikel' && r.velden.has('winkel')) {
-      r.velden.set('winkel', lijst(r.velden.get('winkel')).map((w) => normNaam(w) === oudN ? nieuweNaam : w).join('|'));
-    }
-    if (r.soort === 'artikel' && r.velden.has('ligt')) {
+    if (rec.soort === 'winkel' && r.soort === 'artikel' && r.velden.has('ligt')) {
       r.velden.set('ligt', plekTekst(plekLijst(r.velden.get('ligt')).map((p) =>
-        rec.soort === 'winkel' && normNaam(p.winkel) === oudN ? { winkel: nieuweNaam, afd: p.afd }
-        : rec.soort === 'afdeling' && normNaam(p.afd) === oudN ? { winkel: p.winkel, afd: nieuweNaam } : p)));
-    }
-    if (rec.soort === 'winkel' && r.soort === 'artikel' && r.velden.has('niet')) {
-      r.velden.set('niet', lijst(r.velden.get('niet')).map((w) => normNaam(w) === oudN ? nieuweNaam : w).join('|'));
+        normNaam(p.winkel) === oudN ? { winkel: nieuweNaam, afd: p.afd } : p)));
     }
   }
   if (normNaam(oud) === normNaam(nieuweNaam)) return; // alleen hoofdletters of spaties: geen spoor nodig
@@ -489,6 +558,16 @@ function pasToe(model, h, nu) {
   if (h.actie === 'weg') {
     if (!r) return { status: 'al' };
     model.records.delete(sleutel(r.soort, r.vast));
+    if (r.soort === 'winkel') {
+      /* Een verwijderde winkel verdwijnt ook bij de artikelen. */
+      const n = normNaam(r.vast[0]);
+      for (const a of model.records.values()) {
+        if (a.soort !== 'artikel') continue;
+        const voor = plekkenVan(a);
+        const na = voor.filter((p) => normNaam(p.winkel) !== n);
+        if (na.length !== voor.length) zetPlekken(a, na);
+      }
+    }
     return { status: 'ok' };
   }
   if (!r) return { status: 'vervallen' };
@@ -518,23 +597,41 @@ function pasToe(model, h, nu) {
        een plaatsing in een andere winkel. */
     const plekken = plekkenVan(r);
     const oud = plekken.find((p) => normNaam(p.winkel) === normNaam(h.winkel));
-    const niet = lijst(r.velden.get('niet')).filter((w) => normNaam(w) !== normNaam(h.winkel));
-    const nietWas = lijst(r.velden.get('niet')).length !== niet.length;
-    if (oud && oud.afd === (h.afd || '') && !nietWas && r.velden.has('ligt')) return { status: 'al' };
+    if (oud && oud.afd === (h.afd || '')) return { status: 'al' };
     zetPlekken(r, plekken.filter((p) => p !== oud).concat([{ winkel: oud ? oud.winkel : h.winkel, afd: h.afd || '' }]));
-    if (niet.length) r.velden.set('niet', niet.join('|')); else r.velden.delete('niet');
     return { status: 'ok' };
   }
-  if (h.actie === 'nietHier') {
-    /* Niet te koop in deze winkel. */
-    const plekken = plekkenVan(r);
-    const niet = lijst(r.velden.get('niet'));
-    const rest = plekken.filter((p) => normNaam(p.winkel) !== normNaam(h.winkel));
-    const al = niet.some((w) => normNaam(w) === normNaam(h.winkel));
-    if (al && rest.length === plekken.length) return { status: 'al' };
-    zetPlekken(r, rest);
-    if (!al) niet.push(h.winkel);
-    r.velden.set('niet', niet.join('|'));
+  if (h.actie === 'volgorde') {
+    /* Nieuwe volgorde van de afdelingen van een winkel. Wat de ander intussen
+       toevoegde blijft achteraan staan; wat hij weghaalde blijft weg. */
+    const cur = lijst(r.velden.get('route'));
+    const curN = cur.map(normNaam);
+    const nieuw = h.volgorde.filter((x) => curN.indexOf(normNaam(x)) !== -1).map((x) => cur[curN.indexOf(normNaam(x))]);
+    for (const x of cur) if (!nieuw.some((y) => normNaam(y) === normNaam(x))) nieuw.push(x);
+    if (nieuw.join('|') === cur.join('|')) return { status: 'al' };
+    r.velden.set('route', nieuw.join('|'));
+    return { status: 'ok' };
+  }
+  if (h.actie === 'afdHernoem' || h.actie === 'afdWeg') {
+    /* Een afdeling van één winkel hernoemen of weghalen; de artikelen die daar
+       liggen gaan mee (bij weghalen: nog te koop in die winkel, afdeling onbekend). */
+    const cur = lijst(r.velden.get('route'));
+    const i = cur.findIndex((x) => normNaam(x) === normNaam(h.afd));
+    if (i === -1) return { status: h.actie === 'afdWeg' ? 'al' : 'vervallen' };
+    if (h.actie === 'afdHernoem') {
+      if (cur.some((x, j) => j !== i && normNaam(x) === normNaam(h.nieuw))) return { status: 'vervallen', reden: 'naam-bezet' };
+      if (cur[i] === h.nieuw) return { status: 'al' };
+      cur[i] = h.nieuw;
+    } else cur.splice(i, 1);
+    if (cur.length) r.velden.set('route', cur.join('|')); else r.velden.delete('route');
+    const w = normNaam(r.vast[0]), oud = normNaam(h.afd);
+    for (const a of model.records.values()) {
+      if (a.soort !== 'artikel' || !a.velden.has('ligt')) continue;
+      const pl = plekLijst(a.velden.get('ligt'));
+      let veranderd = false;
+      for (const p of pl) if (normNaam(p.winkel) === w && normNaam(p.afd) === oud) { p.afd = h.actie === 'afdHernoem' ? h.nieuw : ''; veranderd = true; }
+      if (veranderd) a.velden.set('ligt', plekTekst(pl));
+    }
     return { status: 'ok' };
   }
   if (h.actie === 'lijstErbij') {
@@ -626,6 +723,9 @@ function synchroniseer(remote, wachtrij, nu) {
   if (!gelezen.ok) return { ok: false, reden: gelezen.reden };
   const model = gelezen.model;
   const voor = schrijfBestand(model);
+  if (!model.records.has(sleutel('instelling', ['wekelijks']))) {
+    model.records.set(sleutel('instelling', ['wekelijks']), { soort: 'instelling', vast: ['wekelijks'], velden: new Map([['dag', 'za'], ['tijd', '06:00']]) });
+  }
   const resultaten = wachtrij.map((h) => Object.assign({ h }, pasToe(model, h, nu)));
   const terug = wekelijksTerug(model, nu);
   opruimen(model, nu);
@@ -647,7 +747,7 @@ function artikelLijst(model) {
     const soort = SOORT_LETTER[r.velden.get('soort')] ? r.velden.get('soort') : 'eenmalig';
     uit.push({
       naam: r.vast[0], sleutel: normNaam(r.vast[0]), soort, letter: SOORT_LETTER[soort],
-      afd: r.velden.get('afd') || '', plekken: plekkenVan(r), niet: lijst(r.velden.get('niet')),
+      plekken: plekkenVan(r),
       op: r.velden.get('op') || '', opdoor: r.velden.get('opdoor') || '',
       gekocht: lijst(r.velden.get('gekocht'))
     });
@@ -700,22 +800,16 @@ function winkelLijst(model) {
   return uit.sort((a, b) => SORTEER.compare(a.naam, b.naam));
 }
 
-function afdelingLijst(model) {
-  const uit = [];
-  for (const r of model.records.values()) if (r.soort === 'afdeling') uit.push(r.vast[0]);
-  return uit.sort((a, b) => SORTEER.compare(a, b));
-}
 
 /* Is dit artikel te koop in deze winkel? */
 function teKoopIn(a, winkelNaam) {
   const n = normNaam(winkelNaam);
-  if (a.niet.some((w) => normNaam(w) === n)) return false;
   return !a.plekken.length || a.plekken.some((p) => normNaam(p.winkel) === n);
 }
-/* De afdeling van dit artikel in deze winkel (het oude afd= als terugval). */
+/* De afdeling van dit artikel in deze winkel ('' = nog onbekend). */
 function afdelingIn(a, winkelNaam) {
   const p = a.plekken.find((x) => normNaam(x.winkel) === normNaam(winkelNaam));
-  return (p && p.afd) || a.afd;
+  return p ? p.afd : '';
 }
 
 /* Deelt de artikelen op de lijst in voor één winkel:
@@ -730,7 +824,7 @@ function winkelIndeling(artikelen, winkel) {
   for (const a of artikelen) {
     if (!a.op) continue;
     if (winkel && !teKoopIn(a, winkel.naam)) { elders.push(a); continue; }
-    const afd = winkel ? afdelingIn(a, winkel.naam) : a.afd;
+    const afd = winkel ? afdelingIn(a, winkel.naam) : '';
     const i = afd ? routeN.indexOf(normNaam(afd)) : -1;
     if (i === -1) boven.push(a); else perAfd[i].push(a);
   }
@@ -745,7 +839,7 @@ function winkelTellingen(artikelen, winkels) {
   const uit = [];
   for (const w of winkels) {
     const n = normNaam(w.naam);
-    const hier = artikelen.filter((a) => a.op && a.plekken.some((p) => normNaam(p.winkel) === n) && !a.niet.some((x) => normNaam(x) === n));
+    const hier = artikelen.filter((a) => a.op && a.plekken.some((p) => normNaam(p.winkel) === n));
     if (hier.length) uit.push({ naam: w.naam, aantal: hier.length, artikelen: hier.map((a) => a.naam) });
   }
   return uit.sort((x, y) => y.aantal - x.aantal || SORTEER.compare(x.naam, y.naam));
@@ -864,8 +958,11 @@ function toonScherm(naam) {
     if (aan) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     $('scherm-' + b.dataset.scherm).hidden = !aan;
   }
+  $('balk-boodschappen').hidden = naam !== 'boodschappen';
+  $('balk-winkels').hidden = naam !== 'winkels';
   $('midden').scrollTop = 0;
   if (naam === 'winkel') { tekenWinkel(); planSync(0); }
+  if (naam === 'winkels') tekenWinkels();
 }
 for (const b of document.querySelectorAll('nav button')) {
   b.addEventListener('click', () => toonScherm(b.dataset.scherm));
@@ -1202,13 +1299,12 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 /* ---------- gegevens: lokale kopie + wachtrij (stap 5) ---------- */
-/* De app werkt altijd op de lokale kopie van thuis.txt plus de wachtrij met
+/* De app werkt altijd op de lokale kopie van thuis.json plus de wachtrij met
    handelingen die nog niet in OneDrive staan. Een handeling wordt meteen lokaal
    toegepast en na een korte pauze gebundeld verstuurd. */
 const SYNC_PAUZE = 1500;
 const VERVERS_GEWOON = 3 * 60 * 1000;
-const BESTAND = 'thuis.txt';
-const STANDAARD = 'instelling;wekelijks;dag=za;tijd=06:00\n';
+const BESTAND = 'thuis.json';
 
 let kopie = null;          // { tekst, eTag, fileId, tijd }
 let wachtrij = [];         // handelingen, oudste eerst
@@ -1273,7 +1369,7 @@ async function bestandOphalen(map) {
 async function dagbackup(map, tekst) {
   const vandaag = datumTekst(new Date()).replace(/-/g, '');
   if ((await kvGet('backupDag')) === vandaag) return;
-  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/thuis_backup_' + vandaag + '.txt:/content?@microsoft.graph.conflictBehavior=fail', {
+  const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/thuis_backup_' + vandaag + '.json:/content?@microsoft.graph.conflictBehavior=fail', {
     method: 'PUT', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: tekst
   });
   /* 409: de andere telefoon maakte de backup van vandaag al. */
@@ -1299,7 +1395,7 @@ async function syncRonde() {
           return;
         }
         const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + BESTAND + ':/content?@microsoft.graph.conflictBehavior=fail', {
-          method: 'PUT', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: STANDAARD
+          method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: schrijfBestand(leesBestand('').model)
         });
         if (!res.ok && res.status !== 409) throw new Error('aanmaken: code ' + res.status);
         continue;
@@ -1307,31 +1403,33 @@ async function syncRonde() {
       meldingWeg('m-weg');
       const remote = opgehaald.bytes || opgehaald.tekst;
       const inBehandeling = wachtrij.slice();
-      /* Ontbreekt de instelling voor wekelijks, dan komt de standaard erbij. */
       const remoteTekst = typeof remote === 'string' ? remote : new TextDecoder().decode(remote);
-      const extra = /^(\uFEFF)?instelling;wekelijks;/m.test(remoteTekst) ? [] :
-        [{ actie: 'nieuw', soort: 'instelling', naam: 'wekelijks', velden: { dag: 'za', tijd: '06:00' }, t: tijdstipTekst(new Date()), wie: ik }];
-      const ronde = synchroniseer(remote, extra.concat(inBehandeling), new Date());
+      const ronde = synchroniseer(remote, inBehandeling, new Date());
       if (!ronde.ok) {
-        melding('m-utf8', BESTAND + ' is niet in UTF-8 opgeslagen. De app leest en schrijft hem niet; sla hem in een editor op als UTF-8.', []);
+        melding('m-utf8', BESTAND + ' ' + ({
+          'geen-utf8': 'is niet in UTF-8 opgeslagen.',
+          'geen-json': 'is beschadigd.',
+          'nieuwer-formaat': 'is gemaakt door een nieuwere versie van de app. Werk de app bij.',
+          'onbekend-formaat': 'heeft een onbekend formaat.'
+        }[ronde.reden] || 'is niet te lezen.') + ' De app schrijft er niets in.', []);
         return;
       }
       meldingWeg('m-utf8');
       if (!ronde.gewijzigd) {
-        kopie = { tekst: remoteTekst, eTag: opgehaald.item.eTag, fileId: opgehaald.item.id, tijd: Date.now() };
+        kopie = { bestand: BESTAND, tekst: remoteTekst, eTag: opgehaald.item.eTag, fileId: opgehaald.item.id, tijd: Date.now() };
         wachtrij = wachtrij.slice(inBehandeling.length);
         break;
       }
       await dagbackup(map, remoteTekst);
       const res = await graph('/drives/' + map.driveId + '/items/' + opgehaald.item.id + '/content', {
         method: 'PUT',
-        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'If-Match': opgehaald.item.eTag },
+        headers: { 'Content-Type': 'application/json; charset=utf-8', 'If-Match': opgehaald.item.eTag },
         body: ronde.tekst
       });
       if (res.status === 412) continue; // intussen gewijzigd: opnieuw lezen en toepassen
       if (!res.ok) throw new Error('schrijven: code ' + res.status);
       const item = await res.json();
-      kopie = { tekst: ronde.tekst, eTag: item.eTag, fileId: item.id, tijd: Date.now() };
+      kopie = { bestand: BESTAND, tekst: ronde.tekst, eTag: item.eTag, fileId: item.id, tijd: Date.now() };
       wachtrij = wachtrij.slice(inBehandeling.length);
       meldResultaten(ronde.resultaten);
       break;
@@ -1412,7 +1510,7 @@ function tekenSoortknop() {
   const b = $('invoerSoort');
   b.style.background = TINT[k];
   b.innerHTML = svgIcoon(PADEN[k], KLEUR[k], 24) +
-    '<svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l4 4 4-4"></path></svg>';
+    '<svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l4-4 4 4"></path></svg>';
   b.setAttribute('aria-label', 'Soort voor nieuw artikel: ' + SOORTNAAM[k].toLowerCase() + '. Wijzigen');
 }
 
@@ -1614,12 +1712,15 @@ const volleHoogte = { h: window.innerHeight };
 function typenBijwerken() {
   const vv = window.visualViewport;
   const h = vv ? vv.height : window.innerHeight;
-  if (document.activeElement !== $('invoerTekst')) volleHoogte.h = Math.max(volleHoogte.h, h);
-  const open = document.activeElement === $('invoerTekst') && h < volleHoogte.h * 0.8;
+  if (!(document.activeElement && document.activeElement.closest && document.activeElement.closest('.onderbalk'))) volleHoogte.h = Math.max(volleHoogte.h, h);
+  const actief = document.activeElement && document.activeElement.closest && document.activeElement.closest('.onderbalk');
+  const open = !!actief && h < volleHoogte.h * 0.8;
   document.body.classList.toggle('typen', open);
 }
-$('invoerTekst').addEventListener('focus', () => setTimeout(typenBijwerken, 300));
-$('invoerTekst').addEventListener('blur', () => setTimeout(typenBijwerken, 150));
+for (const id of ['invoerTekst', 'winkelsTekst']) {
+  $(id).addEventListener('focus', () => setTimeout(typenBijwerken, 300));
+  $(id).addEventListener('blur', () => setTimeout(typenBijwerken, 150));
+}
 if (window.visualViewport) window.visualViewport.addEventListener('resize', typenBijwerken);
 window.addEventListener('resize', typenBijwerken);
 
@@ -1631,6 +1732,8 @@ window.addEventListener('offline', () => { sync.offline = true; tekenWolk(); });
 
 async function gegevensLaden() {
   kopie = await kvGet('kopie');
+  /* Een kopie van een ander bestand (het oude thuis.txt) telt niet. */
+  if (kopie && kopie.bestand !== BESTAND) { kopie = null; wachtrij = []; await kvDel('kopie'); await kvSet('wachtrij', []); }
   wachtrij = (await kvGet('wachtrij')) || [];
   const auth = await kvGet('auth');
   ik = ((auth && auth.naam) || '').split(' ')[0];
@@ -1641,7 +1744,7 @@ async function gegevensLaden() {
 
 /* ---------- keuzelijst van onderen (winkel, afdeling) ---------- */
 /* opt: { titel, secties: [{ uitleg?, titel?, ingeklapt?, opties: [{ naam, sub?, aantal?, actief? }] }],
-   kies(naam), actie?: { tekst, doe() }, zoek?: { placeholder, extra: [namen], nieuw(naam) } }.
+   kies(naam), zoek?: { placeholder, extra: [namen], nieuw(naam) } }.
    Kruisje rechtsboven; "Zoeken of toevoegen" onderaan. Tijdens het typen één
    lijst met alles wat past, uit alle secties. */
 const KRUIS = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
@@ -1708,13 +1811,6 @@ function keuzeLijst(opt) {
       if (s.uitleg) { const u = document.createElement('div'); u.className = 'uitleg'; u.textContent = s.uitleg; opties.appendChild(u); }
       if (open[i]) for (const o of s.opties) opties.appendChild(optieKnop(o));
     });
-    if (opt.actie) {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'optie amber';
-      b.textContent = opt.actie.tekst;
-      b.addEventListener('click', () => { sluitKeuze(); opt.actie.doe(); });
-      opties.appendChild(b);
-    }
     if (!opties.children.length) {
       const p = document.createElement('div'); p.className = 'leeg';
       p.textContent = 'Nog niets. Typ hieronder een naam en tik op +.';
@@ -1757,6 +1853,7 @@ function huidigeWinkel() {
 
 async function winkelLaden() {
   winkel.naam = (await kvGet('winkel')) || '';
+  ws.favorieten = (await kvGet('favorieten')) || [];
   const m = (await kvGet('mandje')) || [];
   winkel.mandje = new Map(m.map((x) => [x.naam, x]));
 }
@@ -1768,8 +1865,8 @@ function mandjeBewaren() {
 function winkelNaamSchoon(s) { return schoonTekst(String(s).replace(/:/g, ' ')); }
 
 function winkelKiezen() {
-  const ws = winkelLijst(model);
-  const tel = winkelTellingen(artikelen, ws);
+  const wl = zichtbareWinkels();
+  const tel = winkelTellingen(artikelen, wl);
   const laatst = normNaam(winkel.naam);
   /* Bij een gelijk aantal staat de laatst gekozen winkel bovenaan. */
   tel.sort((x, y) => y.aantal - x.aantal || (normNaam(y.naam) === laatst) - (normNaam(x.naam) === laatst) || SORTEER.compare(x.naam, y.naam));
@@ -1778,8 +1875,8 @@ function winkelKiezen() {
     secties: [
       { opties: tel.map((x) => ({ naam: x.naam, aantal: x.aantal, actief: normNaam(x.naam) === laatst,
           sub: normNaam(x.naam) === laatst ? 'laatst gekozen' : x.aantal <= 2 ? x.artikelen.join(', ') : '' })) },
-      { titel: 'Alle winkels · ' + ws.length, ingeklapt: tel.length > 0,
-        opties: ws.map((w) => ({ naam: w.naam, actief: normNaam(w.naam) === laatst })) }
+      { titel: 'Alle winkels · ' + wl.length, ingeklapt: tel.length > 0,
+        opties: wl.map((w) => ({ naam: w.naam, actief: normNaam(w.naam) === laatst })) }
     ],
     kies: (naam) => kiesWinkel(naam),
     zoek: { placeholder: 'Winkel', extra: [], nieuw: (v) => {
@@ -1801,24 +1898,16 @@ function waarLigtDit(a) {
   if (!winkel.naam) { winkelKiezen(); return; }
   const w = huidigeWinkel();
   const route = w ? w.route : [];
-  const overige = afdelingLijst(model).filter((x) => !route.some((r) => normNaam(r) === normNaam(x)));
-  const kies = (afd, nieuweAfdeling) => {
-    const hs = [];
-    if (nieuweAfdeling) hs.push({ actie: 'nieuw', soort: 'afdeling', naam: afd, velden: {} });
-    hs.push({ actie: 'plaats', soort: 'artikel', naam: a.naam, winkel: winkel.naam, afd });
+  const kies = (afd) => {
+    const hs = [{ actie: 'plaats', soort: 'artikel', naam: a.naam, winkel: winkel.naam, afd }];
     if (!route.some((r) => normNaam(r) === normNaam(afd))) hs.push({ actie: 'lijstErbij', soort: 'winkel', naam: winkel.naam, veld: 'route', waarde: afd });
     handelen(hs);
   };
   keuzeLijst({
     titel: 'Waar ligt ' + a.naam + ' bij ' + winkel.naam + '?',
-    secties: [
-      { uitleg: route.length ? 'Afdelingen van ' + winkel.naam + ', in looproute' : winkel.naam + ' heeft nog geen afdelingen. Kies er een of voeg er een toe.',
-        opties: route.map((x) => ({ naam: x })) },
-      ...(overige.length ? [{ titel: 'Andere afdelingen · ' + overige.length, ingeklapt: route.length > 0, opties: overige.map((x) => ({ naam: x })) }] : [])
-    ],
-    kies: (afd) => kies(afd, false),
-    actie: { tekst: 'Niet te koop bij ' + winkel.naam, doe: () => handelen([{ actie: 'nietHier', soort: 'artikel', naam: a.naam, winkel: winkel.naam }]) },
-    zoek: { placeholder: 'Afdeling', extra: [], nieuw: (afd) => kies(afd, true) }
+    secties: [{ opties: route.map((x) => ({ naam: x })) }],
+    kies,
+    zoek: { placeholder: 'Afdeling', extra: [], nieuw: kies }
   });
 }
 
@@ -1968,20 +2057,306 @@ function tekenWinkel() {
 $('winkelKies').addEventListener('click', winkelKiezen);
 setInterval(() => { if (winkelOpen() && !document.hidden) planSync(0); }, VERVERS_WINKEL);
 
+/* ---------- tabblad Winkels: winkels en hun afdelingen ---------- */
+/* Afdelingen horen bij één winkel (de route, op volgorde). Favorieten gelden
+   per telefoon. Verwijderen gaat pas na 10 s, met Ongedaan maken. */
+const ONGEDAAN = 10 * 1000;
+const ws = { open: '', favorieten: [], dicht: { fav: false, rest: false }, wacht: new Map() };
+const ICOON_PUI = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M4 9l1.5-5h13L20 9"></path><path d="M4 9h16v11H4z"></path><path d="M10 20v-5h4v5"></path></svg>';
+const PIJL_IN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A93C9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M9 5l7 7-7 7"></path></svg>';
+const PIJL_TERUG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>';
+const POTLOOD = (kleur) => '<svg width="' + (kleur ? 20 : 22) + '" height="' + (kleur ? 20 : 22) + '" viewBox="0 0 24 24" fill="none" stroke="' + (kleur || '#4B3CC0') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg>';
+const STER = (aan) => '<svg width="22" height="22" viewBox="0 0 24 24" fill="' + (aan ? '#4B3CC0' : 'none') + '" stroke="#4B3CC0" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"></path></svg>';
+const GREEP = '<svg width="22" height="22" viewBox="0 0 24 24" fill="#9A93C9" aria-hidden="true"><circle cx="9" cy="6" r="1.7"></circle><circle cx="15" cy="6" r="1.7"></circle><circle cx="9" cy="12" r="1.7"></circle><circle cx="15" cy="12" r="1.7"></circle><circle cx="9" cy="18" r="1.7"></circle><circle cx="15" cy="18" r="1.7"></circle></svg>';
+const PRULLENBAK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4232A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path><path d="M10 11v5M14 11v5"></path></svg>';
+
+function isFavoriet(naam) { return ws.favorieten.some((f) => normNaam(f) === normNaam(naam)); }
+function zichtbareWinkels() {
+  return winkelLijst(model).filter((w) => !ws.wacht.has('winkel:' + normNaam(w.naam)));
+}
+function openWinkel() {
+  if (!ws.open || !model) return null;
+  const w = zichtbareWinkels().find((x) => normNaam(x.naam) === normNaam(ws.open));
+  return w || null;
+}
+function afdelingenVan(w) {
+  return w.route.filter((a) => !ws.wacht.has('afd:' + normNaam(w.naam) + ':' + normNaam(a)));
+}
+function aantalTekst(n) { return n === 0 ? 'geen afdelingen' : n === 1 ? '1 afdeling' : n + ' afdelingen'; }
+
+/* Iets later echt doen, met Ongedaan maken in een melding. */
+function uitgesteld(sleutelW, tekst, doe) {
+  const id = 'm-weg-' + willekeurig(6);
+  const klaar = () => { ws.wacht.delete(sleutelW); meldingWeg(id); };
+  ws.wacht.set(sleutelW, setTimeout(() => { klaar(); doe(); }, ONGEDAAN));
+  melding(id, tekst, [{ tekst: 'Ongedaan maken', tweede: true, actie: () => { clearTimeout(ws.wacht.get(sleutelW)); klaar(); tekenWinkels(); tekenWinkel(); } }], 'info');
+  tekenWinkels();
+  tekenWinkel();
+}
+
+function bewerkPaneel(opt) {
+  sluitKeuze();
+  const k = document.createElement('div');
+  k.id = 'keuze';
+  k.setAttribute('role', 'dialog');
+  k.setAttribute('aria-modal', 'true');
+  k.setAttribute('aria-label', opt.titel);
+  k.innerHTML = '<div class="paneel"><div class="kop"><h3></h3><button class="kruis" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
+    '<div class="naamveld"><label for="bewerkNaam">Naam</label><input id="bewerkNaam" type="text" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></div>' +
+    '<div class="bewerkknoppen"><button class="prul" type="button">' + PRULLENBAK + '</button><button class="knop" type="button">Opslaan</button></div></div>';
+  k.querySelector('h3').textContent = opt.titel;
+  k.querySelector('.prul').setAttribute('aria-label', opt.wegLabel);
+  const inp = k.querySelector('input');
+  inp.value = opt.naam;
+  const opslaan = () => {
+    const v = opt.schoon(inp.value);
+    if (!v) { inp.focus(); return; }
+    sluitKeuze();
+    if (v !== opt.naam) opt.opslaan(v);
+  };
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); opslaan(); } });
+  k.querySelector('.knop').addEventListener('click', opslaan);
+  k.querySelector('.prul').addEventListener('click', () => { sluitKeuze(); opt.verwijder(); });
+  k.querySelector('.kruis').addEventListener('click', sluitKeuze);
+  k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
+  document.body.appendChild(k);
+}
+
+function tekenWinkels() {
+  if (!model || $('scherm-winkels').hidden) return;
+  const w = openWinkel();
+  if (ws.open && !w) ws.open = '';
+  $('winkelsOverzicht').hidden = !!w;
+  $('winkelDetail').hidden = !w;
+  $('winkelsTekst').placeholder = w ? 'Afdeling' : 'Winkel';
+  if (w) tekenWinkelDetail(w); else tekenWinkelsOverzicht();
+}
+
+function tekenWinkelsOverzicht() {
+  const doel = $('winkelsOverzicht');
+  doel.innerHTML = '';
+  if (!gekoppeld) {
+    doel.innerHTML = '<div class="kaart leeg"><b>Nog niet gekoppeld</b><span>Meld je eerst aan en koppel de gedeelde map, bij Instellingen.</span></div>';
+    return;
+  }
+  const z = normNaam($('winkelsTekst').value);
+  const alle = zichtbareWinkels().filter((x) => !z || normNaam(x.naam).indexOf(z) !== -1);
+  const groepen = [['fav', 'Favorieten', alle.filter((x) => isFavoriet(x.naam))], ['rest', 'Overige', alle.filter((x) => !isFavoriet(x.naam))]];
+  for (const [sl, titel, rijen] of groepen) {
+    if (!rijen.length) continue;
+    const sec = document.createElement('section'); sec.className = 'wsectie';
+    const kop = document.createElement('button');
+    kop.type = 'button'; kop.className = 'kop';
+    const dicht = ws.dicht[sl] && !z;
+    kop.setAttribute('aria-expanded', String(!dicht));
+    kop.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + (dicht ? -90 : 0) + 'deg)"><path d="M6 9l6 6 6-6"></path></svg><span></span><span class="tal"></span>';
+    kop.children[1].textContent = titel;
+    kop.children[2].textContent = rijen.length;
+    kop.addEventListener('click', () => { ws.dicht[sl] = !ws.dicht[sl]; tekenWinkels(); });
+    sec.appendChild(kop);
+    if (!dicht) {
+      const kaart = document.createElement('div'); kaart.className = 'wkaart';
+      for (const x of rijen) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'winkelrij';
+        b.innerHTML = ICOON_PUI + '<span class="nm"></span>' + PIJL_IN;
+        b.querySelector('.nm').textContent = x.naam;
+        const s = document.createElement('span'); s.className = 'sub'; s.textContent = aantalTekst(afdelingenVan(x).length);
+        b.querySelector('.nm').appendChild(s);
+        b.addEventListener('click', () => winkelOpenen(x.naam));
+        kaart.appendChild(b);
+      }
+      sec.appendChild(kaart);
+    }
+    doel.appendChild(sec);
+  }
+  if (!alle.length) {
+    const p = document.createElement('div'); p.className = 'kaart leegregel';
+    p.textContent = z ? 'Niets gevonden' : 'Nog geen winkels';
+    doel.appendChild(p);
+  }
+}
+
+function tekenWinkelDetail(w) {
+  const doel = $('winkelDetail');
+  doel.innerHTML = '<div class="wdkop"><button class="terug" type="button" aria-label="Terug naar winkels">' + PIJL_TERUG + '</button><h2></h2>' +
+    '<button class="icoonknop ster" type="button"></button><button class="icoonknop bewerk" type="button" aria-label="Winkel bewerken">' + POTLOOD() + '</button></div>' +
+    '<div class="kopregel2"><h3>Afdelingen in looproute</h3><span></span></div><div class="wkaart" id="afdelingen"></div>';
+  doel.querySelector('h2').textContent = w.naam;
+  const fav = isFavoriet(w.naam);
+  const ster = doel.querySelector('.ster');
+  ster.innerHTML = STER(fav);
+  ster.setAttribute('aria-pressed', String(fav));
+  ster.setAttribute('aria-label', fav ? 'Favoriet, weghalen' : 'Favoriet maken');
+  ster.addEventListener('click', async () => {
+    ws.favorieten = ws.favorieten.filter((f) => normNaam(f) !== normNaam(w.naam));
+    if (!fav) ws.favorieten.push(w.naam);
+    tekenWinkels();
+    await kvSet('favorieten', ws.favorieten);
+  });
+  doel.querySelector('.terug').addEventListener('click', winkelSluiten);
+  doel.querySelector('.bewerk').addEventListener('click', () => winkelBewerken(w));
+  const afd = afdelingenVan(w);
+  const z = normNaam($('winkelsTekst').value);
+  const zicht = afd.filter((a) => !z || normNaam(a).indexOf(z) !== -1);
+  doel.querySelector('.kopregel2 span').textContent = afd.length;
+  const lijstEl = doel.querySelector('#afdelingen');
+  for (const a of zicht) {
+    const rij = document.createElement('div');
+    rij.className = 'arij';
+    rij.dataset.afd = a;
+    rij.innerHTML = (z ? '<span class="greep" style="visibility:hidden"></span>' : '<span class="greep" role="img" aria-label="Verslepen">' + GREEP + '</span>') +
+      '<span class="nm"></span><button class="potlood" type="button">' + POTLOOD('#9A93C9') + '</button>';
+    rij.querySelector('.nm').textContent = a;
+    rij.querySelector('.potlood').setAttribute('aria-label', a + ' bewerken');
+    rij.querySelector('.potlood').addEventListener('click', () => afdelingBewerken(w, a));
+    lijstEl.appendChild(rij);
+  }
+  if (!zicht.length) {
+    const p = document.createElement('div'); p.className = 'leegregel';
+    p.textContent = z ? 'Niets gevonden' : 'Geen afdelingen';
+    lijstEl.appendChild(p);
+  }
+  if (!z) slepenAan(lijstEl, w);
+}
+
+/* Verslepen aan de greep: de regel volgt de vinger, de andere schuiven opzij;
+   bij loslaten één handeling met de nieuwe volgorde. */
+function slepenAan(lijstEl, w) {
+  lijstEl.addEventListener('pointerdown', (e) => {
+    const greep = e.target.closest('.greep');
+    if (!greep) return;
+    e.preventDefault();
+    const rij = greep.closest('.arij');
+    const rijen = Array.from(lijstEl.querySelectorAll('.arij'));
+    const van = rijen.indexOf(rij);
+    const hoogte = rij.getBoundingClientRect().height || 56;
+    const y0 = e.clientY;
+    let naar = van;
+    greep.setPointerCapture && greep.setPointerCapture(e.pointerId);
+    rij.classList.add('sleept');
+    const beweeg = (ev) => {
+      const dy = ev.clientY - y0;
+      naar = Math.max(0, Math.min(rijen.length - 1, van + Math.round(dy / hoogte)));
+      rij.style.transform = 'translateY(' + dy + 'px)';
+      rijen.forEach((r, i) => {
+        if (r === rij) return;
+        const schuif = van < naar && i > van && i <= naar ? -hoogte : van > naar && i >= naar && i < van ? hoogte : 0;
+        r.style.transform = schuif ? 'translateY(' + schuif + 'px)' : '';
+      });
+    };
+    const los = () => {
+      greep.removeEventListener('pointermove', beweeg);
+      greep.removeEventListener('pointerup', los);
+      greep.removeEventListener('pointercancel', los);
+      rijen.forEach((r) => { r.style.transform = ''; });
+      rij.classList.remove('sleept');
+      if (naar !== van) {
+        const volgorde = rijen.map((r) => r.dataset.afd);
+        volgorde.splice(naar, 0, volgorde.splice(van, 1)[0]);
+        handelen([{ actie: 'volgorde', soort: 'winkel', naam: w.naam, volgorde }]);
+      }
+    };
+    greep.addEventListener('pointermove', beweeg);
+    greep.addEventListener('pointerup', los);
+    greep.addEventListener('pointercancel', los);
+  });
+}
+
+function winkelOpenen(naam) {
+  ws.open = naam;
+  $('winkelsTekst').value = '';
+  try { history.pushState({ thuisWinkel: naam }, ''); } catch (e) { /* zonder geschiedenis: alleen de terugknop */ }
+  tekenWinkels();
+  $('midden').scrollTop = 0;
+}
+function winkelSluiten() {
+  if (history.state && history.state.thuisWinkel) { history.back(); return; }
+  ws.open = '';
+  $('winkelsTekst').value = '';
+  tekenWinkels();
+}
+window.addEventListener('popstate', () => {
+  if (ws.open) { ws.open = ''; $('winkelsTekst').value = ''; sluitKeuze(); tekenWinkels(); }
+});
+
+function winkelBewerken(w) {
+  bewerkPaneel({
+    titel: 'Winkel bewerken', naam: w.naam, wegLabel: 'Winkel verwijderen', schoon: winkelNaamSchoon,
+    opslaan: async (nieuw) => {
+      if (zichtbareWinkels().some((x) => x !== w && normNaam(x.naam) === normNaam(nieuw))) {
+        melding('m-naam', 'Er is al een winkel ' + nieuw + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
+        return;
+      }
+      if (isFavoriet(w.naam)) {
+        ws.favorieten = ws.favorieten.map((f) => normNaam(f) === normNaam(w.naam) ? nieuw : f);
+        kvSet('favorieten', ws.favorieten);
+      }
+      if (normNaam(winkel.naam) === normNaam(w.naam)) { winkel.naam = nieuw; kvSet('winkel', nieuw); }
+      ws.open = nieuw;
+      if (history.state && history.state.thuisWinkel) try { history.replaceState({ thuisWinkel: nieuw }, ''); } catch (e) { /* niet erg */ }
+      handelen([{ actie: 'hernoem', soort: 'winkel', naam: w.naam, nieuw }]);
+    },
+    verwijder: () => {
+      winkelSluiten();
+      uitgesteld('winkel:' + normNaam(w.naam), w.naam + ' verwijderd.', () => handelen([{ actie: 'weg', soort: 'winkel', naam: w.naam }]));
+    }
+  });
+}
+
+function afdelingBewerken(w, afd) {
+  bewerkPaneel({
+    titel: 'Afdeling bewerken', naam: afd, wegLabel: 'Afdeling verwijderen', schoon: schoonTekst,
+    opslaan: (nieuw) => {
+      if (w.route.some((x) => x !== afd && normNaam(x) === normNaam(nieuw))) {
+        melding('m-naam', w.naam + ' heeft al een afdeling ' + nieuw + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
+        return;
+      }
+      handelen([{ actie: 'afdHernoem', soort: 'winkel', naam: w.naam, afd, nieuw }]);
+    },
+    verwijder: () => uitgesteld('afd:' + normNaam(w.naam) + ':' + normNaam(afd), afd + ' verwijderd bij ' + w.naam + '.',
+      () => handelen([{ actie: 'afdWeg', soort: 'winkel', naam: w.naam, afd }]))
+  });
+}
+
+function winkelsToevoegen() {
+  const inp = $('winkelsTekst');
+  const w = openWinkel();
+  if (w) {
+    const v = schoonTekst(inp.value);
+    if (!v) { inp.focus(); return; }
+    inp.value = '';
+    if (!w.route.some((x) => normNaam(x) === normNaam(v))) handelen([{ actie: 'lijstErbij', soort: 'winkel', naam: w.naam, veld: 'route', waarde: v }]);
+    else tekenWinkels();
+    return;
+  }
+  const v = winkelNaamSchoon(inp.value);
+  if (!v) { inp.focus(); return; }
+  inp.value = '';
+  inp.blur();
+  const bestaand = zichtbareWinkels().find((x) => normNaam(x.naam) === normNaam(v));
+  if (!bestaand) handelen([{ actie: 'nieuw', soort: 'winkel', naam: v, velden: {} }]);
+  winkelOpenen(bestaand ? bestaand.naam : v);
+}
+$('winkelsTekst').addEventListener('input', tekenWinkels);
+$('winkelsTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); winkelsToevoegen(); } });
+$('winkelsPlus').addEventListener('click', winkelsToevoegen);
+
 function tekenAlles() {
   tekenBoodschappen();
   tekenWinkel();
+  tekenWinkels();
 }
 
 /* ---------- vegen tussen de tabbladen (rondom) ---------- */
 /* Niet vanaf de rand (daar zit het terug-gebaar van Android), niet tijdens typen,
    niet als er een menu of keuzelijst open is, en alleen bij een duidelijk
    horizontale beweging. */
-const TABS = ['boodschappen', 'winkel', 'doen', 'instellingen'];
+const TABS = ['winkels', 'boodschappen', 'winkel', 'doen', 'instellingen'];
 const veeg = { x: 0, y: 0, actief: false };
 $('midden').addEventListener('touchstart', (e) => {
   const t = e.touches[0];
-  veeg.actief = e.touches.length === 1 && t.clientX > 24 && t.clientX < window.innerWidth - 24 &&
+  veeg.actief = e.touches.length === 1 && !(e.target.closest && e.target.closest('.greep')) && t.clientX > 24 && t.clientX < window.innerWidth - 24 &&
     !$('keuze') && $('soortMenu').hidden && !document.body.classList.contains('typen');
   veeg.x = t.clientX; veeg.y = t.clientY;
 }, { passive: true });

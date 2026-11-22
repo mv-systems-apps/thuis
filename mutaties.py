@@ -9,6 +9,7 @@ MUTATIES = [
   ("hernoemd-spoor genegeerd", "if (!spoor || !spoor.velden.get('nieuw')) return null;", "return null;"),
   ("verwijderd artikel weer aanmaken", "  if (!r) return { status: 'vervallen' };", "  if (!r) return { status: 'ok' };"),
   ("geen UTF-8-controle", "new TextDecoder('utf-8', { fatal: true })", "new TextDecoder('utf-8')"),
+  ("nieuwer formaat toch lezen", "if (v > formaatGetal(FORMAAT)) return { ok: false, reden: 'nieuwer-formaat', meldingen: [] };", ""),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))
 t = open(os.path.join(hier, 'thuis.html'), encoding='utf-8').read()
