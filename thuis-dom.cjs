@@ -202,7 +202,8 @@ const BEGIN = [
   const rijVan = (naam) => [...d.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').textContent === naam);
   controle('winkel: voortgang bovenaan los van de winkel, Bananen onder "Zonder winkel" met winkelicoon',
     d.querySelector('#scherm-winkel > .voortgang h2').textContent === 'Boodschappen' && / artikelen?$/.test(d.getElementById('winkelTeller').textContent) &&
-    rijVan('Bananen').closest('.afd').querySelector('.afdkop span').textContent === 'Zonder winkel' && !!rijVan('Bananen').querySelector('.naarwinkel') && !rijVan('Bananen').closest('.winkelkaart'));
+    rijVan('Bananen').closest('.winkelkaart.zonder').querySelector('h3').textContent === 'Zonder winkel' && / artikelen?$/.test(rijVan('Bananen').closest('.winkelkaart.zonder').querySelector('.winkelkop .tal').textContent) &&
+    !!rijVan('Bananen').querySelector('.naarwinkel') && !rijVan('Bananen').closest('.winkelkaart').contains(d.getElementById('winkelKies')));
   rijVan('Bananen').querySelector('.naarwinkel').click();
   let k = d.getElementById('keuze');
   controle('winkel: winkelicoon zonder gekozen winkel vraagt eerst de winkel', !!k && k.getAttribute('aria-label') === 'Waar ga je heen?');
@@ -233,7 +234,7 @@ const BEGIN = [
   controle('winkel: afdeling alleen in de route van de winkel, artikel met ligt=winkel:afdeling',
     !/^afdeling;/m.test(t5c) && /^winkel;Albert Heijn;route=Groente & fruit$/m.test(t5c) && /^artikel;Bananen;soort=wekelijks;ligt=Albert Heijn:Groente & fruit;/m.test(t5c), t5c);
 
-  /* winkel kiezen: alleen waar iets is vastgelegd, met aantal; de rest onder "Alle winkels" */
+  /* winkel kiezen: alleen waar iets is vastgelegd, met aantal; de rest onder "Overige winkels" */
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   k.querySelector('#keuzeZoek').value = 'Lidl centrum'; k.querySelector('.plusknop').click();
@@ -242,10 +243,10 @@ const BEGIN = [
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
-  controle('winkelkeuze: AH met 1 (en wat), "Alle winkels · 2" ingeklapt, kruisje, zoekvak onderaan',
-    JSON.stringify(zicht) === '["Albert HeijnBananen1","Alle winkels · 2"]' && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
+  controle('winkelkeuze: AH met "1 artikel" (en wat), "Overige winkels" met "1 winkel" ingeklapt, kruisje, zoekvak onderaan',
+    JSON.stringify(zicht) === '["Albert HeijnBananen1 artikel","Overige winkels1 winkel"]' && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
   k.querySelector('.uitklapper').click();
-  controle('winkelkeuze: uitklappen toont alle winkels', k.querySelectorAll('.optie').length === 3);
+  controle('winkelkeuze: uitklappen toont de overige winkels, niet nog eens de AH', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn,Lidl centrum');
   k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
   controle('keuzelijst: typen filtert (één keer, ook al staat hij in twee secties)', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn');
   k.querySelector('.kruis').click();

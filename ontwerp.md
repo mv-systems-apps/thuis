@@ -224,7 +224,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   welke afdeling het daar ligt (`ligt`).
 - Van boven naar beneden: "Boodschappen" met de voortgang van de hele lijst
   ("1 van 7 artikelen"; wat in een van de mandjes ligt telt als gehaald);
-  "Zonder winkel" (grijs, met per artikel een winkelicoon: te koop in deze
+  "Zonder winkel" (een kaart in de vorm van de winkelkaart, met een lichte
+  streep; per artikel een winkelicoon: te koop in deze
   winkel, en heeft die afdelingen, meteen de afdeling kiezen); de gekozen
   winkel als één kaart met een paarse streep links (kop met de winkelkeuze en
   rechts "4 artikelen", dan "Afdeling onbekend" met de speld en de afdelingen
@@ -235,8 +236,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?": de
   winkels waar je iets van de lijst kunt halen (alleen wat bij die winkel is
   vastgelegd telt), met het aantal, meeste eerst, bij gelijk aantal de laatst
-  gekozen bovenaan; bij een of twee artikelen staan ze eronder. Winkels met 0
-  staan er niet in; ingeklapt "Alle winkels". Kruisje rechtsboven; onderaan
+  gekozen bovenaan; bij een of twee artikelen staan ze eronder. Rechts "2
+  artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
+  (alleen wat er niet al boven staat, rechts "2 winkels"). Kruisje rechtsboven; onderaan
   "Zoeken of toevoegen" (placeholder "Winkel", + voegt toe). De laatste keuze
   geldt per telefoon. Winkels beheren komt bij Instellingen (stap 9).
 - "Afdeling onbekend": wat hier te koop is maar nog geen afdeling heeft, met de
