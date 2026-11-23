@@ -3,7 +3,6 @@ welke controles rood worden. Faalt (exitcode 1) als een mutatie niet meer aangri
 of door geen enkele controle wordt gevangen.   python3 mutaties.py"""
 import subprocess, os, shutil, sys, tempfile
 MUTATIES = [
-  ("BOM-markering vergeten", "  model.bom = tekst.charCodeAt(0) === 0xFEFF;", "  model.bom = false;"),
   ("allebei op de lijst = botsing", "if (h.veld === 'op' && cur !== '' && nieuw !== '') return { status: 'al' };", ""),
   ("na het moment gekocht telt niet", "if (r.gekocht.some((d) => d >= mDatum)) continue;", ""),
   ("verwijderd artikel weer aanmaken", "  return r ? regel.doe(model, h, verz, r) : VERVALLEN;", "  return r ? regel.doe(model, h, verz, r) : { status: 'ok' };"),
@@ -31,12 +30,13 @@ MUTATIES = [
   ("wekelijks-dag niet gecontroleerd", "      || (w.dag !== undefined && !INSTELLING_GELDIG.wekelijks.dag(w.dag))", "      || false"),
   ("constructor-veld kwijt", "if (!Object.prototype.hasOwnProperty.call(o, k)) Object.defineProperty(", "if (!(k in o)) Object.defineProperty("),
   ("aankopen niet beperkt", "  if (model.aankopen.size <= n) return 0;", "  return 0;"),
-  ("aankoop dubbel", "  if (verz.has(h.id)) return { status: 'al' };\n  try { verz.set(h.id, recordUitJson('aankoop'", "  try { verz.set(h.id + 'x', recordUitJson('aankoop'"),
+  ("aankoop dubbel", "  if (verz.has(h.id)) return { status: 'al' };\n  try { verz.set(h.id, recordUitJson(h.soort", "  try { verz.set(h.id + 'x', recordUitJson(h.soort"),
+  ("historie niet opgeruimd", "  for (const r of Array.from(model.historie.values())) if (r.tijd.slice(0, 10) < hg)", "  for (const r of []) if (r.tijd.slice(0, 10) < hg)"),
   ("maand vergeet de dag", "Math.min(dagWens || x.getDate(), laatste)", "Math.min(x.getDate(), laatste)"),
   ("B1: afvinken van vorige week haalt nieuwe week weg", "&& model.nu && wk.teruggezet <= model.nu && String(h.t || '').slice(0, 10) < wk.teruggezet.slice(0, 10)) return { status: 'al' };", "&& false) return { status: 'al' };"),
   ("B3: verdachte klok toch reset", "  const terug = verdacht ? 0 : wekelijksTerug(model, nu);", "  const terug = wekelijksTerug(model, nu);"),
   ("K2: terug met verdwenen winkel", "      if (!winkel) a.ligt.delete(w);\n", "      if (false) a.ligt.delete(w);\n"),
-  ("K2: rechtzetten niet opgeslagen", "gewijzigd: tekst !== voor || model.bom || rechtgezet > 0 };", "gewijzigd: tekst !== voor || model.bom };"),
+  ("K2: rechtzetten niet opgeslagen", "gewijzigd: tekst !== voor || rechtgezet > 0 };", "gewijzigd: tekst !== voor };"),
   ("K3: weer 7 dagen afstand", "moment.getDate() - 4, moment.getHours()", "moment.getDate() - 7, moment.getHours()"),
   ("K6: alle <woord> weg", ".replace(/<\\/?(?:a|abbr|", ".replace(/<\\/?(?:[a-z]+|abbr|"),
   ("K10: bezette naam vervalt", "  if (zelfde && h.soort === 'artikel') return { status: 'samengevoegd', id: zelfde.id };", ""),

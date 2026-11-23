@@ -31,7 +31,7 @@ function onedrive(begintekst) {
     json: async () => body,
     arrayBuffer: async () => (body instanceof Uint8Array ? body : new TextEncoder().encode(String(body))).buffer
   });
-  const item = (naam) => ({ id: od.bestanden[naam].id, name: naam, eTag: od.bestanden[naam].eTag, '@microsoft.graph.downloadUrl': 'https://download.test/' + naam });
+  const item = (naam) => ({ id: od.bestanden[naam].id, name: naam, eTag: od.bestanden[naam].eTag, lastModifiedDateTime: od.serverNu || new Date().toISOString(), '@microsoft.graph.downloadUrl': 'https://download.test/' + naam });
   const naamVanId = (id) => Object.keys(od.bestanden).find((n) => od.bestanden[n].id === id);
   od.fetch = async (url, init) => {
     init = init || {};
@@ -54,6 +54,8 @@ function onedrive(begintekst) {
         return antwoord(201, item(naam));
       }
     }
+    if (od.geenToegang) return antwoord(404, {});
+    if (/^\/drives\/D\/items\/MAP(\?|$)/.test(g)) return antwoord(200, { id: 'MAP', name: 'thuis', folder: {} });
     if (/^\/drives\/D\/items\/MAP\/children/.test(g)) return antwoord(200, { value: Object.keys(od.bestanden).map((n) => ({ id: od.bestanden[n].id, name: n })) });
     m = /^\/drives\/D\/items\/([^/?]+)(\/content)?/.exec(g);
     if (m) {
@@ -76,9 +78,9 @@ function onedrive(begintekst) {
 }
 
 /* ---------- app starten ---------- */
-async function start(od) {
+async function start(od, vooraf, gedeeld, adres) {
   const fakeIdb = require('fake-indexeddb');
-  const idb = new fakeIdb.IDBFactory();
+  const idb = gedeeld || new fakeIdb.IDBFactory();
   // vooraf: aangemeld en een gekoppelde map
   await new Promise((resolve, reject) => {
     const req = idb.open('thuis', 1);
@@ -87,17 +89,18 @@ async function start(od) {
       const t = req.result.transaction('kv', 'readwrite');
       t.objectStore('kv').put({ access: 'a', accessTot: Date.now() + 3600e3, refresh: 'r', aangemeldOp: Date.now(), naam: 'Testspeler Een' }, 'auth');
       t.objectStore('kv').put({ driveId: 'D', itemId: 'MAP', naam: 'thuis' }, 'map');
+      for (const [k, v] of Object.entries(vooraf || {})) t.objectStore('kv').put(v, k);
       t.oncomplete = () => { req.result.close(); resolve(); };
       t.onerror = () => reject(t.error);
     };
     req.onerror = () => reject(req.error);
   });
   const dom = new JSDOM(html, {
-    url: 'https://mv-systems-apps.github.io/thuis/thuis.html',
+    url: adres || 'https://mv-systems-apps.github.io/thuis/thuis.html',
     runScripts: 'dangerously', pretendToBeVisual: true,
     beforeParse(w) {
       w.indexedDB = idb;
-      w.fetch = od.fetch;
+      w.fetch = (...a) => od.fetch(...a);
       w.TextDecoder = TextDecoder; w.TextEncoder = TextEncoder;
       w.matchMedia = () => ({ matches: true, addEventListener() {} });
       w.scrollTo = () => {};
@@ -107,6 +110,7 @@ async function start(od) {
   await slaap(600);
   return dom.window;
 }
+function datumTekstT(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 const zonderPauze = (s) => s.split('\n').filter((x) => !x.startsWith('instelling;opruimen;')).join('\n');
 const overigeKop = (k) => [...k.querySelectorAll('.uitklapper')].find((u) => u.textContent.startsWith('Overige'));
 const naamVanRij = (r) => r.querySelector('.naam > span').textContent;
@@ -384,6 +388,16 @@ const BEGIN = [
   greep.dispatchEvent(pe('pointerdown', 300)); greep.dispatchEvent(pe('pointermove', 300 - 112)); greep.dispatchEvent(pe('pointerup', 300 - 112));
   await slaap(20);
   controle('verslepen: Zuivel bovenaan', afdNamen() === 'Zuivel,Groente & fruit,Brood', afdNamen());
+  /* L9: komt er tijdens het slepen een sync (hertekening), dan gaat het slepen gewoon door. */
+  const greep2 = [...d.querySelectorAll('#afdelingen .arij')][2].querySelector('.greep');
+  greep2.dispatchEvent(pe('pointerdown', 300)); greep2.dispatchEvent(pe('pointermove', 300 - 60));
+  w.eval('tekenWinkels()');
+  greep2.dispatchEvent(pe('pointermove', 300 - 112)); greep2.dispatchEvent(pe('pointerup', 300 - 112));
+  await slaap(20);
+  controle('verslepen tijdens een hertekening: gaat door en wordt bewaard (L9)', afdNamen() === 'Brood,Zuivel,Groente & fruit', afdNamen());
+  const greep3 = [...d.querySelectorAll('#afdelingen .arij')][0].querySelector('.greep');
+  greep3.dispatchEvent(pe('pointerdown', 100)); greep3.dispatchEvent(pe('pointermove', 100 + 112)); greep3.dispatchEvent(pe('pointerup', 100 + 112));
+  await slaap(20);
   controle('tik op de naam van een afdeling opent het bewerkpaneel', (() => {
     d.querySelector('#afdelingen .arij .nm').click();
     const k = d.getElementById('keuze'); const ok = !!k && k.getAttribute('aria-label') === 'Afdeling bewerken' && k.querySelector('#bewerkNaam').value === 'Zuivel';
@@ -516,6 +530,14 @@ const BEGIN = [
   [...d.getElementById('m-terug').querySelectorAll('button')].find((b) => b.textContent === 'Ongedaan maken').click();
   await slaap(500);
   controle('ongedaan maken: de stand van voor het terugzetten is terug (met dezelfde pauze voor opruimen)', zonderPauze(R(od.bestanden['thuis.json'].tekst)) === zonderPauze(R(voorTerug)) && /dag=vr;tijd=18:30/.test(R(od.bestanden['thuis.json'].tekst)));
+  /* M4: twee keer kort na elkaar terugzetten: de stand van vóór de eerste poging blijft bewaard. */
+  for (let keer = 0; keer < 2; keer++) {
+    d.getElementById('naarBackups').click(); await slaap(300);
+    d.querySelector('#backupScherm .backuprij').click(); await slaap(300);
+    d.getElementById('keuze').querySelector('.knop').click(); await slaap(500);
+    const mt = d.getElementById('m-terug'); if (mt) mt.remove();
+  }
+  controle('twee keer terugzetten binnen het uur: de stand van vóór de eerste poging blijft bewaard (M4)', od.bestanden['thuis_voor_terugzetten.json'].tekst === voorTerug);
   d.getElementById('tab-boodschappen').click();
 
   /* 5f. Artikel bewerken: tik op de naam, kladversie, Opslaan, vraag bij sluiten. */
@@ -873,6 +895,228 @@ const BEGIN = [
     nt.blur(); dD.getElementById('artikelOpslaan').click(); await slaap(30);
   }
 
+  /* 5z. H1: een kopie van een ouder formaat gaat weg, de wachtrij niet. */
+  {
+    const odF = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const wF = await start(odF, {
+      kopie: { formaat: '1352901-000', tekst: '{}', eTag: '"oud"', fileId: 'id-thuis.json' },
+      wachtrij: [{ actie: 'nieuw', soort: 'artikel', id: 'pnd01', velden: { naam: 'Pindakaas', soort: 'eenmalig', op: '2026-11-23T09:00', opdoor: 'Testspeler' }, t: '2026-11-23T09:00', wie: 'Testspeler' },
+                 { actie: 'zet', soort: 'artikel', id: 'bestaatniet', veld: 'notitie', oud: '', nieuw: 'x', t: '2026-11-23T09:00', wie: 'Testspeler' }]
+    });
+    await slaap(2500);
+    controle('formaatwissel: wachtrij blijft en wordt verstuurd (H1)', /Pindakaas/.test(R(odF.bestanden['thuis.json'].tekst)), R(odF.bestanden['thuis.json'].tekst));
+    controle('formaatwissel: wat niet meer past, vervalt met een melding', [...wF.document.querySelectorAll('#meldingen .melding')].some((m) => /Niet doorgevoerd/.test(m.textContent)));
+  }
+
+  /* 5z2. M1: klok verdacht volgens de servertijd → wel schrijven, geen dagbackup (die ruimt op met de datum van de telefoon). */
+  {
+    const odK = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    odK.serverNu = new Date(Date.now() - 90 * 864e5).toISOString();
+    odK.zet('thuis_backup_20200101.json', '{}');
+    const wK = await start(odK);
+    await slaap(800);
+    wK.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'kaa01', velden: { naam: 'Kaas', soort: 'eenmalig' } }])");
+    await slaap(2500);
+    const backups = Object.keys(odK.bestanden).filter((n) => /^thuis_backup_/.test(n));
+    controle('klok verdacht (servertijd): wijziging opgeslagen, geen dagbackup en niets opgeruimd (M1)', /Kaas/.test(R(odK.bestanden['thuis.json'].tekst)) && backups.join() === 'thuis_backup_20200101.json'
+      && [...wK.document.querySelectorAll('#meldingen .melding')].some((m) => /datum van deze telefoon/.test(m.textContent)), backups.join());
+  }
+
+  /* 5z3. M3: twee vensters (PWA en browsertab) op dezelfde opslag: het venster dat in beeld komt, leest de wachtrij opnieuw. */
+  {
+    const odV = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const echt = odV.fetch; let offline = false;
+    odV.fetch = async (u, i) => { if (offline) throw new TypeError('Failed to fetch'); return echt(u, i); };
+    const idbV = new (require('fake-indexeddb').IDBFactory)();
+    const voeg = async (w, n) => { const i = w.document.getElementById('invoerTekst'); i.value = n; i.dispatchEvent(new w.Event('input')); w.document.getElementById('invoerPlus').click(); await slaap(300); };
+    const A = await start(odV, null, idbV); await slaap(600);
+    offline = true;
+    await voeg(A, 'Appels');
+    const Bv = await start(odV, null, idbV); await slaap(600);
+    await voeg(A, 'Peren');
+    Bv.document.dispatchEvent(new Bv.Event('visibilitychange')); await slaap(300);
+    await voeg(Bv, 'Kaas');
+    await slaap(500);
+    A.close(); Bv.close();
+    offline = false;
+    const Cv = await start(odV, null, idbV); await slaap(2500);
+    const namen = R(odV.bestanden['thuis.json'].tekst).split('\n').filter((x) => x.startsWith('artikel')).map((x) => x.split(';')[1]).sort().join();
+    controle('twee vensters: niets kwijt als het andere venster in beeld komt (M3)', namen === 'Appels,Kaas,Melk,Peren', namen);
+    Cv.close();
+  }
+
+  /* 5z4. M6: geen toegang meer tot de map is iets anders dan een verdwenen bestand. */
+  {
+    const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const wT = await start(odT); await slaap(800);
+    odT.geenToegang = true;
+    wT.eval('planSync(0)'); await slaap(800);
+    const dT = wT.document;
+    const mT = dT.getElementById('m-toegang');
+    controle('geen toegang: eigen melding met Andere map koppelen, geen Leeg beginnen; lijst blijft (M6)', !!mT && /Andere map koppelen/.test(mT.textContent) && !dT.getElementById('m-weg') && wT.eval("artikelen.some((a) => a.naam === 'Melk')"), mT ? mT.textContent : 'geen melding');
+    const knopT = mT && [...mT.querySelectorAll('button')].find((b) => /Andere map/.test(b.textContent));
+    if (knopT) knopT.click(); await slaap(100);
+    controle('geen toegang: Andere map koppelen opent Instellingen met het deellinkvak', !dT.getElementById('scherm-instellingen').hidden && !dT.getElementById('mapVeld').hidden);
+    wT.close();
+  }
+
+  /* 5z5. M7: "nieuw" blijft staan als je op een ander tabblad was. */
+  {
+    const odN = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks;op=2026-11-14T06:00\n');
+    const wN = await start(odN); await slaap(800);
+    const dN = wN.document;
+    dN.getElementById('tab-doen').click();
+    const j = JSON.parse(odN.bestanden['thuis.json'].tekst); j.artikelen.brd01 = { naam: 'Brood', soort: 'eenmalig', op: '2026-11-23T09:00', opdoor: 'Natasja' };
+    odN.zet('thuis.json', JSON.stringify(j));
+    wN.eval('planSync(0)'); await slaap(800);
+    Object.defineProperty(dN, 'hidden', { configurable: true, get: () => true }); dN.dispatchEvent(new wN.Event('visibilitychange'));
+    Object.defineProperty(dN, 'hidden', { configurable: true, get: () => false }); dN.dispatchEvent(new wN.Event('visibilitychange'));
+    await slaap(800);
+    dN.getElementById('tab-instellingen').click();
+    dN.getElementById('tab-boodschappen').click();
+    const rij = [...dN.querySelectorAll('#lijst .item')].find((r) => /Brood/.test(r.textContent));
+    controle('nieuw: blijft staan na terugkomen op een ander tabblad (M7)', !!rij && !!rij.querySelector('.nieuw'), rij ? rij.textContent : 'geen Brood');
+    wN.close();
+  }
+
+  /* 5z6. M8: bewerkschermen na samenvoegen of verwijderen door de ander. */
+  {
+    const odM = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Koeling\nartikel;Kaas;soort=eenmalig\n');
+    const echt = odM.fetch; let offline = false;
+    odM.fetch = async (u, i) => { if (offline) throw new TypeError('Failed to fetch'); return echt(u, i); };
+    const wM = await start(odM); await slaap(800); const dM = wM.document;
+    offline = true;
+    const iM = dM.getElementById('invoerTekst'); iM.value = 'Melk'; iM.dispatchEvent(new wM.Event('input')); dM.getElementById('invoerPlus').click(); await slaap(300);
+    const lokaal = wM.eval("artikelen.find((a) => a.naam === 'Melk').id");
+    const j = JSON.parse(odM.bestanden['thuis.json'].tekst); j.artikelen.mlk99 = { naam: 'Melk', soort: 'eenmalig', notitie: 'van Natasja', op: '2026-11-23T08:00', opdoor: 'Natasja' }; odM.zet('thuis.json', JSON.stringify(j));
+    wM.eval("artikelOpenen('" + lokaal + "')");
+    const lk = dM.getElementById('artikelLink'); lk.value = 'https://ah.nl/melk'; lk.dispatchEvent(new wM.Event('input'));
+    offline = false; wM.eval('planSync(0)'); await slaap(1500);
+    dM.getElementById('artikelOpslaan').click(); await slaap(2500);
+    const melk = R(odM.bestanden['thuis.json'].tekst).split('\n').filter((x) => /^artikel;Melk;/.test(x)).join(' / ');
+    const meld = [...dM.querySelectorAll('#meldingen .melding')].map((m) => m.textContent).join(' | ');
+    controle('samenvoegen tijdens bewerken: link opgeslagen bij het bestaande, notitie van de ander blijft, geen "iets" (M8)', /link=https:\/\/ah\.nl\/melk/.test(melk) && /notitie=van Natasja/.test(melk) && !/iets/.test(meld), melk + ' || ' + meld);
+    /* Winkel bewerken terwijl de ander hem verwijdert. */
+    dM.getElementById('tab-winkels').click(); await slaap(50);
+    const wid = wM.eval("winkels.find((x) => x.naam === 'Plus').id");
+    wM.eval("winkelOpenen('" + wid + "')"); dM.querySelector('#winkelDetail .bewerk').click();
+    const nt = dM.getElementById('bewerkNotitie'); nt.value = 'open tot 22 uur'; nt.dispatchEvent(new wM.Event('input'));
+    const j2 = JSON.parse(odM.bestanden['thuis.json'].tekst); delete j2.winkels[wid]; odM.zet('thuis.json', JSON.stringify(j2));
+    wM.eval('planSync(0)'); await slaap(1000);
+    dM.querySelector('#keuze .bewerkknoppen .knop').click(); await slaap(300);
+    const mW = dM.getElementById('m-weg-' + wid);
+    controle('winkel bewerken na verwijderen: paneel dicht, melding met Terugzetten (M8)', !dM.getElementById('keuze') && !!mW && /Plus is intussen verwijderd/.test(mW.textContent));
+    [...mW.querySelectorAll('button')].find((b) => b.textContent === 'Terugzetten').click(); await slaap(2500);
+    controle('winkel terugzetten: met de notitie die je typte', /^winkel;Plus;[^\n]*notitie=open tot 22 uur/m.test(R(odM.bestanden['thuis.json'].tekst)), R(odM.bestanden['thuis.json'].tekst));
+    wM.close();
+  }
+
+  /* 5z7. L3: archief korter bewaren vraagt eerst, met het aantal. */
+  {
+    const oud = datumTekstT(-20);
+    const odA2 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Lampje;soort=eenmalig;gekocht=' + oud + '\nartikel;Kaars;soort=eenmalig;gekocht=' + datumTekstT(-2) + '\n');
+    const wA2 = await start(odA2); await slaap(800); const dA2 = wA2.document;
+    dA2.getElementById('tab-instellingen').click(); await slaap(50);
+    [...dA2.querySelectorAll('#archiefBewaren button')].find((b) => b.textContent === '1 week').click(); await slaap(50);
+    const v = dA2.getElementById('keuze');
+    controle('archief korter: eerst de vraag met het aantal (L3)', !!v && /1 artikel uit het archief verwijderen\?/.test(v.textContent), v ? v.textContent : 'geen vraag');
+    v.querySelector('.knop.tweede').click(); await slaap(2500);
+    controle('archief korter, Annuleren: niets veranderd', !/archief/.test(R(odA2.bestanden['thuis.json'].tekst)) && /Lampje/.test(R(odA2.bestanden['thuis.json'].tekst)));
+    wA2.close();
+  }
+
+  /* 5z8. L4: ?error= alleen bij een eigen aanmeldpoging met de juiste state. */
+  {
+    const odE2 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const wE2 = await start(odE2, { pkce: { verifier: 'v', state: 'echt1', t: Date.now() } }, null, 'https://mv-systems-apps.github.io/thuis/thuis.html?error=Bel+0612345678&state=nep');
+    await slaap(300);
+    controle('aanmeldfout zonder juiste state: stil genegeerd (L4)', !wE2.document.getElementById('m-aanmelden'));
+    wE2.close();
+    const wE3 = await start(odE2, { pkce: { verifier: 'v', state: 'echt1', t: Date.now() } }, null, 'https://mv-systems-apps.github.io/thuis/thuis.html?error=server_error&state=echt1');
+    await slaap(300);
+    const mE3 = wE3.document.getElementById('m-aanmelden');
+    controle('aanmeldfout van de eigen poging: melding met de foutcode', !!mE3 && /server_error/.test(mE3.textContent));
+    wE3.close();
+  }
+
+  /* 5z9. L5: Leeg beginnen wist ook de wachtrij en toont meteen de lege lijst. */
+  {
+    const odL5 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\n');
+    const wL5 = await start(odL5); await slaap(800); const dL5 = wL5.document;
+    delete odL5.bestanden['thuis.json'];
+    wL5.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'kaa01', velden: { naam: 'Kaas', soort: 'eenmalig' } }])");
+    await slaap(2500);
+    [...dL5.getElementById('m-weg').querySelectorAll('button')].find((b) => b.textContent === 'Leeg beginnen').click(); await slaap(20);
+    const vL5 = dL5.getElementById('keuze');
+    controle('leeg beginnen: de vraag noemt de wachtende wijziging (L5)', !!vL5 && /ook 1 wijziging die nog niet is opgeslagen/.test(vL5.textContent), vL5 && vL5.textContent);
+    [...vL5.querySelectorAll('.knop')].find((b) => b.textContent === 'Leeg beginnen').click(); await slaap(100);
+    controle('leeg beginnen: meteen een lege lijst, wachtrij leeg', wL5.eval('artikelen.length') === 0 && wL5.eval('wachtrij.length') === 0);
+    await slaap(2500);
+    controle('leeg beginnen: nieuw leeg bestand, zonder Kaas', !!odL5.bestanden['thuis.json'] && !/Kaas|Melk/.test(R(odL5.bestanden['thuis.json'].tekst)), odL5.bestanden['thuis.json'] ? R(odL5.bestanden['thuis.json'].tekst) : 'geen bestand');
+    wL5.close();
+  }
+
+  /* 5z10. L8: een ronde zonder verandering rekent niets uit. */
+  {
+    const odR = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const wR = await start(odR); await slaap(800);
+    wR.eval('planSync(0)'); await slaap(400);
+    wR.eval('window.__rondes = 0; const echteSync = synchroniseer; synchroniseer = function () { window.__rondes++; return echteSync.apply(this, arguments); };');
+    wR.eval('planSync(0)'); await slaap(400);
+    const na1 = wR.eval('window.__rondes');
+    const j = JSON.parse(odR.bestanden['thuis.json'].tekst); j.artikelen.brd01 = { naam: 'Brood', soort: 'eenmalig' }; odR.zet('thuis.json', JSON.stringify(j));
+    wR.eval('planSync(0)'); await slaap(400);
+    const na2 = wR.eval('window.__rondes');
+    controle('ronde zonder verandering: overgeslagen; bij een gewijzigd bestand wel (L8)', na1 === 0 && na2 === 1 && wR.eval("artikelen.some((a) => a.naam === 'Brood')"), na1 + ' ' + na2);
+    wR.close();
+  }
+
+  /* 5z11. Historie: afronden komt in de gedeelde historie; een regel weggooien vraagt eerst. */
+  {
+    const odH = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Afval;datum=2026-11-28;herhaal=week\nactie;Bellen\n');
+    const wH2 = await start(odH); await slaap(800); const dH2 = wH2.document;
+    dH2.getElementById('tab-doen').click(); await slaap(30);
+    wH2.eval("doen.filter = 'alles'; tekenDoen()");
+    const rondje = (n) => [...dH2.querySelectorAll('#doenLijst .actierij')].find((r) => r.textContent.includes(n)).querySelector('.rondje');
+    rondje('Afval').click(); rondje('Bellen').click(); await slaap(2600);
+    const tH = R(odH.bestanden['thuis.json'].tekst);
+    controle('historie: afronden (ook herhalend) staat in het bestand, naam en tijd', (tH.match(/^historie;(Afval|Bellen);tijd=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/gm) || []).length === 2, tH);
+    const kop = [...dH2.querySelectorAll('#doenLijst .naaraankopen')].find((k) => /Historie/.test(k.textContent));
+    controle('historie: kop onderaan Doen met het aantal', !!kop && /2/.test(kop.textContent));
+    kop.querySelector('button').click(); await slaap(50);
+    const hs = dH2.getElementById('historieScherm');
+    controle('historie: scherm met de regels, zoekbalk onderaan, Doen-balk weg', !hs.hidden && hs.querySelectorAll('.aankooprij').length === 2 && !dH2.getElementById('balk-log').hidden && dH2.getElementById('balk-doen').hidden);
+    [...hs.querySelectorAll('.aankooprij')].find((r) => /Bellen/.test(r.textContent)).click(); await slaap(20);
+    const vH = dH2.getElementById('keuze');
+    controle('historie: tik op een regel vraagt eerst', !!vH && /Bellen/.test(vH.textContent) && /Verwijderen/.test(vH.textContent));
+    [...vH.querySelectorAll('.knop')].find((b) => b.textContent === 'Verwijderen').click(); await slaap(2600);
+    controle('historie: regel weg bij allebei, zonder Ongedaan maken', !/^historie;Bellen/m.test(R(odH.bestanden['thuis.json'].tekst)) && /^historie;Afval/m.test(R(odH.bestanden['thuis.json'].tekst)) && hs.querySelectorAll('.aankooprij').length === 1);
+    hs.querySelector('.terug').click(); await slaap(30);
+    controle('historie: terug naar Doen, balken goed', hs.hidden && !dH2.getElementById('balk-doen').hidden && dH2.getElementById('balk-log').hidden);
+    wH2.close();
+  }
+
+  /* 5z12. L12: afmelden wist alles van deze telefoon. */
+  {
+    const odU = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;op=2026-11-20T10:00\n');
+    const wU = await start(odU, { mandje: [{ id: 'x1234', naam: 'Kaas' }], favorieten: ['abc12'], doenStandaard: 'maand', logboek: ['2026-11-23 10:00 · test'] });
+    await slaap(800);
+    wU.eval('afmelden()'); await slaap(300);
+    const over = await wU.eval("(async () => { const uit = []; for (const k of ALLE_SLEUTELS) if (await kvLees(k) !== null) uit.push(k); return uit.join(); })()");
+    controle('afmelden: alle sleutels weg, ook mandje, favorieten en logboek (L12)', over === '' && wU.eval('winkel.mandje.size') === 0 && wU.eval('doen.standaard') === 'week', over);
+    wU.close();
+  }
+
+  /* 5o0. Openen met een lege lijst en een gekozen winkel: de winkelkop staat niet los onderaan. */
+  {
+    const odL = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus\n');
+    const wL = await start(odL);
+    await slaap(800);
+    wL.eval("winkel.id = winkels[0].id");
+    wL.document.getElementById('tab-winkel').click(); await slaap(30);
+    controle('leeg bij openen: geen losse winkelkop (Plus) onderaan', !wL.document.getElementById('winkelKop') && /Geen artikelen/.test(wL.document.getElementById('winkelLijst').textContent));
+  }
+
   /* 5o. Lege lijsten: overal dezelfde melding; bij Boodschappen dan geen winkel. */
   {
     const odE = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
@@ -886,6 +1130,7 @@ const BEGIN = [
     [...lijstE.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Melk')).click(); await slaap(1800);
     lijstE.querySelector('.icoonknop.amber').click(); await slaap(50);
     controle('leeg: Boodschappen zonder artikelen toont geen winkel, alleen "Geen artikelen"', !lijstE.querySelector('.winkelkaart') && lijstE.firstElementChild.textContent === 'Geen artikelen' && lijstE.firstElementChild.matches('.kaart.leegregel'), lijstE.innerHTML.slice(0, 200));
+    controle('leeg: winkelkop niet los op het scherm', !dE.getElementById('winkelKop'));
     const mE = [...dE.querySelectorAll('#meldingen .melding')].find((m) => /Mandje leeggemaakt/.test(m.textContent));
     const vE = mE && mE.querySelector('.vinkknop[aria-label="Klaar"]');
     if (vE) vE.click();
@@ -896,7 +1141,7 @@ const BEGIN = [
     controle('leeg: komt er iets op de lijst, dan is de winkelkop er weer', !!lijstE.querySelector('.winkelkaart') && dE.getElementById('winkelNaam').textContent === 'Plus' && /Kaas/.test(lijstE.textContent), lijstE.textContent);
     dE.getElementById('tab-doen').click(); await slaap(30);
     const doenE = dE.getElementById('doenLijst');
-    controle('leeg: Doen in dezelfde stijl als Winkels', doenE.textContent === 'Geen acties' && !!doenE.querySelector('.kaart.leegregel'), doenE.innerHTML);
+    controle('leeg: Doen in dezelfde stijl als Winkels, met daaronder Historie', doenE.firstElementChild.textContent === 'Geen acties' && doenE.firstElementChild.matches('.kaart.leegregel') && /Historie/.test(doenE.textContent), doenE.innerHTML);
   }
 
   /* 5p. 020: leeg bestand wint niet (B1); bij een fout niet blijven ophalen (B2); vervallen altijd melden (B3). */
@@ -942,11 +1187,11 @@ const BEGIN = [
     const sch = dA.getElementById('aankopenScherm');
     const rijen = () => [...sch.querySelectorAll('.aankooprij .nm')].map((x) => x.textContent).sort().join();
     controle('aankopen: lijst per dag met tijd, kop "Vandaag"', !sch.hidden && rijen() === 'Brood,Melk' && /^Vandaag/.test(sch.querySelector('.kopbalk h3').textContent) && /^\d{2}:\d{2}$/.test(sch.querySelector('.aankooprij .tijd').textContent), rijen());
-    const zk = dA.getElementById('aankopenZoek'); zk.value = 'bro'; zk.dispatchEvent(new wA.Event('input'));
-    controle('aankopen: zoekvak onderaan in eigen balk', !dA.getElementById('balk-aankopen').hidden && !sch.contains(zk));
+    const zk = dA.getElementById('logZoek'); zk.value = 'bro'; zk.dispatchEvent(new wA.Event('input'));
+    controle('aankopen: zoekvak onderaan in eigen balk', !dA.getElementById('balk-log').hidden && !sch.contains(zk));
     controle('aankopen: zoeken filtert', rijen() === 'Brood');
     sch.querySelector('.terug').click(); await slaap(50);
-    controle('aankopen: terug naar Boodschappen, zoekbalk weg en leeg', sch.hidden && !dA.getElementById('scherm-winkel').classList.contains('sub') && dA.getElementById('balk-aankopen').hidden && zk.value === '');
+    controle('aankopen: terug naar Boodschappen, zoekbalk weg en leeg', sch.hidden && !dA.getElementById('scherm-winkel').classList.contains('sub') && dA.getElementById('balk-log').hidden && zk.value === '');
     [...lijstA.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Brood')).click(); await slaap(2600);
     controle('terugtikken uit het mandje: ook uit de gedeelde aankopen', !/^aankoop;Brood;/m.test(R(odA.bestanden['thuis.json'].tekst)) && /^aankoop;Melk;/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
     dA.getElementById('tab-instellingen').click(); await slaap(50);

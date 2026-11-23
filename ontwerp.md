@@ -4,8 +4,8 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (23-11-2026): in gebruik, versie 1352903-006. Dit document beschrijft
-het ontwerp zoals het gebouwd is; §7a t/m §7a5 de wijzigingen na de review.
+Status (23-11-2026): in gebruik, versie 1352903-007. Dit document beschrijft
+het ontwerp zoals het gebouwd is; §7a t/m §7a8 de wijzigingen na de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
 
@@ -38,6 +38,10 @@ scripts; de app gebruikt het systeemlettertype.
   verstuurd.
 - `navigator.locks` voorkomt dat twee vensters (de PWA en een browsertab)
   tegelijk de wachtrij versturen.
+- Bij elke opslag van kopie of wachtrij verandert een klein kenmerk (`stand`).
+  Komt een venster in beeld en is de stand anders, dan leest het kopie en
+  wachtrij opnieuw: zo schrijft het geen oude wachtrij over die van het andere
+  venster heen (M3). Normaal is dat één kleine leesactie.
 
 ### 2.3 OneDrive
 - **Aanmelden:** een eigen, kleine PKCE-flow tegen Microsoft (geen MSAL), met
@@ -52,10 +56,17 @@ scripts; de app gebruikt het systeemlettertype.
   Zijn vrouw opent die link één keer; haar app zet hem om via
   `GET /shares/u!{base64url}/driveItem` naar driveId en itemId en bewaart die
   lokaal. Daarna altijd `/drives/{driveId}/items/{id}`. (`sharedWithMe` werkt
-  sinds november 2026 niet meer.) Bij 403 of 404 meldt de app "geen toegang
-  meer tot de gedeelde map", met de weg terug.
-- **Lezen:** eerst alleen de metadata (`$select=eTag,cTag,size`). Pas bij een
-  andere eTag wordt de inhoud gedownload.
+  sinds november 2026 niet meer.) Geeft het bestand 403 of 404, dan kijkt de
+  app of de map zelf nog bereikbaar is. Zo niet: "Geen toegang meer tot de
+  gedeelde map" met "Andere map koppelen" (Instellingen, deellinkvak); de lijst
+  op de telefoon blijft staan. Is de map er wel en het bestand niet: de melding
+  dat het bestand weg is, met terugzetten vanaf deze telefoon (M6).
+- **Lezen:** eerst het item (eTag, lastModifiedDateTime en de downloadUrl). Pas
+  bij een andere eTag wordt de inhoud gedownload. Is het bestand gelijk, de
+  wachtrij leeg, de dag dezelfde en het wekelijkse moment niet voorbij, dan wordt
+  de ronde overgeslagen.
+- **Scope:** `Files.ReadWrite.All offline_access User.Read` (User.Read voor de
+  voornaam bij "nieuw").
 - **Schrijven:** `PUT …/content` met `If-Match: <eTag>`. Bij 412 opnieuw
   lezen, de wachtrij opnieuw toepassen en opnieuw schrijven.
 - **Verversen:** op het tabblad Winkel elke 30 s, elders elke 3 minuten, en bij
@@ -74,17 +85,21 @@ daarvoor niet te veranderen.
 ## 3. Bestand
 
 Eén bestand `thuis.json` in de gedeelde map, plus dagbackups
-(`thuis_backup_JJJJMMDD.json`) en een submap `fotos/`. Niet bedoeld om met de
-hand te bewerken.
+(`thuis_backup_JJJJMMDD.json`) en `thuis_voor_terugzetten.json`. Niet bedoeld
+om met de hand te bewerken.
 
 - UTF-8, geldige JSON, en de opbouw hieronder. Klopt een van die drie niet,
   dan leest de app het bestand niet en schrijft hij er nooit in; hij werkt
   verder op de laatste goede kopie op de telefoon, met een melding. Een BOM
-  gaat eruit.
+  wordt bij het lezen genegeerd en nooit geschreven (RFC 8259); hij verdwijnt
+  bij de volgende wijziging, net als in de andere apps.
 - `versie`: datum en tijd van de laatste formaatwijziging in hex, zoals het
   versiestempel (`1352902-459` = 22-11-2026 11:13). Nieuwer dan de app kent:
   niets schrijven, melding om bij te werken. Ouder of ontbrekend: niet lezen
   (geen omzetting van oude formaten).
+  Na een update met een nieuw formaat gaat de oude kopie op de telefoon weg, maar
+  de wachtrij niet: die wordt alsnog verstuurd en elke handeling gecontroleerd;
+  wat niet meer past, vervalt met de gewone melding (H1, ronde 3).
 - **Vaste id's.** Winkels, afdelingen, artikelen en acties hebben een id van
   vijf willekeurige tekens (kleine letters en cijfers zonder 0 o 1 l i; via
   `crypto.getRandomValues`, uniek binnen het bestand). De naam is een gewoon
@@ -121,15 +136,18 @@ hand te bewerken.
 
 | deel | velden |
 |---|---|
-| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; later `personen` |
+| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
-| `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `wie`, `notitie`, `link`, `foto`, `klaar`, `door` |
+| `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`; `wie`, `foto` en `door` zijn gereserveerd (niet gebouwd) |
+| `aankopen` | per id `naam`, `tijd` (afgevinkt in de winkel; niet wie) |
+| `historie` | per id `naam`, `tijd` (actie afgerond; niet wie) |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
 tijdstippen `2026-11-21T10:12` in lokale tijd (Europe/Amsterdam).
 
-Opruimen door de app: afgeronde acties na 3 maanden; eenmalige artikelen in
+Opruimen door de app: afgeronde acties na 3 maanden; historie na de ingestelde
+tijd (standaard 3 maanden); aankopen boven het ingestelde aantal; eenmalige artikelen in
 het archief (niet op de lijst) die de ingestelde tijd niet gekocht zijn
 (`instellingen.archief.bewaren`: `1w`, `1m` standaard, `3m`, `1j`; de laatste
 dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
@@ -338,6 +356,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   de app de huidige stand als `thuis_voor_terugzetten.json`; daarna een melding
   met "Ongedaan maken". Alleen als er geen wijzigingen klaarstaan, met
   If-Match. Een backup in een ouder formaat is niet terug te zetten.
+  Vóór het terugzetten ook de dagbackup van vandaag (als die er nog niet is).
+  Zet je meteen nog een backup terug (binnen een uur en zonder wijzigingen
+  ertussen), dan blijft `thuis_voor_terugzetten.json` de stand van vóór de
+  eerste poging (M4).
 - Archief: "Verwijderen als niet gekocht in" 1 week, 1 mnd (standaard), 3 mnd,
   1 jaar. Geldt voor beiden (in thuis.json).
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
@@ -354,9 +376,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   keer per nieuwe fout), per telefoon, de laatste 100, nieuwste eerst.
 
 ### 5.7 Eerste start
-- **Mark:** aanmelden → nieuwe lijst maken (map `thuis` met standaardafdelingen) → "Ik ben" → deellink maken.
-- **Zijn vrouw:** deellink openen → aanmelden → "Ik ben".
-- "Plakken als lijst": één artikel per regel, als eenmalig op de lijst.
+- Aanmelden bij Microsoft, dan de deellink van de gedeelde map plakken. Staat er
+  nog geen `thuis.json`, dan maakt de app een leeg bestand. De voornaam komt uit
+  het Microsoft-account (geen aparte "Ik ben").
+- Misschien later: "Plakken als lijst", een nieuwe lijst met standaardafdelingen,
+  de deellink vanuit de app maken.
 
 ### 5.8 Meldingen en ongedaan maken
 - Volgens de gedeelde conventies: één melding per regel met de knoppen eronder,
@@ -419,7 +443,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Een wijziging die vervalt, wordt altijd gemeld.
 - Opruimen: wordt een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Na het terugzetten van
   een backup ruimt de app die dag niets op (instelling opruimen.tot). Staat de klok van de telefoon meer
-  dan een week na de nieuwste datum in het bestand, dan wordt er niet opgeruimd (regel in het logboek).
+  dan een maand na de laatste wijziging van het bestand volgens OneDrive (servertijd, lastModifiedDateTime),
+  dan wordt er niet opgeruimd, niet wekelijks teruggezet en geen dagbackup gemaakt; wijzigingen worden wel
+  opgeslagen (melding en regel in het logboek). Tegen de servertijd blijft een verkeerde klok verdacht, ook
+  na een ronde; lang niet gebruiken of een oude backup terugzetten geeft hooguit één voorzichtige ronde (M1, M2).
+  Een wekelijks moment dat meer dan twee dagen na nu ligt (de andere telefoon liep voor) telt als vorige
+  week; twee dagen, zodat een tijdzoneverschil (tot 26 uur) nooit meetelt.
 - Na een ronde zonder verandering wordt niets opnieuw getekend.
 
 ### 7a2. Wekelijks, mandje en aankopen (021)
@@ -498,6 +527,20 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   is voor alle apps gelijk, check_app bewaakt dat), seconden in de aankooptijd (een oudere app op de
   andere telefoon zou het bestand dan weigeren).
 
+### 7a8. Review ronde 3 (007)
+- Historie op Doen: elke afgeronde actie (ook herhalend) komt in een gedeeld logboek `historie`
+  (naam en moment, niet wie), zoals Aankopen. Kop "Historie" onderaan Doen; scherm per dag met
+  zoeken onderaan. Ongedaan maken of meteen terugtikken haalt de regel weg; later heropenen niet.
+  Instelling "Historie verwijderen na" 1 week, 1 mnd, 3 mnd (standaard), 1 jaar; korter vraagt
+  eerst met het aantal. Opruimen gebeurt met de rest (niet bij een verdachte klok).
+- Aankopen en Historie: een tik op een regel vraagt "Verwijderen?" en haalt hem bij allebei weg,
+  zonder Ongedaan maken (het is maar een logboekregel).
+- Archief korter bewaren vraagt eerst met het aantal (L3). Technische velden (weg, klaar, maanddag)
+  geven geen botsingsmelding; de nieuwste datum wint (L2). Een ronde zonder verandering wordt
+  overgeslagen (L8). Tijdens het verslepen van een afdeling wordt niet opnieuw getekend (L9).
+- Aanmeldfout alleen bij een eigen poging met de juiste state (L4). Leeg beginnen wist ook de
+  wachtrij (L5). Hulpgegevens (gezien, logboek, backupDag) geven geen opslagmelding (L1).
+
 ## 7b. Veiligheid
 
 - Geen code van anderen (geen bibliotheken, CDN, analytics). Gegevens alleen via
@@ -512,10 +555,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   alle apps en geen code van anderen; tweestapsverificatie op GitHub.
 - Links bij acties (stap 8) alleen als ze met `https://` beginnen.
 
-## 8. Foto's
-Verkleind tot ±1600 px JPEG voordat ze worden opgeslagen, onder een vrije naam
-in `fotos/` (niet afgeleid van de titel). Kleine voorbeeldjes worden bewaard in
-IndexedDB voor offline gebruik. Bij verwijderen ruimt de app de foto op.
+## 8. Foto's (misschien later, niet gebouwd)
+Idee: verkleind tot ±1600 px JPEG, onder een vrije naam in `fotos/`, kleine
+voorbeeldjes in IndexedDB voor offline gebruik, opruimen bij verwijderen.
 
 ## 9. Bewuste afwijkingen van conventies.md (op te nemen in §4)
 

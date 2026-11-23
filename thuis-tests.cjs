@@ -138,7 +138,7 @@ controle('bestand: precies deze opmaak (versie, één record per regel op naam, 
   '{\n"versie": "' + K.FORMAAT + '",\n"instellingen": {},\n"winkels": {\n "w1111": {"naam":"AH","afdelingen":[{"id":"a1111","naam":"Zuivel"}]},\n "w2222": {"naam":"Plus"}\n},\n' +
   '"artikelen": {\n "p1111": {"naam":"Melk","soort":"wekelijks","ligt":{"w1111":"a1111","w2222":""},"gekocht":["2026-11-14"]}\n},\n"acties": {}\n}\n'));
 controle('bestand: schrijven is stabiel', () => { const een = K.schrijfBestand(lees(VB)); return gelijk(K.schrijfBestand(K.leesBestand(een).model), een); });
-controle('bestand: BOM herkend', () => { const r = K.leesBestand('﻿' + B({})); return gelijk(r.ok + '|' + r.model.bom, 'true|true'); });
+controle('bestand: BOM genegeerd bij lezen, nooit geschreven (L7)', () => { const r = K.leesBestand('﻿' + B({})); return gelijk(r.ok + '|' + (K.schrijfBestand(r.model).charCodeAt(0) === 0xFEFF), 'true|false'); });
 controle('bestand: geen geldige UTF-8 wordt niet gelezen', () => gelijk(K.leesBestand(new Uint8Array([0x7B, 0x7D, 0xFF])).reden, 'geen-utf8'));
 controle('bestand: kapotte JSON wordt niet gelezen', () => gelijk([K.leesBestand('{"versie": "' + K.FORMAAT + '", "artikelen": {').reden, K.leesBestand('[1]').reden].join(), 'geen-json,geen-json'));
 controle('bestand: versie — nieuwer weigert (melding bijwerken), ouder of ontbrekend ook; leeg is niet geldig (B1)', () => gelijk(
@@ -524,6 +524,56 @@ controle('terugzetten: alleen winkels en afdelingen die nog bestaan; bij lezen r
   return gelijk(JSON.stringify(JSON.parse(r.tekst).artikelen.mel01.ligt) + '|' + rec.gewijzigd + '|' + JSON.stringify(JSON.parse(rec.tekst).artikelen.mel01.ligt), '{"w1111":""}|true|{"w1111":""}');
 });
 
+controle('klok vooruit: tegen de servertijd blijft hij ook de tweede ronde verdacht (M1)', () => {
+  const ver = new Date(2027, 1, 1, 10, 0);
+  const begin = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+    artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', op: '2026-11-21T09:00' } } });
+  const r1 = K.synchroniseer(begin, [H({ actie: 'gekocht', soort: 'artikel', id: 'mel01', datum: '2027-02-01' })], ver, '2026-11-23');
+  const r2 = K.synchroniseer(r1.tekst, [], ver, '2026-11-23');
+  const d = JSON.parse(r2.tekst);
+  return gelijk(r1.klokVerdacht + '|' + r2.klokVerdacht + '|' + !!d.artikelen.lam01 + '|' + d.instellingen.wekelijks.teruggezet, 'true|true|true|2026-11-21T06:00');
+});
+controle('lang niet gebruikt of oude backup: tegen de servertijd niet verdacht (M2)', () => {
+  const r = K.synchroniseer(B({ artikelen: { tan01: { naam: 'Tandpasta', soort: 'regelmatig', gekocht: ['2026-03-01'] } } }), [], NU, '2026-11-21');
+  return gelijk(r.klokVerdacht, false);
+});
+controle('wekelijks: moment in de toekomst (andere telefoon liep voor) telt niet; tijdzones wel (M1)', () => {
+  const k = kern();
+  const toekomst = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-12-05T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
+  const n1 = k.wekelijksTerug(toekomst, new Date(2026, 10, 21, 10, 0));
+  const tz = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-22T12:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
+  const n2 = k.wekelijksTerug(tz, new Date(2026, 10, 21, 10, 0));
+  return gelijk(n1 + '|' + toekomst.instellingen.wekelijks.teruggezet + '|' + n2, '1|2026-11-21T06:00|0');
+});
+controle('ongeldige handelingen vervallen; het bestand blijft leesbaar (M5)', () => {
+  const begin = B({ winkels: { w1111: { naam: 'AH' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks' } } });
+  const fouten = [
+    H({ actie: 'gekocht', soort: 'artikel', id: 'mel01' }),
+    H({ actie: 'gekocht', soort: 'artikel', id: 'mel01', datum: 'gisteren' }),
+    H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: 5 }),
+    H({ actie: 'terug', soort: 'afdeling', winkel: 'w1111', afd: { id: 'd1111', naam: '' }, plaats: 0 })];
+  const r = K.synchroniseer(begin, fouten, NU);
+  return gelijk(r.resultaten.map((x) => x.status).join() + '|' + K.leesBestand(r.tekst).ok, 'vervallen,vervallen,vervallen,vervallen|true');
+});
+controle('technische velden: geen botsing, de nieuwste datum wint stil (L2)', () => {
+  const begin = B({ artikelen: { cad01: { naam: 'Cadeau', soort: 'eenmalig', weg: '2026-11-24' } }, acties: { afv01: { naam: 'Afval', datum: '2026-11-28', herhaal: 'week', klaar: '2026-11-23T09:00' } } });
+  const r = K.synchroniseer(begin, [
+    H({ actie: 'zet', soort: 'artikel', id: 'cad01', veld: 'weg', oud: '', nieuw: '2026-11-23' }),
+    H({ actie: 'zet', soort: 'actie', id: 'afv01', veld: 'klaar', oud: '', nieuw: '2026-11-23T10:00' })], NU);
+  const d = JSON.parse(r.tekst);
+  return gelijk(r.resultaten.map((x) => x.status).join() + '|' + d.artikelen.cad01.weg + '|' + d.acties.afv01.klaar, 'al,ok|2026-11-24|2026-11-23T10:00');
+});
+controle('historie: regels ouder dan de ingestelde tijd gaan weg (standaard 3 maanden)', () => {
+  const r = K.synchroniseer(B({ historie: { h0001: { naam: 'Afval', tijd: '2026-11-20T08:00' }, h0002: { naam: 'Bellen', tijd: '2026-07-01T10:00' } } }), [], NU);
+  const kort = K.synchroniseer(B({ instellingen: { historie: { bewaren: '1w' } }, historie: { h0001: { naam: 'Afval', tijd: '2026-11-20T08:00' }, h0003: { naam: 'Fiets', tijd: '2026-11-10T10:00' } } }), [], NU);
+  return gelijk(Object.keys(JSON.parse(r.tekst).historie).join() + '|' + Object.keys(JSON.parse(kort.tekst).historie).join(), 'h0001|h0001');
+});
+controle('namen als constructor en toString: deel bewaard, handeling vervalt netjes (L11)', () => {
+  const r = K.leesBestand('{"versie":"' + K.FORMAAT + '","constructor":{"x":1}}');
+  const h1 = K.pasToe(K.leegModel(), { actie: 'toString', soort: 'artikel', id: 'abc12' });
+  const h2 = K.pasToe(K.leegModel(), { actie: 'instelling', naam: 'constructor', veld: 'name', nieuw: 'x' });
+  return gelijk(r.ok + '|' + /"constructor"/.test(K.schrijfBestand(r.model)) + '|' + h1.status + '|' + h2.status, 'true|true|vervallen|vervallen');
+});
 controle('wekelijks: andere dag kiezen geeft geen gat van bijna twee weken (K3)', () => {
   const k = kern();
   const m = lees({ instellingen: { wekelijks: { dag: 'vr', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
@@ -554,9 +604,9 @@ controle('ronde: zonder wachtrij en zonder terugzetten is er niets te schrijven'
   const vb = JSON.parse(JSON.stringify(VB)); vb.instellingen.wekelijks.teruggezet = '2026-11-21T06:00';
   return gelijk(K.synchroniseer(B(vb), [], NU).gewijzigd, false);
 });
-controle('ronde: alleen een BOM is reden om te schrijven', () => {
+controle('ronde: alleen een BOM is geen reden om te schrijven; bij een wijziging gaat hij eruit (L7)', () => {
   const vb = JSON.parse(JSON.stringify(VB)); vb.instellingen.wekelijks.teruggezet = '2026-11-21T06:00';
-  return gelijk(K.synchroniseer('﻿' + B(vb), [], NU).gewijzigd, true);
+  return gelijk(String(K.synchroniseer('﻿' + B(vb), [], NU).gewijzigd), 'false');
 });
 controle('ronde: ontbreekt de instelling voor wekelijks, dan komt de standaard erin', () => {
   const r = K.synchroniseer(B({}), [], NU);

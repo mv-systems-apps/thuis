@@ -65,6 +65,10 @@ function jsonNaarRegels(tekst) {
     const o = d.aankopen[id];
     uit.push(['aankoop', o.naam].concat(Object.keys(o).filter((k) => k !== 'naam').map((k) => k + '=' + o[k])).join(';'));
   }
+  for (const id of Object.keys(d.historie || {})) {
+    const o = d.historie[id];
+    uit.push(['historie', o.naam].concat(Object.keys(o).filter((k) => k !== 'naam').map((k) => k + '=' + o[k])).join(';'));
+  }
   return uit.join('\n') + (uit.length ? '\n' : '');
 }
 
