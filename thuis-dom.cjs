@@ -1164,6 +1164,8 @@ const BEGIN = [
     odI.nieuweIds = true; delete odI.bestanden['thuis.json']; odI.zet('thuis.json', tekstI.replace('"Melk"', '"Melk"').replace('"artikelen": {', '"artikelen": {\n "brd01": {"naam":"Brood","soort":"eenmalig"},'));
     wI.eval('planSync(0)'); await slaap(1000);
     controle('nieuwe id: geen melding "weg", nieuwe inhoud binnen (M2 ronde 4)', !wI.document.getElementById('m-weg') && wI.eval("artikelen.some((a) => a.naam === 'Brood')") && wI.eval('kopie.fileId') === odI.bestanden['thuis.json'].id);
+    const mO = wI.document.getElementById('m-opnieuw');
+    controle('nieuwe id: wel een melding "opnieuw aangemaakt" met Backups (M2 data)', !!mO && /opnieuw aangemaakt/.test(mO.textContent) && /Backups/.test(mO.textContent));
     wI.close();
   }
 
@@ -1217,6 +1219,59 @@ const BEGIN = [
     const namen = R(odL3.bestanden['thuis.json'].tekst).split('\n').filter((x) => x.startsWith('artikel')).map((x) => x.split(';')[1]).sort().join();
     controle('twee vensters: de ronde van het achtergrondvenster laat de wachtrij van het andere staan (L3 ronde 4)', namen === 'Appels,Kaas,Melk', namen);
     C.close();
+  }
+
+  /* 5z20. M1 data: eerste keer koppelen neemt de wachtrij mee. */
+  {
+    const odK1 = onedrive('artikel;Koffie;soort=regelmatig\n');
+    const echtK1 = odK1.fetch;
+    odK1.fetch = async (url, init) => url.includes('/shares/') ? { ok: true, status: 200, json: async () => ({ id: 'MAP', name: 'thuis', folder: {}, parentReference: { driveId: 'D' } }) } : echtK1(url, init);
+    const wK1 = await start(odK1, { map: null }); await slaap(300);
+    wK1.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'brd01', velden: { naam: 'Brood', soort: 'eenmalig', op: '2026-11-23T10:00' } }])"); await slaap(100);
+    wK1.document.getElementById('deellink').value = 'https://1drv.ms/f/s!voorbeeld';
+    await wK1.eval('mapKoppelen(false)'); await slaap(2500);
+    controle('eerste keer koppelen: geen vraag, wat je al deed staat in het bestand (M1 data)', !wK1.document.getElementById('m-koppelen') && /^artikel;Brood;/m.test(R(odK1.bestanden['thuis.json'].tekst)), R(odK1.bestanden['thuis.json'].tekst));
+    wK1.close();
+  }
+
+  /* 5z21. M3 data: beschadigd bestand met een wachtende wijziging → Backups-knop, terugzetten mag, wijziging komt mee. */
+  {
+    const odB3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Koffie;soort=regelmatig\n');
+    odB3.zet('thuis_backup_20261122.json', J('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Koffie;soort=regelmatig\nartikel;Thee;soort=regelmatig\n'));
+    const wB3 = await start(odB3); await slaap(1500);
+    odB3.zet('thuis.json', '{"versie": "kapot');
+    wB3.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'brd01', velden: { naam: 'Brood', soort: 'eenmalig', op: '2026-11-23T10:00' } }])"); await slaap(2500);
+    const mB = wB3.document.getElementById('m-bestand');
+    controle('beschadigd bestand: melding met Backups (M3 data)', !!mB && /Backups/.test(mB.textContent));
+    const ok = await wB3.eval('terugzetten(' + JSON.stringify(odB3.bestanden['thuis_backup_20261122.json'].tekst) + ', true)');
+    await slaap(2500);
+    const tB3 = R(odB3.bestanden['thuis.json'].tekst);
+    controle('beschadigd bestand: terugzetten lukt ondanks wachtende wijziging, die komt erbij', ok === true && /^artikel;Thee;/m.test(tB3) && /^artikel;Brood;/m.test(tB3) && wB3.eval('wachtrij.length') === 0, tB3);
+    wB3.close();
+  }
+
+  /* 5z22. L3 data: naar de achtergrond met iets in de wachtrij → meteen versturen. */
+  {
+    const odA3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const wA3 = await start(odA3); await slaap(800);
+    wA3.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'kaa01', velden: { naam: 'Kaas', soort: 'eenmalig' } }])");
+    Object.defineProperty(wA3.document, 'hidden', { configurable: true, get: () => true }); wA3.document.dispatchEvent(new wA3.Event('visibilitychange'));
+    await slaap(400);
+    controle('naar de achtergrond: wachtrij meteen verstuurd (L3 data)', /^artikel;Kaas;/m.test(R(odA3.bestanden['thuis.json'].tekst)));
+    wA3.close();
+  }
+
+  /* 5z23. H3 performance: na een eigen tik zonder iets van buiten niet opnieuw inlezen en tekenen. */
+  {
+    const odP3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const wP3 = await start(odP3); await slaap(1500);
+    wP3.eval('window.__bouw = 0; const echtBouw = bouwModel; bouwModel = function () { window.__bouw++; return echtBouw.apply(this, arguments); };');
+    wP3.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen[0].id, veld: 'notitie', oud: '', nieuw: 'halfvol' }])"); await slaap(2500);
+    const n1 = wP3.eval('window.__bouw');
+    const j = JSON.parse(odP3.bestanden['thuis.json'].tekst); j.artikelen.brd01 = { naam: 'Brood', soort: 'eenmalig' }; odP3.zet('thuis.json', JSON.stringify(j));
+    wP3.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen[0].id, veld: 'notitie', oud: 'halfvol', nieuw: 'vol' }])"); await slaap(2500);
+    controle('eigen tik zonder iets van buiten: niet opnieuw ingelezen; met iets van de ander wel (H3 perf)', n1 === 0 && wP3.eval('window.__bouw') === 1 && wP3.eval("artikelen.some((a) => a.naam === 'Brood')"), n1 + ' ' + wP3.eval('window.__bouw'));
+    wP3.close();
   }
 
   /* 5o0. Openen met een lege lijst en een gekozen winkel: de winkelkop staat niet los onderaan. */

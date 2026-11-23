@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (23-11-2026): in gebruik, versie 1352903-008. Dit document beschrijft
+Status (23-11-2026): in gebruik, versie 1352903-009. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a t/m §7a8 de wijzigingen na de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
@@ -554,6 +554,24 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   winkelkaart alleen als er hier of elders iets te halen is, kop "Overige winkels" ook als niets nodig is.
 - Artikelen: tijdens het typen blijven de filters bovenaan. Archief standaard 1 jaar. Aankopen bewaren
   als keuzelijst 50, 100, 250, 500 (standaard 500).
+
+### 7a10. Review dataveiligheid (009)
+- Eerste keer een map koppelen neemt de wachtrij mee; wisselen van map zegt dat wijzigingen verloren gaan.
+- Bestand opnieuw aangemaakt (andere id): melding met "Backups"; de app gaat door met het nieuwe bestand.
+- Beschadigd bestand: melding met "Backups"; terugzetten mag dan ook met wachtende wijzigingen (die
+  worden op de backup toegepast); geen dagbackup van het beschadigde bestand.
+- Koppelen blokkeert rondes; een handeling met een onverwachte vorm vervalt; naar de achtergrond met een
+  wachtrij = meteen versturen; offline met een wachtrij = nog eens om vaste opslag vragen.
+- Bewust niet: een verloren antwoord bij exact gelijktijdig dezelfde wijziging (zeldzaam, één artikel).
+- Werkwijze: deel de map alleen met "Specifieke personen", niet met "Iedereen met de link".
+
+### 7a11. Review performance (009)
+- Regels buiten beeld worden niet opgemaakt (`content-visibility:auto` op .item, .actierij, .aankooprij, .wrij).
+- Archief, Weggehaald en Doen hergebruiken ongewijzigde regels (rijUitGeheugen, actieGeheugen).
+- Na een eigen ronde zonder iets van buiten: niet opnieuw inlezen en tekenen (kopie.tekst === schrijfBestand(model)).
+- Aankopen/Historie: alleen opnieuw opbouwen als regels, zoekterm of dag veranderden; zoekvorm onthouden.
+- Normaliseren van de invoer één keer vóór een zoeklus. Bewust zo gelaten: afgeleid() bouwt de lijsten
+  helemaal opnieuw (±4 ms desktop bij 800 artikelen) en zoekOpNaam is lineair (alleen bij nieuw/terug).
 
 ## 7b. Veiligheid
 

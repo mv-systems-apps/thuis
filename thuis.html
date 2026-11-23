@@ -49,6 +49,8 @@
   #scherm-instellingen.sub > :not(#backupScherm){display:none}
   #scherm-winkel.sub > :not(#aankopenScherm){display:none}
   .loglijst{padding-top:12px}
+  /* Regels buiten beeld slaat de browser over bij het opmaken, tot je ernaartoe scrolt (H1, performance). */
+  .item,.actierij,.aankooprij,.wrij{content-visibility:auto;contain-intrinsic-size:auto 56px}
   .aankooprij{display:flex;align-items:center;gap:10px;width:100%;min-height:54px;padding:6px 14px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;font:inherit;color:inherit;text-align:left;cursor:pointer}
   .aankooprij:first-child{border-top:0}
   .aankooprij .nm{flex:1;min-width:0;font-size:20px;overflow-wrap:anywhere}
@@ -450,7 +452,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352903-008</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352903-009</div>
   </section>
 </main>
 
@@ -1036,7 +1038,8 @@ function handelAfdErbij(model, h, verz, r) {
   if (r.afdelingen.some((a) => a.id === h.afd.id)) return { status: 'al' };
   const naam = schoonTekst(h.afd.naam || '');
   if (!naam || !ID_PATROON.test(h.afd.id)) return { status: 'vervallen', reden: 'ongeldig' };
-  const zelfde = r.afdelingen.find((a) => normNaam(a.naam) === normNaam(naam));
+  const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+  const zelfde = r.afdelingen.find((a) => normNaam(a.naam) === nn);
   if (zelfde) return { status: 'samengevoegd', id: zelfde.id };
   r.afdelingen.push({ id: h.afd.id, naam, extra: Object.create(null) });
   return { status: 'ok' };
@@ -1047,7 +1050,8 @@ function handelAfdHernoem(model, h, verz, r) {
   if (i === -1) return VERVALLEN;
   const naam = schoonTekst(h.naam || '');
   if (!naam) return { status: 'vervallen', reden: 'ongeldig' };
-  if (r.afdelingen.some((a, j) => j !== i && normNaam(a.naam) === normNaam(naam))) return { status: 'vervallen', reden: 'naam-bezet' };
+  const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+  if (r.afdelingen.some((a, j) => j !== i && normNaam(a.naam) === nn)) return { status: 'vervallen', reden: 'naam-bezet' };
   if (r.afdelingen[i].naam === naam) return { status: 'al' };
   r.afdelingen[i].naam = naam;
   return { status: 'ok' };
@@ -1111,7 +1115,9 @@ function pasAllesToe(model, reeks) {
   const alias = new Map();
   const resultaten = reeks.map((h0) => {
     const h = vervangIds(h0, alias);
-    const res = pasToe(model, h);
+    /* Een handeling met een onverwachte vorm vervalt; de rest gaat door (L2, data). */
+    let res;
+    try { res = pasToe(model, h); } catch (e) { res = { status: 'vervallen', reden: 'ongeldig' }; }
     if (res.status === 'samengevoegd') alias.set(h.actie === 'afdErbij' ? h.afd.id : h.id, res.id);
     return Object.assign({ h }, res);
   });
@@ -1947,9 +1953,10 @@ async function afmelden() {
 async function mapKoppelen(toch) {
   const link = $('deellink').value.trim();
   /* Wijzigingen die nog niet in OneDrive staan, horen bij de oude map: niet
-     meenemen naar de nieuwe. */
-  if (wachtrij.length && toch !== true) {
-    melding('m-koppelen', wachtrij.length + (wachtrij.length === 1 ? ' wijziging staat' : ' wijzigingen staan') + ' nog niet in OneDrive.', [
+     meenemen naar een andere. Nog geen map: gewoon meenemen naar de eerste (M1, data). */
+  const vorigeMap = await kvGet('map');
+  if (wachtrij.length && vorigeMap && toch !== true) {
+    melding('m-koppelen', wachtrij.length + (wachtrij.length === 1 ? ' wijziging staat' : ' wijzigingen staan') + ' nog niet in OneDrive en ' + (wachtrij.length === 1 ? 'gaat' : 'gaan') + ' verloren bij koppelen.', [
       { tekst: 'Toch koppelen', actie: () => { meldingWeg('m-koppelen'); mapKoppelen(true); } },
       { tekst: 'Annuleren', tweede: true, actie: () => meldingWeg('m-koppelen') }
     ]);
@@ -1959,25 +1966,31 @@ async function mapKoppelen(toch) {
   if (sync.bezig) { melding('m-map', 'Even geduld: de app is aan het synchroniseren. Probeer het zo opnieuw.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-map') }]); return; }
   if (!/^https:\/\//.test(link)) { melding('m-map', 'Plak een deellink die met https:// begint.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-map') }]); return; }
   $('btnMap').disabled = true;
+  /* Zolang het koppelen loopt geen ronde: die zou nog in het oude bestand schrijven (L1, data). */
+  sync.bezig = true;
   try {
     const res = await graph('/shares/' + deelSleutel(link) + '/driveItem');
     if (!res.ok) throw new Error(res.status === 404 || res.status === 403 ? 'deze link geeft geen toegang' : 'code ' + res.status);
     const item = await res.json();
     if (!item.folder) throw new Error('"' + item.name + '" is geen map');
     await kvSet('map', { driveId: item.parentReference.driveId, itemId: item.id, naam: item.name });
-    /* Alles van de vorige map weg: kopie, wachtrij, mandje en keuzes. */
-    for (const k of ['kopie', 'wachtrij', 'mandje', 'favorieten', 'winkel', 'gezien', 'backupDag']) await kvDel(k);
-    kopie = null; wachtrij = [];
-    winkel.id = ''; winkel.mandje.clear(); ws.favorieten = []; ws.open = '';
-    gezien.klaar.clear(); gezien.inBeeld.clear();
+    /* Alles van de vorige map weg: kopie, wachtrij, mandje en keuzes. Was er nog geen
+       map, dan blijft wat je al deed (de wachtrij gaat naar de nieuwe map). */
+    if (vorigeMap) {
+      for (const k of ['kopie', 'wachtrij', 'mandje', 'favorieten', 'winkel', 'gezien', 'backupDag']) await kvDel(k);
+      kopie = null; wachtrij = [];
+      winkel.id = ''; winkel.mandje.clear(); ws.favorieten = []; ws.open = '';
+      gezien.klaar.clear(); gezien.inBeeld.clear();
+    } else { await kvDel('kopie'); await kvDel('backupDag'); kopie = null; }
     bouwModel();
     tekenAlles();
     $('deellink').value = '';
-    planSync(0);
     meldingWeg('m-map');
   } catch (e) {
     melding('m-map', 'Map koppelen is niet gelukt: ' + e.message + '.', [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-map') }]);
   } finally {
+    sync.bezig = false;
+    planSync(0);
     $('btnMap').disabled = false;
     await toonStatus();
   }
@@ -2322,7 +2335,8 @@ async function bestandOphalen(map) {
   let res = await graph(pad);
   /* Niet gevonden op de id: misschien opnieuw aangemaakt (teruggezet vanaf de andere
      telefoon, opnieuw geüpload) en dus een nieuwe id. Eerst op naam zoeken (M2, ronde 4). */
-  if (res.status === 404 && kopie && kopie.fileId) res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + BESTAND);
+  let opnieuw = false;
+  if (res.status === 404 && kopie && kopie.fileId) { res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/' + BESTAND); opnieuw = res.ok; }
   if (res.status === 404 || res.status === 403) {
     /* Niet gevonden of geen toegang: is de map zelf nog bereikbaar? Zo niet, dan is
        het delen gestopt; dat is iets anders dan een verdwenen bestand (M6). */
@@ -2335,7 +2349,7 @@ async function bestandOphalen(map) {
   if (kopie && kopie.eTag === item.eTag) return { item, tekst: kopie.tekst, bytes: null };
   const inhoud = await metGrens(item['@microsoft.graph.downloadUrl'], { cache: 'no-store' });
   if (!inhoud.ok) throw new Error('downloaden: code ' + inhoud.status);
-  return { item, bytes: new Uint8Array(await inhoud.arrayBuffer()) };
+  return { item, bytes: new Uint8Array(await inhoud.arrayBuffer()), opnieuw };
 }
 
 /* Elke dag één backup van de versie van vóór het eerste schrijven; daarna de
@@ -2458,7 +2472,13 @@ async function syncRonde() {
   const auth = await kvGet('auth');
   const map = await kvGet('map');
   if (!auth || !auth.refresh || !map) { tekenWolk(); return; }
-  if (!navigator.onLine) { sync.offline = true; tekenWolk(); return; }
+  if (!navigator.onLine) {
+    sync.offline = true; tekenWolk();
+    /* Offline met iets in de wachtrij: nog één keer stil om vaste opslag vragen, zodat de
+       browser die wijzigingen niet wist bij ruimtegebrek (L6, data). */
+    if (wachtrij.length && !sync.persistGevraagd) { sync.persistGevraagd = true; opslagVastzetten(); }
+    return;
+  }
   const vorigeFout = sync.fout;
   sync.bezig = true; sync.fout = ''; sync.offline = false; tekenWolk();
   let gelukt = false, veranderd = true;
@@ -2481,6 +2501,10 @@ async function syncRonde() {
         continue;
       }
       meldingWeg('m-weg');
+      /* Het bestand is opnieuw aangemaakt (andere id): niet stil overnemen (M2, data). */
+      if (opgehaald.opnieuw) melding('m-opnieuw', [{ vet: BESTAND }, ' is opnieuw aangemaakt op de andere telefoon. Klopt de lijst niet, zet dan een backup terug.'], [
+        { tekst: 'Backups', actie: () => { meldingWeg('m-opnieuw'); toonScherm('instellingen'); backupsOpenen(); } },
+        { tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-opnieuw') }]);
       /* Niets veranderd sinds de vorige ronde (zelfde bestand, lege wachtrij, zelfde
          dag, wekelijks moment niet voorbij): niets uit te rekenen (L8). */
       if (!opgehaald.bytes && !wachtrij.length && sync.overslaan === rondeSleutel(opgehaald.item.eTag)) { veranderd = false; gelukt = true; break; }
@@ -2494,7 +2518,8 @@ async function syncRonde() {
            de laatste goede kopie op deze telefoon. Niet opnieuw proberen tot er
            iets verandert (app openen, Nu synchroniseren, de gewone ronde). */
         melding('m-bestand', [{ vet: BESTAND }, ' ' + (LEESREDEN[ronde.reden] || 'is niet te lezen.') + ' De app schrijft er niets in.'],
-          ronde.reden === 'nieuwer-formaat' ? [{ tekst: 'App bijwerken', actie: () => herlaadVoorUpdate() }] : []);
+          ronde.reden === 'nieuwer-formaat' ? [{ tekst: 'App bijwerken', actie: () => herlaadVoorUpdate() }]
+            : [{ tekst: 'Backups', actie: () => { toonScherm('instellingen'); backupsOpenen(); } }]);
         sync.fout = BESTAND + ' ' + (LEESREDEN[ronde.reden] || 'is niet te lezen.').replace(/\.$/, '');
         return;
       }
@@ -2555,7 +2580,9 @@ async function syncRonde() {
     sync.laatst = Date.now();
     sync.aanmelden = false;
     /* Niets veranderd (zelfde bestand, niets verstuurd): niet opnieuw tekenen. */
-    if (veranderd) { bouwModel(); tekenAlles(); }
+    /* Is het resultaat precies wat dit scherm al toonde (niets van de ander, geen wekelijks
+       terug of opruimen), dan niet opnieuw inlezen en tekenen (H3, performance). */
+    if (veranderd && !(model && !wachtrij.length && kopie && kopie.tekst === schrijfBestand(model))) { bouwModel(); tekenAlles(); }
     sync.overslaan = kopie && !wachtrij.length ? rondeSleutel(kopie.eTag) : '';
   } catch (e) {
     sync.fout = e.message;
@@ -2776,7 +2803,7 @@ const rijGeheugen = new Map();
 function rijUitGeheugen(a, opties) {
   if (scherm.teller === a.id) { rijGeheugen.delete(a.id); return artikelRij(a, opties); }
   const sleutel = [a.letter, a.naam, a.aantal, winkelsRegel(a), a.notitie, a.link, a.op, a.opdoor, isNieuw(a), !!opties.vertrekt,
-    opties.sug ? suggestieTekst(opties.sug) : ''].join('\u0001');
+    opties.sug ? suggestieTekst(opties.sug) : '', !!opties.archief, !!opties.weg, opties.hint || ''].join('\u0001');
   const g = rijGeheugen.get(a.id);
   if (g && g.sleutel === sleutel) return g.rij;
   const rij = artikelRij(a, opties);
@@ -2882,7 +2909,7 @@ function tekenWeggehaald(zoekend) {
   if (!open) kop.style.borderBottom = '1px solid var(--lijn)';
   kop.addEventListener('click', () => { scherm.dicht.weg = open; tekenWeggehaald(false); });
   sec.querySelector('.tal').textContent = telTekst(weg.length, 'artikel', 'artikelen');
-  if (open) for (const a of weg) sec.querySelector('.lijst').appendChild(artikelRij(a, { weg: true }));
+  if (open) for (const a of weg) sec.querySelector('.lijst').appendChild(rijUitGeheugen(a, { weg: true }));
   $('lijstBlok').after(sec);
 }
 
@@ -2914,7 +2941,8 @@ function tekenArchief(zoekend) {
     const frag = document.createDocumentFragment();
     for (const a of arch) {
       const g = a.gekocht.length && a.laatst === a.gekocht.reduce((x, y) => (y > x ? y : x));
-      frag.appendChild(artikelRij(a, { archief: true, hint: a.laatst ? (g ? 'gekocht ' : 'van de lijst ') + datumKort(a.laatst) : '' }));
+      /* Hergebruikt, net als in de hoofdlijst (H2, performance). */
+      frag.appendChild(rijUitGeheugen(a, { archief: true, hint: a.laatst ? (g ? 'gekocht ' : 'van de lijst ') + datumKort(a.laatst) : '' }));
     }
     sec.querySelector('.lijst').appendChild(frag);
   }
@@ -3028,7 +3056,8 @@ function toevoegen() {
   if (!naam) { $('invoerTekst').focus(); return; }
   /* Met # vooraan is het zoeken op een tag, geen nieuw artikel. */
   if (naam[0] === '#') { $('invoerTekst').blur(); return; }
-  const bestaand = artikelen.find((a) => a.sleutel === normNaam(naam));
+  const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+  const bestaand = artikelen.find((a) => a.sleutel === nn);
   const t = tijdstipTekst(new Date());
   const id = bestaand ? bestaand.id : nieuweId();
   if (bestaand) {
@@ -3115,7 +3144,8 @@ window.addEventListener('resize', typenBijwerken);
 /* Verversen: elke paar minuten zolang de app in beeld is, en bij terugkomen of weer online. */
 setInterval(() => { if (!document.hidden) planSync(0); }, VERVERS_GEWOON);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) return;
+  /* Naar de achtergrond met iets in de wachtrij: meteen versturen, niet pas bij de volgende keer openen (L3, data). */
+  if (document.hidden) { if (wachtrij.length && navigator.onLine) planSync(0); return; }
   /* Een ander venster kan aanmelding of map veranderd hebben: opnieuw lezen (K5). */
   KV_GEHEUGEN.clear();
   standNagaan().then((opnieuw) => {
@@ -3265,7 +3295,8 @@ function keuzeLijst(opt) {
   const toevoegenNu = () => {
     const v = schoonTekst(inp.value);
     if (!v) { inp.focus(); return; }
-    const bestaand = alle.find((o) => normNaam(o.naam) === normNaam(v));
+    const nn = normNaam(v); // één keer, niet per element (L1, performance)
+    const bestaand = alle.find((o) => normNaam(o.naam) === nn);
     sluitKeuze();
     if (bestaand) opt.kies(bestaand.id); else opt.zoek.nieuw(v);
   };
@@ -3679,7 +3710,13 @@ function tekenLog() {
   const lijstEl = $(c.doel).querySelector('.loglijst');
   if (!lijstEl) return;
   const z = zoekVorm($('logZoek').value);
-  const alle = opTijd(verzameling(model, soort)).filter((x) => !z || zoekVorm(x.naam).indexOf(z) !== -1);
+  const verz = verzameling(model, soort);
+  /* Niets veranderd (zelfde regels, zelfde zoekterm, zelfde dag): niet opnieuw opbouwen.
+     Logboekregels veranderen nooit, er komen er alleen bij of af (M1, performance). */
+  const sleutel = soort + '\u0001' + z + '\u0001' + datumTekst(new Date()) + '\u0001' + Array.from(verz.keys()).join();
+  if (lijstEl.dataset.sleutel === sleutel) return;
+  lijstEl.dataset.sleutel = sleutel;
+  const alle = opTijd(verz).filter((x) => !z || logZoekVorm(x).indexOf(z) !== -1);
   lijstEl.innerHTML = '';
   if (!alle.length) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = z ? 'Niets gevonden' : c.leeg; lijstEl.appendChild(p); return; }
   const frag = document.createDocumentFragment();
@@ -3707,6 +3744,13 @@ function tekenLog() {
   lijstEl.appendChild(frag);
 }
 function tekenAankopen() { tekenLog(); }
+/* Zoekvorm per logboekregel één keer uitrekenen (de naam verandert nooit). */
+const logZoekGeheugen = new Map();
+function logZoekVorm(x) {
+  let v = logZoekGeheugen.get(x.id);
+  if (v === undefined) { if (logZoekGeheugen.size > 3000) logZoekGeheugen.clear(); v = zoekVorm(x.naam); logZoekGeheugen.set(x.id, v); }
+  return v;
+}
 /* Een regel weggooien: eerst vragen, bij allebei weg. */
 function logRegelWeg(soort, id) {
   const x = verzameling(model, soort).get(id);
@@ -4029,7 +4073,8 @@ function winkelBewerken(w) {
     titel: 'Winkel bewerken', naam: w.naam, wegLabel: 'Winkel verwijderen',
     metNotitie: true, notitie: w.notitie, link: w.link,
     opslaan: (nieuw, extra) => {
-      if (nieuw !== w.naam && winkels.some((x) => x.id !== w.id && normNaam(x.naam) === normNaam(nieuw))) {
+      const nn = normNaam(nieuw); // één keer, niet per element (L1, performance)
+      if (nieuw !== w.naam && winkels.some((x) => x.id !== w.id && normNaam(x.naam) === nn)) {
         return 'Er is al een winkel ' + nieuw + '.';
       }
       const r = model.winkels.get(w.id);
@@ -4077,7 +4122,8 @@ function afdelingBewerken(w, afd) {
   bewerkPaneel({
     titel: 'Afdeling bewerken', naam: afd.naam, wegLabel: 'Afdeling verwijderen',
     opslaan: (nieuw) => {
-      if (w.afdelingen.some((x) => x.id !== afd.id && normNaam(x.naam) === normNaam(nieuw))) {
+      const nn = normNaam(nieuw); // één keer, niet per element (L1, performance)
+      if (w.afdelingen.some((x) => x.id !== afd.id && normNaam(x.naam) === nn)) {
         return w.naam + ' heeft al een afdeling ' + nieuw + '.';
       }
       handelen([{ actie: 'afdHernoem', soort: 'winkel', id: w.id, afd: afd.id, naam: nieuw }]);
@@ -4101,12 +4147,14 @@ function winkelsToevoegen() {
   if (v[0] === '#') { inp.blur(); return; }
   vakLeeg(inp);
   if (w) {
-    if (!w.afdelingen.some((x) => normNaam(x.naam) === normNaam(v))) handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: nieuweId(), naam: v } }]);
+    const nn = normNaam(v); // één keer, niet per element (L1, performance)
+    if (!w.afdelingen.some((x) => normNaam(x.naam) === nn)) handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: nieuweId(), naam: v } }]);
     else tekenWinkels();
     return;
   }
   inp.blur();
-  const bestaand = winkels.find((x) => normNaam(x.naam) === normNaam(v));
+  const nn = normNaam(v); // één keer, niet per element (L1, performance)
+  const bestaand = winkels.find((x) => normNaam(x.naam) === nn);
   const id = bestaand ? bestaand.id : nieuweId();
   if (!bestaand) handelen([{ actie: 'nieuw', soort: 'winkel', id, velden: { naam: v } }]);
   winkelOpenen(id);
@@ -4260,7 +4308,8 @@ function artikelWinkelKiezen() {
     secties: winkelSecties(vrij, ''),
     kies,
     zoek: { placeholder: 'Winkel', nieuw: (naam) => {
-      const bestaand = winkels.find((w) => normNaam(w.naam) === normNaam(naam));
+      const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+      const bestaand = winkels.find((w) => normNaam(w.naam) === nn);
       if (bestaand) { kies(bestaand.id); return; }
       const id = nieuweId();
       handelen([{ actie: 'nieuw', soort: 'winkel', id, velden: { naam } }]);
@@ -4291,7 +4340,8 @@ function artikelOpslaan() {
   const naam = schoonTekst(bw.naam);
   if (!naam) { $('artikelNaam').focus(); return; }
   if (naam[0] === '#' && naam !== bw.oud.naam) { naamMetHekje(); return; }
-  if (naam !== o.naam && artikelen.some((x) => x.id !== o.id && x.sleutel === normNaam(naam))) {
+  const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+  if (naam !== o.naam && artikelen.some((x) => x.id !== o.id && x.sleutel === nn)) {
     melding('m-naam', ['Er is al een artikel ', { vet: naam }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
     $('midden').scrollTop = 0;
     return;
@@ -4406,12 +4456,23 @@ function actieRij(a, vandaag, groep) {
   if (a.notitie || a.link) tekst.appendChild(notitieRegel(a));
   return rij;
 }
+/* Actieregels hergebruiken: alleen een regel waarvan iets veranderde, wordt opnieuw gemaakt (H2, performance). */
+const actieGeheugen = new Map();
+function actieRijUitGeheugen(a, vandaag, groep) {
+  const sleutel = [a.naam, a.datum, a.herhaal, a.open, a.klaar, a.notitie, a.link, groep, vandaag, doen.vertrekt.has(a.id)].join('\u0001');
+  const g = actieGeheugen.get(a.id);
+  if (g && g.sleutel === sleutel) return g.rij;
+  const rij = actieRij(a, vandaag, groep);
+  actieGeheugen.set(a.id, { sleutel, rij });
+  return rij;
+}
 function doenGroep(doel, titel, lijst, vandaag, groep, extra) {
   const sec = document.createElement('section'); sec.className = 'blok';
   sec.innerHTML = '<div class="kopbalk' + (groep === 'laat' ? ' laat' : '') + '"><h2></h2><span class="tal"></span></div><div class="lijst"></div>';
   sec.querySelector('h2').textContent = titel;
   sec.querySelector('.tal').textContent = telTekst(lijst.length, 'actie', 'acties');
-  for (const a of lijst) sec.querySelector('.lijst').appendChild(actieRij(a, vandaag, groep));
+  const lijstEl = sec.querySelector('.lijst');
+  for (const a of lijst) lijstEl.appendChild(actieRijUitGeheugen(a, vandaag, groep));
   if (extra) extra(sec);
   doel.appendChild(sec);
 }
@@ -4419,6 +4480,7 @@ function tekenDoen() {
   if (!model || $('scherm-doen').hidden || bd.id) return;
   const doel = $('doenLijst');
   doel.innerHTML = '';
+  if (actieGeheugen.size > acties.length + 50) actieGeheugen.clear();
   if (!gekoppeld) { $('doenFilters').hidden = true; const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Nog niet gekoppeld'; doel.appendChild(p); return; }
   $('doenFilters').hidden = false;
   const vandaag = datumTekst(new Date());
@@ -4452,7 +4514,7 @@ function tekenDoen() {
     kop.addEventListener('click', () => { doen.afgerondOpen = !doen.afgerondOpen; tekenDoen(); });
     if (doen.afgerondOpen || z) {
       const l = document.createElement('div'); l.className = 'lijst';
-      for (const a of af) l.appendChild(actieRij(a, vandaag, 'af'));
+      for (const a of af) l.appendChild(actieRijUitGeheugen(a, vandaag, 'af'));
       sec.appendChild(l);
     } else kop.style.borderBottom = '1px solid var(--lijn)';
     doel.appendChild(sec);
@@ -4539,7 +4601,8 @@ function actieToevoegen() {
   if (!naam) { inp.focus(); return; }
   if (naam[0] === '#') { inp.blur(); return; }
   vakLeeg(inp);
-  const bestaand = acties.find((a) => normNaam(a.naam) === normNaam(naam));
+  const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+  const bestaand = acties.find((a) => normNaam(a.naam) === nn);
   const id = bestaand ? bestaand.id : nieuweId();
   if (bestaand && !bestaand.open) actieHeropenen(bestaand);
   else if (!bestaand) handelen([{ actie: 'nieuw', soort: 'actie', id, velden: { naam } }]);
@@ -4778,7 +4841,8 @@ function actieOpslaan() {
   const naam = schoonTekst(bd.naam);
   if (!naam) { $('actieNaam').focus(); return; }
   if (naam[0] === '#' && naam !== bd.oud.naam) { naamMetHekje(); return; }
-  if (naam !== o.naam && acties.some((x) => x.id !== o.id && normNaam(x.naam) === normNaam(naam))) {
+  const nn = normNaam(naam); // één keer, niet per element (L1, performance)
+  if (naam !== o.naam && acties.some((x) => x.id !== o.id && normNaam(x.naam) === nn)) {
     melding('m-naam', ['Er is al een actie ', { vet: naam }, '.'], [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg('m-naam') }]);
     $('midden').scrollTop = 0;
     return;
@@ -5133,7 +5197,6 @@ async function terugzetten(tekst, voorBewaren) {
   /* Na terugzetten ruimt de app vandaag niets op (anders verdwijnt meteen weer wat je terugzette). */
   terug.model.instellingen.opruimen = { tot: datumTekst(new Date()) };
   tekst = schrijfBestand(terug.model);
-  if (wachtrij.length) { planSync(0); return fout('Er staan nog wijzigingen klaar. Probeer het zo opnieuw.'); }
   if (sync.bezig) return fout('Even geduld: de app is aan het synchroniseren.');
   sync.bezig = true; tekenWolk();
   try {
@@ -5145,6 +5208,9 @@ async function terugzetten(tekst, voorBewaren) {
     /* Verdachte klok: niet terugzetten. Anders komt er een backup met een datum in de
        toekomst en ruimt de app de echte backups op (H1, ronde 4). */
     const nuGelezen = leesBestand(huidig);
+    /* Wachtende wijzigingen: eerst versturen. Behalve als het huidige bestand onleesbaar is:
+       dan kunnen ze niet weg, en worden ze na het terugzetten op de backup toegepast (M3, data). */
+    if (wachtrij.length && nuGelezen.ok) { sync.opnieuw = true; return fout('Er staan nog wijzigingen klaar. Probeer het zo opnieuw.'); }
     if (klokIsVerdacht(klokInfo(opgehaald.item), nuGelezen.ok ? nuGelezen.model : leegModel(), new Date())) return fout('De datum van deze telefoon lijkt niet te kloppen; er is niets teruggezet.');
     if (voorBewaren) {
       /* Eerst de dagbackup van vandaag (als die er nog niet is). Daarna de stand van
@@ -5152,7 +5218,7 @@ async function terugzetten(tekst, voorBewaren) {
          sinds het vorige terugzetten niets veranderde: zet je meteen nog een backup
          terug, dan blijft de stand van vóór de eerste poging bewaard en gaat
          Ongedaan maken daarheen (M4). */
-      await dagbackup(map, huidig);
+      if (nuGelezen.ok) await dagbackup(map, huidig);
       const pad = '/drives/' + map.driveId + '/items/' + map.itemId + ':/' + VOOR_TERUGZETTEN;
       /* Alleen eigen wijzigingen tellen: wat de app zelf schrijft (wekelijks terug) of de
          ander deed, niet (M4, ronde 4). Na een herstart is er geen vorige: dan bewaren. */
@@ -5172,6 +5238,8 @@ async function terugzetten(tekst, voorBewaren) {
     const item = await res.json();
     kopie = { formaat: FORMAAT, tekst, eTag: item.eTag, fileId: item.id, tijd: Date.now(), serverDag: serverDag(item), scheef: scheefVan(item) };
     terugzetten.vorige = { tijd: Date.now(), eigen: eigenTeller };
+    meldingWeg('m-bestand');
+    if (wachtrij.length) sync.opnieuw = true;
     await bewaar('kopie', kopie);
     bouwModel();
     tekenAlles();

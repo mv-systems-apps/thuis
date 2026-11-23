@@ -589,6 +589,12 @@ controle('klok gemeten tegen de server: meer dan een dag voor of achter is verda
   const v = (s) => K.synchroniseer(b, [], NU, { serverDag: '2026-11-21', scheef: s }).klokVerdacht;
   return gelijk([v(5 * 864e5), v(-3 * 864e5), v(2 * 3600e3), v(-2 * 3600e3)].join(), 'true,true,false,false');
 });
+controle('handeling met een onverwachte vorm vervalt, de rest gaat door (L2 data)', () => {
+  const r = K.synchroniseer(B({ winkels: { w1111: { naam: 'AH' } } }), [
+    H({ actie: 'volgorde', soort: 'winkel', id: 'w1111', volgorde: null }),
+    H({ actie: 'nieuw', soort: 'artikel', id: 'kaa01', velden: { naam: 'Kaas', soort: 'eenmalig' } })], NU);
+  return gelijk(r.ok + '|' + r.resultaten.map((x) => x.status).join() + '|' + !!JSON.parse(r.tekst).artikelen.kaa01, 'true|vervallen,ok|true');
+});
 controle('wekelijks: andere dag kiezen geeft geen gat van bijna twee weken (K3)', () => {
   const k = kern();
   const m = lees({ instellingen: { wekelijks: { dag: 'vr', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
