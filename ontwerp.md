@@ -406,6 +406,40 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Een andere map koppelen met wijzigingen in de wachtrij: eerst bevestigen; de
   wachtrij, kopie, het mandje en de keuzes horen bij de oude map en gaan weg.
 
+### 7a. Wat de app niet doet (020)
+- Een leeg thuis.json geldt als onleesbaar: niets schrijven, melding, verder op de kopie van de telefoon.
+- Bij een onleesbaar, leeg, nieuwer of verdwenen bestand probeert de app niet steeds opnieuw; het
+  wolkje zegt "niet gelukt" tot er iets verandert (app openen, Nu synchroniseren, de gewone ronde).
+  Bij een nieuwer formaat staat er een knop "App bijwerken".
+- Een wijziging die vervalt, wordt altijd gemeld.
+- Opruimen: wordt een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Na het terugzetten van
+  een backup ruimt de app die dag niets op (instelling opruimen.tot). Staat de klok van de telefoon meer
+  dan een week na de nieuwste datum in het bestand, dan wordt er niet opgeruimd (regel in het logboek).
+- Na een ronde zonder verandering wordt niets opnieuw getekend.
+
+### 7a2. Wekelijks, mandje en aankopen (021)
+- Wekelijks gaat hooguit één keer per week terug op de lijst; een andere dag of tijd geldt vanaf de
+  volgende week. Een "van de lijst" van vóór het moment dat pas na de reset binnenkomt, haalt het
+  artikel niet van de nieuwe lijst (de aankoop blijft).
+- Mandje: per telefoon. Wat weer op de lijst staat of verwijderd is, gaat er vanzelf uit; de teller telt
+  alleen wat er nog ligt.
+- Aankopen: gedeeld, in het bestand (deel "aankopen": naam en tijd, niet wie), nieuwste eerst.
+  Instelling "Aankopen bewaren" 0 t/m 1000, standaard 500 (instellingen.aankopen.bewaren). Afvinken
+  voegt een aankoop toe, terugtikken uit het mandje haalt hem weg. In Boodschappen onder het mandje
+  de regel "Aankopen": per dag, met tijd en een zoekvak.
+
+### 7a3. Terugknop en panelen (022)
+- Eén stapel lagen (paneel, subscherm, ander tabblad dan Artikelen), elk een eigen stap in de
+  geschiedenis. Terug sluit altijd de bovenste; op Artikelen zonder lagen sluit terug de app. Een laag
+  die met het kruisje of Opslaan dichtging, laat een dode stap achter die terug overslaat.
+- Bewerkscherm of bewerkpaneel met wijzigingen: terug, kruisje of tik ernaast vraagt "Wijzigingen
+  opslaan?"; terug of het kruisje van die vraag = verder bewerken.
+- Winkel/Afdeling bewerken: een fout (bestaande naam, onveilige link) staat rood in het paneel; het
+  paneel blijft open met alles wat je invulde.
+- Winkel kiezen (bij een artikel zonder winkel, in de editor): Huidig (vast), Favorieten (inklapbaar,
+  open), Overige winkels (ingeklapt) of zonder favorieten Alle winkels (open). Elk zoekvak in een
+  keuzelijst heeft links een loep, met tekst een terugpijl die leegmaakt.
+
 ## 7b. Veiligheid
 
 - Geen code van anderen (geen bibliotheken, CDN, analytics). Gegevens alleen via

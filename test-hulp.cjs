@@ -61,6 +61,10 @@ function jsonNaarRegels(tekst) {
       uit.push([deel === 'artikelen' ? 'artikel' : 'actie', o.naam].concat(velden).join(';'));
     }
   }
+  for (const id of Object.keys(d.aankopen || {})) {
+    const o = d.aankopen[id];
+    uit.push(['aankoop', o.naam].concat(Object.keys(o).filter((k) => k !== 'naam').map((k) => k + '=' + o[k])).join(';'));
+  }
   return uit.join('\n') + (uit.length ? '\n' : '');
 }
 

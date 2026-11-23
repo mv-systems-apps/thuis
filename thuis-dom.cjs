@@ -107,6 +107,7 @@ async function start(od) {
   await slaap(600);
   return dom.window;
 }
+const zonderPauze = (s) => s.split('\n').filter((x) => !x.startsWith('instelling;opruimen;')).join('\n');
 const overigeKop = (k) => [...k.querySelectorAll('.uitklapper')].find((u) => u.textContent.startsWith('Overige'));
 const naamVanRij = (r) => r.querySelector('.naam > span').textContent;
 const namenInLijst = (w) => [...w.document.querySelectorAll('#lijst .item')].map(naamVanRij);
@@ -223,7 +224,7 @@ const BEGIN = [
     !!rijVan('Bananen').querySelector('.naarwinkel') && !rijVan('Bananen').closest('.winkelkaart').contains(d.getElementById('winkelKies')));
   rijVan('Bananen').querySelector('.naarwinkel').click();
   let k = d.getElementById('keuze');
-  controle('winkel: winkelicoon vraagt bij welke winkel het te koop is', !!k && k.getAttribute('aria-label') === 'Bij welke winkel is Bananen te koop?');
+  controle('winkel: winkelicoon vraagt bij welke winkel het te koop is', !!k && k.getAttribute('aria-label') === 'Waar is Bananen te koop?');
   controle('keuzelijst: zoekvak zonder kopje, placeholder Winkel',
     !k.querySelector('.zoek label') && k.querySelector('#keuzeZoek').getAttribute('aria-label') === 'Zoeken of toevoegen' && k.querySelector('#keuzeZoek').placeholder === 'Winkel');
   k.querySelector('#keuzeZoek').value = 'Albert Heijn';
@@ -506,11 +507,11 @@ const BEGIN = [
   paneel.querySelector('.knop').click();
   await slaap(500);
   controle('terugzetten: backup staat in thuis.json, huidige stand bewaard, melding met Ongedaan maken',
-    R(od.bestanden['thuis.json'].tekst) === BEGIN && od.bestanden['thuis_voor_terugzetten.json'].tekst === voorTerug && !!d.getElementById('m-terug') && /Ongedaan maken/.test(d.getElementById('m-terug').textContent),
+    zonderPauze(R(od.bestanden['thuis.json'].tekst)) === BEGIN && /^instelling;opruimen;tot=\d{4}-\d{2}-\d{2}$/m.test(R(od.bestanden['thuis.json'].tekst)) && od.bestanden['thuis_voor_terugzetten.json'].tekst === voorTerug && !!d.getElementById('m-terug') && /Ongedaan maken/.test(d.getElementById('m-terug').textContent),
     R(od.bestanden['thuis.json'].tekst));
   [...d.getElementById('m-terug').querySelectorAll('button')].find((b) => b.textContent === 'Ongedaan maken').click();
   await slaap(500);
-  controle('ongedaan maken: de stand van voor het terugzetten is terug', od.bestanden['thuis.json'].tekst === voorTerug && /dag=vr;tijd=18:30/.test(R(od.bestanden['thuis.json'].tekst)));
+  controle('ongedaan maken: de stand van voor het terugzetten is terug (met dezelfde pauze voor opruimen)', zonderPauze(R(od.bestanden['thuis.json'].tekst)) === zonderPauze(R(voorTerug)) && /dag=vr;tijd=18:30/.test(R(od.bestanden['thuis.json'].tekst)));
   d.getElementById('tab-boodschappen').click();
 
   /* 5f. Artikel bewerken: tik op de naam, kladversie, Opslaan, vraag bij sluiten. */
@@ -842,7 +843,7 @@ const BEGIN = [
     const k = dD.getElementById('keuze');
     controle('winkel bewerken: Naam, Notitie en Link', !!k.querySelector('#bewerkNotitie') && k.querySelector('#bewerkLink').type === 'url');
     k.querySelector('#bewerkLink').value = 'http://gamma.nl'; k.querySelector('.knop').click(); await slaap(20);
-    controle('winkel bewerken: onveilige link geweigerd, paneel blijft', !!dD.getElementById('keuze') && !!dD.getElementById('m-link'));
+    controle('winkel bewerken: onveilige link geweigerd, paneel blijft', !!dD.getElementById('keuze') && !dD.querySelector('#keuze .paneelfout').hidden && /https:\/\//.test(dD.querySelector('#keuze .paneelfout').textContent));
     k.querySelector('#bewerkNotitie').value = 'za tot 17:00 #klussen'; k.querySelector('#bewerkLink').value = 'gamma.nl/openingstijden'; k.querySelector('.knop').click(); await slaap(30);
     dD.querySelector('#winkelDetail .terug').click(); await slaap(30);
     const gr = [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma'));
@@ -879,7 +880,7 @@ const BEGIN = [
     controle('leeg: eerst Melk bij de Plus', !!lijstE.querySelector('.winkelkaart') && /Melk/.test(lijstE.textContent));
     [...lijstE.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Melk')).click(); await slaap(1800);
     lijstE.querySelector('.icoonknop.amber').click(); await slaap(50);
-    controle('leeg: Boodschappen zonder artikelen toont geen winkel, alleen "Geen artikelen"', !lijstE.querySelector('.winkelkaart') && lijstE.textContent === 'Geen artikelen' && !!lijstE.querySelector('.kaart.leegregel'), lijstE.innerHTML.slice(0, 200));
+    controle('leeg: Boodschappen zonder artikelen toont geen winkel, alleen "Geen artikelen"', !lijstE.querySelector('.winkelkaart') && lijstE.firstElementChild.textContent === 'Geen artikelen' && lijstE.firstElementChild.matches('.kaart.leegregel'), lijstE.innerHTML.slice(0, 200));
     const mE = [...dE.querySelectorAll('#meldingen .melding')].find((m) => /Mandje leeggemaakt/.test(m.textContent));
     const vE = mE && mE.querySelector('.vinkknop[aria-label="Klaar"]');
     if (vE) vE.click();
@@ -891,6 +892,131 @@ const BEGIN = [
     dE.getElementById('tab-doen').click(); await slaap(30);
     const doenE = dE.getElementById('doenLijst');
     controle('leeg: Doen in dezelfde stijl als Winkels', doenE.textContent === 'Geen acties' && !!doenE.querySelector('.kaart.leegregel'), doenE.innerHTML);
+  }
+
+  /* 5p. 020: leeg bestand wint niet (B1); bij een fout niet blijven ophalen (B2); vervallen altijd melden (B3). */
+  {
+    const odL = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\n');
+    const wL = await start(odL);
+    await slaap(800);
+    const dL = wL.document;
+    wL.eval("handelen([{ actie: 'zet', soort: 'artikel', id: 'zzz01', veld: 'notitie', oud: '', nieuw: 'x' }])");
+    await slaap(2500);
+    controle('vervallen: melding ook als er verder niets verandert (B3)', !!dL.getElementById('m-vervallen'));
+    odL.zet('thuis.json', '');
+    const downloads = () => odL.verzoeken.filter((v) => v.includes('download.test/thuis.json')).length;
+    const voor = downloads();
+    wL.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen[0].id, veld: 'notitie', oud: '', nieuw: 'halfvol' }])");
+    await slaap(6000);
+    controle('leeg bestand: niet overschreven, melding "is leeg", wolkje "niet gelukt" (B1)', odL.bestanden['thuis.json'].tekst === '' && /is leeg/.test((dL.getElementById('m-bestand') || {}).textContent || '') && dL.getElementById('wolkTekst').textContent === 'niet gelukt', dL.getElementById('wolkTekst').textContent);
+    controle('fout in het bestand: niet elke 1,5 s opnieuw ophalen (B2)', downloads() - voor <= 1, String(downloads() - voor));
+    controle('fout in het bestand: lokale lijst blijft (Melk, met de nieuwe notitie)', wL.eval("artikelen.map((a) => a.naam + ':' + a.notitie).join()") === 'Melk:halfvol');
+  }
+
+  /* 5q. 021: mandje loopt mee met de lijst (B6); gedeelde aankopen met zoeken; instelling bewaren. */
+  {
+    const odA = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\nartikel;Brood;ligt=Plus;op=2026-11-20T10:00\n');
+    const wA = await start(odA);
+    await slaap(800);
+    const dA = wA.document;
+    wA.eval("winkel.id = winkels[0].id");
+    dA.getElementById('tab-winkel').click(); await slaap(30);
+    const lijstA = dA.getElementById('winkelLijst');
+    const vink = (naam) => [...lijstA.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes(naam)).click();
+    vink('Melk'); await slaap(50); vink('Brood'); await slaap(1800);
+    controle('afvinken: twee in het mandje, teller 2 van 2', /In het mandje/.test(lijstA.textContent) && dA.getElementById('winkelTeller').textContent === '2 van 2 artikelen', dA.getElementById('winkelTeller').textContent);
+    await slaap(2500);
+    const tA = R(odA.bestanden['thuis.json'].tekst);
+    controle('afvinken: aankopen in het gedeelde bestand (naam en tijd, niet wie)', (tA.match(/^aankoop;(Melk|Brood);tijd=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/gm) || []).length === 2, tA);
+    const melk = wA.eval("artikelen.find((a) => a.naam === 'Melk').id");
+    wA.eval("handelen([{ actie: 'zet', soort: 'artikel', id: '" + melk + "', veld: 'op', oud: '', nieuw: '2026-11-28T06:00' }])");
+    await slaap(50);
+    const mandjeTekst = [...lijstA.querySelectorAll('.afd')].filter((s) => /In het mandje/.test(s.textContent)).map((s) => s.textContent).join();
+    controle('mandje: weer op de lijst = uit het mandje, niet dubbel; teller telt alleen wat er nog ligt (B6)', !/Melk/.test(mandjeTekst) && /Brood/.test(mandjeTekst) && dA.getElementById('winkelTeller').textContent === '1 van 2 artikelen', mandjeTekst + ' ' + dA.getElementById('winkelTeller').textContent);
+    lijstA.querySelector('.naaraankopen button').click(); await slaap(30);
+    const sch = dA.getElementById('aankopenScherm');
+    const rijen = () => [...sch.querySelectorAll('.aankooprij .nm')].map((x) => x.textContent).sort().join();
+    controle('aankopen: lijst per dag met tijd, kop "Vandaag"', !sch.hidden && rijen() === 'Brood,Melk' && /^Vandaag/.test(sch.querySelector('.kopbalk h3').textContent) && /^\d{2}:\d{2}$/.test(sch.querySelector('.aankooprij .tijd').textContent), rijen());
+    const zk = dA.getElementById('aankopenZoek'); zk.value = 'bro'; zk.dispatchEvent(new wA.Event('input'));
+    controle('aankopen: zoeken filtert', rijen() === 'Brood');
+    sch.querySelector('.terug').click(); await slaap(50);
+    controle('aankopen: terug naar Boodschappen', sch.hidden && !dA.getElementById('scherm-winkel').classList.contains('sub'));
+    [...lijstA.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Brood')).click(); await slaap(2600);
+    controle('terugtikken uit het mandje: ook uit de gedeelde aankopen', !/^aankoop;Brood;/m.test(R(odA.bestanden['thuis.json'].tekst)) && /^aankoop;Melk;/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
+    dA.getElementById('tab-instellingen').click(); await slaap(50);
+    const ab = dA.getElementById('aankopenBewaren');
+    controle('instelling: aankopen bewaren standaard 500', String(ab.value) === '500', String(ab.value));
+    ab.value = '1500'; ab.dispatchEvent(new wA.Event('change'));
+    controle('instelling: buiten 0..1000 wordt teruggezet', String(ab.value) === '500');
+    ab.value = '250'; ab.dispatchEvent(new wA.Event('change')); await slaap(2600);
+    controle('instelling: 250 in het bestand', /^instelling;aankopen;bewaren=250$/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
+  }
+
+  /* 5r. 022: terugknop sluit altijd het bovenste; Winkel bewerken vraagt eerst; keuzelijst met Huidig, Favorieten, loep. */
+  {
+    const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Jumbo\nwinkel;Plus\nartikel;Kaars;op=2026-11-20T10:00\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
+    const wT = await start(odT);
+    await slaap(800);
+    const dT = wT.document;
+    const terug = async () => { wT.history.back(); await slaap(80); };
+    const tab = () => [...dT.querySelectorAll('nav button')].find((b) => b.getAttribute('aria-current') === 'page').dataset.scherm;
+    dT.getElementById('tab-winkels').click(); await slaap(30);
+    [...dT.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma')).click(); await slaap(30);
+    dT.querySelector('#winkelDetail .bewerk').click(); await slaap(20);
+    await terug();
+    controle('terug: eerst het paneel dicht, winkel blijft open', !dT.getElementById('keuze') && !dT.getElementById('winkelDetail').hidden);
+    await terug();
+    controle('terug: dan de winkel dicht (overzicht)', dT.getElementById('winkelDetail').hidden && tab() === 'winkels');
+    await terug();
+    controle('terug: dan naar Artikelen', tab() === 'boodschappen');
+    /* paneel met het kruisje dicht: terug slaat die stap over */
+    dT.getElementById('tab-winkels').click(); await slaap(30);
+    [...dT.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma')).click(); await slaap(30);
+    dT.querySelector('#winkelDetail .bewerk').click(); await slaap(20);
+    dT.querySelector('#keuze .kruis').click(); await slaap(20);
+    await terug(); await slaap(100);
+    controle('terug na kruisje: de dode stap wordt overgeslagen, winkel dicht', dT.getElementById('winkelDetail').hidden && tab() === 'winkels', tab() + ' ' + dT.getElementById('winkelDetail').hidden);
+    /* Winkel bewerken met wijzigingen */
+    [...dT.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma')).click(); await slaap(30);
+    dT.querySelector('#winkelDetail .bewerk').click(); await slaap(20);
+    dT.getElementById('bewerkNotitie').value = 'za tot 17:00';
+    dT.querySelector('#keuze .kruis').click(); await slaap(20);
+    controle('winkel bewerken: sluiten met wijzigingen vraagt "Wijzigingen opslaan?" (K13)', /Wijzigingen opslaan/.test(dT.getElementById('keuze').textContent) && dT.getElementById('keuzeWacht').hidden);
+    await terug(); await slaap(50);
+    controle('vraag: terug = verder bewerken, notitie staat er nog', !!dT.getElementById('keuze') && dT.getElementById('bewerkNotitie').value === 'za tot 17:00');
+    dT.getElementById('bewerkNaam').value = 'Plus';
+    dT.querySelector('#keuze .knop').click(); await slaap(20);
+    controle('winkel bewerken: bestaande naam = fout in het paneel, paneel blijft, notitie blijft (K13)', !!dT.getElementById('keuze') && /Er is al een winkel Plus/.test(dT.querySelector('#keuze .paneelfout').textContent) && dT.getElementById('bewerkNotitie').value === 'za tot 17:00');
+    dT.getElementById('bewerkNaam').value = 'Gamma';
+    dT.querySelector('#keuze').click(); await slaap(20);
+    [...dT.querySelectorAll('#keuze .bewerkknoppen .knop')].find((b) => b.textContent === 'Opslaan').click(); await slaap(30);
+    controle('vraag: Opslaan bewaart en sluit', !dT.getElementById('keuze') && !dT.getElementById('keuzeWacht') && wT.eval("winkels.find((w) => w.naam === 'Gamma').notitie") === 'za tot 17:00');
+    /* artikel-editor met wijzigingen: terug = vraag */
+    dT.getElementById('tab-boodschappen').click(); await slaap(30);
+    [...dT.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Kaars')).querySelector('.tekst').click(); await slaap(30);
+    dT.getElementById('artikelNotitie').value = 'wit'; dT.getElementById('artikelNotitie').dispatchEvent(new wT.Event('input'));
+    await terug();
+    controle('terug in de artikel-editor met wijzigingen: vraag, editor blijft', !dT.getElementById('artikelScherm').hidden && /Wijzigingen opslaan/.test((dT.getElementById('keuze') || {}).textContent || ''));
+    await terug();
+    controle('terug op de vraag: verder bewerken', !dT.getElementById('keuze') && !dT.getElementById('artikelScherm').hidden && dT.getElementById('artikelNotitie').value === 'wit');
+    dT.getElementById('artikelDicht').click(); await slaap(20);
+    [...dT.querySelectorAll('#keuze .bewerkknoppen .knop')].find((b) => b.textContent === 'Weggooien').click(); await slaap(30);
+    /* keuzelijst Bij welke winkel? */
+    wT.eval("ws.favorieten = [winkels.find((w) => w.naam === 'Jumbo').id]; winkel.id = winkels.find((w) => w.naam === 'Plus').id");
+    dT.getElementById('tab-winkel').click(); await slaap(30);
+    dT.querySelector('#winkelLijst .naarwinkel').click(); await slaap(20);
+    const kz = dT.getElementById('keuze');
+    const koppen = [...kz.querySelectorAll('.uitklapper')].map((u) => u.firstChild.textContent + (u.classList.contains('vast') ? '(vast)' : '') + (u.getAttribute('aria-expanded') === 'false' ? '(dicht)' : '')).join();
+    controle('bij welke winkel: Huidig (vast), Favorieten (inklapbaar, open), Overige winkels (dicht)', koppen === 'Huidig(vast),Favorieten,Overige winkels(dicht)' && [...kz.querySelectorAll('.optie .nm')].map((x) => x.firstChild.textContent).join() === 'Plus,Jumbo', koppen);
+    const links = kz.querySelector('.zoeklinks');
+    const zk = kz.querySelector('#keuzeZoek');
+    const loep = links.getAttribute('aria-label');
+    zk.value = 'ga'; zk.dispatchEvent(new wT.Event('input'));
+    const pijl = links.getAttribute('aria-label');
+    links.click();
+    controle('keuzelijst: loep links, met tekst een terugpijl die leegmaakt', loep === 'Zoeken' && pijl === 'Leegmaken' && zk.value === '' && links.getAttribute('aria-label') === 'Zoeken');
+    await terug();
+    controle('terug sluit de keuzelijst, Boodschappen blijft', !dT.getElementById('keuze') && tab() === 'winkel');
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */

@@ -141,9 +141,13 @@ controle('bestand: schrijven is stabiel', () => { const een = K.schrijfBestand(l
 controle('bestand: BOM herkend', () => { const r = K.leesBestand('﻿' + B({})); return gelijk(r.ok + '|' + r.model.bom, 'true|true'); });
 controle('bestand: geen geldige UTF-8 wordt niet gelezen', () => gelijk(K.leesBestand(new Uint8Array([0x7B, 0x7D, 0xFF])).reden, 'geen-utf8'));
 controle('bestand: kapotte JSON wordt niet gelezen', () => gelijk([K.leesBestand('{"versie": "' + K.FORMAAT + '", "artikelen": {').reden, K.leesBestand('[1]').reden].join(), 'geen-json,geen-json'));
-controle('bestand: versie — nieuwer weigert (melding bijwerken), ouder of ontbrekend ook, leeg is een begin', () => gelijk(
-  [K.leesBestand('{"versie": "1352903-000"}').reden, K.leesBestand('{"versie": "1352902-3FF"}').reden, K.leesBestand('{}').reden, K.leesBestand('').ok].join(),
-  'nieuwer-formaat,onbekend-formaat,onbekend-formaat,true'));
+controle('bestand: versie — nieuwer weigert (melding bijwerken), ouder of ontbrekend ook; leeg is niet geldig (B1)', () => gelijk(
+  [K.leesBestand('{"versie": "1352903-000"}').reden, K.leesBestand('{"versie": "1352902-3FF"}').reden, K.leesBestand('{}').reden, K.leesBestand('').reden, K.leesBestand(' \n').reden].join(),
+  'nieuwer-formaat,onbekend-formaat,onbekend-formaat,leeg,leeg'));
+controle('ronde: een leeg bestand op OneDrive wordt niet overschreven (B1)', () => {
+  const r = K.synchroniseer('', [{ actie: 'nieuw', soort: 'artikel', id: 'mel01', velden: { naam: 'Melk' } }], NU);
+  return gelijk(r.ok + '|' + r.reden + '|' + (r.tekst === undefined), 'false|leeg|true');
+});
 const OPBOUW = [
   ['artikelen is een lijst', { artikelen: [] }],
   ['artikel is tekst', { artikelen: { p1111: 'Melk' } }],
@@ -415,6 +419,71 @@ controle('opruimen: instelling archief bewaren (1 jaar) telt; ongeldige waarde w
   return gelijk(Object.keys(uit(k, m).artikelen).join() + '|' + fout.ok, 'bat01|false');
 });
 
+controle('opruimen: soort naar Eenmalig → bewaartijd loopt vanaf die dag, niet meteen weg (B5)', () => {
+  const r = K.synchroniseer(B({ artikelen: { tan01: { naam: 'Tandpasta', soort: 'regelmatig', gekocht: ['2026-03-01'] } } }),
+    [H({ actie: 'zet', soort: 'artikel', id: 'tan01', veld: 'soort', oud: 'regelmatig', nieuw: 'eenmalig', t: '2026-11-21T09:00' })], NU);
+  const a = JSON.parse(r.tekst).artikelen.tan01;
+  return gelijk(a && a.soort + '|' + a.weg, 'eenmalig|2026-11-21');
+});
+controle('opruimen: niet op de dag van een teruggezette backup (B5)', () => {
+  const r = K.synchroniseer(B({ instellingen: { opruimen: { tot: '2026-11-21' } }, artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-20'] } } }), [], NU);
+  const morgen = K.synchroniseer(r.tekst, [], new Date(2026, 10, 22, 10, 0));
+  return gelijk(!!JSON.parse(r.tekst).artikelen.lam01 + '|' + !!JSON.parse(morgen.tekst).artikelen.lam01, 'true|false');
+});
+controle('opruimen: niet als de klok van de telefoon ver na de nieuwste datum staat; wel in het logboek (B5)', () => {
+  const bestand = B({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-20'] } } });
+  const ver = K.synchroniseer(bestand, [], new Date(2027, 5, 1, 10, 0));
+  const goed = K.synchroniseer(bestand, [], NU);
+  return gelijk(!!JSON.parse(ver.tekst).artikelen.lam01 + '|' + ver.opgelost.some((x) => /Opruimen overgeslagen/.test(x)) + '|' + !!JSON.parse(goed.tekst).artikelen.lam01, 'true|true|false');
+});
+controle('lezen: wekelijks-dag of -tijd die niet klopt maakt het bestand ongeldig (K7)', () => gelijk(
+  ['toString', 'xx', 'za'].map((dag) => K.leesBestand(B({ instellingen: { wekelijks: { dag, tijd: '06:00' } } })).ok).join() + '|' + K.leesBestand(B({ instellingen: { wekelijks: { dag: 'za', tijd: '25:00' } } })).ok,
+  'false,false,true|false'));
+controle('lezen/schrijven: onbekende velden als "constructor" en "__proto__" blijven bewaard (K8)', () => {
+  const tekst = '{"versie": "' + K.FORMAAT + '", "artikelen": {"mel01": {"naam": "Melk", "constructor": "x", "toString": 1, "__proto__": {"a": 1}}}}';
+  const uitTekst = K.schrijfBestand(K.leesBestand(tekst).model);
+  return gelijk(['"constructor":"x"', '"toString":1', '"__proto__":{"a":1}'].map((s) => uitTekst.includes(s)).join(), 'true,true,true');
+});
+controle('lezen: actie met onbekende datum komt in het logboek (K9)', () => gelijk(
+  K.leesBestand(B({ acties: { a1111: { naam: 'APK', datum: '2026-13' } } })).model.opgelost.join(), 'APK: onbekende datum "2026-13", getoond zonder periode'));
+
+controle('wekelijks: offline van de lijst vóór het moment, gesynct na de reset → blijft op de nieuwe lijst; aankoop blijft (B4)', () => {
+  const na = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+    artikelen: { ban01: { naam: 'Bananen', soort: 'wekelijks', op: '2026-11-21T06:00', gekocht: ['2026-11-14'] } } });
+  const r = K.synchroniseer(na, [
+    H({ actie: 'zet', soort: 'artikel', id: 'ban01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' }),
+    H({ actie: 'gekocht', soort: 'artikel', id: 'ban01', datum: '2026-11-20', t: '2026-11-20T17:00' })], NU);
+  const b = JSON.parse(r.tekst).artikelen.ban01;
+  const laterAf = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'ban01', veld: 'op', oud: '2026-11-21T06:00', nieuw: '', t: '2026-11-21T09:00' })], NU);
+  return gelijk(b.op + '|' + b.gekocht.join() + '|' + (JSON.parse(laterAf.tekst).artikelen.ban01.op || ''), '2026-11-21T06:00|2026-11-14,2026-11-20|');
+});
+controle('wekelijks: hooguit één keer per week; tijd later zetten op dezelfde dag geeft geen tweede reset (K11)', () => {
+  const k = kern();
+  const m = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '10:00', teruggezet: '2026-11-21T06:00' } },
+    artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
+  const vandaag = k.wekelijksTerug(m, new Date(2026, 10, 21, 11, 0));
+  const volgende = k.wekelijksTerug(m, new Date(2026, 10, 28, 11, 0));
+  return gelijk(vandaag + '|' + volgende + '|' + m.instellingen.wekelijks.teruggezet, '0|1|2026-11-28T10:00');
+});
+controle('aankopen: toevoegen (dubbel = één), weghalen, nieuwste eerst in het bestand; standaard 500 bewaard', () => {
+  const aankoop = (id, tijd) => H({ actie: 'aankoop', soort: 'aankoop', id, naam: 'Melk', tijd });
+  const r = K.synchroniseer(B({ artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks' } } }),
+    [aankoop('k1111', '2026-11-20T10:00'), aankoop('k2222', '2026-11-21T09:00'), aankoop('k1111', '2026-11-20T10:00'), aankoop('k3333', '2026-11-21T09:30'),
+     H({ actie: 'weg', soort: 'aankoop', id: 'k3333' })], NU);
+  const veel = [];
+  for (let i = 0; i < 510; i++) veel.push(aankoop('x' + String(1000 + i), '2026-11-' + String(10 + (i % 10)) + 'T' + String(10 + (i % 12)) + ':' + String(10 + (i % 50))));
+  const r2 = K.synchroniseer(B({}), veel, NU);
+  return gelijk(Object.keys(JSON.parse(r.tekst).aankopen).join() + '|' + Object.keys(JSON.parse(r2.tekst).aankopen).length, 'k2222,k1111|500');
+});
+controle('aankopen: bewaren instelbaar 0 t/m 1000; ongeldig vervalt of maakt het bestand ongeldig', () => {
+  const k = kern();
+  const m = lees({});
+  const st = ['0', '1000', '250', '1001', '-1', '05', 'toString'].map((v) => k.pasToe(m, H({ actie: 'instelling', naam: 'aankopen', veld: 'bewaren', nieuw: v })).status).join();
+  const nul = K.synchroniseer(B({ instellingen: { aankopen: { bewaren: '0' } } }), [H({ actie: 'aankoop', soort: 'aankoop', id: 'k1111', naam: 'Melk', tijd: '2026-11-20T10:00' })], NU);
+  return gelijk(st + '|' + (JSON.parse(nul.tekst).aankopen === undefined) + '|' + K.leesBestand(B({ instellingen: { aankopen: { bewaren: '2000' } } })).ok
+    + '|' + K.leesBestand(B({ aankopen: { k1111: { naam: 'Melk', tijd: 'gisteren' } } })).ok, 'ok,ok,ok,vervallen,vervallen,vervallen,vervallen|true|false|false');
+});
+
 /* ---------- een hele ronde ---------- */
 controle('ronde: wachtrij toepassen op de nieuwste versie, met resultaten', () => {
   const r = K.synchroniseer(B(VB), [
@@ -433,7 +502,7 @@ controle('ronde: alleen een BOM is reden om te schrijven', () => {
   return gelijk(K.synchroniseer('﻿' + B(vb), [], NU).gewijzigd, true);
 });
 controle('ronde: ontbreekt de instelling voor wekelijks, dan komt de standaard erin', () => {
-  const r = K.synchroniseer('', [], NU);
+  const r = K.synchroniseer(B({}), [], NU);
   return gelijk(r.gewijzigd + '|' + JSON.stringify(JSON.parse(r.tekst).instellingen.wekelijks), 'true|{"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}');
 });
 controle('ronde: een bestand dat geen UTF-8 is of een verkeerde opbouw heeft, wordt nooit verwerkt', () =>

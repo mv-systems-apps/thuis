@@ -24,6 +24,16 @@ MUTATIES = [
   ("deze week t/m zondag vergeten", "  return g.begin <= zondag ? 'week' : 'later';", "  return g.begin <= vandaag ? 'week' : 'later';"),
   ("tag zoekt ook in de naam", "    return tagsVan(notitie).some((g) => g.sleutel.indexOf(k) === 0);", "    return tagsVan(notitie + ' ' + naam).some((g) => g.sleutel.indexOf(k) === 0);"),
   ("winkel-link niet gecontroleerd", "  if ((h.soort === 'artikel' || h.soort === 'winkel') && h.veld === 'link'", "  if (h.soort === 'artikel' && h.veld === 'link'"),
+  ("leeg bestand weer geldig", "  if (tekst.trim() === '') return { ok: false, reden: 'leeg' };", "  if (tekst.trim() === '') return { ok: true, model };"),
+  ("soortwissel zet geen weg", "&& String(h.t).slice(0, 10) > (r.weg || '')) r.weg = String(h.t).slice(0, 10);", "&& false) r.weg = '';"),
+  ("pauze na terugzetten genegeerd", "  if (pauze && vandaag <= pauze) return 0;", ""),
+  ("klok vooruit niet herkend", "  if (nieuwste && vandaag > datumTekst(", "  if (false && vandaag > datumTekst("),
+  ("wekelijks-dag niet gecontroleerd", "      || (w.dag !== undefined && !INSTELLING_GELDIG.wekelijks.dag(w.dag))", "      || false"),
+  ("constructor-veld kwijt", "if (!Object.prototype.hasOwnProperty.call(o, k)) Object.defineProperty(", "if (!(k in o)) Object.defineProperty("),
+  ("oude afvinkactie haalt nieuwe week weg", "&& String(h.t || '') < wk.teruggezet) return { status: 'al' };", "&& false) return { status: 'al' };"),
+  ("twee resets per week", "  if (vorige !== '' && vorige > tijdstipTekst(weekEerder)) return 0;", ""),
+  ("aankopen niet beperkt", "  if (model.aankopen.size <= n) return 0;", "  return 0;"),
+  ("aankoop dubbel", "  if (verz.has(h.id)) return { status: 'al' };\n  try { verz.set(h.id, recordUitJson('aankoop'", "  try { verz.set(h.id + 'x', recordUitJson('aankoop'"),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))
