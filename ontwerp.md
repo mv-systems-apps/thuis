@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (23-11-2026): in gebruik, versie 1352903-009. Dit document beschrijft
+Status (23-11-2026): in gebruik, versie 1352903-00A. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a t/m §7a8 de wijzigingen na de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
@@ -201,7 +201,7 @@ Maten: het rondje (op/van de lijst, afvinken) is overal 28 px en krimpt nooit;
 het gevulde rondje is even groot als de buitenkant van het open rondje (lijn
 meegerekend). Soorticoon en iconen 24 px, lijndikte 2. Een icoonknop is een
 vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
-"Waar ligt dit?"; amber alleen voor "Mandje leegmaken"). Een lange naam loopt door naar een volgende regel.
+"Waar ligt dit?"; turquoise voor "Winkelmand leegmaken", 36 px). Een lange naam loopt door naar een volgende regel.
 
 ### 5.1 Boodschappen
 - Invoervak "Zoeken of toevoegen" (placeholder "Artikel"). Links een
@@ -297,11 +297,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Terugtikken zet het terug en haalt de aankoopdatum weg.
 - "Niet bij <winkel>": artikelen die hier niet te koop zijn, ingeklapt
   en grijs, wel af te vinken.
-- Het mandje blijft staan tot je het leegmaakt: rechts naast het kopje "In het
-  mandje" staat een icoonknop (mandje met kruis, "Mandje leegmaken"). Het mandje hoort bij de telefoon (niet in
+- Het mandje blijft staan tot je het leegmaakt of tot de volgende dag (wat op een eerdere dag is
+  afgevinkt, gaat er vanzelf uit): rechts naast het kopje "In winkelmand" staat een icoonknop
+  (mandje met kruis, "Winkelmand leegmaken"). Het mandje hoort bij de telefoon (niet in
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
-  groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar". Later
-  eventueel een instelling "na x dagen vanzelf leeg".
+  groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar".
 - Het mandje is per winkel: "In winkelmand" toont alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
   je elders afvinkte, staat daar weer als je die winkel kiest.
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
@@ -456,7 +456,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Wekelijks gaat hooguit één keer per week terug op de lijst; een andere dag of tijd geldt vanaf de
   volgende week. Een "van de lijst" van vóór het moment dat pas na de reset binnenkomt, haalt het
   artikel niet van de nieuwe lijst (de aankoop blijft).
-- Mandje: per telefoon. Wat weer op de lijst staat of verwijderd is, gaat er vanzelf uit; de teller telt
+- Mandje: per telefoon. Wat weer op de lijst staat, verwijderd is of op een eerdere dag is afgevinkt, gaat er vanzelf uit; de teller telt
   alleen wat er nog ligt.
 - Aankopen: gedeeld, in het bestand (deel "aankopen": naam en tijd, niet wie), nieuwste eerst.
   Instelling "Aankopen bewaren" 0 t/m 1000, standaard 500 (instellingen.aankopen.bewaren). Afvinken
@@ -572,6 +572,31 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Aankopen/Historie: alleen opnieuw opbouwen als regels, zoekterm of dag veranderden; zoekvorm onthouden.
 - Normaliseren van de invoer één keer vóór een zoeklus. Bewust zo gelaten: afgeleid() bouwt de lijsten
   helemaal opnieuw (±4 ms desktop bij 800 artikelen) en zoekOpNaam is lineair (alleen bij nieuw/terug).
+
+### 7a12. Review UI, laatste hand (00A)
+- Koppen overal 46 px hoog met 14 px rechts; pijltjes rechts op één lijn. Tekstkolom op alle tabs op 72 px.
+- Filterknoppen even breed; past een naam niet, dan voor de hele rij korter (Wk, Mnd, Jr), gemeten.
+- "Winkel?" als eigen kaart (lichtpaarse kop), los van de winkelkaart. Voortgangsbalk altijd, ook bij 0 van 0.
+- Lege schermen: "Geen …". Logboek: "Logs" met "n van 100". Een kop die het woord al noemt ("Winkels", "Alle
+  winkels") toont alleen het getal. Actie-editor: veld "Naam". Infomelding met paarse streep links.
+- Tijd (wekelijks) en Aankopen bewaren: eigen keuzepanelen in de stijl van de app.
+- Winkelmand leegmaken: kleine turquoise knop (36 px). Na + blijft het toetsenbord open (Artikelen, Doen,
+  afdelingen); een nieuwe winkel opent zijn pagina, dan gaat het dicht.
+
+### 7a13. Review dagelijks gebruik (00A)
+- Nieuwe dag of wekelijks moment voorbij (na middernacht, of 's ochtends weer geopend): het model wordt
+  opnieuw uitgerekend en getekend, ook als het bestand niet veranderde (dagNagaan, bij terugkomen en elke 3 min).
+- Winkelmand: wat op een eerdere dag is afgevinkt gaat er vanzelf uit (de aankopen blijven).
+- Herhalen: een te laat afgeronde actie op een vaste dag komt niet op vandaag; een lopende maand of kwartaal wel.
+- Een gewone actie afronden: melding met Ongedaan maken (ook de historieregel weg); zelf terugtikken binnen 1,5 s
+  haalt de melding weg. Een afgeronde actie opnieuw intypen: een voorbije datum gaat eraf.
+- Zoektreffer op de lijst zetten: toetsenbord blijft open, de zoektekst wordt geselecteerd.
+- Datum bij een vaste dag: tik op de datum opent de kalender van de telefoon; ‹ › blijven voor één dag.
+- Aanmelding bijna verlopen: ook gemeld bij terugkomen uit de achtergrond.
+- Afvinken onder "Niet bij <winkel>" legt vast dat het daar te koop is (afdeling onbekend); terugtikken haalt
+  dat weer weg. Typen wist "Van de lijst gehaald" niet meer (alleen verborgen); een ander filter wel.
+- Suggestie stopt na vier keer de gebruikelijke tussentijd.
+- Overal 1,5 s (VERTRAGING) om een mis-tik terug te zetten; Ongedaan maken (6 s) alleen waar iets uit beeld gaat.
 
 ## 7b. Veiligheid
 

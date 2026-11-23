@@ -45,6 +45,14 @@
   .dagen{display:flex;gap:4px}
   .dagen button{flex:1;min-width:0;height:44px;border:0;background:#E9E6F8;color:var(--paars);font-size:17px;font-weight:600}
   .dagen button[aria-checked="true"]{background:var(--paars);color:#FFFFFF}
+  /* Tijd en aantal in Instellingen: een knop met de waarde; kiezen in een eigen paneel (UI). */
+  .mveld{width:120px;flex:none;height:44px;border:2px solid #CFCBE6;background:#FFFFFF;color:var(--tekst);font:inherit;font-size:18px;display:flex;align-items:center;justify-content:space-between;padding:0 10px}
+  .mveld:disabled{opacity:.5}
+  .rij:has(> .mveld) > .label{white-space:nowrap}
+  .tijdraster{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:10px 14px}
+  .tijdraster button{height:44px;border:0;background:#E9E6F8;color:var(--paars);font:inherit;font-size:17px;font-weight:600}
+  .tijdraster button[aria-checked="true"]{background:var(--paars);color:#FFFFFF}
+  .tijdlabel{padding:10px 16px 0;color:var(--grijs);font-size:17px}
   input.tijd,select.tijd{width:150px;flex:none;height:44px;border:2px solid #CFCBE6;padding:0 10px;font-size:18px;background:#FFFFFF;color:var(--tekst)}
   #scherm-instellingen.sub > :not(#backupScherm){display:none}
   #scherm-winkel.sub > :not(#aankopenScherm){display:none}
@@ -92,7 +100,7 @@
   #actieScherm textarea:focus,#actieScherm input:focus{outline:none;border-color:var(--paars)}
   .kopbalk.laat{background:#FBF0DA}
   .kopbalk.laat h2,.kopbalk.laat .kopnaam{color:#A84A0A}
-  .actierij{display:flex;align-items:center;gap:8px;min-height:56px;padding:4px 10px 4px 8px;border-top:1px solid var(--rij);background:#FFFFFF}
+  .actierij{display:flex;align-items:center;gap:8px;min-height:56px;padding:4px 10px 4px 5px;border-top:1px solid var(--rij);background:#FFFFFF}
   .actierij:first-child{border-top:0}
   .actierij .tekst{flex:1;min-width:0;min-height:44px;border:0;background:transparent;padding:4px 0;display:flex;flex-direction:column;justify-content:center;text-align:left;color:var(--tekst)}
   .actierij .nm{font-size:20px;line-height:1.3;overflow-wrap:anywhere}
@@ -106,6 +114,9 @@
   .blader{display:flex;align-items:center;height:52px;background:#FFFFFF;border:1px solid var(--lijn)}
   .blader button{width:52px;height:50px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
   .blader span{flex:1;text-align:center;font-size:20px;font-weight:600}
+  /* Bij een dag: een tik op de datum opent de kalender van de telefoon (onzichtbaar datumvak eroverheen). */
+  .blader label{flex:1;align-self:stretch;position:relative;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:var(--paars);text-decoration:underline;text-decoration-color:#CFCBE6;text-underline-offset:4px}
+  .blader label input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0}
   .backupgroep{display:flex;flex-direction:column}
   .synctoestand{padding:14px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--rij)}
   .synctoestand .regel{display:flex;align-items:center;gap:12px}
@@ -133,7 +144,7 @@
   #meldingen{display:flex;flex-direction:column;gap:8px;padding:14px 14px 0;max-width:640px;margin:0 auto}
   #meldingen:empty{display:none}
   .melding{background:var(--oranje-bg);color:var(--oranje);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
-  .melding.info{background:#ECEAF8;color:#2E2A4F}
+  .melding.info{background:#ECEAF8;color:#2E2A4F;border-left:4px solid var(--paars);padding-left:10px}
   .melding p{margin:0;font-size:17px;line-height:1.4}
   .melding .knoppen{padding:0}
   /* Knoppen in een melding vullen de breedte: één knop over de hele breedte, twee naast elkaar elk de helft. */
@@ -183,7 +194,7 @@
   .kopregel{display:flex;align-items:baseline;justify-content:space-between;padding:2px 2px 0}
   /* Kopbalk boven een lijst: lichtpaars, paarse titel, rechts het aantal (en
      eventueel een pijltje om in te klappen). Elke lijst in de app ziet er zo uit. */
-  .kopbalk{width:100%;min-height:46px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#E9E6F8;border:1px solid var(--lijn);border-bottom:0;text-align:left;font:inherit}
+  .kopbalk{width:100%;min-height:46px;display:flex;align-items:center;gap:8px;padding:6px 14px;background:#E9E6F8;border:1px solid var(--lijn);border-bottom:0;text-align:left;font:inherit}
   .kopbalk h2,.kopbalk h3,.kopbalk .kopnaam{flex:1;min-width:0;margin:0;font-size:18px;font-weight:700;color:var(--paars)}
   .kopbalk .tal{flex-shrink:0;font-size:17px;font-weight:400;color:var(--grijs)}
   .kopbalk svg{flex-shrink:0}
@@ -195,7 +206,7 @@
   .kopregel h2{margin:0;font-size:18px}
   .kopregel span{font-size:17px;color:var(--grijs)}
   .lijst{background:#FFFFFF;border:1px solid var(--lijn)}
-  .item{display:flex;align-items:center;gap:8px;min-height:54px;padding:4px 6px 4px 10px;border-bottom:1px solid var(--rij)}
+  .item{display:flex;align-items:center;gap:8px;min-height:54px;padding:4px 6px 4px 9px;border-bottom:1px solid var(--rij)}
   .item:last-child{border-bottom:0}
   .item .icoon{width:40px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:0;padding:0;background:transparent}
   /* "2×": als een label in de regel, verticaal gecentreerd op de naam. */
@@ -226,11 +237,11 @@
   .wkaart{background:#FFFFFF;border:1px solid var(--lijn)}
   .wkaart > *{border-top:1px solid var(--rij)}
   .wkaart > *:first-child{border-top:0}
-  .winkelrij{width:100%;min-height:60px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:12px;padding:6px 12px 6px 14px;text-align:left;color:var(--tekst)}
+  .winkelrij{width:100%;min-height:60px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:19px;padding:6px 12px 6px 14px;text-align:left;color:var(--tekst)}
   .winkelrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere}
   .winkelrij .sub{display:block;font-size:17px;color:var(--grijs)}
   .wdkop{position:sticky;top:-14px;z-index:2;margin:-14px -14px 0;height:60px;display:flex;align-items:center;gap:6px;padding:0 8px 0 4px;background:#FFFFFF;border-bottom:1px solid var(--lijn)}
-  #winkelDetail{display:flex;flex-direction:column;gap:12px}
+  #winkelDetail,#backupScherm:not([hidden]){display:flex;flex-direction:column;gap:12px}
   #winkelsOverzicht{display:flex;flex-direction:column;gap:12px}
   .wdkop h2{flex:1;min-width:0;margin:0;font-size:21px;font-weight:700;color:var(--tekst);overflow-wrap:anywhere;line-height:1.2}
   .wdkop{min-height:60px;height:auto}
@@ -254,8 +265,8 @@
   /* Bovenaan de voortgang van de hele lijst; daaronder wat bij geen winkel hoort,
      dan de gekozen winkel als één kaart (paarse streep links) met alles wat je
      daar haalt, en los en grijs wat elders ligt en het mandje. */
-  /* De balk ligt vast op de eerste kaart (geen ruimte ertussen). */
-  .voortgang{display:flex;flex-direction:column;gap:8px;margin-bottom:-16px}
+  /* Onder de balk 12 px, net als tussen de kaarten. */
+  .voortgang{display:flex;flex-direction:column;gap:8px;margin-bottom:-4px}
   .voortgang .balk{height:6px;background:#DCD7F3}
   .voortgang .balk div{height:6px;width:0;background:linear-gradient(90deg,#5EE0E8,var(--violet))}
   /* De winkel waar je bent: kop gevuld paars (zoals de balk bovenin); "Zonder
@@ -265,7 +276,9 @@
   .winkelkaart > .winkelkop{background:linear-gradient(115deg,var(--paars),var(--violet))}
   .winkelkaart > .winkelkop .winkelnaam{color:#FFFFFF}
   .winkelkaart > .winkelkop .tal{color:#E4E0FF}
-  .winkelkaart.zonder > .winkelkop{background:#E4E2EE;gap:8px}
+  /* "Winkel?": een gewone groepskop (lichtpaars, 46 px), los van de winkel eronder. */
+  .winkelkaart.zonder > .winkelkop{background:#E9E6F8;gap:8px;height:46px;padding:0 14px}
+  .winkelkaart.zonder > .winkelkop h3{font-size:18px;color:var(--paars)}
   .winkelkop h3{flex:1;min-width:0;margin:0;font-size:21px;font-weight:700;color:var(--grijs)}
   .winkelkaart.zonder > .winkelkop .tal{color:var(--grijs)}
   .winkelkop{height:60px;display:flex;align-items:center;gap:6px;padding:0 10px 0 14px}
@@ -274,25 +287,32 @@
   .winkelkop .tal{flex-shrink:0;font-size:17px;color:var(--grijs)}
   #winkelLijst{display:flex;flex-direction:column;gap:12px}
   .afd{background:#FFFFFF;border:1px solid var(--lijn)}
-  .afd .afdkop{min-height:44px;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;background:#ECEAF8}
+  .afd .afdkop{box-sizing:border-box;min-height:46px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#ECEAF8}
+  .afd .afdkop > span:first-child{padding:6px 0}
   .afd .afdkop span{flex:1;font-size:18px;font-weight:700;color:var(--paars)}
   .afd.grijs{background:#FAFAFD}
   /* Koppen van Niet bij, In het mandje en Aankopen: zoals de groepskoppen elders (paars op lichtpaars). */
   .afd.grijs .afdkop{background:#E9E6F8}
   .wrij{display:flex;align-items:center;gap:6px;padding-right:8px;border-top:1px solid var(--rij)}
   .afd > .wrij:first-child{border-top:0}
-  .wrij .vink{flex:1;min-width:0;min-height:56px;border:0;background:transparent;display:flex;align-items:center;gap:12px;padding:4px 6px 4px 14px;color:var(--tekst);text-align:left}
+  .wrij .vink{flex:1;min-width:0;min-height:56px;border:0;background:transparent;display:flex;align-items:center;gap:12px;padding:4px 6px 4px 17px;color:var(--tekst);text-align:left}
   .wrij .vink .nm{flex:1;min-width:0;font-size:20px;font-weight:400;line-height:1.25;overflow-wrap:anywhere}
   .wrij.gedaan .vink{color:#6B7482}
   .wrij.gedaan .vink .nm{text-decoration:line-through;font-weight:400}
-  .afd .uitklap{flex:1;min-height:44px;border:0;background:transparent;display:flex;align-items:center;gap:8px;padding:0;font-size:18px;font-weight:700;color:var(--paars);text-align:left}
+  .afd .uitklap{flex:1;min-height:46px;padding:6px 0;border:0;background:transparent;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;color:var(--paars);text-align:left}
   .afd .uitklap span{flex:1}
-  .naaraankopen .rij{background:#E9E6F8}
+  /* Zelfde maat als de kopbalk erboven ("Niet bij …"): 44 px hoog, pijl paars, en rechts op dezelfde plek (punt 1, UI). */
+  .naaraankopen .rij{background:#E9E6F8;min-height:46px;padding:6px 14px;gap:8px}
+  .naaraankopen .rij svg{stroke:#4B3CC0}
+  .naaraankopen .waarde{font-size:17px;color:var(--grijs)}
   .naaraankopen .label{color:var(--paars);font-weight:700}
   .afd .uitklap .tal,.afd .afdkop .tal{flex:0 0 auto;font-size:17px;font-weight:400;color:var(--grijs)}
   /* Icoonknop: vierkant van 44 px, lichte tint, geen rand. */
   .icoonknop{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
   .icoonknop.amber{background:#FBF0DA}
+  /* Winkelmand leegmaken: klein (36 px) in de kop, turquoise zoals de vinkjes erin (UI). */
+  .afdkop .icoonknop.mandleeg{width:36px;height:36px;background:#DDF1F2}
+  .afdkop .icoonknop.mandleeg svg{stroke:#0A7581}
   /* ---------- keuzelijst van onderen ---------- */
   #keuze{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(24,20,60,.35)}
   .oplicht{animation:oplichten 1s ease-out}
@@ -301,7 +321,7 @@
   #keuze .paneeltekst{margin:0;padding:4px 16px 6px;font-size:18px;color:var(--tekst)}
   #keuze .paneelfout{margin:0;padding:0 16px 10px;font-size:17px;color:var(--rood, #B3261E)}
   #keuze .paneel{background:#FFFFFF;max-height:80dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
-  #keuze .kop{display:flex;align-items:center;gap:8px;padding:6px 6px 4px 16px}
+  #keuze .kop{display:flex;align-items:center;gap:8px;padding:10px 6px 8px 16px}
   #keuze h3{flex:1;min-width:0;margin:0;font-size:18px;color:var(--paars)}
   /* Een titel met namen erin: de namen vet, de rest gewoon. */
   #keuze h3.delen{font-weight:400}
@@ -417,14 +437,14 @@
       <div class="kopbalk"><h2>Wekelijks terug op de lijst</h2></div>
       <div class="kaart">
         <div class="veld"><span class="label2">Dag</span><div class="dagen" id="wekDagen" role="radiogroup" aria-label="Dag"></div></div>
-        <div class="rij"><label class="label" for="wekTijd">Tijd</label><input class="tijd" id="wekTijd" type="time" step="300"></div>
+        <div class="rij"><span class="label" id="wekTijdLabel">Tijd</span><button class="mveld" id="wekTijd" type="button" aria-labelledby="wekTijdLabel wekTijd" aria-haspopup="dialog"><span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
       </div>
     </div>
     <div class="blok">
       <div class="kopbalk"><h2>Archief</h2></div>
       <div class="kaart">
         <div class="veld"><span class="label2">Verwijderen als niet gekocht in</span><div class="dagen" id="archiefBewaren" role="radiogroup" aria-label="Verwijderen als niet gekocht in"></div></div>
-        <div class="rij"><label class="label" for="aankopenBewaren">Aankopen bewaren</label><select class="tijd" id="aankopenBewaren"></select></div>
+        <div class="rij"><span class="label" id="aankopenLabel">Aankopen bewaren</span><button class="mveld" id="aankopenBewaren" type="button" aria-labelledby="aankopenLabel aankopenBewaren" aria-haspopup="dialog"><span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
       </div>
     </div>
     <div class="blok">
@@ -452,7 +472,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352903-009</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352903-00A</div>
   </section>
 </main>
 
@@ -460,7 +480,7 @@
   <div class="invoerbalk">
     <button class="soortknop" id="invoerSoort" type="button" aria-haspopup="menu" aria-expanded="false"></button>
     <button class="soortknop terugknop" id="invoerTerug" type="button" aria-label="Annuleren" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
-    <input id="invoerTekst" type="text" aria-label="Artikel zoeken of toevoegen" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <input id="invoerTekst" type="text" aria-label="Artikel zoeken of toevoegen" placeholder="Artikel" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter">
     <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     <button class="plusknop" id="invoerPlus" type="button" aria-label="Toevoegen">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
@@ -484,7 +504,7 @@
 <div class="onderbalk" id="balk-doen" hidden>
   <div class="invoerbalk">
     <button class="soortknop terugknop links" id="doenLinks" type="button" aria-label="Zoeken"></button>
-    <input id="doenTekst" type="text" placeholder="Actie" aria-label="Actie zoeken of toevoegen" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    <input id="doenTekst" type="text" placeholder="Actie" aria-label="Actie zoeken of toevoegen" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter">
     <button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     <button class="plusknop" id="doenPlus" type="button" aria-label="Toevoegen">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
@@ -1338,9 +1358,13 @@ function koopPatroon(gekocht) {
   const mid = Math.floor(gaten.length / 2);
   return { laatst, interval: gaten.length % 2 ? gaten[mid] : Math.round((gaten[mid - 1] + gaten[mid]) / 2) };
 }
+/* Na vier keer de gebruikelijke tussentijd niet meer: wat je niet meer koopt,
+   blijft niet eeuwig staan (punt 12, dagelijks gebruik). */
 function suggestie(gekocht, vandaag) {
   const p = koopPatroon(gekocht);
-  if (!p || p.interval === null || dagNummer(vandaag) - p.laatst < p.interval) return null;
+  if (!p || p.interval === null) return null;
+  const sinds = dagNummer(vandaag) - p.laatst;
+  if (sinds < p.interval || sinds > 4 * p.interval) return null;
   return p;
 }
 
@@ -1348,7 +1372,8 @@ function dagLabel(dag) { const dt = new Date(dag * 86400000); return dt.getUTCDa
 function elkeTekst(n) {
   return n >= 14 ? 'elke ' + Math.round(n / 7) + ' weken' : n === 7 ? 'elke week' : n === 1 ? 'elke dag' : 'elke ' + n + ' dagen';
 }
-function suggestieTekst(s) { return 'laatst ' + dagLabel(s.laatst) + ' · meestal ' + elkeTekst(s.interval); }
+/* Kort, zodat het past op één regel: "3 nov · elke 3 weken" (punt 3, UI). */
+function suggestieTekst(s) { return dagLabel(s.laatst) + ' · ' + elkeTekst(s.interval); }
 /* Eén regel voor het bewerkscherm. */
 function gekochtTekst(gekocht) {
   const p = koopPatroon(gekocht);
@@ -1508,10 +1533,13 @@ function verschuif(d, n, stap, dagWens) {
   }
   return String(+d + n);
 }
-/* De volgende keer van een herhalende actie: de eerste die niet al voorbij is. */
+/* De volgende keer van een herhalende actie: de eerste die niet al voorbij is. Een
+   vaste dag ook niet vandaag: te laat afgerond komt hij niet meteen weer open te
+   staan (punt 3, dagelijks gebruik). Een maand of kwartaal die nog loopt wel. */
 function volgendeKeer(d, herhaal, vandaag, dagWens) {
+  const voorbij = (x) => periodeSoort(x) === 'dag' ? x <= vandaag : periodeGrenzen(x).eind < vandaag;
   let x = verschuif(d, 1, herhaal, dagWens);
-  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal, dagWens);
+  for (let i = 0; i < 1000 && voorbij(x); i++) x = verschuif(x, 1, herhaal, dagWens);
   return x;
 }
 /* Te laat (periode voorbij), deze week (begint uiterlijk zondag), later, of geen. */
@@ -2201,16 +2229,34 @@ function afgeleid() {
   mandjeOpschonen();
 }
 /* Het mandje (per telefoon) loopt mee met de lijst: wat weer op de lijst staat of
-   verwijderd is, gaat eruit. Zo staat niets dubbel en klopt de teller (B6). */
+   verwijderd is, gaat eruit. Zo staat niets dubbel en klopt de teller (B6).
+   Wat op een eerdere dag is afgevinkt ook: elke boodschappenronde begint met een
+   leeg mandje; de aankopen blijven (punt 2, dagelijks gebruik). */
 function mandjeOpschonen() {
   if (!winkel.mandje.size) return;
   const opId = new Map(artikelen.map((a) => [a.id, a]));
+  const vandaag = datumTekst(new Date());
   let anders = false;
-  for (const [id] of Array.from(winkel.mandje)) {
+  for (const [id, m] of Array.from(winkel.mandje)) {
     const a = opId.get(id);
-    if (!a || a.op) { winkel.mandje.delete(id); anders = true; }
+    if (!a || a.op || (m.datum && m.datum < vandaag)) { winkel.mandje.delete(id); anders = true; }
   }
   if (anders) mandjeBewaren();
+}
+
+/* Dag en wekelijks moment waarvoor het model het laatst is uitgerekend. Verandert
+   dat (na middernacht, of het wekelijkse moment is voorbij), dan opnieuw uitrekenen
+   en tekenen, ook als het bestand niet veranderde (punt 1, dagelijks gebruik). */
+const getekend = { sleutel: '' };
+function momentSleutel(nu) {
+  const w = model && model.instellingen.wekelijks;
+  const m = w ? laatsteMoment(nu, w.dag, w.tijd) : null;
+  return datumTekst(nu) + '|' + (m ? tijdstipTekst(m) : '');
+}
+function dagNagaan() {
+  if (!model || !kopie || sync.bezig) return;
+  if (momentSleutel(new Date()) === getekend.sleutel) return;
+  bouwModel(); tekenAlles();
 }
 
 function bouwModel() {
@@ -2222,6 +2268,7 @@ function bouwModel() {
   const { alias } = pasAllesToe(model, wachtrij);
   if (alias.size) vervangLokaal(alias);
   afgeleid();
+  getekend.sleutel = momentSleutel(new Date());
 }
 
 /* Bewaren op de telefoon. Mislukt het, dan een melding die blijft staan tot het
@@ -3046,8 +3093,12 @@ function lijstKlik(e) {
     handelen(terugRecord.concat([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
               { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]));
   }
+  /* Tijdens zoeken: toetsenbord open, zoektekst geselecteerd; verder typen vervangt hem (punt 6, dagelijks gebruik). */
+  if (document.activeElement === $('invoerTekst') && normNaam(scherm.zoek)) $('invoerTekst').select();
 }
 $('lijst').addEventListener('click', lijstKlik);
+/* Het rondje laat het vak niet los, zodat het toetsenbord open blijft. */
+for (const ev of ['pointerdown', 'mousedown']) $('lijst').addEventListener(ev, (e) => { if (document.activeElement === $('invoerTekst') && e.target.closest('.rondje')) e.preventDefault(); });
 $('lijstKop').addEventListener('click', () => { if (normNaam(scherm.zoek)) return; scherm.dicht.lijst = !scherm.dicht.lijst; tekenBoodschappen(); });
 $('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald') || e.target.closest('#archief .lijst')) lijstKlik(e); });
 
@@ -3114,13 +3165,18 @@ $('invoerTekst').addEventListener('blur', () => setTimeout(invoerBijwerken, 0));
 
 $('invoerSoort').addEventListener('click', () => soortMenu($('soortMenu').hidden));
 $('invoerPlus').addEventListener('click', toevoegen);
+/* Het toetsenbord blijft open na +: snel meer artikelen achter elkaar (sluiten met ← of terug). */
+$('invoerPlus').addEventListener('pointerdown', (e) => { if (document.activeElement === $('invoerTekst')) e.preventDefault(); });
+$('invoerPlus').addEventListener('mousedown', (e) => { if (document.activeElement === $('invoerTekst')) e.preventDefault(); });
 $('invoerTekst').addEventListener('input', () => {
   /* Nieuw zoeken begint in alles; wordt het vak leeg, dan blijf je op het filter dat je tijdens het zoeken koos. */
   const was = normNaam(scherm.zoek) !== '';
   scherm.zoek = $('invoerTekst').value;
   const is = normNaam(scherm.zoek) !== '';
   if (!was && is) scherm.zoekIn = '';
-  if (was && !is && scherm.zoekIn) { scherm.filter = scherm.zoekIn; scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); scherm.zoekIn = ''; } weggehaaldLegen(); invoerBijwerken(); tekenBoodschappen(); });
+  /* "Van de lijst gehaald" blijft bewaard tijdens het typen (verborgen) en komt terug als het vak leeg is;
+     alleen een ander filter wist het (punt 10, dagelijks gebruik). */
+  if (was && !is && scherm.zoekIn) { if (scherm.zoekIn !== scherm.filter) weggehaaldLegen(); scherm.filter = scherm.zoekIn; scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); scherm.zoekIn = ''; } invoerBijwerken(); tekenBoodschappen(); });
 $('invoerTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); toevoegen(); } });
 /* De tabbalk gaat alleen weg zolang het toetsenbord echt open is. Op Android
    sluit je het toetsenbord vaak met terug; het vak houdt dan de focus, dus
@@ -3142,15 +3198,19 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', type
 window.addEventListener('resize', typenBijwerken);
 
 /* Verversen: elke paar minuten zolang de app in beeld is, en bij terugkomen of weer online. */
-setInterval(() => { if (!document.hidden) planSync(0); }, VERVERS_GEWOON);
+setInterval(() => { if (!document.hidden) { dagNagaan(); planSync(0); } }, VERVERS_GEWOON);
 document.addEventListener('visibilitychange', () => {
   /* Naar de achtergrond met iets in de wachtrij: meteen versturen, niet pas bij de volgende keer openen (L3, data). */
   if (document.hidden) { if (wachtrij.length && navigator.onLine) planSync(0); return; }
   /* Een ander venster kan aanmelding of map veranderd hebben: opnieuw lezen (K5). */
   KV_GEHEUGEN.clear();
+  /* Ook na terugkomen: verloopt de aanmelding binnenkort, dan nu melden, niet pas in de winkel (punt 8, dagelijks gebruik). */
+  aanmeldingOpTijd().catch(() => {});
   standNagaan().then((opnieuw) => {
     /* Offline weer geopend: wekelijks terug alvast zelf uitrekenen (K10). */
     if (!opnieuw && !navigator.onLine && model && kopie) { bouwModel(); tekenAlles(); }
+    /* Online, maar een nieuwe dag of het wekelijkse moment voorbij: eerst zelf uitrekenen (punt 1). */
+    else if (!opnieuw) dagNagaan();
     planSync(300);
   });
 });
@@ -3290,7 +3350,7 @@ function keuzeLijst(opt) {
       if (s.titel) opties.appendChild(keuzeUitklapper(s.titel, open[i], s.vast ? null : () => { open[i] = !open[i]; teken(); }, s.tal));
       if (open[i]) for (const o of s.opties) opties.appendChild(keuzeOptie(o, opt.kies));
     });
-    if (!opties.children.length) opties.appendChild(keuzeLeeg('Nog niets'));
+    if (!opties.children.length) opties.appendChild(keuzeLeeg('Geen keuzes'));
   };
   const toevoegenNu = () => {
     const v = schoonTekst(inp.value);
@@ -3413,7 +3473,7 @@ function winkelKiezen() {
   if (kan.length) secties.push({ titel: moet.length ? 'Kan ook' : 'Te koop bij', ingeklapt: moet.length > 0, tal: telTekst(kan.length, 'winkel', 'winkels'), opties: kan.map(optie) });
   /* Altijd een kop, zoals in de andere keuzelijsten: zonder iets nodig of te koop is
      de groep open; met een gekozen winkel heet hij "Overige winkels", anders "Alle winkels". */
-  if (rest.length) secties.push({ titel: tel.length || gekozen ? 'Overige winkels' : 'Alle winkels', ingeklapt: tel.length > 0, tal: telTekst(rest.length, 'winkel', 'winkels'),
+  if (rest.length) secties.push({ titel: tel.length || gekozen ? 'Overige winkels' : 'Alle winkels', ingeklapt: tel.length > 0, tal: String(rest.length),
     opties: rest.map((w) => ({ id: w.id, naam: w.naam, actief: w.id === winkel.id })) });
   keuzeLijst({
     titel: 'Waar ga je heen?',
@@ -3443,7 +3503,7 @@ function winkelSecties(lijst, actief) {
   const s = [];
   if (gekozen) s.push({ titel: 'Huidig', vast: true, opties: [optie(gekozen)] });
   if (fav.length) s.push({ titel: 'Favorieten', tal: telTekst(fav.length, 'winkel', 'winkels'), opties: fav.map(optie) });
-  if (over.length) s.push({ titel: fav.length ? 'Overige winkels' : 'Alle winkels', ingeklapt: fav.length > 0, tal: telTekst(over.length, 'winkel', 'winkels'), opties: over.map(optie) });
+  if (over.length) s.push({ titel: fav.length ? 'Overige winkels' : 'Alle winkels', ingeklapt: fav.length > 0, tal: String(over.length), opties: over.map(optie) });
   return s;
 }
 
@@ -3485,12 +3545,15 @@ function afvinken(a) {
   const nu = tijdstipTekst(new Date());
   /* Aankopen bewaren = 0: geen aankoop maken (K11). */
   const aankoop = aankopenBewaren(model) > 0 ? nieuweId() : '';
-  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop });
+  /* Afgevinkt onder "Niet bij <winkel>": dan is het hier dus te koop (afdeling nog onbekend) (punt 9, dagelijks gebruik). */
+  const geplaatst = !!(winkel.id && winkelOpId.has(winkel.id) && !teKoopIn(a, winkel.id));
+  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop, geplaatst });
   mandjeBewaren();
   const hs = (aankoop ? [{ actie: 'aankoop', soort: 'aankoop', id: aankoop, naam: a.naam, tijd: nu }] : []).concat([
     { actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' },
     { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: a.opdoor, nieuw: '' }]);
   if (!al) hs.push({ actie: 'gekocht', soort: 'artikel', id: a.id, datum });
+  if (geplaatst) hs.push({ actie: 'plaats', soort: 'artikel', id: a.id, winkel: winkel.id, afd: '' });
   winkel.vertraagd.set(a.id, setTimeout(() => { winkel.vertraagd.delete(a.id); if (winkelOpen()) tekenWinkel(); }, VERTRAGING));
   handelen(hs);
 }
@@ -3506,6 +3569,8 @@ function terugOpLijst(id) {
               { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: '', nieuw: m.opdoor }];
   if (!m.alGekocht) hs.push({ actie: 'nietGekocht', soort: 'artikel', id, datum: m.datum });
   if (m.aankoop) hs.push({ actie: 'weg', soort: 'aankoop', id: m.aankoop });
+  /* Een mis-tik onder "Niet bij": de winkel er ook weer af. */
+  if (m.geplaatst) hs.push({ actie: 'plaats', soort: 'artikel', id, winkel: m.winkel, afd: null });
   handelen(hs);
 }
 
@@ -3604,7 +3669,7 @@ function eldersSectie(doel, w, elders, soortVan) {
 /* "In het mandje", met rechts de knop om het leeg te maken. */
 function mandjeSectie(doel, inMandje) {
   const leeg = document.createElement('button');
-  leeg.type = 'button'; leeg.className = 'icoonknop amber';
+  leeg.type = 'button'; leeg.className = 'icoonknop mandleeg';
   leeg.setAttribute('aria-label', 'Winkelmand leegmaken');
   leeg.innerHTML = MANDJE_WEG;
   leeg.addEventListener('click', mandjeLeegmaken);
@@ -3634,7 +3699,7 @@ function tekenWinkel() {
     /* Zelfde vorm als de winkelkaart, met een lichte streep: een eigen groep, niet de winkel. */
     const kaart = document.createElement('section');
     kaart.className = 'winkelkaart zonder';
-    kaart.innerHTML = '<div class="winkelkop"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M4 9l1.5-5h13L20 9"></path><path d="M4 9h16v11H4z"></path><path d="M10 20v-5h4v5"></path><path d="M3 3l18 18"></path></svg><h3></h3><span class="tal"></span></div>';
+    kaart.innerHTML = '<div class="winkelkop"><h3></h3><span class="tal"></span></div>';
     kaart.querySelector('h3').textContent = 'Winkel?';
     kaart.querySelector('.tal').textContent = telTekst(ind.zonder.length, 'artikel', 'artikelen');
     const sec = winkelSectie(kaart, null);
@@ -3665,8 +3730,8 @@ function tekenWinkel() {
    nieuwste eerst; zoeken in de balk onderaan; een tik op een regel = verwijderen
    (met een vraag, zonder Ongedaan maken: het is maar een logboekregel). */
 const LOG = {
-  aankoop: { titel: 'Aankopen', scherm: 'winkel', doel: 'aankopenScherm', terug: 'Terug naar Boodschappen', een: 'artikel', meer: 'artikelen', leeg: 'Nog geen aankopen' },
-  historie: { titel: 'Historie', scherm: 'doen', doel: 'historieScherm', terug: 'Terug naar Doen', een: 'actie', meer: 'acties', leeg: 'Nog niets afgerond' }
+  aankoop: { titel: 'Aankopen', scherm: 'winkel', doel: 'aankopenScherm', terug: 'Terug naar Boodschappen', een: 'artikel', meer: 'artikelen', leeg: 'Geen aankopen' },
+  historie: { titel: 'Historie', scherm: 'doen', doel: 'historieScherm', terug: 'Terug naar Doen', een: 'actie', meer: 'acties', leeg: 'Geen acties afgerond' }
 };
 const logStand = { open: '', laag: null };
 function logRij(doel, soort) {
@@ -3677,7 +3742,7 @@ function logRij(doel, soort) {
   k.className = 'kaart naaraankopen';
   k.innerHTML = '<button class="rij knoprij" type="button"><span class="label"></span><span class="waarde"></span>' + PIJL_IN + '</button>';
   k.querySelector('.label').textContent = LOG[soort].titel;
-  k.querySelector('.waarde').textContent = verz.size || '';
+  k.querySelector('.waarde').textContent = verz.size ? telTekst(verz.size, LOG[soort].een, LOG[soort].meer) : '';
   k.querySelector('button').addEventListener('click', () => logOpenen(soort));
   doel.appendChild(k);
 }
@@ -3917,6 +3982,9 @@ function tekenWinkels() {
   if (w) tekenWinkelDetail(w); else tekenWinkelsOverzicht();
 }
 
+/* Telt winkels; zegt de kop het woord al ("Alle winkels"), dan alleen het getal. */
+function winkelTal(titel, n) { return /winkels/i.test(titel) ? String(n) : telTekst(n, 'winkel', 'winkels'); }
+
 function tekenWinkelsOverzicht() {
   const doel = $('winkelsOverzicht');
   doel.innerHTML = '';
@@ -3939,7 +4007,7 @@ function tekenWinkelsOverzicht() {
     kop.setAttribute('aria-expanded', String(!dicht));
     kop.innerHTML = '<span class="kopnaam"></span><span class="tal"></span>' + KLAPPIJL(!dicht);
     kop.querySelector('.kopnaam').textContent = titel;
-    kop.querySelector('.tal').textContent = telTekst(rijen.length, 'winkel', 'winkels');
+    kop.querySelector('.tal').textContent = winkelTal(titel, rijen.length);
     kop.addEventListener('click', () => { ws.dicht[sl] = !ws.dicht[sl]; tekenWinkels(); });
     sec.appendChild(kop);
     if (!dicht) {
@@ -3949,8 +4017,8 @@ function tekenWinkelsOverzicht() {
         b.type = 'button'; b.className = 'winkelrij';
         b.innerHTML = ICOON_PUI + '<span class="nm"></span>' + PIJL_IN;
         b.querySelector('.nm').textContent = x.naam;
-        const s = document.createElement('span'); s.className = 'sub'; s.textContent = aantalTekst(x.afdelingen.length);
-        b.querySelector('.nm').appendChild(s);
+        /* Alleen bij afdelingen; "geen afdelingen" maakt de lijst onrustig (punt 6, UI). */
+        if (x.afdelingen.length) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = aantalTekst(x.afdelingen.length); b.querySelector('.nm').appendChild(s); }
         if (x.notitie || x.link) b.querySelector('.nm').appendChild(notitieRegel(x));
         b.addEventListener('click', () => winkelOpenen(x.id));
         kaart.appendChild(b);
@@ -3961,7 +4029,7 @@ function tekenWinkelsOverzicht() {
   }
   if (!alle.length) {
     const p = document.createElement('div'); p.className = 'kaart leegregel';
-    p.textContent = z ? 'Niets gevonden' : 'Nog geen winkels';
+    p.textContent = z ? 'Niets gevonden' : 'Geen winkels';
     doel.appendChild(p);
   }
 }
@@ -3970,7 +4038,7 @@ function tekenWinkelDetail(w) {
   const doel = $('winkelDetail');
   doel.innerHTML = '<div class="wdkop"><button class="terug" type="button" aria-label="Terug naar winkels">' + PIJL_TERUG + '</button><h2></h2>' +
     '<button class="icoonknop ster" type="button"></button><button class="icoonknop bewerk" type="button" aria-label="Winkel bewerken">' + POTLOOD() + '</button></div>' +
-    '<div class="blok"><div class="kopbalk"><h3>Afdelingen in looproute</h3><span class="tal"></span></div><div class="wkaart" id="afdelingen"></div></div>';
+    '<div class="blok"><div class="kopbalk"><h3>Looproute</h3><span class="tal"></span></div><div class="wkaart" id="afdelingen"></div></div>';
   doel.querySelector('h2').textContent = w.naam;
   const fav = isFavoriet(w.id);
   const ster = doel.querySelector('.ster');
@@ -4162,6 +4230,9 @@ function winkelsToevoegen() {
 $('winkelsTekst').addEventListener('input', () => { $('midden').scrollTop = 0; tekenWinkels(); });
 $('winkelsTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); winkelsToevoegen(); } });
 $('winkelsPlus').addEventListener('click', winkelsToevoegen);
+/* Afdelingen achter elkaar invoeren: het toetsenbord blijft open na + (punt 11, dagelijks gebruik).
+   Een nieuwe winkel opent zijn pagina; dan gaat het toetsenbord wel dicht. */
+for (const ev of ['pointerdown', 'mousedown']) $('winkelsPlus').addEventListener(ev, (e) => { if (ws.open && document.activeElement === $('winkelsTekst')) e.preventDefault(); });
 
 /* ---------- artikel bewerken ---------- */
 /* Een kladversie: pas bij Opslaan worden het handelingen. Nieuwe winkels en
@@ -4426,7 +4497,7 @@ function tekenAlles() {
 /* Groepen: te laat, deze week, later, zonder periode; vroegste eerst. Afvinken:
    een herhalende actie schuift door naar de volgende keer (met Ongedaan maken),
    een gewone blijft even grijs staan en gaat dan naar "Afgerond". */
-const doen = { afgerondOpen: false, vertrekt: new Map(), historie: new Map(), filter: 'week', zoekIn: '' };
+const doen = { afgerondOpen: false, vertrekt: new Map(), historie: new Map(), melding: new Map(), filter: 'week', zoekIn: '' };
 const DOEN_NAAM = { week: 'Week', maand: 'Maand', kwartaal: 'Kw.', jaar: 'Jaar', alles: 'Alles' };
 const DOEN_LANG = { week: 'Week', maand: 'Maand', kwartaal: 'Kwartaal', jaar: 'Jaar', alles: 'Alles' };
 const DOEN_KOP = { week: 'Deze week', maand: 'Deze maand', kwartaal: 'Dit kwartaal', jaar: 'Dit jaar' };
@@ -4546,6 +4617,7 @@ function tekenDoenFilters(open, vandaag, zoekend, actief) {
     });
     f.appendChild(b);
   }
+  inkortenAlsNodig(f);
 }
 
 function actieAfronden(a) {
@@ -4577,6 +4649,17 @@ function actieAfronden(a) {
   doen.vertrekt.set(a.id, timer);
   if (hid) doen.historie.set(a.id, hid);
   handelen(hs.concat(log));
+  /* Ook hier Ongedaan maken: na 1,5 s staat hij onder Afgerond, en dat zie je alleen bij Alles (punt 4, dagelijks gebruik). */
+  const mid = 'm-actie-' + willekeurig(6);
+  doen.melding.set(a.id, mid);
+  melding(mid, [{ vet: a.naam }, ' afgerond.'], [{ tekst: 'Ongedaan maken', aftel: ONGEDAAN, actie: () => {
+    meldingWeg(mid);
+    const v = doen.vertrekt.get(a.id);
+    if (v) { clearTimeout(v); doen.vertrekt.delete(a.id); }
+    doen.historie.delete(a.id);
+    handelen([{ actie: 'zet', soort: 'actie', id: a.id, veld: 'klaar', oud: t, nieuw: hs[0].oud }, { actie: 'weg', soort: 'historie', id: hid }]);
+  } }], 'info');
+  setTimeout(() => meldingWeg(mid), ONGEDAAN);
 }
 function actieHeropenen(a) {
   const v = doen.vertrekt.get(a.id);
@@ -4584,6 +4667,8 @@ function actieHeropenen(a) {
   /* Meteen terugtikken (mis-tik): ook de regel uit de historie. Later heropenen laat de historie staan. */
   const hid = doen.historie.get(a.id);
   doen.historie.delete(a.id);
+  /* De melding van het afronden is dan niet meer nodig. */
+  if (doen.melding.has(a.id)) { meldingWeg(doen.melding.get(a.id)); doen.melding.delete(a.id); }
   const oud = model.acties.get(a.id).velden;
   handelen([{ actie: 'zet', soort: 'actie', id: a.id, veld: 'klaar', oud: oud.klaar || '', nieuw: '' }].concat(v && hid ? [{ actie: 'weg', soort: 'historie', id: hid }] : []));
 }
@@ -4604,7 +4689,11 @@ function actieToevoegen() {
   const nn = normNaam(naam); // één keer, niet per element (L1, performance)
   const bestaand = acties.find((a) => normNaam(a.naam) === nn);
   const id = bestaand ? bestaand.id : nieuweId();
-  if (bestaand && !bestaand.open) actieHeropenen(bestaand);
+  if (bestaand && !bestaand.open) {
+    actieHeropenen(bestaand);
+    /* Opnieuw ingetypt: een voorbije datum hoort bij de vorige keer, niet meteen Te laat (punt 5, dagelijks gebruik). */
+    if (bestaand.datum && periodeGrenzen(bestaand.datum).eind < datumTekst(new Date())) handelen([{ actie: 'zet', soort: 'actie', id, veld: 'datum', oud: bestaand.datum, nieuw: '' }]);
+  }
   else if (!bestaand) handelen([{ actie: 'nieuw', soort: 'actie', id, velden: { naam } }]);
   /* Altijd zichtbaar maken: valt de actie buiten het filter (zonder periode valt hij
      alleen onder Alles), dan naar Alles; daarna licht hij op (B4). */
@@ -4733,6 +4822,8 @@ tagKeuze('doenTekst', () => acties.map((a) => a.notitie));
 linksKnop('winkelsLinks', 'winkelsTekst', () => tekenWinkels());
 $('doenTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); actieToevoegen(); } });
 $('doenPlus').addEventListener('click', actieToevoegen);
+/* Acties achter elkaar invoeren: het toetsenbord blijft open na + (punt 11, dagelijks gebruik). */
+for (const ev of ['pointerdown', 'mousedown']) $('doenPlus').addEventListener(ev, (e) => { if (document.activeElement === $('doenTekst')) e.preventDefault(); });
 
 /* Actie bewerken: zoals een artikel (kladversie, Opslaan, vraag bij sluiten). */
 const bd = { id: '', oud: null, naam: '', notitie: '', link: '', datum: '', herhaal: '', sluiten: false };
@@ -4755,7 +4846,7 @@ function actieOpenen(id) {
   const doel = $('actieScherm');
   doel.hidden = false;
   doel.innerHTML = '<div class="wdkop"><h2>Actie</h2><button class="icoonknop" id="actieDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
-    '<div class="veld"><label for="actieNaam">Actie</label><textarea id="actieNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
+    '<div class="veld"><label for="actieNaam">Naam</label><textarea id="actieNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
     '<div class="veld"><label for="actieNotitie">Notitie</label><textarea id="actieNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
     '<div class="veld"><label for="actieLink">Link</label><input id="actieLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
     '<div class="veld"><span class="label2" id="wanneerLabel" style="font-weight:600;color:var(--paars)">Wanneer</span><div class="segment" id="wanneerSoort" role="radiogroup" aria-labelledby="wanneerLabel"></div><div id="wanneerBlader"></div></div>' +
@@ -4777,6 +4868,17 @@ function actieOpenen(id) {
   $('midden').scrollTop = 0;
   hoogte();
 }
+/* Knoppen in een rij blijven even breed. Past een tekst niet (gemeten), dan de korte
+   vorm: Week → Wk, Maand → Mnd, Jaar → Jr. De voorleestekst blijft voluit (punt 2, UI). */
+const KORT = { Week: 'Wk', Maand: 'Mnd', Jaar: 'Jr' };
+function inkortenAlsNodig(rij) {
+  const knoppen = Array.from(rij.querySelectorAll('button'));
+  if (knoppen.every((b) => b.scrollWidth <= b.clientWidth + 1)) return;
+  for (const b of knoppen) {
+    const el = b.querySelector('span:not(.n)') || b;
+    if (KORT[el.textContent]) { if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', el.textContent); el.textContent = KORT[el.textContent]; }
+  }
+}
 function segment(doel, opties, nu, kies) {
   doel.innerHTML = '';
   for (const [waarde, tekst] of opties) {
@@ -4788,6 +4890,7 @@ function segment(doel, opties, nu, kies) {
     b.addEventListener('click', () => kies(waarde));
     doel.appendChild(b);
   }
+  inkortenAlsNodig(doel);
 }
 function tekenWanneer() {
   const vandaag = datumTekst(new Date()), soort = periodeSoort(bd.datum);
@@ -4802,6 +4905,16 @@ function tekenWanneer() {
     bl.className = 'blader';
     bl.innerHTML = '<button type="button" aria-label="Eerder">' + PIJL_TERUG + '</button><span></span><button type="button" aria-label="Later">' + PIJL_TERUG.replace('<svg ', '<svg style="transform:rotate(180deg)" ') + '</button>';
     bl.querySelector('span').textContent = periodeTekst(bd.datum, vandaag, true);
+    if (soort === 'dag') {
+      /* Verder weg in één keer: de kalender van de telefoon (punt 7, dagelijks gebruik). */
+      const lab = document.createElement('label');
+      lab.textContent = periodeTekst(bd.datum, vandaag, true);
+      const inp = document.createElement('input');
+      inp.type = 'date'; inp.value = bd.datum; inp.setAttribute('aria-label', 'Datum kiezen');
+      inp.addEventListener('change', () => { if (periodeSoort(inp.value) === 'dag') { bd.datum = inp.value; tekenWanneer(); } });
+      lab.appendChild(inp);
+      bl.replaceChild(lab, bl.querySelector('span'));
+    }
     const [eerder, later] = bl.querySelectorAll('button');
     eerder.addEventListener('click', () => { bd.datum = verschuif(bd.datum, -1, soort); tekenWanneer(); });
     later.addEventListener('click', () => { bd.datum = verschuif(bd.datum, 1, soort); tekenWanneer(); });
@@ -4911,17 +5024,8 @@ function tekenInstellingen() {
     b.addEventListener('click', () => { if (w.dag !== d) handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'dag', oud: w.dag, nieuw: d }]).then(tekenInstellingen); });
     doel.appendChild(b);
   }
-  if (document.activeElement !== $('wekTijd')) $('wekTijd').value = w.tijd || '06:00';
-  /* Keuzelijst in plaats van typen (geen toetsenbord): 50, 100, 250, 500. Een eerder
-     ingestelde andere waarde (oudere versie) staat er alleen in zolang hij geldt. */
-  const ab = $('aankopenBewaren'), abNu = aankopenBewaren(model);
-  const waarden = Array.from(new Set(AANKOPEN_KEUZES.concat([abNu]))).sort((x, y) => x - y);
-  if (ab.dataset.waarden !== waarden.join()) {
-    ab.innerHTML = '';
-    for (const v of waarden) { const o = document.createElement('option'); o.value = String(v); o.textContent = v === 0 ? 'niet' : String(v); ab.appendChild(o); }
-    ab.dataset.waarden = waarden.join();
-  }
-  ab.value = String(abNu);
+  $('wekTijd').querySelector('span').textContent = w.tijd || '06:00';
+  $('aankopenBewaren').querySelector('span').textContent = String(aankopenBewaren(model));
   /* Doen: standaard filter, per telefoon. */
   const ds = $('doenStandaard');
   ds.innerHTML = '';
@@ -4934,6 +5038,7 @@ function tekenInstellingen() {
     b.addEventListener('click', () => { doen.standaard = k; doen.filter = k; bewaar('doenStandaard', k); tekenInstellingen(); });
     ds.appendChild(b);
   }
+  inkortenAlsNodig(ds);
   $('aankopenBewaren').disabled = !gekoppeld;
   $('wekTijd').disabled = !gekoppeld;
   tekenArchiefInstelling();
@@ -4996,33 +5101,67 @@ function tekenArchiefInstelling() {
     doel.appendChild(b);
   }
 }
-/* Aankopen en historie bewaren: 0 t/m 1000 (standaard 500). Iets anders: terug naar de huidige waarde. */
-function bewarenInstellen(vakId, soort, een, meer) {
-  const vak = $(vakId);
-  vak.addEventListener('change', () => {
-    const nu = String(aankopenBewaren(model));
-    const v = String(vak.value).trim().replace(/^0+(?=\d)/, '');
-    if (!AANKOPEN_BEWAREN.test(v)) { vak.value = nu; return; }
-    if (v === nu) return;
-    const zet = () => handelen([{ actie: 'instelling', naam: LOG_INSTELLING[soort], veld: 'bewaren', oud: nu, nieuw: v }]);
-    /* Lager dan wat er nu is: eerst bevestigen, met hoeveel er verdwijnen (K9). */
-    const weg = verzameling(model, soort).size - +v;
-    if (weg <= 0) { zet(); return; }
-    const k = keuzePaneel(weg + ' oudste ' + (weg === 1 ? een : meer) + ' verwijderen?', false);
-    k.querySelector('.opties').outerHTML = '<div class="bewerkknoppen" style="padding:10px 14px 14px"><button class="knop tweede grijs" type="button">Annuleren</button><button class="knop rood" type="button">Verwijderen</button></div>';
-    const [nee, ja] = k.querySelectorAll('.bewerkknoppen .knop');
-    nee.addEventListener('click', () => { sluitKeuze(); vak.value = nu; });
-    ja.addEventListener('click', () => { sluitKeuze(); zet(); });
-    k.vraag = () => { setTimeout(() => { vak.value = nu; }, 0); return null; };
-    keuzeTonen(k);
+/* Aankopen bewaren: kiezen uit 50, 100, 250, 500 in een eigen keuzelijst. Een eerder
+   ingestelde andere waarde (oudere versie) staat erbij zolang hij geldt. */
+function aankopenBewarenKiezen() {
+  const nu = aankopenBewaren(model);
+  const waarden = Array.from(new Set(AANKOPEN_KEUZES.concat([nu]))).sort((x, y) => x - y);
+  keuzeLijst({
+    titel: 'Aankopen bewaren',
+    secties: [{ opties: waarden.map((v) => ({ id: String(v), naam: v === 0 ? 'Niet bewaren' : v + ' aankopen', actief: v === nu })) }],
+    kies: (id) => aankopenBewarenZetten(id)
   });
 }
-bewarenInstellen('aankopenBewaren', 'aankoop', 'aankoop', 'aankopen');
-$('wekTijd').addEventListener('change', () => {
+function aankopenBewarenZetten(v) {
+  const nu = String(aankopenBewaren(model));
+  if (!AANKOPEN_BEWAREN.test(v) || v === nu) return;
+  const zet = () => handelen([{ actie: 'instelling', naam: 'aankopen', veld: 'bewaren', oud: nu, nieuw: v }]).then(tekenInstellingen);
+  /* Lager dan wat er nu is: eerst bevestigen, met hoeveel er verdwijnen (K9). */
+  const weg = model.aankopen.size - +v;
+  if (weg <= 0) { zet(); return; }
+  const k = keuzePaneel(weg + ' oudste ' + (weg === 1 ? 'aankoop' : 'aankopen') + ' verwijderen?', false);
+  k.querySelector('.opties').outerHTML = '<div class="bewerkknoppen" style="padding:10px 14px 14px"><button class="knop tweede grijs" type="button">Annuleren</button><button class="knop rood" type="button">Verwijderen</button></div>';
+  const [nee, ja] = k.querySelectorAll('.bewerkknoppen .knop');
+  nee.addEventListener('click', sluitKeuze);
+  ja.addEventListener('click', () => { sluitKeuze(); zet(); });
+  keuzeTonen(k);
+}
+$('aankopenBewaren').addEventListener('click', aankopenBewarenKiezen);
+
+/* Tijd voor wekelijks terug: uur (00–23) en minuten (per kwartier) in een eigen paneel.
+   Een uur kiezen laat de minuten staan; minuten kiezen sluit het paneel. */
+function wekTijdKiezen() {
   const w = model.instellingen.wekelijks || {};
-  const v = $('wekTijd').value;
-  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(v) && v !== w.tijd) handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'tijd', oud: w.tijd || '', nieuw: v }]);
-});
+  const m = /^(\d{2}):(\d{2})$/.exec(w.tijd || '06:00') || [null, '06', '00'];
+  let uur = m[1], min = m[2];
+  const k = keuzePaneel('Tijd wekelijks terug', false);
+  const o = k.querySelector('.opties');
+  const teken = () => {
+    o.innerHTML = '<div class="tijdlabel">Uur</div><div class="tijdraster uren" role="radiogroup" aria-label="Uur"></div><div class="tijdlabel">Minuten</div><div class="tijdraster minuten" role="radiogroup" aria-label="Minuten" style="grid-template-columns:repeat(4,1fr)"></div><div style="height:10px"></div>';
+    for (let u = 0; u < 24; u++) {
+      const s = tweeCijfers(u), b = document.createElement('button');
+      b.type = 'button'; b.textContent = s; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(s === uur));
+      b.addEventListener('click', () => { uur = s; zetten(); teken(); });
+      o.querySelector('.uren').appendChild(b);
+    }
+    const minuten = ['00', '15', '30', '45'];
+    if (minuten.indexOf(min) === -1) minuten.push(min);
+    for (const s of minuten.sort()) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = ':' + s; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(s === min));
+      b.addEventListener('click', () => { min = s; zetten(); sluitKeuze(); });
+      o.querySelector('.minuten').appendChild(b);
+    }
+  };
+  const zetten = () => wekTijdZetten(uur + ':' + min);
+  teken();
+  keuzeTonen(k);
+}
+function wekTijdZetten(v) {
+  const w = model.instellingen.wekelijks || {};
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(v) && v !== w.tijd) handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'tijd', oud: w.tijd || '', nieuw: v }]).then(tekenInstellingen);
+}
+$('wekTijd').addEventListener('click', wekTijdKiezen);
 
 /* Backups in de gedeelde map: alleen de naam en grootte; de inhoud pas als je
    er een aantikt. */
@@ -5066,7 +5205,9 @@ async function backupsOpenen() {
   for (const [titel, deel] of [['Laatste 14 dagen', lijstB.filter((b) => b.datum >= grens)], ['Eerste van de maand', lijstB.filter((b) => b.datum < grens)]]) {
     if (!deel.length) continue;
     const g = document.createElement('section'); g.className = 'backupgroep';
-    const h = document.createElement('div'); h.className = 'kopbalk'; h.appendChild(document.createElement('h3')).textContent = titel; g.appendChild(h);
+    const h = document.createElement('div'); h.className = 'kopbalk'; h.appendChild(document.createElement('h3')).textContent = titel;
+    /* Aantal rechts, zoals bij elke kop (punt 10, UI). */
+    const tal = document.createElement('span'); tal.className = 'tal'; tal.textContent = telTekst(deel.length, 'backup', 'backups'); h.appendChild(tal); g.appendChild(h);
     const kaart = document.createElement('div'); kaart.className = 'wkaart';
     for (const b of deel) {
       const r = document.createElement('button');
@@ -5081,7 +5222,7 @@ async function backupsOpenen() {
     g.appendChild(kaart);
     doel.appendChild(g);
   }
-  if (!lijstB.length) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Nog geen backups'; doel.appendChild(p); }
+  if (!lijstB.length) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Geen backups'; doel.appendChild(p); }
 }
 let backupLaag = null;
 function backupSluiten() {
@@ -5100,14 +5241,14 @@ async function logboekOpenen() {
   const doel = $('backupScherm');
   doel.hidden = false;
   doel.innerHTML = '<div class="wdkop"><button class="terug" type="button" aria-label="Terug naar Instellingen">' + PIJL_TERUG + '</button><h2>Logboek</h2></div>' +
-    '<div class="blok"><div class="kopbalk"><h3>Laatste 100</h3><span class="tal"></span></div><div class="wkaart"></div></div>';
+    '<div class="blok"><div class="kopbalk"><h3>Logs</h3><span class="tal"></span></div><div class="wkaart"></div></div>';
   doel.querySelector('.terug').addEventListener('click', () => backupSluiten(false));
   backupLaag = laagOpen(() => { backupLaag = null; sluitKeuze(); backupSluiten(true); return true; });
   $('midden').scrollTop = 0;
   const regels = ((await kvGet('logboek')) || []).slice().reverse();
-  doel.querySelector('.tal').textContent = telTekst(regels.length, 'regel', 'regels');
+  doel.querySelector('.tal').textContent = regels.length + ' van 100';
   const kaart = doel.querySelector('.wkaart');
-  if (!regels.length) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = 'Nog niets'; kaart.appendChild(p); return; }
+  if (!regels.length) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = 'Geen logs'; kaart.appendChild(p); return; }
   for (const r of regels) {
     const i = r.indexOf(' · ');
     const d = document.createElement('div'); d.className = 'logregel';

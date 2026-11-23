@@ -340,7 +340,7 @@ const BEGIN = [
   controle('winkelkeuze: zonder iets nodigs heet de groep "Te koop bij" en staat open', /Te koop bij:true|Nodig:true/.test(koppen) && !/Kan ook/.test(koppen) || /Nodig:true,Kan ook:false/.test(koppen), koppen);
   k.querySelector('.kruis').click();
   controle('mandje per winkel: terug in de AH staat het er nog', [...d.querySelectorAll('#winkelLijst .afdkop')].some((h) => h.firstChild.textContent === 'In winkelmand' && h.querySelector('.tal').textContent === '1 artikel'));
-  const leeg = d.querySelector('#winkelLijst .icoonknop.amber');
+  const leeg = d.querySelector('#winkelLijst .icoonknop.mandleeg');
   controle('mandje: leegmaakknop (mandje met kruis) bij het mandje', !!leeg && leeg.getAttribute('aria-label') === 'Winkelmand leegmaken');
   leeg.click();
   controle('mandje: leeggemaakt', ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In winkelmand')));
@@ -348,7 +348,7 @@ const BEGIN = [
   controle('mandje leeg: melding met Ongedaan maken en aftelbalkje', !!mMandje && /Winkelmand leeggemaakt/.test(mMandje.textContent) && !!mMandje.querySelector('button .aftel'));
   mMandje.querySelector('button').click(); await slaap(20);
   controle('mandje leeg ongedaan: Bananen weer in het mandje', [...d.querySelectorAll('#winkelLijst .afdkop')].some((h) => h.firstChild.textContent === 'In winkelmand' && h.querySelector('.tal').textContent === '1 artikel'));
-  d.querySelector('#winkelLijst .icoonknop.amber').click();
+  d.querySelector('#winkelLijst .icoonknop.mandleeg').click();
   d.querySelector('[id^="m-mandje"]').remove();
 
   /* vegen: van Boodschappen naar links → Doen, van Artikelen naar rechts → Winkels, rondom van Winkels naar Instellingen */
@@ -510,7 +510,11 @@ const BEGIN = [
   const dagKnop = (dag) => [...d.querySelectorAll('#wekDagen button')].find((b) => b.textContent === dag);
   controle('instellingen: zaterdag gekozen', dagKnop('za').getAttribute('aria-checked') === 'true');
   dagKnop('vr').click();
-  const tijd = d.getElementById('wekTijd'); tijd.value = '18:30'; tijd.dispatchEvent(new w.Event('change'));
+  /* Tijd via het eigen paneel: uur 18, minuten :30. */
+  d.getElementById('wekTijd').click(); await slaap(20);
+  [...d.querySelectorAll('#keuze .uren button')].find((b) => b.textContent === '18').click(); await slaap(20);
+  [...d.querySelectorAll('#keuze .minuten button')].find((b) => b.textContent === ':30').click();
+  controle('tijd kiezen: paneel met uren en minuten, sluit na de minuten', !d.getElementById('keuze'));
   await slaap(2500);
   controle('instellingen: dag en tijd in OneDrive', /^instelling;wekelijks;dag=vr;tijd=18:30;/m.test(R(od.bestanden['thuis.json'].tekst)), R(od.bestanden['thuis.json'].tekst).split('\n')[0]);
   const voorTerug = od.bestanden['thuis.json'].tekst;
@@ -813,7 +817,7 @@ const BEGIN = [
     [...dC.querySelectorAll('#wanneerSoort button')][1].click(); await slaap(10);
     const vandaag = wC.eval('datumTekst(new Date())');
     controle('doen: Dag kiezen begint bij vandaag, herhalen verschijnt met Nee/Week/Maand/Kwartaal/Jaar', !dC.getElementById('herhaalVeld').hidden && [...dC.querySelectorAll('#herhaalSoort button')].map((b) => b.textContent).join() === 'Nee,Week,Maand,Kw.,Jaar'
-      && dC.querySelector('.blader span').textContent === wC.eval("periodeTekst(datumTekst(new Date()), '', true)"));
+      && dC.querySelector('.blader label').textContent === wC.eval("periodeTekst(datumTekst(new Date()), '', true)"));
     dC.querySelectorAll('.blader button')[0].click(); await slaap(10);
     [...dC.querySelectorAll('#herhaalSoort button')][1].click(); await slaap(10);
     dC.getElementById('actieOpslaan').click(); await slaap(50);
@@ -1296,7 +1300,7 @@ const BEGIN = [
     controle('leeg: eerst Melk bij de Plus', !!lijstE.querySelector('.winkelkaart') && /Melk/.test(lijstE.textContent));
     [...lijstE.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Melk')).click(); await slaap(1800);
     controle('alleen het mandje over: geen lege winkelkaart, wel het mandje', !lijstE.querySelector('.winkelkaart') && /Melk/.test(lijstE.textContent));
-    lijstE.querySelector('.icoonknop.amber').click(); await slaap(50);
+    lijstE.querySelector('.icoonknop.mandleeg').click(); await slaap(50);
     controle('leeg: Boodschappen zonder artikelen toont geen winkel, alleen "Geen artikelen"', !lijstE.querySelector('.winkelkaart') && lijstE.firstElementChild.textContent === 'Geen artikelen' && lijstE.firstElementChild.matches('.kaart.leegregel'), lijstE.innerHTML.slice(0, 200));
     controle('leeg: winkelkop niet los op het scherm', !dE.getElementById('winkelKop'));
     const mE = [...dE.querySelectorAll('#meldingen .melding')].find((m) => /Winkelmand leeggemaakt/.test(m.textContent));
@@ -1366,10 +1370,11 @@ const BEGIN = [
     controle('terugtikken uit het mandje: ook uit de gedeelde aankopen', !/^aankoop;Brood;/m.test(R(odA.bestanden['thuis.json'].tekst)) && /^aankoop;Melk;/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
     dA.getElementById('tab-instellingen').click(); await slaap(50);
     const ab = dA.getElementById('aankopenBewaren');
-    controle('instelling: aankopen bewaren standaard 500', String(ab.value) === '500', String(ab.value));
-    ab.value = '1500'; ab.dispatchEvent(new wA.Event('change'));
-    controle('instelling: buiten 0..1000 wordt teruggezet', String(ab.value) === '500');
-    ab.value = '250'; ab.dispatchEvent(new wA.Event('change')); await slaap(2600);
+    controle('instelling: aankopen bewaren standaard 500', ab.textContent.trim() === '500', ab.textContent);
+    wA.eval("aankopenBewarenZetten('1500')");
+    controle('instelling: buiten 0..1000 verandert niets', ab.textContent.trim() === '500');
+    ab.click(); await slaap(20);
+    [...dA.querySelectorAll('#keuze .optie')].find((b) => /^250/.test(b.textContent.trim())).click(); await slaap(2600);
     controle('instelling: 250 in het bestand', /^instelling;aankopen;bewaren=250$/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
   }
 
@@ -1552,13 +1557,16 @@ const BEGIN = [
     for (let i = 0; i < 5; i++) wB.eval("handelen([{ actie: 'aankoop', soort: 'aankoop', id: 'k" + (1111 + i) + "', naam: 'A" + i + "', tijd: '2026-11-2" + i + "T10:00' }])");
     dB.getElementById('tab-instellingen').click(); await slaap(30);
     const ab = dB.getElementById('aankopenBewaren');
-    controle('aankopen bewaren: keuzelijst zonder toetsenbord (50, 100, 250, 500)', ab.tagName === 'SELECT' && [...ab.options].map((o) => o.value).join() === '50,100,250,500');
+    ab.click(); await slaap(20);
+    controle('aankopen bewaren: eigen keuzelijst (50, 100, 250, 500), huidige gemarkeerd', [...dB.querySelectorAll('#keuze .optie')].map((o) => o.textContent.trim().split(' ')[0]).join() === '50,100,250,500');
+    dB.querySelector('#keuze .kruis').click(); await slaap(20);
     for (let i = 5; i < 60; i++) wB.eval("handelen([{ actie: 'aankoop', soort: 'aankoop', id: 'k" + (1111 + i) + "', naam: 'A" + i + "', tijd: '2026-11-1" + (i % 10) + "T10:00' }])");
-    ab.value = '50'; ab.dispatchEvent(new wB.Event('change')); await slaap(20);
+    ab.click(); await slaap(20);
+    [...dB.querySelectorAll('#keuze .optie')].find((b) => /^50 /.test(b.textContent.trim())).click(); await slaap(20);
     const v = dB.getElementById('keuze');
     controle('aankopen bewaren verlagen: eerst bevestigen met het aantal (K9)', !!v && /10 oudste aankopen verwijderen\?/.test(v.textContent), v && v.textContent);
     [...v.querySelectorAll('.knop')].find((b) => b.textContent === 'Annuleren').click(); await slaap(20);
-    controle('annuleren: waarde terug, niets veranderd', String(ab.value) === '500' && wB.eval('model.aankopen.size') === 60);
+    controle('annuleren: waarde blijft, niets veranderd', ab.textContent.trim() === '500' && wB.eval('model.aankopen.size') === 60);
   }
 
   /* 5y. 006/007: zichtbaar na toevoegen (B4, B5); Aankopen ververst (B7); tab wisselen sluit winkel (K1); editor + verwijderde winkel (K4); aankopen 0 (K11). */
@@ -1606,6 +1614,87 @@ const BEGIN = [
     const kid = wZ.eval("artikelen.find((a) => a.naam === 'Kaars').id");
     wZ.eval("afvinken(artikelen.find((a) => a.id === '" + kid + "'))"); await slaap(30);
     controle('aankopen bewaren 0: afvinken maakt geen aankoop (K11)', wZ.eval('model.aankopen.size') === voor);
+  }
+
+  /* 5z30. Review dagelijks gebruik (punt 1–12) en UI 11–15. */
+  {
+    const odD = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\nwinkel;Jumbo\nartikel;Kaas;ligt=AH;op=2026-11-20T10:00\nartikel;Brood;ligt=Plus;op=2026-11-20T10:00\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\nactie;Tandarts;datum=2026-03-10;klaar=2026-03-10T09:00\nactie;Bellen;datum=' + datumTekstT(3) + '\n');
+    const wD = await start(odD);
+    await slaap(800);
+    const dD = wD.document;
+    /* Punt 1: andere dag → opnieuw uitrekenen en tekenen, zonder wijziging in het bestand. */
+    wD.eval("window.__getekend = 0; const __t = tekenAlles; tekenAlles = function () { window.__getekend++; return __t.apply(this, arguments); };");
+    wD.eval('dagNagaan()');
+    controle('dag: zelfde dag → niets opnieuw (punt 1)', wD.eval('window.__getekend') === 0);
+    wD.eval("getekend.sleutel = 'gisteren'; dagNagaan()");
+    controle('dag: andere dag → opnieuw uitrekenen en tekenen (punt 1)', wD.eval('window.__getekend') === 1 && wD.eval('getekend.sleutel') === wD.eval('momentSleutel(new Date())'));
+    /* Punt 2: mandje van een eerdere dag gaat er vanzelf uit. */
+    wD.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id; const __b = artikelen.find((a) => a.naam === 'Brood'); afvinken(__b);");
+    await slaap(30);
+    wD.eval("const __m = winkel.mandje.get(artikelen.find((a) => a.naam === 'Brood').id); __m.datum = verschuif(datumTekst(new Date()), -1, 'dag'); mandjeOpschonen();");
+    controle('mandje: afgevinkt op een eerdere dag gaat eruit (punt 2)', wD.eval('winkel.mandje.size') === 0);
+    /* Punt 9: afvinken onder "Niet bij" legt de winkel vast; terugtikken haalt hem weer weg. */
+    const kid = wD.eval("artikelen.find((a) => a.naam === 'Kaas').id");
+    const pid = wD.eval('winkel.id');
+    wD.eval("afvinken(artikelen.find((a) => a.id === '" + kid + "'))"); await slaap(30);
+    controle('niet bij: afvinken legt vast dat het hier te koop is (punt 9)', wD.eval("model.artikelen.get('" + kid + "').ligt.has('" + pid + "')") && wD.eval("winkel.mandje.get('" + kid + "').geplaatst") === true);
+    wD.eval("terugOpLijst('" + kid + "')"); await slaap(30);
+    controle('niet bij: terugtikken haalt de winkel er weer af (punt 9)', !wD.eval("model.artikelen.get('" + kid + "').ligt.has('" + pid + "')") && wD.eval("model.artikelen.get('" + kid + "').ligt.size") === 1);
+    /* Punt 10: typen wist "Van de lijst gehaald" niet. */
+    dD.getElementById('tab-boodschappen').click(); await slaap(30);
+    wD.eval("scherm.filter = 'L'; tekenBoodschappen()");
+    [...dD.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.rondje').click();
+    await slaap(1700);
+    controle('van de lijst gehaald: zichtbaar na weghalen', !!dD.getElementById('weggehaald'));
+    const inv = dD.getElementById('invoerTekst');
+    inv.value = 'x'; inv.dispatchEvent(new wD.Event('input')); await slaap(10);
+    controle('van de lijst gehaald: tijdens typen verborgen', !dD.getElementById('weggehaald'));
+    inv.value = ''; inv.dispatchEvent(new wD.Event('input')); await slaap(10);
+    controle('van de lijst gehaald: terug als het vak leeg is (punt 10)', !!dD.getElementById('weggehaald') && /Melk/.test(dD.getElementById('weggehaald').textContent));
+    /* Punt 6: tijdens zoeken laat het rondje het vak niet los, en de zoektekst wordt geselecteerd. */
+    inv.focus(); inv.value = 'Melk'; inv.dispatchEvent(new wD.Event('input')); await slaap(10);
+    const rond = [...dD.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.rondje');
+    const pd = new wD.MouseEvent('mousedown', { bubbles: true, cancelable: true }); rond.dispatchEvent(pd);
+    rond.click(); await slaap(20);
+    controle('zoeken: rondje houdt het toetsenbord open en selecteert de zoektekst (punt 6)', pd.defaultPrevented && dD.activeElement === inv && inv.selectionStart === 0 && inv.selectionEnd === 4);
+    inv.value = ''; inv.dispatchEvent(new wD.Event('input')); inv.blur();
+    /* Punt 11: + bij Doen houdt het toetsenbord open. */
+    dD.getElementById('tab-doen').click(); await slaap(30);
+    const dt = dD.getElementById('doenTekst'); dt.focus();
+    const pd2 = new wD.MouseEvent('mousedown', { bubbles: true, cancelable: true }); dD.getElementById('doenPlus').dispatchEvent(pd2);
+    controle('doen: + laat het toetsenbord open (punt 11)', pd2.defaultPrevented);
+    dt.blur();
+    /* Punt 5: een afgeronde actie opnieuw intypen: de voorbije datum gaat eraf. */
+    dt.value = 'Tandarts'; dD.getElementById('doenPlus').click(); await slaap(30);
+    const tid = wD.eval("acties.find((a) => a.naam === 'Tandarts').id");
+    controle('doen: afgeronde actie opnieuw intypen → open, zonder voorbije datum (punt 5)', wD.eval("acties.find((a) => a.id === '" + tid + "').open") && wD.eval("acties.find((a) => a.id === '" + tid + "').datum") === '');
+    /* Punt 4: een gewone actie afronden heeft Ongedaan maken, ook voor de historie. */
+    wD.eval("doen.filter = 'alles'; tekenDoen()");
+    const bid = wD.eval("acties.find((a) => a.naam === 'Bellen').id");
+    dD.querySelector('#doenLijst .actierij[data-id="' + bid + '"] .rondje').click(); await slaap(20);
+    const knop = [...dD.querySelectorAll('.melding button')].find((b) => b.textContent === 'Ongedaan maken');
+    controle('doen: gewone actie afronden geeft Ongedaan maken (punt 4)', !!knop && wD.eval('model.historie.size') === 1);
+    knop.click(); await slaap(30);
+    controle('doen: ongedaan maken → weer open en uit de historie (punt 4)', wD.eval("acties.find((a) => a.id === '" + bid + "').open") && wD.eval('model.historie.size') === 0, wD.eval("JSON.stringify([acties.find((a) => a.id === '" + bid + "'), model.historie.size, wachtrij.slice(-3)])"));
+    /* Punt 4: zelf terugtikken binnen 1,5 s haalt de melding weg. */
+    dD.querySelector('#doenLijst .actierij[data-id="' + bid + '"] .rondje').click(); await slaap(20);
+    dD.querySelector('#doenLijst .actierij[data-id="' + bid + '"] .rondje').click(); await slaap(20);
+    controle('doen: terugtikken binnen 1,5 s → melding weg, open (punt 4)', ![...dD.querySelectorAll('.melding')].some((m) => /Bellen/.test(m.textContent) && /afgerond/.test(m.textContent)) && wD.eval("acties.find((a) => a.id === '" + bid + "').open"));
+    /* Punt 7 en UI 11: editor met "Naam", bij een dag een datumvak (kalender van de telefoon). */
+    wD.eval("actieOpenen('" + bid + "')"); await slaap(30);
+    const datumVak = dD.querySelector('.blader label input[type="date"]');
+    controle('editor: label Naam en een datumvak bij een dag (UI 11, punt 7)', dD.querySelector('label[for="actieNaam"]').textContent === 'Naam' && !!datumVak);
+    datumVak.value = datumTekstT(21); datumVak.dispatchEvent(new wD.Event('change')); await slaap(10);
+    controle('editor: datum kiezen in de kalender zet de dag (punt 7)', wD.eval('bd.datum') === datumTekstT(21) && dD.querySelector('.blader label').textContent === wD.eval("periodeTekst('" + datumTekstT(21) + "', '', true)"));
+    dD.getElementById('actieDicht').click(); await slaap(20);
+    const vraag = dD.getElementById('keuze');
+    if (vraag) { const w = [...vraag.querySelectorAll('.knop')].find((b) => /weggooien|Niet opslaan/i.test(b.textContent)); if (w) w.click(); await slaap(20); }
+    /* UI 15: geen dubbel woord in de kop "Winkels". */
+    dD.getElementById('tab-winkels').click(); await slaap(30);
+    const kop = dD.querySelector('#winkelsOverzicht .kopbalk');
+    controle('winkels: kop "Winkels" met alleen het getal (UI 15)', kop && kop.querySelector('.kopnaam').textContent === 'Winkels' && kop.querySelector('.tal').textContent === '3', kop && kop.textContent);
+    /* UI 12: infomelding met een paarse streep links. */
+    controle('infomelding: paarse streep links (UI 12)', /border-left:4px solid var\(--paars\)/.test(dD.querySelector('style').textContent.replace(/\s+/g, '')) || /\.melding\.info\{[^}]*border-left:4px solid var\(--paars\)/.test([...dD.querySelectorAll('style')].map((x) => x.textContent).join('')));
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */

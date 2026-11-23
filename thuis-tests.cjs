@@ -388,6 +388,10 @@ controle('periode: grenzen van dag, maand, kwartaal en jaar', () => gelijk(['202
 controle('periode: verschuiven, ook over het jaar en de 31e naar een kortere maand', () => gelijk([K.verschuif('2026-11-27', 1, 'week'), K.verschuif('2026-01-31', 1, 'maand'), K.verschuif('2026-12', 1, 'maand'),
   K.verschuif('2026-K4', 1, 'kwartaal'), K.verschuif('2026-K2', 1, 'jaar'), K.verschuif('2026-11', 1, 'kwartaal'), K.verschuif('2026', -1, 'jaar'), K.verschuif('2026-03-01', -1, 'dag')].join(),
   '2026-12-04,2026-02-28,2027-01,2027-K1,2027-K2,2027-02,2025,2026-02-28'));
+controle('herhalen: te laat afgeronde dag komt niet op vandaag, een lopende maand wel (punt 3)', () => gelijk([K.volgendeKeer('2026-11-16', 'week', '2026-11-23'), K.volgendeKeer('2026-11-23', 'week', '2026-11-23'), K.volgendeKeer('2026-10', 'maand', '2026-11-23'), K.volgendeKeer('2026-11-20', 'week', '2026-11-23')].join(),
+  '2026-11-30,2026-11-30,2026-11,2026-11-27'));
+controle('suggestie: na vier keer de tussentijd niet meer (punt 12)', () => K.suggestie(['2026-01-01', '2026-01-08', '2026-01-15'], '2026-01-22') !== null && K.suggestie(['2026-01-01', '2026-01-08', '2026-01-15'], '2026-02-12') !== null
+  && K.suggestie(['2026-01-01', '2026-01-08', '2026-01-15'], '2026-02-13') === null);
 controle('herhalen: de volgende keer slaat voorbije over', () => gelijk([K.volgendeKeer('2026-11-20', 'week', '2026-11-21'), K.volgendeKeer('2026-08-10', 'week', '2026-11-21'),
   K.volgendeKeer('2026-10', 'maand', '2026-11-21'), K.volgendeKeer('2026-K3', 'kwartaal', '2026-11-21'), K.volgendeKeer('2026-11-21', 'jaar', '2026-11-21')].join(),
   '2026-11-27,2026-11-23,2026-11,2026-K4,2027-11-21'));
@@ -671,7 +675,7 @@ controle('winkelkeuze: alleen waar iets is vastgelegd, alfabetisch; na kopen val
 });
 controle('suggestie: na drie aankopen en langer dan gewoonlijk geleden', () => {
   const s = K.suggestie(['2026-10-03', '2026-10-24', '2026-10-10', '2026-10-17'], '2026-11-21');
-  return gelijk(s && K.suggestieTekst(s), 'laatst 24 okt · meestal elke week');
+  return gelijk(s && K.suggestieTekst(s), '24 okt · elke week');
 });
 controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () =>
   gelijk(K.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null && K.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true));
