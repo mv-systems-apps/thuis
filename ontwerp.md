@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (23-11-2026): in gebruik, versie 1352903-004. Dit document beschrijft
+Status (23-11-2026): in gebruik, versie 1352903-006. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a t/m §7a5 de wijzigingen na de review.
 
 Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
@@ -466,6 +466,37 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Gekocht als kopbalk; notitie van een winkel groeit mee; naam met # ook bij
   hernoemen geweigerd; link met toetsenbord te openen, focus blijft in een
   paneel; teller- en afdelingsknoppen 44 px.
+
+### 7a6. Gegevens, ronde 2 (005)
+- Wekelijks: een "van de lijst" voor een wekelijks artikel van vóór de dag van het laatste wekelijkse
+  moment haalt het niet van de nieuwe lijst; de aankoop blijft. (De sync doet eerst wekelijks terug,
+  dan de wachtrij.)
+- Bestand weg: "Terugzetten vanaf deze telefoon" (de kopie wordt het nieuwe bestand) of "Leeg
+  beginnen" na bevestiging.
+- Klok: staat de telefoon meer dan een maand na de nieuwste datum in het bestand, dan geen opruimen,
+  geen wekelijkse reset en geen datum uit de toekomst; melding en logboekregel.
+- Terugzetten (archief, ongedaan maken, intussen verwijderd): alleen winkels en afdelingen die nog
+  bestaan. Wat bij het lezen rechtgezet wordt, wordt ook opgeslagen. Het logboek herhaalt geen regels.
+- Aankopen bewaren verlagen onder het huidige aantal: eerst bevestigen met het aantal.
+
+### 7a7. Zichtbaarheid en kleine punten, ronde 2 (006)
+- Toevoegen maakt altijd zichtbaar: valt het buiten het filter, dan springt Artikelen naar Op de lijst
+  en Doen naar Alles; daarna licht de regel op. Toevoegen van een gearchiveerd artikel stuurt het hele
+  artikel mee; is de naam intussen opnieuw gebruikt, dan komt dat artikel op de lijst.
+- Het Aankopen-scherm ververst mee. Tab wisselen sluit een open winkel en Backups/Logboek.
+- Editor: een winkel die de ander verwijdert, telt niet als jouw wijziging.
+- Aanmelden vervangt de pagina in de geschiedenis; een losse terugkeer zonder aanmeldpoging wordt
+  stil genegeerd als je al bent aangemeld.
+- Wekelijks: minstens 4 dagen tussen twee keer terug op de lijst (andere dag kiezen: nooit langer dan
+  ±10 dagen zonder).
+- Platte tekst: alleen bekende HTML-tags en afgesloten <!-- --> weg; "<jong>" blijft staan.
+- Aankopen bewaren = 0: geen aankopen maken, geen regel "Aankopen".
+- Map koppelen niet tijdens een synchronisatie; na terugzetten een uitgestelde sync alsnog. De kopie op
+  de telefoon wordt alleen opgeslagen als er iets veranderde. Aanmelding/map opnieuw lezen bij terugkeer.
+- Zoekvak van Aankopen staat onderaan in een eigen balk (loep/terug, kruisje), net als op de tabbladen.
+- Bewust niet: een CSP-hash (de CSP
+  is voor alle apps gelijk, check_app bewaakt dat), seconden in de aankooptijd (een oudere app op de
+  andere telefoon zou het bestand dan weigeren).
 
 ## 7b. Veiligheid
 

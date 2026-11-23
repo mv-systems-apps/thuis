@@ -447,7 +447,7 @@ controle('opruimen: niet als de klok van de telefoon ver na de nieuwste datum st
   const bestand = B({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-20'] } } });
   const ver = K.synchroniseer(bestand, [], new Date(2027, 5, 1, 10, 0));
   const goed = K.synchroniseer(bestand, [], NU);
-  return gelijk(!!JSON.parse(ver.tekst).artikelen.lam01 + '|' + ver.opgelost.some((x) => /Opruimen overgeslagen/.test(x)) + '|' + !!JSON.parse(goed.tekst).artikelen.lam01, 'true|true|false');
+  return gelijk(!!JSON.parse(ver.tekst).artikelen.lam01 + '|' + ver.opgelost.some((x) => /lijkt niet te kloppen/.test(x)) + '|' + !!JSON.parse(goed.tekst).artikelen.lam01, 'true|true|false');
 });
 controle('lezen: wekelijks-dag of -tijd die niet klopt maakt het bestand ongeldig (K7)', () => gelijk(
   ['toString', 'xx', 'za'].map((dag) => K.leesBestand(B({ instellingen: { wekelijks: { dag, tijd: '06:00' } } })).ok).join() + '|' + K.leesBestand(B({ instellingen: { wekelijks: { dag: 'za', tijd: '25:00' } } })).ok,
@@ -495,6 +495,50 @@ controle('aankopen: bewaren instelbaar 0 t/m 1000; ongeldig vervalt of maakt het
   const nul = K.synchroniseer(B({ instellingen: { aankopen: { bewaren: '0' } } }), [H({ actie: 'aankoop', soort: 'aankoop', id: 'k1111', naam: 'Melk', tijd: '2026-11-20T10:00' })], NU);
   return gelijk(st + '|' + (JSON.parse(nul.tekst).aankopen === undefined) + '|' + K.leesBestand(B({ instellingen: { aankopen: { bewaren: '2000' } } })).ok
     + '|' + K.leesBestand(B({ aankopen: { k1111: { naam: 'Melk', tijd: 'gisteren' } } })).ok, 'ok,ok,ok,vervallen,vervallen,vervallen,vervallen|true|false|false');
+});
+
+controle('wekelijks: gewoon geval — vrijdag offline afgevinkt, zaterdag na het moment gesynct: blijft op de nieuwe lijst (B1)', () => {
+  const r = K.synchroniseer(B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
+    artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', op: '2026-11-14T06:00', gekocht: ['2026-11-07'] } } }), [
+    H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' }),
+    H({ actie: 'gekocht', soort: 'artikel', id: 'mel01', datum: '2026-11-20', t: '2026-11-20T17:00' })], NU);
+  const m = JSON.parse(r.tekst).artikelen.mel01;
+  const zaterdag = K.synchroniseer(B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
+    artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', op: '2026-11-14T06:00' } } }), [
+    H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-21T09:00' })], NU);
+  return gelijk(!!m.op + '|' + m.gekocht.join() + '|' + !!JSON.parse(zaterdag.tekst).artikelen.mel01.op, 'true|2026-11-07,2026-11-20|false');
+});
+controle('klok een jaar vooruit: twee rondes lang geen opruimen, geen wekelijkse reset, geen toekomstige datum in het bestand (B3)', () => {
+  const ver = new Date(2027, 10, 20, 10, 0);
+  const begin = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+    artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
+  const r1 = K.synchroniseer(begin, [], ver);
+  const r2 = K.synchroniseer(r1.tekst, [], ver);
+  const d = JSON.parse(r2.tekst);
+  return gelijk(!!d.artikelen.lam01 + '|' + d.instellingen.wekelijks.teruggezet + '|' + !!d.artikelen.mel01.op + '|' + r1.klokVerdacht, 'true|2026-11-21T06:00|false|true');
+});
+controle('terugzetten: alleen winkels en afdelingen die nog bestaan; bij lezen rechtgezet = ook opgeslagen (K2)', () => {
+  const r = K.synchroniseer(B({ winkels: { w1111: { naam: 'AH', afdelingen: [{ id: 'd1111', naam: 'Zuivel' }] } } }),
+    [H({ actie: 'terug', soort: 'artikel', id: 'mel01', record: { naam: 'Melk', soort: 'wekelijks', ligt: { w1111: 'd9999', w2222: '' } } })], NU);
+  const rec = K.synchroniseer(B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, winkels: { w1111: { naam: 'AH' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', ligt: { w1111: '', w2222: '' } } } }), [], NU);
+  return gelijk(JSON.stringify(JSON.parse(r.tekst).artikelen.mel01.ligt) + '|' + rec.gewijzigd + '|' + JSON.stringify(JSON.parse(rec.tekst).artikelen.mel01.ligt), '{"w1111":""}|true|{"w1111":""}');
+});
+
+controle('wekelijks: andere dag kiezen geeft geen gat van bijna twee weken (K3)', () => {
+  const k = kern();
+  const m = lees({ instellingen: { wekelijks: { dag: 'vr', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
+  return gelijk(String(k.wekelijksTerug(m, new Date(2026, 10, 27, 10, 0))), '1');
+});
+controle('platte tekst: open "<!--" blijft snel; "<jong>" en "<oud>" blijven staan (K6)', () => {
+  const s = Date.now(); K.schoonTekst('<!--' + 'a'.repeat(130000)); const snel = Date.now() - s < 300;
+  return gelijk(snel + '|' + K.schoonTekst('Kaas <jong> of <oud>') + '|' + K.schoonTekst('a <B>b</B> <iframe src=x>c'), 'true|Kaas <jong> of <oud>|a b c');
+});
+controle('archief terug: naam intussen opnieuw gebruikt → dat artikel komt op de lijst (K10)', () => {
+  const r = K.synchroniseer(B({ artikelen: { mel02: { naam: 'Melk', soort: 'eenmalig' } } }), [
+    H({ actie: 'terug', soort: 'artikel', id: 'mel01', record: { naam: 'Melk', soort: 'eenmalig', op: '2026-11-21T09:00' } }),
+    H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' })], NU);
+  const d = JSON.parse(r.tekst).artikelen;
+  return gelijk(Object.keys(d).join() + '|' + d.mel02.op, 'mel02|2026-11-21T09:00');
 });
 
 /* ---------- een hele ronde ---------- */

@@ -943,9 +943,10 @@ const BEGIN = [
     const rijen = () => [...sch.querySelectorAll('.aankooprij .nm')].map((x) => x.textContent).sort().join();
     controle('aankopen: lijst per dag met tijd, kop "Vandaag"', !sch.hidden && rijen() === 'Brood,Melk' && /^Vandaag/.test(sch.querySelector('.kopbalk h3').textContent) && /^\d{2}:\d{2}$/.test(sch.querySelector('.aankooprij .tijd').textContent), rijen());
     const zk = dA.getElementById('aankopenZoek'); zk.value = 'bro'; zk.dispatchEvent(new wA.Event('input'));
+    controle('aankopen: zoekvak onderaan in eigen balk', !dA.getElementById('balk-aankopen').hidden && !sch.contains(zk));
     controle('aankopen: zoeken filtert', rijen() === 'Brood');
     sch.querySelector('.terug').click(); await slaap(50);
-    controle('aankopen: terug naar Boodschappen', sch.hidden && !dA.getElementById('scherm-winkel').classList.contains('sub'));
+    controle('aankopen: terug naar Boodschappen, zoekbalk weg en leeg', sch.hidden && !dA.getElementById('scherm-winkel').classList.contains('sub') && dA.getElementById('balk-aankopen').hidden && zk.value === '');
     [...lijstA.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Brood')).click(); await slaap(2600);
     controle('terugtikken uit het mandje: ook uit de gedeelde aankopen', !/^aankoop;Brood;/m.test(R(odA.bestanden['thuis.json'].tekst)) && /^aankoop;Melk;/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
     dA.getElementById('tab-instellingen').click(); await slaap(50);
@@ -1086,7 +1087,7 @@ const BEGIN = [
     const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const wW = await start(odW);
     await slaap(800);
-    const r = wW.eval("(() => { kopie = { tekst: JSON.stringify({ versie: FORMAAT, instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2000-01-01T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2000-01-01'] } } }) }; wachtrij = []; bouwModel(); return !!artikelen.find((a) => a.naam === 'Melk').op; })()");
+    const r = wW.eval("(() => { const vorige = tijdstipTekst(laatsteMoment(new Date(Date.now() - 8 * 86400000), 'za', '06:00')); kopie = { tekst: JSON.stringify({ versie: FORMAAT, instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: vorige } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: [vorige.slice(0, 10)] } } }) }; wachtrij = []; bouwModel(); return !!artikelen.find((a) => a.naam === 'Melk').op; })()");
     controle('wekelijks: ook zonder sync terug op de lijst, uit de kopie (K10)', r === true);
   }
 
@@ -1111,6 +1112,83 @@ const BEGIN = [
     dH.getElementById('artikelNaam').value = '#kerst'; dH.getElementById('artikelNaam').dispatchEvent(new wH.Event('input'));
     dH.getElementById('artikelOpslaan').click(); await slaap(30);
     controle('hernoemen naar #… geweigerd: melding, editor blijft open', !dH.getElementById('artikelScherm').hidden && /niet met # beginnen/.test((dH.getElementById('m-naam') || {}).textContent || '') && wH.eval("artikelen[0].naam") === 'Kaars');
+  }
+
+  /* 5x. 005: bestand weg = terugzetten vanaf deze telefoon (B2); aankopen bewaren verlagen vraagt eerst (K9). */
+  {
+    const odB = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\nartikel;Brood\n');
+    const wB = await start(odB);
+    await slaap(800);
+    const dB = wB.document;
+    delete odB.bestanden['thuis.json'];
+    wB.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen[0].id, veld: 'notitie', oud: '', nieuw: 'x' }])");
+    await slaap(2500);
+    const m = dB.getElementById('m-weg');
+    const knoppen = m ? [...m.querySelectorAll('button')].map((b) => b.textContent).join() : '';
+    controle('bestand weg: Terugzetten vanaf deze telefoon en Leeg beginnen (B2)', knoppen === 'Terugzetten vanaf deze telefoon,Leeg beginnen' && !odB.bestanden['thuis.json'], knoppen);
+    [...m.querySelectorAll('button')].find((b) => b.textContent === 'Leeg beginnen').click(); await slaap(20);
+    controle('leeg beginnen: eerst bevestigen', /Leeg beginnen\?/.test((dB.getElementById('keuze') || {}).textContent || ''));
+    [...dB.querySelectorAll('#keuze .knop')].find((b) => b.textContent === 'Annuleren').click(); await slaap(20);
+    [...dB.getElementById('m-weg').querySelectorAll('button')].find((b) => /Terugzetten/.test(b.textContent)).click();
+    await slaap(3000);
+    const tB = odB.bestanden['thuis.json'] ? R(odB.bestanden['thuis.json'].tekst) : '';
+    controle('terugzetten vanaf deze telefoon: het bestand is terug met de hele lijst en de wachtende wijziging', /^artikel;Brood;[^\n]*notitie=x/m.test(tB) && /^artikel;Melk;/m.test(tB) && !dB.getElementById('m-weg'), tB);
+    /* K9 */
+    for (let i = 0; i < 5; i++) wB.eval("handelen([{ actie: 'aankoop', soort: 'aankoop', id: 'k" + (1111 + i) + "', naam: 'A" + i + "', tijd: '2026-11-2" + i + "T10:00' }])");
+    dB.getElementById('tab-instellingen').click(); await slaap(30);
+    const ab = dB.getElementById('aankopenBewaren');
+    ab.value = '2'; ab.dispatchEvent(new wB.Event('change')); await slaap(20);
+    const v = dB.getElementById('keuze');
+    controle('aankopen bewaren verlagen: eerst bevestigen met het aantal (K9)', !!v && /3 oudste aankopen verwijderen\?/.test(v.textContent), v && v.textContent);
+    [...v.querySelectorAll('.knop')].find((b) => b.textContent === 'Annuleren').click(); await slaap(20);
+    controle('annuleren: waarde terug, niets veranderd', String(ab.value) === '500' && wB.eval('model.aankopen.size') === 5);
+  }
+
+  /* 5y. 006/007: zichtbaar na toevoegen (B4, B5); Aankopen ververst (B7); tab wisselen sluit winkel (K1); editor + verwijderde winkel (K4); aankopen 0 (K11). */
+  {
+    const odZ = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Plus\nartikel;Kaars;ligt=Gamma|Plus;op=2026-11-20T10:00\nartikel;Lampje\n');
+    const wZ = await start(odZ);
+    await slaap(800);
+    const dZ = wZ.document;
+    /* B5 */
+    [...dZ.querySelectorAll('#filters .filter')][4].click(); await slaap(20);
+    dZ.getElementById('invoerTekst').value = 'Lampje'; dZ.getElementById('invoerTekst').dispatchEvent(new wZ.Event('input'));
+    dZ.getElementById('invoerPlus').click(); await slaap(30);
+    const lid = wZ.eval("artikelen.find((a) => a.naam === 'Lampje').id");
+    controle('artikelen: toevoegen in Suggesties springt naar Op de lijst en licht op (B5)', wZ.eval('scherm.filter') === 'L' && !!dZ.querySelector('#lijst .item[data-id="' + lid + '"].oplicht'));
+    /* B4 */
+    dZ.getElementById('tab-doen').click(); await slaap(30);
+    controle('doen: standaard Week', wZ.eval('doen.filter') === 'week');
+    dZ.getElementById('doenTekst').value = 'Lamp vervangen'; dZ.getElementById('doenPlus').click(); await slaap(30);
+    controle('doen: nieuwe actie zonder periode → Alles, zichtbaar en oplichtend (B4)', wZ.eval('doen.filter') === 'alles' && !!dZ.querySelector('#doenLijst .actierij.oplicht'));
+    /* K1 */
+    dZ.getElementById('tab-winkels').click(); await slaap(30);
+    [...dZ.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma')).click(); await slaap(30);
+    dZ.getElementById('tab-instellingen').click(); await slaap(30);
+    wZ.history.back(); await slaap(120);
+    const tabNu = [...dZ.querySelectorAll('nav button')].find((b) => b.getAttribute('aria-current') === 'page').dataset.scherm;
+    controle('tab wisselen met een open winkel: winkel dicht, terug gaat meteen naar Artikelen (K1)', !wZ.eval('ws.open') && tabNu === 'boodschappen', tabNu);
+    /* K4 */
+    [...dZ.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Kaars')).querySelector('.tekst').click(); await slaap(30);
+    const gid = wZ.eval("winkels.find((w) => w.naam === 'Gamma').id");
+    wZ.eval("handelen([{ actie: 'weg', soort: 'winkel', id: '" + gid + "' }])"); await slaap(30);
+    dZ.getElementById('artikelDicht').click(); await slaap(20);
+    controle('editor: de ander verwijdert een winkel; sluiten zonder eigen wijziging vraagt niets (K4)', dZ.getElementById('artikelScherm').hidden && !dZ.getElementById('keuze'));
+    /* B7 */
+    wZ.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id");
+    dZ.getElementById('tab-winkel').click(); await slaap(30);
+    dZ.querySelector('.naaraankopen button') && dZ.querySelector('.naaraankopen button').click();
+    if (!dZ.querySelector('.naaraankopen button')) wZ.eval('aankopenOpenen()');
+    await slaap(20);
+    wZ.eval("handelen([{ actie: 'aankoop', soort: 'aankoop', id: 'kzz12', naam: 'Nieuw', tijd: tijdstipTekst(new Date()) }])"); await slaap(30);
+    controle('aankopen: open scherm ververst bij een nieuwe aankoop (B7)', [...dZ.querySelectorAll('.aankooprij .nm')].some((n) => n.textContent === 'Nieuw'));
+    wZ.history.back(); await slaap(80);
+    /* K11 */
+    wZ.eval("handelen([{ actie: 'instelling', naam: 'aankopen', veld: 'bewaren', oud: '500', nieuw: '0' }])"); await slaap(20);
+    const voor = wZ.eval('model.aankopen.size');
+    const kid = wZ.eval("artikelen.find((a) => a.naam === 'Kaars').id");
+    wZ.eval("afvinken(artikelen.find((a) => a.id === '" + kid + "'))"); await slaap(30);
+    controle('aankopen bewaren 0: afvinken maakt geen aankoop (K11)', wZ.eval('model.aankopen.size') === voor);
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */
