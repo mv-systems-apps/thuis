@@ -371,7 +371,7 @@ const BEGIN = [
   controle('winkels: invoer onderaan heet Winkel, die van Artikelen is weg',
     !d.getElementById('balk-winkels').hidden && d.getElementById('balk-boodschappen').hidden && d.getElementById('winkelsTekst').placeholder === 'Winkel');
   const winkelRijen = () => [...d.querySelectorAll('#winkelsOverzicht .winkelrij .nm')].map((x) => x.firstChild.textContent);
-  controle('winkels: alfabetisch onder Overige', winkelRijen().join() === 'Albert Heijn,Lidl centrum' && d.querySelector('#winkelsOverzicht .kop span').textContent === 'Overige', winkelRijen().join());
+  controle('winkels: alfabetisch; zonder favorieten heet de groep Winkels', winkelRijen().join() === 'Albert Heijn,Lidl centrum' && d.querySelector('#winkelsOverzicht .kop span').textContent === 'Winkels', winkelRijen().join());
   [...d.querySelectorAll('#winkelsOverzicht .winkelrij')][0].click();
   await slaap(50);
   controle('winkel: detail open met afdelingen', !d.getElementById('winkelDetail').hidden && d.querySelector('#winkelDetail h2').textContent === 'Albert Heijn' && d.getElementById('winkelsTekst').placeholder === 'Afdeling');
@@ -773,6 +773,7 @@ const BEGIN = [
     const wC = await start(odC);
     await slaap(800);
     const dC = wC.document;
+    wC.eval("doen.filter = 'alles'");
     dC.getElementById('tab-doen').click(); await slaap(50);
     controle('doen: invoer onderaan "Actie", leeg scherm "Geen acties"', !dC.getElementById('balk-doen').hidden && dC.getElementById('doenTekst').placeholder === 'Actie' && /Geen acties/.test(dC.getElementById('doenLijst').textContent));
     for (const n of ['Vuilnis buiten zetten', 'Lamp vervangen']) { dC.getElementById('doenTekst').value = n; dC.getElementById('doenPlus').click(); await slaap(30); }
@@ -804,7 +805,7 @@ const BEGIN = [
     await slaap(1800);
     controle('doen: daarna onder "Afgerond" (ingeklapt)', /Afgerond1 actie/.test(groepen()) && !rijC('Lamp vervangen'), groepen());
     dC.querySelector('#afgerond .kopbalk').click(); await slaap(20);
-    controle('doen: Afgerond uitgeklapt toont wanneer, niet wie', /^afgerond [a-z]{2} \d+ [a-z]+$/.test(rijC('Lamp vervangen').querySelector('.wanneer').textContent), rijC('Lamp vervangen').textContent);
+    controle('doen: Afgerond uitgeklapt toont wanneer, niet wie', /^afgerond (vandaag|[a-z]{2} \d+ [a-z]+)$/.test(rijC('Lamp vervangen').querySelector('.wanneer').textContent), rijC('Lamp vervangen').textContent);
     rijC('Lamp vervangen').querySelector('.rondje').click(); await slaap(30);
     controle('doen: heropenen zet hem terug onder Zonder periode', /Zonder periode1 actie/.test(groepen()) && !dC.getElementById('afgerond'), groepen());
     rijC('Lamp vervangen').querySelector('.tekst').click(); await slaap(20);
@@ -1053,6 +1054,63 @@ const BEGIN = [
     wK.eval("actieAfronden(actieLijst(model).find((a) => a.naam === 'Huur'))"); await slaap(30);
     const huur = wK.eval("JSON.stringify((({ datum, maanddag }) => ({ datum, maanddag }))(actieLijst(model).find((a) => a.naam === 'Huur')))");
     controle('maandelijks afronden: datum verschuift, dag 31 onthouden waar de maand korter is (K5)', /"maanddag":(0|31)/.test(huur) && (/"maanddag":31/.test(huur) ? !/-31"/.test(huur) : /-31"/.test(huur)), huur);
+  }
+
+  /* 5t. 024: filters bij Doen (Week/Maand/Kw./Jaar/Alles), standaard per telefoon in Instellingen. */
+  {
+    const nu = new Date(), dt = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const gister = new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() - 1), vandaagD = dt(nu);
+    const maand = vandaagD.slice(0, 7), jaar = vandaagD.slice(0, 4);
+    const odF = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Te laat;datum=' + dt(gister) + '\nactie;Vandaag;datum=' + vandaagD + '\nactie;Volgend jaar;datum=' + (+jaar + 1) + '\nactie;Zomaar\nactie;Deze maand;datum=' + maand + '\n');
+    const wF = await start(odF);
+    await slaap(800);
+    const dF = wF.document;
+    dF.getElementById('tab-doen').click(); await slaap(50);
+    const knoppen = () => [...dF.querySelectorAll('#doenFilters .filter')].map((b) => b.firstChild.textContent + ':' + b.lastChild.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(',');
+    const koppen = () => [...dF.querySelectorAll('#doenLijst .kopbalk')].map((k) => k.firstChild.textContent).join(',');
+    controle('doen-filters: standaard Week; naam en aantal (te laat telt mee)', /^Week:\d\*,Maand:\d,Kw\.:\d,Jaar:\d,Alles:5$/.test(knoppen()) && /^Te laat(,Deze week)?$/.test(koppen()), knoppen() + ' ' + koppen());
+    [...dF.querySelectorAll('#doenFilters .filter')][1].click(); await slaap(20);
+    controle('doen-filters: Maand toont Te laat en Deze maand (met de maandactie)', koppen() === 'Te laat,Deze maand' && /Deze maand/.test(dF.getElementById('doenLijst').textContent.replace('Deze maand', '')), koppen());
+    [...dF.querySelectorAll('#doenFilters .filter')][4].click(); await slaap(20);
+    controle('doen-filters: Alles toont ook Zonder periode', /Zonder periode/.test(koppen()), koppen());
+    dF.getElementById('tab-instellingen').click(); await slaap(30);
+    const st = [...dF.querySelectorAll('#doenStandaard button')];
+    controle('instelling: Doen standaard, Week gekozen', st.map((b) => b.textContent).join() === 'Week,Maand,Kw.,Jaar,Alles' && st[0].getAttribute('aria-checked') === 'true');
+    st[1].click(); await slaap(30);
+    dF.getElementById('tab-doen').click(); await slaap(30);
+    controle('instelling: Doen opent op Maand; bewaard per telefoon (niet in het bestand)', /Maand:\d\*/.test(knoppen()) && !/doenStandaard|standaard/.test(R(odF.bestanden['thuis.json'].tekst)) && wF.eval('doen.standaard') === 'maand', knoppen());
+  }
+
+  /* 5u. 024: wekelijks terug ook offline, uit de kopie op de telefoon (K10). */
+  {
+    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const wW = await start(odW);
+    await slaap(800);
+    const r = wW.eval("(() => { kopie = { tekst: JSON.stringify({ versie: FORMAAT, instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2000-01-01T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2000-01-01'] } } }) }; wachtrij = []; bouwModel(); return !!artikelen.find((a) => a.naam === 'Melk').op; })()");
+    controle('wekelijks: ook zonder sync terug op de lijst, uit de kopie (K10)', r === true);
+  }
+
+  /* 5v. 024: twee verzoeken tegelijk met een verlopen token = één vernieuwing (B8). */
+  {
+    const odV = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const wV = await start(odV);
+    await slaap(800);
+    await wV.eval("(async () => { const a = await kvGet('auth'); a.accessTot = 0; await kvSet('auth', a); })()");
+    const voor = odV.verzoeken.filter((v) => v.includes('/oauth2/')).length;
+    await wV.eval('Promise.all([toegang(), toegang(), toegang()])');
+    controle('aanmelding: gelijktijdige vernieuwing gebeurt één keer (B8)', odV.verzoeken.filter((v) => v.includes('/oauth2/')).length - voor === 1, String(odV.verzoeken.filter((v) => v.includes('/oauth2/')).length - voor));
+  }
+
+  /* 5w. 024: hernoemen naar een naam met # vooraan wordt geweigerd (net als toevoegen). */
+  {
+    const odH = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Kaars;op=2026-11-20T10:00\n');
+    const wH = await start(odH);
+    await slaap(800);
+    const dH = wH.document;
+    [...dH.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Kaars')).querySelector('.tekst').click(); await slaap(30);
+    dH.getElementById('artikelNaam').value = '#kerst'; dH.getElementById('artikelNaam').dispatchEvent(new wH.Event('input'));
+    dH.getElementById('artikelOpslaan').click(); await slaap(30);
+    controle('hernoemen naar #… geweigerd: melding, editor blijft open', !dH.getElementById('artikelScherm').hidden && /niet met # beginnen/.test((dH.getElementById('m-naam') || {}).textContent || '') && wH.eval("artikelen[0].naam") === 'Kaars');
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */

@@ -4,8 +4,8 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status: ontwerp na review (21-11-2026). Mockups: het canvas "thuis – mockup
-boodschappen" in claude.ai. Er is nog geen code.
+Status (23-11-2026): in gebruik, versie 1352903-004. Dit document beschrijft
+het ontwerp zoals het gebouwd is; §7a t/m §7a5 de wijzigingen na de review.
 
 Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
 
@@ -15,8 +15,8 @@ Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
 
 - Aantrekkelijk, praktisch, eenvoudig te bedienen, met één hand.
 - Snel: één keer inlezen, één keer verwerken, alleen tekenen wat zichtbaar is.
-- Gegevens in jullie eigen OneDrive, in één tekstbestand dat met een editor te
-  lezen en te bewerken is.
+- Gegevens in jullie eigen OneDrive, in één bestand `thuis.json`: één record per
+  regel, met een teksteditor te lezen.
 - Synchroniseren gaat ongemerkt. Een vertraging van een halve minuut is
   geen probleem.
 - Geen meldingen of herinneringen: een datum is een rustige markering.
@@ -170,11 +170,11 @@ dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
 
 Layout volgens de conventies: vaste kop, scrollend midden, vaste tabbalk. De
 kop heeft een kleurverloop van kobalt naar paars, met rechts het sync-wolkje.
-Tabbalk met alleen iconen, vier tabbladen: **Lijst** (klembord met lijst),
-**Winkel** (winkelwagen), **Doen** (vinkvak) en **Instellingen** (tandwiel uit
-events). Wisselen kan ook door te vegen, rondom (Lijst → Winkel → Doen →
-Instellingen → Lijst, en terug); niet vanaf de rand van het scherm (terug-gebaar
-van Android), niet tijdens typen en niet in een menu of keuzelijst.
+Tabbalk met alleen iconen, vijf tabbladen: **Winkels** (winkelpui),
+**Artikelen** (klembord), **Boodschappen** (winkelwagen), **Doen** (vinkvak) en
+**Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom; niet vanaf
+de rand van het scherm (terug-gebaar van Android), niet tijdens typen en niet in
+een menu of keuzelijst. De terugknop: zie §7a3.
 Kleur per soort: wekelijks kobalt (een 7 in een cirkel), regelmatig turquoise
 (voorraaddoos), eenmalig paars (vakje met een 1). Rechte hoeken; tekst nooit
 kleiner dan 17 px; knoppen minstens 44 px.
@@ -295,8 +295,13 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   terugpijl die het vak leegmaakt. Tik op de loep = invoeren.
 - Invoervak "Actie" onderaan: typen filtert, + voegt toe (een afgeronde actie
   met dezelfde naam wordt heropend). Een nieuwe actie heeft geen periode.
-- Groepen met kopbalken: Te laat (oranje), Deze week (begint uiterlijk
-  zondag), Later, Zonder periode; vroegste eerst. Per regel het rondje en de
+- Filters bovenaan (024): Week · Maand · Kw. · Jaar · Alles, naam met het aantal
+  eronder. Een filter toont Te laat en wat binnen de termijn af moet ("Deze week",
+  "Deze maand", …); een maand-, kwartaal- of jaaractie dus pas in de week/maand
+  waarin die eindigt. Alles toont Te laat, Deze week, Later, Zonder periode en
+  Afgerond. Standaard Week; in Instellingen per telefoon te kiezen. Tijdens
+  zoeken is geen filter actief; een tik zoekt alleen daarin.
+- Groepen met kopbalken, vroegste eerst; vandaag en morgen heten zo. Per regel het rondje en de
   naam; eronder grijs de periode ("vr 27 nov", "december", "K4", "2027"; het
   jaar alleen als het niet dit jaar is) en het herhaalteken met "week"; daaronder
   paars de notitie en de link.
@@ -451,6 +456,17 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Terugzetten uit het archief stuurt het hele artikel mee (komt terug als het intussen is opgeruimd).
 - Een mislukte dagbackup komt in het logboek. Elke melding heeft een eigen klok.
 
+### 7a5. Doen, offline en poetsen (024)
+- Doen: filters Week/Maand/Kw./Jaar/Alles (zie §5.3), standaard per telefoon.
+- Wekelijks terug op de lijst rekent de telefoon ook zelf uit (offline, bij
+  openen); de sync doet eerst wekelijks terug en dan de wachtrij.
+- Aanmelding: één vernieuwing tegelijk. Dagelijks opnieuw aanmelden: eerst een
+  paar weken bekijken hoe vaak het stoort (token-server, §2.4, pas daarna).
+- Poetsen: knoppen 18 px; lege lijsten één stijl; "Winkels" zonder favorieten;
+  Gekocht als kopbalk; notitie van een winkel groeit mee; naam met # ook bij
+  hernoemen geweigerd; link met toetsenbord te openen, focus blijft in een
+  paneel; teller- en afdelingsknoppen 44 px.
+
 ## 7b. Veiligheid
 
 - Geen code van anderen (geen bibliotheken, CDN, analytics). Gegevens alleen via
@@ -481,6 +497,8 @@ IndexedDB voor offline gebruik. Bij verwijderen ruimt de app de foto op.
 - Een soorticoon per rij.
 - ISO-datums in plaats van de D-sleutel: geen andere app leest dit bestand.
 - Drie accentkleuren met een kleurverloop in plaats van één kleur per app.
+- Meldingen met Ongedaan maken verdwijnen na 6 s vanzelf (met aftelbalkje en een
+  vinkje om meteen te sluiten); alle andere meldingen blijven tot je ze wegtikt.
 
 Ook: aanvullen in `maak_zips.py`, `README.md` en `nieuwe-chat.txt`, en
 controleren of `check_app.py` de app herkent. Token, wachtrij, "Ik ben", de
@@ -492,7 +510,13 @@ laatste winkel en de koppeling met de map horen in de reset.
 - Na verversen alleen opnieuw tekenen als de eTag veranderde.
 - Alleen de gefilterde, zichtbare lijst tekenen.
 - Zoeken op een vooraf genormaliseerd veld.
-- Het interval voor suggesties alleen herberekenen bij een nieuwe aankoop.
+- Het interval voor suggesties alleen herberekenen bij een nieuwe aankoop (per
+  dag onthouden).
+- Regels van Artikelen hergebruiken: alleen wat veranderde, opnieuw maken.
+- Zoeken één keer per toets; acties één keer per wijziging berekenen.
+- Na een sync zonder verandering niets opnieuw tekenen.
+- Gemeten (telefoon-benadering, 5× trager): 300 artikelen ±30 ms per tik;
+  1500 artikelen ±45 ms per tik, zoeken ±80 ms.
 - Schrijfacties bundelen.
 
 ## 11. Risico's en de proef

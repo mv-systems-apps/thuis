@@ -100,7 +100,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -392,10 +392,15 @@ controle('herhalen: de volgende keer slaat voorbije over', () => gelijk([K.volge
   K.volgendeKeer('2026-10', 'maand', '2026-11-21'), K.volgendeKeer('2026-K3', 'kwartaal', '2026-11-21'), K.volgendeKeer('2026-11-21', 'jaar', '2026-11-21')].join(),
   '2026-11-27,2026-11-23,2026-11,2026-K4,2027-11-21'));
 controle('groepen: te laat, deze week (t/m zondag), later, geen', () => gelijk(['2026-11-20', '2026-11-21', '2026-11-22', '2026-11-23', '2026-11', '2026-10', '2026-K4', '2027', ''].map((d) => K.actieGroep(d, '2026-11-21')).join(),
-  'laat,week,week,later,week,laat,week,later,geen'));
+  'laat,week,week,later,later,laat,later,later,geen'));
+controle('doen-filters: binnen de termijn af (te laat altijd), Alles ook zonder periode (K6)', () => gelijk(
+  ['week', 'maand', 'kwartaal', 'jaar', 'alles'].map((f) => ['2026-10', '2026-11-22', '2026-11-30', '2026-11', '2026-12', '2026-K4', '2026', '2027', ''].filter((d) => K.inDoenFilter(d, f, '2026-11-21')).length).join(),
+  '2,4,7,7,9'));
 controle('periode: andere soort kiezen houdt de plek; teksten kort en lang', () => gelijk([K.naarSoort('2026-11-27', 'kwartaal', '2026-11-21'), K.naarSoort('', 'maand', '2026-11-21'), K.naarSoort('2026-K2', 'dag', '2026-11-21'),
   K.periodeTekst('2026-11-27', '2026-11-21'), K.periodeTekst('2027-01-05', '2026-11-21'), K.periodeTekst('2026-12', '2026-11-21'), K.periodeTekst('2026-K4', '2026-11-21'), K.periodeTekst('2026-11-27', '2026-11-21', true)].join('|'),
   '2026-K4|2026-11|2026-04-01|vr 27 nov|di 5 jan 2027|december|K4|vr 27 november 2026'));
+controle('periode: vandaag en morgen in de lijst, niet in het lange formaat', () => gelijk([K.periodeTekst('2026-11-21', '2026-11-21'), K.periodeTekst('2026-11-22', '2026-11-21'), K.periodeTekst('2026-11-21', '2026-11-21', true)].join('|'),
+  'vandaag|morgen|za 21 november 2026'));
 controle('acties: open = nooit afgerond of herhalend; ongeldige herhaling bij een periode telt niet; onveilige link niet', () => {
   const al = K.actieLijst(lees({ acties: { a1111: { naam: 'Vuilnis', datum: '2026-11-27', herhaal: 'week', klaar: '2026-11-20T08:00' }, a2222: { naam: 'Lamp', klaar: '2026-11-20T08:00' },
     a3333: { naam: 'Filter', datum: '2026-12', herhaal: 'week', link: 'javascript:x' } } }));

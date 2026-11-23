@@ -8,17 +8,19 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (november 2026): boodschappen compleet. Werkt: aanmelden bij Microsoft,
-de gedeelde map koppelen, synchroniseren via `thuis.json` (lokale kopie,
-wachtrij, If-Match, dagbackup, backups terugzetten), vijf tabbladen met vegen
-rondom:
-- **Winkels**: favorieten en overige, afdelingen per winkel in looproute.
-- **Artikelen**: toevoegen, zoeken, filters, op en van de lijst, aantal en
-  notitie, bewerkscherm, archief voor eenmalige artikelen.
-- **Boodschappen**: winkelkeuze (Nodig, Kan ook), per afdeling afvinken, mandje
-  per winkel.
-- **Doen**: nog te bouwen.
-- **Instellingen**: wekelijks terug op de lijst, archief, backups.
+Stand (23 november 2026, versie 1352903-004): in gebruik. Werkt: aanmelden
+bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
+(lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
+tabbladen met vegen rondom:
+- **Winkels**: favorieten en overige, afdelingen per winkel in looproute,
+  notitie en link per winkel.
+- **Artikelen**: toevoegen, zoeken (ook op #tags), filters, op en van de lijst,
+  aantal, notitie en link, bewerkscherm, archief voor eenmalige artikelen.
+- **Boodschappen**: winkelkeuze (Huidig, Nodig, Kan ook), per afdeling
+  afvinken, mandje per telefoon, gedeelde Aankopen (per dag, met zoeken).
+- **Doen**: acties met periode en herhalen, filters Week/Maand/Kw./Jaar/Alles.
+- **Instellingen**: synchroniseren, wekelijks terug op de lijst, archief,
+  aankopen bewaren, standaard bij Doen, backups, logboek.
 
 Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie

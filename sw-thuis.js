@@ -14,7 +14,7 @@
    Het versiestempel in thuis.html is een eigen teller en gaat met de hand
    omhoog. */
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const CACHE_NAME = 'thuis-v' + CACHE_VERSION;
 
 /* Zonder dit bestand is er niets om offline te openen, dus dit moet slagen. */
@@ -117,8 +117,8 @@ function offlineAntwoord(navigatie) {
       ? '<!doctype html><html lang="nl"><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width,initial-scale=1">' +
         '<title>thuis offline</title>' +
-        '<body style="font:16px system-ui;margin:2rem;color:#e7edf0;background:#0f1417">' +
-        '<h1 style="font-size:1.2rem">thuis is offline</h1>' +
+        '<body style="font:18px system-ui;margin:2rem;color:#1E2230;background:#F4F3FB">' +
+        '<h1 style="font-size:22px;color:#4B3CC0">thuis is offline</h1>' +
         '<p>Deze pagina staat niet in de offline-kopie. Open de app een keer met ' +
         'verbinding, daarna werkt hij ook zonder.</p>'
       : '',
