@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (23-11-2026): in gebruik, versie 1352903-007. Dit document beschrijft
+Status (23-11-2026): in gebruik, versie 1352903-008. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a t/m §7a8 de wijzigingen na de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
@@ -149,7 +149,7 @@ tijdstippen `2026-11-21T10:12` in lokale tijd (Europe/Amsterdam).
 Opruimen door de app: afgeronde acties na 3 maanden; historie na de ingestelde
 tijd (standaard 3 maanden); aankopen boven het ingestelde aantal; eenmalige artikelen in
 het archief (niet op de lijst) die de ingestelde tijd niet gekocht zijn
-(`instellingen.archief.bewaren`: `1w`, `1m` standaard, `3m`, `1j`; de laatste
+(`instellingen.archief.bewaren`: `1w`, `1m`, `3m`, `1j` standaard; de laatste
 dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
 
 ## 4. Samenvoegen
@@ -261,12 +261,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   welke afdeling het daar ligt (`ligt`).
 - Van boven naar beneden: "Boodschappen" met de voortgang van de hele lijst
   ("1 van 7 artikelen"; wat in een van de mandjes ligt telt als gehaald);
-  "Zonder winkel" (kaart met een grijze kop en een doorgestreept winkeltje;
+  "Winkel?" (kaart met een grijze kop en een doorgestreept winkeltje;
   per artikel een winkelicoon dat vraagt bij welke winkel het te koop is,
   zoeken of toevoegen; het komt daar onder "Afdeling onbekend" met de speld,
   zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
   (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling onbekend" met de speld en de afdelingen
-  in looproute); los en grijs "Niet bij <winkel>" en "In het mandje".
+  in looproute); los en grijs "Niet bij <winkel>" en "In winkelmand".
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
@@ -293,7 +293,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   de route.
 - Daarna de afdelingen in looproute.
 - Elke vink is direct een handeling (van de lijst, aankoopdatum erbij). Het
-  item blijft 1,5 s grijs op zijn plek en schuift dan naar "In het mandje".
+  item blijft 1,5 s grijs op zijn plek en schuift dan naar "In winkelmand".
   Terugtikken zet het terug en haalt de aankoopdatum weg.
 - "Niet bij <winkel>": artikelen die hier niet te koop zijn, ingeklapt
   en grijs, wel af te vinken.
@@ -302,7 +302,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar". Later
   eventueel een instelling "na x dagen vanzelf leeg".
-- Het mandje is per winkel: "In het mandje" toont alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
+- Het mandje is per winkel: "In winkelmand" toont alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
   je elders afvinkte, staat daar weer als je die winkel kiest.
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
 - Een artikel dat de ander op de lijst zette, krijgt "nieuw" tot je het gezien hebt.
@@ -442,13 +442,14 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Bij een nieuwer formaat staat er een knop "App bijwerken".
 - Een wijziging die vervalt, wordt altijd gemeld.
 - Opruimen: wordt een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Na het terugzetten van
-  een backup ruimt de app die dag niets op (instelling opruimen.tot). Staat de klok van de telefoon meer
-  dan een maand na de laatste wijziging van het bestand volgens OneDrive (servertijd, lastModifiedDateTime),
-  dan wordt er niet opgeruimd, niet wekelijks teruggezet en geen dagbackup gemaakt; wijzigingen worden wel
-  opgeslagen (melding en regel in het logboek). Tegen de servertijd blijft een verkeerde klok verdacht, ook
-  na een ronde; lang niet gebruiken of een oude backup terugzetten geeft hooguit één voorzichtige ronde (M1, M2).
-  Een wekelijks moment dat meer dan twee dagen na nu ligt (de andere telefoon liep voor) telt als vorige
-  week; twee dagen, zodat een tijdzoneverschil (tot 26 uur) nooit meetelt.
+  een backup ruimt de app die dag niets op (instelling opruimen.tot). Klokcontrole (ronde 4): na elke eigen schrijfactie geeft OneDrive de servertijd
+  (lastModifiedDateTime); de app bewaart de afwijking van de telefoonklok (`kopie.scheef`). Meer dan een
+  dag voor of achter = verdacht: wijzigingen worden opgeslagen, maar geen opruimen, geen wekelijks terug,
+  geen dagbackup en geen terugzetten (melding). Nog niets gemeten: verdacht als de telefoon meer dan een
+  maand na de laatste wijziging van het bestand staat; dan schrijft de app één keer hetzelfde bestand
+  terug om te meten (na lang niet gebruiken dus één voorzichtige ronde). Backups worden nooit opgeruimd
+  als vandaag meer dan een maand na de nieuwste andere backup ligt. Een wekelijks moment meer dan twee
+  dagen na nu telt als vorige week.
 - Na een ronde zonder verandering wordt niets opnieuw getekend.
 
 ### 7a2. Wekelijks, mandje en aankopen (021)
@@ -540,6 +541,19 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   overgeslagen (L8). Tijdens het verslepen van een afdeling wordt niet opnieuw getekend (L9).
 - Aanmeldfout alleen bij een eigen poging met de juiste state (L4). Leeg beginnen wist ook de
   wachtrij (L5). Hulpgegevens (gezien, logboek, backupDag) geven geen opslagmelding (L1).
+
+### 7a9. Review ronde 4 en kleine wensen (008)
+- Klok: afwijking gemeten tegen de servertijd van eigen schrijfacties (zie §7a); terugzetten weigert
+  bij een verdachte klok; backups niet opruimen als vandaag ruim na de nieuwste andere backup ligt.
+- Actie- en winkeleditor versturen alleen wat je zelf veranderde t.o.v. de stand bij het openen.
+- Bestand niet gevonden op id: eerst op naam zoeken (nieuwe id na terugzetten of uploaden).
+- Twee keer terugzetten: alleen eigen wijzigingen tellen. Herhalen uitzetten houdt de actie open.
+- Afmelden niet tijdens een sync. Na een ronde haalt een venster alleen zijn verstuurde handelingen
+  (`hid`) uit de opgeslagen wachtrij; het stand-kenmerk wijzigt pas na gelukt opslaan.
+- Boodschappen: kaart "Winkel?" (was "Zonder winkel"), "In winkelmand" (was "In het mandje"),
+  winkelkaart alleen als er hier of elders iets te halen is, kop "Overige winkels" ook als niets nodig is.
+- Artikelen: tijdens het typen blijven de filters bovenaan. Archief standaard 1 jaar. Aankopen bewaren
+  als keuzelijst 50, 100, 250, 500 (standaard 500).
 
 ## 7b. Veiligheid
 

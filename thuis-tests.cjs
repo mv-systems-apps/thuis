@@ -414,9 +414,15 @@ controle('acties: ongeldige datum, herhaling of link in een handeling vervalt', 
 });
 
 /* ---------- opruimen ---------- */
-controle('opruimen: oude afgeronde actie; archief standaard na 1 maand niet gekocht (ook via "weg"); op de lijst of zonder datum blijft', () => {
+controle('opruimen: archief standaard 1 jaar: na 2 maanden nog bewaard, na 14 maanden weg', () => {
   const k = kern();
-  const m = lees({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] }, lam02: { naam: 'Lampje2', soort: 'eenmalig', op: '2026-11-20T10:00', gekocht: ['2025-10-01'] },
+  const m = lees({ artikelen: { kaa01: { naam: 'Kaars', soort: 'eenmalig', weg: '2026-09-01' }, lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-09-01'] } } });
+  k.opruimen(m, NU);
+  return gelijk(Array.from(m.artikelen.keys()).join(), 'kaa01');
+});
+controle('opruimen: oude afgeronde actie; archief op 1 maand: weg na 1 maand niet gekocht (ook via "weg"); op de lijst of zonder datum blijft', () => {
+  const k = kern();
+  const m = lees({ instellingen: { archief: { bewaren: '1m' } }, artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2025-10-01'] }, lam02: { naam: 'Lampje2', soort: 'eenmalig', op: '2026-11-20T10:00', gekocht: ['2025-10-01'] },
       bat01: { naam: 'Batterij', soort: 'eenmalig', gekocht: ['2026-11-01'] }, kaa01: { naam: 'Kaars', soort: 'eenmalig', weg: '2026-09-01' }, tas01: { naam: 'Tas', soort: 'eenmalig' },
       mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2025-01-01'] } },
     acties: { a1111: { naam: 'Pakket', klaar: '2026-01-01' }, a2222: { naam: 'Filter', herhaal: 'maand', klaar: '2026-01-01' } } });
@@ -444,7 +450,7 @@ controle('opruimen: niet op de dag van een teruggezette backup (B5)', () => {
   return gelijk(!!JSON.parse(r.tekst).artikelen.lam01 + '|' + !!JSON.parse(morgen.tekst).artikelen.lam01, 'true|false');
 });
 controle('opruimen: niet als de klok van de telefoon ver na de nieuwste datum staat; wel in het logboek (B5)', () => {
-  const bestand = B({ artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-20'] } } });
+  const bestand = B({ instellingen: { archief: { bewaren: '1m' } }, artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-20'] } } });
   const ver = K.synchroniseer(bestand, [], new Date(2027, 5, 1, 10, 0));
   const goed = K.synchroniseer(bestand, [], NU);
   return gelijk(!!JSON.parse(ver.tekst).artikelen.lam01 + '|' + ver.opgelost.some((x) => /lijkt niet te kloppen/.test(x)) + '|' + !!JSON.parse(goed.tekst).artikelen.lam01, 'true|true|false');
@@ -573,6 +579,15 @@ controle('namen als constructor en toString: deel bewaard, handeling vervalt net
   const h1 = K.pasToe(K.leegModel(), { actie: 'toString', soort: 'artikel', id: 'abc12' });
   const h2 = K.pasToe(K.leegModel(), { actie: 'instelling', naam: 'constructor', veld: 'name', nieuw: 'x' });
   return gelijk(r.ok + '|' + /"constructor"/.test(K.schrijfBestand(r.model)) + '|' + h1.status + '|' + h2.status, 'true|true|vervallen|vervallen');
+});
+controle('backups: vandaag ruim na de nieuwste andere backup (klok vooruit) → niets weg (H1 ronde 4)', () => {
+  const namen = ['thuis_backup_20261014.json', 'thuis_backup_20261101.json', 'thuis_backup_20261120.json', 'thuis_backup_20261123.json', 'thuis_backup_20271228.json'];
+  return gelijk(K.backupsWeg(namen, '2027-12-28').join(), '');
+});
+controle('klok gemeten tegen de server: meer dan een dag voor of achter is verdacht (M3/L4 ronde 4)', () => {
+  const b = B({ artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks' } } });
+  const v = (s) => K.synchroniseer(b, [], NU, { serverDag: '2026-11-21', scheef: s }).klokVerdacht;
+  return gelijk([v(5 * 864e5), v(-3 * 864e5), v(2 * 3600e3), v(-2 * 3600e3)].join(), 'true,true,false,false');
 });
 controle('wekelijks: andere dag kiezen geeft geen gat van bijna twee weken (K3)', () => {
   const k = kern();

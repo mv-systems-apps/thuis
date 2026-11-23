@@ -16,7 +16,7 @@ MUTATIES = [
   ("zonder winkel bij onbekend", "    if (!a.plekken.length) { zonder.push(a); continue; }", ""),
   ("ook-elders maakt nodig", "    const alleen = hier.filter((a) => a.plekken.length === 1).map((a) => a.naam);", "    const alleen = hier.map((a) => a.naam);"),
   ("archief negeert weg", "  return (r.weg || '') > g ? r.weg : g;", "  return g;"),
-  ("archief negeert de instelling", "    const dagen = Object.prototype.hasOwnProperty.call(BEWAREN, b) ? BEWAREN[b] : BEWAREN['1m'];", "    const dagen = BEWAREN['1m'];"),
+  ("archief negeert de instelling", "    const dagen = Object.prototype.hasOwnProperty.call(BEWAREN, b) ? BEWAREN[b] : BEWAREN['1j'];", "    const dagen = BEWAREN['1j'];"),
   ("aantal niet gecontroleerd", "  if (h.soort === 'artikel' && h.veld === 'aantal' && h.nieuw && !AANTAL.test(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };", ""),
   ("link: http toegestaan", "  if (u.protocol !== 'https:' || u.username || u.password) return null;", "  if (u.username || u.password) return null;"),
   ("herhalen slaat voorbije niet over", "  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal, dagWens);", ""),
