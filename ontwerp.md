@@ -440,6 +440,17 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   open), Overige winkels (ingeklapt) of zonder favorieten Alle winkels (open). Elk zoekvak in een
   keuzelijst heeft links een loep, met tekst een terugpijl die leegmaakt.
 
+### 7a4. Tekst en kleine gedragspunten (023)
+- Platte tekst: HTML-tags gaan eruit, losse < en > blijven; onzichtbare en richting-tekens gaan eruit.
+- Herhalen per maand/kwartaal/jaar onthoudt de oorspronkelijke dag (veld maanddag): 31 jan, 28 feb,
+  31 mrt. Zelf een andere datum kiezen laat dat vervallen.
+- Artikel of actie intussen verwijderd terwijl je het bewerkt: melding met "Terugzetten met mijn
+  wijzigingen".
+- Winkel verwijderen waar artikelen liggen: eerst bevestigen, met het aantal.
+- Toevoegen van iets dat er al staat: de regel licht kort op en komt in beeld.
+- Terugzetten uit het archief stuurt het hele artikel mee (komt terug als het intussen is opgeruimd).
+- Een mislukte dagbackup komt in het logboek. Elke melding heeft een eigen klok.
+
 ## 7b. Veiligheid
 
 - Geen code van anderen (geen bibliotheken, CDN, analytics). Gegevens alleen via

@@ -340,12 +340,12 @@ const BEGIN = [
   controle('mandje: leegmaakknop (mandje met kruis) bij het mandje', !!leeg && leeg.getAttribute('aria-label') === 'Mandje leegmaken');
   leeg.click();
   controle('mandje: leeggemaakt', ![...d.querySelectorAll('#winkelLijst .afdkop span')].some((h) => h.textContent.startsWith('In het mandje')));
-  const mMandje = d.getElementById('m-mandje');
+  const mMandje = d.querySelector('[id^="m-mandje"]');
   controle('mandje leeg: melding met Ongedaan maken en aftelbalkje', !!mMandje && /Mandje leeggemaakt/.test(mMandje.textContent) && !!mMandje.querySelector('button .aftel'));
   mMandje.querySelector('button').click(); await slaap(20);
   controle('mandje leeg ongedaan: Bananen weer in het mandje', [...d.querySelectorAll('#winkelLijst .afdkop')].some((h) => h.firstChild.textContent === 'In het mandje' && h.querySelector('.tal').textContent === '1 artikel'));
   d.querySelector('#winkelLijst .icoonknop.amber').click();
-  d.getElementById('m-mandje').remove();
+  d.querySelector('[id^="m-mandje"]').remove();
 
   /* vegen: van Boodschappen naar links → Doen, van Artikelen naar rechts → Winkels, rondom van Winkels naar Instellingen */
   const veeg = (x1, x2) => {
@@ -428,6 +428,10 @@ const BEGIN = [
   await slaap(50);
   d.querySelector('#winkelDetail .bewerk').click();
   d.getElementById('keuze').querySelector('.prul').click();
+  await slaap(20);
+  const bev = d.getElementById('keuze');
+  controle('winkel verwijderen met artikelen: eerst bevestigen, met het aantal (K14)', !!bev && /AH verwijderen\?/.test(bev.textContent) && /\d+ artikel(en liggen| ligt) hier\./.test(bev.querySelector('.paneeltekst').textContent), bev && bev.textContent);
+  [...bev.querySelectorAll('.bewerkknoppen .knop')].find((b) => b.textContent === 'Verwijderen').click();
   await slaap(2500);
   const tWeg = R(od.bestanden['thuis.json'].tekst);
   controle('winkel verwijderen: meteen weg in OneDrive, ook bij Bananen', !/^winkel;AH/m.test(tWeg) && /^artikel;Bananen;soort=wekelijks;(op|gekocht)/m.test(tWeg) && !/Bananen;[^\n]*ligt=/.test(tWeg), tWeg);
@@ -1017,6 +1021,38 @@ const BEGIN = [
     controle('keuzelijst: loep links, met tekst een terugpijl die leegmaakt', loep === 'Zoeken' && pijl === 'Leegmaken' && zk.value === '' && links.getAttribute('aria-label') === 'Zoeken');
     await terug();
     controle('terug sluit de keuzelijst, Boodschappen blijft', !dT.getElementById('keuze') && tab() === 'winkel');
+  }
+
+  /* 5s. 023: editor van iets dat intussen weg is (K12); bestaand toevoegen licht op (K15); maand onthoudt de dag (K5); archief terug ook na opruimen. */
+  {
+    const odK = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Kaars;op=2026-11-20T10:00\nartikel;Lampje;weg=2026-11-01\nactie;Huur;datum=2026-01-31;herhaal=maand\n');
+    const wK = await start(odK);
+    await slaap(800);
+    const dK = wK.document;
+    [...dK.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Kaars')).querySelector('.tekst').click(); await slaap(30);
+    dK.getElementById('artikelNotitie').value = 'wit'; dK.getElementById('artikelNotitie').dispatchEvent(new wK.Event('input'));
+    const kid = wK.eval("artikelen.find((a) => a.naam === 'Kaars').id");
+    wK.eval("handelen([{ actie: 'weg', soort: 'artikel', id: '" + kid + "' }])"); await slaap(50);
+    const m = dK.getElementById('m-weg-' + kid);
+    controle('editor: intussen verwijderd = melding met Terugzetten, niet stil (K12)', dK.getElementById('artikelScherm').hidden && !!m && /Kaars is intussen verwijderd/.test(m.textContent));
+    [...m.querySelectorAll('button')].find((b) => /Terugzetten/.test(b.textContent)).click(); await slaap(50);
+    controle('terugzetten met mijn wijzigingen: artikel terug, met de nieuwe notitie, op de lijst', wK.eval("(artikelen.find((a) => a.naam === 'Kaars') || {}).notitie") === 'wit' && wK.eval("!!(artikelen.find((a) => a.naam === 'Kaars') || {}).op"));
+    dK.getElementById('invoerTekst').value = 'kaars'; dK.getElementById('invoerTekst').dispatchEvent(new wK.Event('input'));
+    dK.getElementById('invoerPlus').click(); await slaap(30);
+    const rij = dK.querySelector('#lijst .item[data-id="' + kid + '"]');
+    controle('toevoegen van iets dat er al staat: de regel licht op (K15)', !!rij && rij.classList.contains('oplicht'));
+    /* archief: terugzetten stuurt het hele artikel mee */
+    const lid = wK.eval("artikelen.find((a) => a.naam === 'Lampje').id");
+    [...dK.querySelectorAll('#filters .filter')][1].click(); await slaap(30);
+    dK.querySelector('#archief .kopbalk').click(); await slaap(30);
+    dK.querySelector('#archief .item[data-id="' + lid + '"] .rondje').click(); await slaap(30);
+    const laatste = wK.eval("JSON.stringify(wachtrij.filter((h) => h.id === '" + lid + "').map((h) => h.actie))");
+    controle('archief: terugzetten stuurt het hele artikel mee (komt terug als het intussen is opgeruimd)', laatste === '["terug","zet","zet"]', laatste);
+    /* K5 */
+    dK.getElementById('tab-doen').click(); await slaap(30);
+    wK.eval("actieAfronden(actieLijst(model).find((a) => a.naam === 'Huur'))"); await slaap(30);
+    const huur = wK.eval("JSON.stringify((({ datum, maanddag }) => ({ datum, maanddag }))(actieLijst(model).find((a) => a.naam === 'Huur')))");
+    controle('maandelijks afronden: datum verschuift, dag 31 onthouden waar de maand korter is (K5)', /"maanddag":(0|31)/.test(huur) && (/"maanddag":31/.test(huur) ? !/-31"/.test(huur) : /-31"/.test(huur)), huur);
   }
 
   /* 6. Een bestand dat geen UTF-8 is: melding, niets geschreven. */

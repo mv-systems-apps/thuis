@@ -20,7 +20,7 @@ MUTATIES = [
   ("archief negeert de instelling", "    const dagen = Object.prototype.hasOwnProperty.call(BEWAREN, b) ? BEWAREN[b] : BEWAREN['1m'];", "    const dagen = BEWAREN['1m'];"),
   ("aantal niet gecontroleerd", "  if (h.soort === 'artikel' && h.veld === 'aantal' && h.nieuw && !AANTAL.test(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };", ""),
   ("link: http toegestaan", "  if (u.protocol !== 'https:' || u.username || u.password) return null;", "  if (u.username || u.password) return null;"),
-  ("herhalen slaat voorbije niet over", "  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal);", ""),
+  ("herhalen slaat voorbije niet over", "  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal, dagWens);", ""),
   ("deze week t/m zondag vergeten", "  return g.begin <= zondag ? 'week' : 'later';", "  return g.begin <= vandaag ? 'week' : 'later';"),
   ("tag zoekt ook in de naam", "    return tagsVan(notitie).some((g) => g.sleutel.indexOf(k) === 0);", "    return tagsVan(notitie + ' ' + naam).some((g) => g.sleutel.indexOf(k) === 0);"),
   ("winkel-link niet gecontroleerd", "  if ((h.soort === 'artikel' || h.soort === 'winkel') && h.veld === 'link'", "  if (h.soort === 'artikel' && h.veld === 'link'"),
@@ -34,6 +34,9 @@ MUTATIES = [
   ("twee resets per week", "  if (vorige !== '' && vorige > tijdstipTekst(weekEerder)) return 0;", ""),
   ("aankopen niet beperkt", "  if (model.aankopen.size <= n) return 0;", "  return 0;"),
   ("aankoop dubbel", "  if (verz.has(h.id)) return { status: 'al' };\n  try { verz.set(h.id, recordUitJson('aankoop'", "  try { verz.set(h.id + 'x', recordUitJson('aankoop'"),
+  ("maand vergeet de dag", "Math.min(dagWens || x.getDate(), laatste)", "Math.min(x.getDate(), laatste)"),
+  ("losse < weer weg", ".replace(/<!--[^]*?-->|<\\/?[A-Za-z][^<>]*>/g, ' ')", ".replace(/<[^>]*>/g, ' ').replace(/[<>]/g, '')"),
+  ("onzichtbare tekens blijven", ".replace(/[\\u00AD\\u200B-\\u200F\\u202A-\\u202E\\u2060-\\u2064\\u2066-\\u2069\\uFEFF]/g, '')", ""),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

@@ -339,7 +339,15 @@ controle('aantal: 2 t/m 99 als tekst; ongeldig aantal in het bestand of in een h
   return gelijk(ok + '|' + fout1 + '|' + fout2 + '|' + JSON.stringify(uit(k, m).artikelen.mel01), 'ok|vervallen|false|{"naam":"Melk","soort":"wekelijks"}');
 });
 
-controle('platte tekst: HTML-tags en losse < > gaan eruit', () => gelijk(K.schoonTekst(' Kaas <img src=x onerror=1> en <b>brood</b> 3 > 2 '), 'Kaas en brood 3 2'));
+controle('platte tekst: HTML-tags gaan eruit, losse < > blijven (B9); onzichtbare en richting-tekens weg (K20)', () => gelijk([
+  K.schoonTekst(' Kaas <img src=x onerror=1> en <b>brood</b> 3 > 2 '), K.schoonTekst('kip < 500 g en > 2 stuks'), K.schoonTekst('<3 <!-- x --> ok </div>'),
+  K.schoonTekst('Me\u200Blk\u202Eabc\uFEFF'), K.schoonTekst('<script>alert(1)</script>')].join('|'),
+  'Kaas en brood 3 > 2|kip < 500 g en > 2 stuks|<3 ok|Melkabc|alert(1)'));
+controle('platte tekst: lange plak met veel < blijft snel (K10)', () => { const s = Date.now(); K.schoonTekst('<'.repeat(80000) + 'a'); return gelijk(Date.now() - s < 200, true); });
+controle('herhalen: maandelijks onthoudt de dag: 31 jan → 28 feb → 31 mrt → 30 apr (K5)', () => gelijk([
+  K.volgendeKeer('2026-01-31', 'maand', '2026-01-31', 31), K.volgendeKeer('2026-02-28', 'maand', '2026-02-28', 31), K.volgendeKeer('2026-03-31', 'maand', '2026-03-31', 31),
+  K.volgendeKeer('2028-02-29', 'jaar', '2028-02-29', 29), K.volgendeKeer('2029-02-28', 'jaar', '2029-02-28', 29)].join(),
+  '2026-02-28,2026-03-31,2026-04-30,2029-02-28,2030-02-28'));
 
 controle('link: alleen https; zonder schema komt https:// ervoor; http, javascript, data, naam/wachtwoord en geen domein geweigerd', () => {
   const v = (x) => K.veiligeLink(x);

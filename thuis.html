@@ -288,6 +288,10 @@
   .icoonknop.amber{background:#FBF0DA}
   /* ---------- keuzelijst van onderen ---------- */
   #keuze{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(24,20,60,.35)}
+  .oplicht{animation:oplichten 1s ease-out}
+  @keyframes oplichten{0%,40%{background:#DCD6F7}100%{background:#FFFFFF}}
+  @media (prefers-reduced-motion:reduce){.oplicht{animation:none;outline:3px solid #DCD6F7}}
+  #keuze .paneeltekst{margin:0;padding:4px 16px 6px;font-size:18px;color:var(--tekst)}
   #keuze .paneelfout{margin:0;padding:0 16px 10px;font-size:17px;color:var(--rood, #B3261E)}
   #keuze .paneel{background:#FFFFFF;max-height:80dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
   #keuze .kop{display:flex;align-items:center;gap:8px;padding:6px 6px 4px 16px}
@@ -432,7 +436,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352903-002</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352903-003</div>
   </section>
 </main>
 
@@ -549,7 +553,7 @@ const DATUM = /^\d{4}-\d{2}-\d{2}$/;
 const VELDEN = {
   winkel: ['naam', 'afdelingen', 'notitie', 'link'],
   artikel: ['naam', 'soort', 'aantal', 'notitie', 'link', 'ligt', 'op', 'opdoor', 'weg', 'gekocht'],
-  actie: ['naam', 'datum', 'herhaal', 'wie', 'notitie', 'link', 'foto', 'klaar', 'door'],
+  actie: ['naam', 'datum', 'maanddag', 'herhaal', 'wie', 'notitie', 'link', 'foto', 'klaar', 'door'],
   aankoop: ['naam', 'tijd']
 };
 const DEEL = { winkels: 'winkel', artikelen: 'artikel', acties: 'actie', aankopen: 'aankoop' };
@@ -566,9 +570,14 @@ function normNaam(s) {
 function zoekVorm(s) { return normNaam(s).normalize('NFD').replace(/[̀-ͯ]/g, ''); }
 
 /* Invoer van de gebruiker: één regel, zonder stuurtekens, spaties samengevoegd. */
-/* Platte tekst: geen stuurtekens, geen HTML (tags gaan eruit, losse < en > ook). */
+/* Platte tekst: geen stuurtekens, geen onzichtbare of richting-tekens, geen
+   HTML-tags (<b>, </div>, <!-- -->). Een losse < of > blijft staan ("< 500 g",
+   "<3"): alles wordt als platte tekst getoond, dus dat is veilig. Lineair, ook
+   bij een lange plak. */
 function schoonTekst(s) {
-  return String(s).normalize('NFC').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/<[^>]*>/g, ' ').replace(/[<>]/g, '')
+  return String(s).normalize('NFC').replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g, '')
+    .replace(/<!--[^]*?-->|<\/?[A-Za-z][^<>]*>/g, ' ')
     .replace(/\s+/g, ' ').trim();
 }
 
@@ -895,7 +904,7 @@ function handelZet(model, h, verz, r) {
   if (h.soort === 'artikel' && h.veld === 'aantal' && h.nieuw && !AANTAL.test(h.nieuw)) return { status: 'vervallen', reden: 'ongeldig' };
   if ((h.soort === 'artikel' || h.soort === 'winkel') && h.veld === 'link' && h.nieuw && veiligeLink(h.nieuw) !== h.nieuw) return { status: 'vervallen', reden: 'ongeldig' };
   if (h.soort === 'actie' && h.nieuw && ((h.veld === 'link' && veiligeLink(h.nieuw) !== h.nieuw) || (h.veld === 'datum' && !periodeSoort(h.nieuw))
-      || (h.veld === 'herhaal' && HERHAAL_BIJ.dag.indexOf(h.nieuw) === -1))) return { status: 'vervallen', reden: 'ongeldig' };
+      || (h.veld === 'herhaal' && HERHAAL_BIJ.dag.indexOf(h.nieuw) === -1) || (h.veld === 'maanddag' && !/^([1-9]|[12]\d|3[01])$/.test(h.nieuw)))) return { status: 'vervallen', reden: 'ongeldig' };
   const doel = h.soort === 'actie' ? r.velden : r;
   const cur = doel[h.veld] || '';
   const oud = h.oud || '', nieuw = h.nieuw || '';
@@ -1359,7 +1368,9 @@ function periodeGrenzen(d) {
   return { begin: datumTekst(new Date(j, m1 - 1, 1)), eind: datumTekst(new Date(j, m2, 0)) };
 }
 /* n stappen verder (of terug) in eenheden van "stap" (dag, week, maand, kwartaal, jaar). */
-function verschuif(d, n, stap) {
+/* dagWens: de oorspronkelijke dag van de maand (bij herhalen per maand, kwartaal,
+   jaar): in een kortere maand de laatste dag, daarna weer die dag (K5). */
+function verschuif(d, n, stap, dagWens) {
   const s = periodeSoort(d);
   if (s === 'dag') {
     const x = dagVan(d);
@@ -1367,7 +1378,7 @@ function verschuif(d, n, stap) {
     const maanden = n * (stap === 'maand' ? 1 : stap === 'kwartaal' ? 3 : 12);
     const doel = new Date(x.getFullYear(), x.getMonth() + maanden, 1);
     const laatste = new Date(doel.getFullYear(), doel.getMonth() + 1, 0).getDate();
-    return datumTekst(new Date(doel.getFullYear(), doel.getMonth(), Math.min(x.getDate(), laatste)));
+    return datumTekst(new Date(doel.getFullYear(), doel.getMonth(), Math.min(dagWens || x.getDate(), laatste)));
   }
   if (s === 'maand') {
     const x = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1 + n * (stap === 'kwartaal' ? 3 : stap === 'jaar' ? 12 : 1), 1);
@@ -1380,9 +1391,9 @@ function verschuif(d, n, stap) {
   return String(+d + n);
 }
 /* De volgende keer van een herhalende actie: de eerste die niet al voorbij is. */
-function volgendeKeer(d, herhaal, vandaag) {
-  let x = verschuif(d, 1, herhaal);
-  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal);
+function volgendeKeer(d, herhaal, vandaag, dagWens) {
+  let x = verschuif(d, 1, herhaal, dagWens);
+  for (let i = 0; i < 1000 && periodeGrenzen(x).eind < vandaag; i++) x = verschuif(x, 1, herhaal, dagWens);
   return x;
 }
 /* Te laat (periode voorbij), deze week (begint uiterlijk zondag), later, of geen. */
@@ -1417,7 +1428,7 @@ function actieLijst(model) {
   return opNaam(model.acties).map((r) => {
     const v = r.velden, datum = periodeSoort(v.datum) ? v.datum : '';
     const herhaal = datum && HERHAAL_BIJ[periodeSoort(datum)].indexOf(v.herhaal) !== -1 ? v.herhaal : '';
-    return { id: r.id, naam: r.naam, datum, herhaal, notitie: v.notitie || '', link: veiligeLink(v.link) || '', klaar: v.klaar || '', door: v.door || '',
+    return { id: r.id, naam: r.naam, datum, herhaal, maanddag: /^([1-9]|[12]\d|3[01])$/.test(v.maanddag || '') ? +v.maanddag : 0, notitie: v.notitie || '', link: veiligeLink(v.link) || '', klaar: v.klaar || '', door: v.door || '',
       open: !v.klaar || !!herhaal, begin: datum ? periodeGrenzen(datum).begin : '' };
   });
 }
@@ -2111,8 +2122,8 @@ async function dagbackup(map, tekst) {
   const res = await graph('/drives/' + map.driveId + '/items/' + map.itemId + ':/thuis_backup_' + kort + '.json:/content?@microsoft.graph.conflictBehavior=fail', {
     method: 'PUT', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: tekst
   });
-  /* 409: de andere telefoon maakte de backup van vandaag al. */
-  if (!res.ok && res.status !== 409) return;
+  /* 409: de andere telefoon maakte de backup van vandaag al. Anders mislukt: in het logboek (K18). */
+  if (!res.ok && res.status !== 409) { logboek(['Dagbackup niet gelukt (code ' + res.status + ').']); return; }
   await bewaar('backupDag', kort);
   try {
     const lijstRes = await graph('/drives/' + map.driveId + '/items/' + map.itemId + '/children?$select=id,name&$top=999');
@@ -2653,8 +2664,11 @@ function lijstKlik(e) {
     if (v) clearTimeout(v.timer);
     scherm.vertrekt.delete(id);
     scherm.weggehaald.delete(id);
-    handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
-              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]);
+    /* Uit het archief: het hele artikel mee, zodat het terugkomt als het intussen is opgeruimd. */
+    const terugRecord = a.letter === 'E' && model.artikelen.get(id)
+      ? [{ actie: 'terug', soort: 'artikel', id, record: Object.assign(recordNaarJson('artikel', model.artikelen.get(id)), { op: t, opdoor: ik }) }] : [];
+    handelen(terugRecord.concat([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
+              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]));
   }
 }
 $('lijst').addEventListener('click', lijstKlik);
@@ -2673,6 +2687,7 @@ function toevoegen() {
       handelen([{ actie: 'zet', soort: 'artikel', id: bestaand.id, veld: 'op', oud: '', nieuw: t },
                 { actie: 'zet', soort: 'artikel', id: bestaand.id, veld: 'opdoor', oud: bestaand.opdoor, nieuw: ik }]);
     }
+    scherm.oplichten = bestaand.id;
   } else {
     handelen([{ actie: 'nieuw', soort: 'artikel', id: nieuweId(), velden: { naam, soort: LETTER_SOORT[scherm.nieuwSoort], op: t, opdoor: ik } }]);
   }
@@ -2683,6 +2698,16 @@ function toevoegen() {
   tekenSoortknop();
   invoerBijwerken();
   tekenBoodschappen();
+  if (scherm.oplichten) { oplichten($('lijst').querySelector('.item[data-id="' + scherm.oplichten + '"]')); scherm.oplichten = ''; }
+}
+/* Stond het er al: de regel licht even op en komt in beeld (K15). */
+function oplichten(rij) {
+  if (!rij) return;
+  rij.classList.remove('oplicht');
+  void rij.offsetWidth;
+  rij.classList.add('oplicht');
+  if (rij.scrollIntoView) rij.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(() => rij.classList.remove('oplicht'), 1100);
 }
 
 /* Annuleren: vak leeg, toetsenbord dicht, soort terug naar die van het filter. */
@@ -3058,7 +3083,7 @@ function mandjeLeegmaken() {
   for (const m of weg) winkel.mandje.delete(m.id);
   mandjeBewaren();
   tekenWinkel();
-  const id = 'm-mandje';
+  const id = 'm-mandje-' + willekeurig(6);
   melding(id, 'Mandje leeggemaakt.', [{ tekst: 'Ongedaan maken', aftel: ONGEDAAN, actie: () => {
     meldingWeg(id);
     for (const m of weg) if (!winkel.mandje.has(m.id)) winkel.mandje.set(m.id, m);
@@ -3549,9 +3574,21 @@ function winkelBewerken(w) {
       const record = recordNaarJson('winkel', model.winkels.get(w.id));
       const ligt = {};
       for (const a of model.artikelen.values()) if (a.ligt.has(w.id)) ligt[a.id] = a.ligt.get(w.id);
-      winkelSluiten();
-      handelen([{ actie: 'weg', soort: 'winkel', id: w.id }]);
-      verwijderdMelding([{ vet: w.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'winkel', id: w.id, record, ligt }]);
+      const weg = () => {
+        winkelSluiten();
+        handelen([{ actie: 'weg', soort: 'winkel', id: w.id }]);
+        verwijderdMelding([{ vet: w.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'winkel', id: w.id, record, ligt }]);
+      };
+      const n = Object.keys(ligt).length;
+      if (!n) { weg(); return; }
+      /* Liggen er artikelen: eerst bevestigen, met het aantal (K14). */
+      const k = keuzePaneel([{ vet: w.naam }, ' verwijderen?'], false);
+      k.querySelector('.opties').outerHTML = '<p class="paneeltekst"></p><div class="bewerkknoppen" style="padding:10px 14px 14px"><button class="knop tweede grijs" type="button">Annuleren</button><button class="knop rood" type="button">Verwijderen</button></div>';
+      k.querySelector('.paneeltekst').textContent = telTekst(n, 'artikel ligt', 'artikelen liggen') + ' hier.';
+      const [nee, ja] = k.querySelectorAll('.bewerkknoppen .knop');
+      nee.addEventListener('click', sluitKeuze);
+      ja.addEventListener('click', () => { sluitKeuze(); weg(); });
+      keuzeTonen(k);
     }
   });
 }
@@ -3672,7 +3709,19 @@ function tekenSoorten() {
 /* Te koop bij en Gekocht; ook na een synchronisatie (namen kunnen veranderd zijn). */
 function artikelBijwerken() {
   const a = artikelen.find((x) => x.id === bw.id);
-  if (!a) { artikelDicht(false); return; }
+  if (!a) {
+    /* Intussen verwijderd (door de ander of het archief): niet stil sluiten (K12). */
+    const o = bw.oud;
+    const ligt = {};
+    for (const [w, afd] of bw.plekken) if (winkelOpId.has(w)) ligt[w] = afd;
+    const link = bw.link.trim() ? veiligeLink(bw.link) : '';
+    const record = { naam: schoonTekst(bw.naam) || o.naam, soort: LETTER_SOORT[bw.soort], notitie: schoonTekst(bw.notitie), link: link || '', ligt, gekocht: o.gekocht.slice() };
+    if (o.aantal > 1) record.aantal = String(o.aantal);
+    if (o.op) { record.op = o.op; record.opdoor = o.opdoor || ''; }
+    artikelDicht(false);
+    weerTerugMelding(o.id, 'artikel', record);
+    return;
+  }
   for (const w of Array.from(bw.plekken.keys())) if (!winkelOpId.has(w)) bw.plekken.delete(w);
   const doel = $('plekken');
   doel.innerHTML = '';
@@ -3897,8 +3946,13 @@ function actieAfronden(a) {
   /* Geen eigenaar: alleen wanneer, niet wie. */
   const hs = [{ actie: 'zet', soort: 'actie', id: a.id, veld: 'klaar', oud: oud.klaar || '', nieuw: t }];
   if (a.herhaal) {
-    const volgende = volgendeKeer(a.datum, a.herhaal, vandaag);
+    /* Per maand/kwartaal/jaar op een dag: de oorspronkelijke dag van de maand onthouden (K5). */
+    const opDag = periodeSoort(a.datum) === 'dag' && a.herhaal !== 'week';
+    const wens = opDag ? (a.maanddag || +a.datum.slice(8, 10)) : 0;
+    const volgende = volgendeKeer(a.datum, a.herhaal, vandaag, wens);
     hs.push({ actie: 'zet', soort: 'actie', id: a.id, veld: 'datum', oud: a.datum, nieuw: volgende });
+    const md = wens && +volgende.slice(8, 10) !== wens ? String(wens) : '';
+    if (md !== (oud.maanddag || '')) hs.push({ actie: 'zet', soort: 'actie', id: a.id, veld: 'maanddag', oud: oud.maanddag || '', nieuw: md });
     handelen(hs);
     const terug = hs.map((h) => Object.assign({}, h, { oud: h.nieuw, nieuw: h.oud }));
     const id = 'm-actie-' + willekeurig(6);
@@ -3934,7 +3988,7 @@ function actieToevoegen() {
   const bestaand = actieLijst(model).find((a) => normNaam(a.naam) === normNaam(naam));
   if (bestaand && !bestaand.open) actieHeropenen(bestaand);
   else if (!bestaand) handelen([{ actie: 'nieuw', soort: 'actie', id: nieuweId(), velden: { naam } }]);
-  else tekenDoen();
+  else { tekenDoen(); oplichten($('doenLijst').querySelector('.actierij[data-id="' + bestaand.id + '"]')); }
 }
 $('doenTekst').addEventListener('input', tekenDoen);
 
@@ -4129,7 +4183,25 @@ function tekenWanneer() {
   $('herhaalVeld').hidden = !soort;
   if (soort) segment($('herhaalSoort'), [['', 'Nee']].concat(HERHAAL_BIJ[soort].map((h) => [h, h === 'kwartaal' ? 'Kw.' : h[0].toUpperCase() + h.slice(1)])), bd.herhaal, (h) => { bd.herhaal = h; tekenWanneer(); });
 }
-function actieBijwerken() { if (!actieLijst(model).some((a) => a.id === bd.id)) actieDicht(false); }
+function actieBijwerken() {
+  if (actieLijst(model).some((a) => a.id === bd.id)) return;
+  /* Intussen verwijderd: niet stil sluiten (K12). */
+  const o = bd.oud;
+  const link = bd.link.trim() ? veiligeLink(bd.link) : '';
+  const record = { naam: schoonTekst(bd.naam) || o.naam };
+  if (schoonTekst(bd.notitie)) record.notitie = schoonTekst(bd.notitie);
+  if (link) record.link = link;
+  if (bd.datum) { record.datum = bd.datum; if (bd.herhaal) record.herhaal = bd.herhaal; }
+  actieDicht(false);
+  weerTerugMelding(o.id, 'actie', record);
+}
+/* "… is intussen verwijderd" met Terugzetten (met wat je had ingevuld). */
+function weerTerugMelding(id, soort, record) {
+  const mid = 'm-weg-' + id;
+  melding(mid, [{ vet: record.naam }, ' is intussen verwijderd.'], [
+    { tekst: 'Terugzetten', actie: () => { meldingWeg(mid); handelen([{ actie: 'terug', soort, id, record }]); } },
+    { tekst: 'Sluiten', tweede: true, actie: () => meldingWeg(mid) }]);
+}
 function actieOpslaan() {
   const o = bd.oud;
   const naam = schoonTekst(bd.naam);
@@ -4150,6 +4222,8 @@ function actieOpslaan() {
   const h = [];
   if (naam !== o.naam) h.push({ actie: 'zet', soort: 'actie', id: o.id, veld: 'naam', oud: o.naam, nieuw: naam });
   const velden = { notitie: schoonTekst(bd.notitie), link, datum: bd.datum, herhaal: bd.datum ? bd.herhaal : '' };
+  /* Zelf een andere datum gekozen: de onthouden dag van de maand vervalt. */
+  if (bd.datum !== (v.datum || '')) velden.maanddag = '';
   for (const k of Object.keys(velden)) if (velden[k] !== (v[k] || '')) h.push({ actie: 'zet', soort: 'actie', id: o.id, veld: k, oud: v[k] || '', nieuw: velden[k] });
   actieDicht(false);
   if (h.length) handelen(h);
