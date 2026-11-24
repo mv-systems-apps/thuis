@@ -230,6 +230,8 @@
   .item .naam{display:block;font-size:20px;line-height:1.25;overflow-wrap:anywhere;padding:4px 0}
   /* De notitie onder de winkels, zelfde letter, in paars. */
   .notitie .tag{font-weight:700}
+  .notitie .ntekst,.notitie .ntags{display:block}
+  .notitie .ntags{display:flex;flex-wrap:wrap;column-gap:12px}
   .notitie .link{font-weight:600;text-decoration:underline;cursor:pointer}
   .item .notitie,.wrij .notitie,.actierij .notitie,.winkelrij .notitie{display:block;font-size:17px;font-weight:400;color:var(--paars);line-height:1.3;margin-top:-2px;padding-bottom:4px;overflow-wrap:anywhere}
   .item .winkels,.wrij .winkels{display:block;font-size:17px;font-weight:400;color:var(--grijs);line-height:1.3;margin-top:-2px;padding-bottom:4px}
@@ -497,7 +499,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-004</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-005</div>
   </section>
 </main>
 
@@ -1528,8 +1530,31 @@ function veiligeLink(invoer) {
   if (!/^([a-z0-9-]+\.)+[a-z][a-z0-9-]+$/i.test(u.hostname)) return null;
   return u.href;
 }
-/* De korte naam: het domein, zonder "www." vooraan. */
-function linkNaam(href) { return new URL(href).hostname.replace(/^www\./i, ''); }
+/* Zoekwoorden in plaats van een link worden een Google-zoekopdracht; zoekWoorden
+   haalt ze er weer uit (voor de weergave en het bewerkveld), anders null. */
+const ZOEK_URL = 'https://www.google.com/search?q=';
+function zoekWoorden(href) {
+  try {
+    const u = new URL(href);
+    if (u.hostname !== 'www.google.com' || u.pathname !== '/search' || Array.from(u.searchParams.keys()).join() !== 'q') return null;
+    return u.searchParams.get('q') || null;
+  } catch (e) { return null; }
+}
+/* Wat in het veld Link staat: een adres (alleen https) of zoekwoorden. Met een
+   schema ervoor moet het een veilig adres zijn; anders is het een adres als dat kan
+   ("gamma.nl"), en zo niet zoekwoorden ("philips hue e27"). null = geweigerd. */
+function linkVanInvoer(ruw) {
+  const t = String(ruw || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  const v = veiligeLink(t);
+  /* Iets dat op een adres lijkt ("http://…", "javascript:…") moet een veilig adres zijn. */
+  if (v || /^[a-z][a-z0-9+.-]*:\S/i.test(t)) return v;
+  return t.length > 200 ? null : veiligeLink(ZOEK_URL + encodeURIComponent(t).replace(/%20/g, '+'));
+}
+/* Het bewerkveld: zoekwoorden terug als woorden, een adres zoals het is. */
+function linkTekst(href) { return href ? zoekWoorden(href) || href : ''; }
+/* De korte naam: het domein zonder "www.", of de zoekwoorden tussen aanhalingstekens. */
+function linkNaam(href) { const w = zoekWoorden(href); return w ? '"' + w + '"' : new URL(href).hostname.replace(/^www\./i, ''); }
 
 /* Zoeken: bevat de tekst, zonder verschil in hoofdletters, spaties en accenten. */
 function zoekArtikelen(artikelen, tekst, winkels) {
@@ -3281,20 +3306,18 @@ function artikelRij(a, opties, wr) {
 function notitieRegel(a) {
   const s = document.createElement('span');
   s.className = 'notitie';
-  if (a.notitie) {
-    /* tags vet, de rest gewone tekst */
-    const n = a.notitie;
-    let i = 0, m;
-    TAG.lastIndex = 0;
-    while ((m = TAG.exec(n))) {
-      const start = m.index + m[1].length;
-      if (start > i) s.appendChild(document.createTextNode(n.slice(i, start)));
-      const b = document.createElement('b'); b.className = 'tag'; b.textContent = '#' + m[2].replace(/_/g, ' ');
-      s.appendChild(b);
-      i = start + 1 + m[2].length;
-    }
-    s.appendChild(document.createTextNode(n.slice(i) + (a.link ? ' ' : '')));
-  }
+  /* Eerste regel de tekst, daaronder de tags en de link (in het bewerkveld blijft het één tekst). */
+  const n = a.notitie || '';
+  const tags = [];
+  TAG.lastIndex = 0;
+  let m;
+  while ((m = TAG.exec(n))) tags.push('#' + m[2].replace(/_/g, ' '));
+  const tekst = tags.length ? n.replace(TAG, '$1').replace(/\s+/g, ' ').trim() : n;
+  if (tekst) { const r = document.createElement('span'); r.className = 'ntekst'; r.textContent = tekst; s.appendChild(r); }
+  if (!tags.length && !a.link) return s;
+  const r2 = document.createElement('span');
+  r2.className = 'ntags';
+  for (const t of tags) { const b = document.createElement('b'); b.className = 'tag'; b.textContent = t; r2.appendChild(b); }
   if (a.link) {
     const l = document.createElement('span');
     l.className = 'link';
@@ -3305,8 +3328,9 @@ function notitieRegel(a) {
     l.addEventListener('click', open);
     /* Ook met het toetsenbord (Enter of spatie). */
     l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); });
-    s.appendChild(l);
+    r2.appendChild(l);
   }
+  s.appendChild(r2);
   return s;
 }
 
@@ -3592,6 +3616,8 @@ function typenBijwerken() {
   const actief = document.activeElement && document.activeElement.closest && document.activeElement.closest('.onderbalk');
   const open = !!actief && h < volleHoogte.h * 0.8;
   document.body.classList.toggle('typen', open);
+  /* Tabbalk weg of terug: de balk onderaan verschuift, de lijst erboven gaat mee. */
+  tagLijstHerplaatsen();
 }
 for (const id of ['invoerTekst', 'winkelsTekst', 'doenTekst', 'logZoek']) {
   $(id).addEventListener('focus', () => setTimeout(typenBijwerken, 300));
@@ -4263,7 +4289,7 @@ function bewerkPaneel(opt) {
     '<div class="paneelmeldingen"></div>' +
     '<div class="naamveld"><label for="bewerkNaam">Naam</label><input id="bewerkNaam" type="text" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></div>' +
     (opt.metNotitie ? '<div class="naamveld"><label for="bewerkNotitie">Notitie</label><textarea id="bewerkNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
-      '<div class="naamveld"><label for="bewerkLink">Link</label><input id="bewerkLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' : '') +
+      '<div class="naamveld"><label for="bewerkLink">Link</label><input id="bewerkLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' : '') +
     '<div class="bewerkknoppen"><button class="prul" type="button">' + PRULLENBAK + '</button><button class="knop" type="button">Opslaan</button></div></div>';
   k.querySelector('h3').textContent = opt.titel;
   k.querySelector('.prul').setAttribute('aria-label', opt.wegLabel);
@@ -4271,7 +4297,7 @@ function bewerkPaneel(opt) {
   inp.value = opt.naam;
   if (opt.metNotitie) {
     const nt = k.querySelector('#bewerkNotitie');
-    nt.value = opt.notitie || ''; k.querySelector('#bewerkLink').value = opt.link || ''; tagKeuze(nt, alleNotities, true);
+    nt.value = opt.notitie || ''; k.querySelector('#bewerkLink').value = linkTekst(opt.link); tagKeuze(nt, alleNotities, true);
     /* Groeit mee over meerdere regels, zoals bij een artikel; Enter = opslaan. */
     const hoog = () => { nt.style.height = 'auto'; nt.style.height = nt.scrollHeight + 4 + 'px'; };
     nt.addEventListener('input', () => { nt.value = nt.value.replace(/[\r\n]+/g, ' '); hoog(); });
@@ -4672,7 +4698,7 @@ function bwGewijzigd() {
   if (!o) return false;
   /* Alleen winkels die nog bestaan (verwijdert de ander er een, dan is dat geen wijziging van jou). */
   const oudPlek = o.plekken.filter((p) => winkelOpId.has(p.winkel));
-  if (schoonTekst(bw.naam) !== o.naam || schoonTekst(bw.notitie) !== o.notitie || bw.link.trim() !== o.link || bw.soort !== o.letter || bw.plekken.size !== oudPlek.length) return true;
+  if (schoonTekst(bw.naam) !== o.naam || schoonTekst(bw.notitie) !== o.notitie || bw.link.trim() !== linkTekst(o.link) || bw.soort !== o.letter || bw.plekken.size !== oudPlek.length) return true;
   return oudPlek.some((p) => bw.plekken.get(p.winkel) !== p.afd);
 }
 
@@ -4680,7 +4706,7 @@ function bwGewijzigd() {
 function artikelOpenen(id) {
   const a = artikelen.find((x) => x.id === id);
   if (!a) return;
-  Object.assign(bw, { id, oud: a, naam: a.naam, notitie: a.notitie, link: a.link, soort: a.letter, plekken: new Map(a.plekken.map((p) => [p.winkel, p.afd])) });
+  Object.assign(bw, { id, oud: a, naam: a.naam, notitie: a.notitie, link: linkTekst(a.link), soort: a.letter, plekken: new Map(a.plekken.map((p) => [p.winkel, p.afd])) });
   bw.laag = laagOpen(() => {
     if (!bw.id) return true;
     /* Terugknop met wijzigingen: blijven staan en vragen. */
@@ -4692,7 +4718,7 @@ function artikelOpenen(id) {
   doel.innerHTML = '<div class="wdkop"><h2>Artikel</h2><button class="icoonknop" id="artikelDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
     '<div class="veld"><label for="artikelNaam">Naam</label><textarea id="artikelNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
     '<div class="veld"><label for="artikelNotitie">Notitie</label><textarea id="artikelNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
-    '<div class="veld"><label for="artikelLink">Link</label><input id="artikelLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
+    '<div class="veld"><label for="artikelLink">Link</label><input id="artikelLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
     '<div class="veld"><span class="label2" id="soortLabel" style="font-weight:600;color:var(--paars)">Soort</span><div class="soorten" role="radiogroup" aria-labelledby="soortLabel"></div></div>' +
     '<div class="blok"><div class="kopbalk"><h3>Te koop bij</h3><span class="tal" id="plekTal"></span></div><div class="wkaart" id="plekken"></div></div>' +
     '<div class="blok"><div class="kopbalk"><h3>Gekocht</h3></div><div class="wkaart"><div class="gekochtregel" id="gekochtRegel"></div></div></div>';
@@ -4739,8 +4765,9 @@ function tekenSoorten() {
    bestaand (allebei "Melk" toegevoegd): verder op het bestaande. Wat je niet
    veranderde, neemt de waarde van het bestaande over; wat je wel veranderde,
    blijft staan. */
+/* vorm (optioneel): hoe het veld in de klad staat (de link als tekst in het bewerkveld). */
 function herbasis(klad, oud, nieuw, velden) {
-  for (const [k, o] of velden) if (klad[k] === oud[o]) klad[k] = nieuw[o];
+  for (const [k, o, vorm = (x) => x] of velden) if (klad[k] === vorm(oud[o])) klad[k] = vorm(nieuw[o]);
   klad.oud = nieuw;
 }
 function artikelBijwerken() {
@@ -4748,7 +4775,7 @@ function artikelBijwerken() {
   if (a && bw.oud && bw.oud.id !== a.id) {
     const oudePlekken = new Map(bw.oud.plekken.map((p) => [p.winkel, p.afd]));
     const plekkenGelijk = bw.plekken.size === oudePlekken.size && Array.from(bw.plekken).every(([w, d]) => oudePlekken.get(w) === d);
-    herbasis(bw, bw.oud, a, [['naam', 'naam'], ['notitie', 'notitie'], ['link', 'link'], ['soort', 'letter']]);
+    herbasis(bw, bw.oud, a, [['naam', 'naam'], ['notitie', 'notitie'], ['link', 'link', linkTekst], ['soort', 'letter']]);
     if (plekkenGelijk) bw.plekken = new Map(a.plekken.map((p) => [p.winkel, p.afd]));
     if ($('artikelNaam')) { $('artikelNaam').value = bw.naam; }
     if ($('artikelNotitie')) { $('artikelNotitie').value = bw.notitie; }
@@ -4759,7 +4786,7 @@ function artikelBijwerken() {
     const o = bw.oud;
     const ligt = {};
     for (const [w, afd] of bw.plekken) if (winkelOpId.has(w)) ligt[w] = afd;
-    const link = bw.link.trim() ? veiligeLink(bw.link) : '';
+    const link = linkVanInvoer(bw.link) || '';
     const record = { naam: schoonTekst(bw.naam) || o.naam, soort: LETTER_SOORT[bw.soort], notitie: schoonTekst(bw.notitie), link: link || '', ligt, gekocht: o.gekocht.slice() };
     if (o.aantal > 1) record.aantal = String(o.aantal);
     if (o.op) { record.op = o.op; record.opdoor = o.opdoor || ''; }
@@ -4875,7 +4902,6 @@ function naamFout(naam, oud, bestaat, wat) {
   return '';
 }
 /* De link uit een invoervak: '' (leeg), het veilige adres, of null (geweigerd). */
-function linkVanInvoer(ruw) { const t = String(ruw || '').trim(); return t ? veiligeLink(t) : ''; }
 const LINK_FOUT = ['Alleen links met ', { vet: 'https://' }, ' zijn toegestaan.'];
 function artikelVerwijderen() {
   const o = bw.oud;
@@ -5166,7 +5192,7 @@ tagLijst.setAttribute('aria-label', 'Tags');
 tagLijst.hidden = true;
 document.body.appendChild(tagLijst);
 /* Tagkeuze. Zoekvak: het hele vak is "#…", kiezen zet de tag en sluit het toetsenbord; lijst boven de balk.
-   Notitie (inTekst): het woord vóór de cursor is "#…", kiezen maakt het af met een spatie en je typt door; lijst onder het vak. */
+   Notitie (inTekst): het woord vóór de cursor is "#…", kiezen maakt het af met een spatie en je typt door; lijst boven het vak. */
 const TAG_VOOR = /(^|[\s(\[{"'])#([^\s#]*)$/u;
 function tagKeuze(vakOfId, bron, inTekst) {
   const vak = typeof vakOfId === 'string' ? $(vakOfId) : vakOfId;
@@ -5214,26 +5240,32 @@ function tagKeuze(vakOfId, bron, inTekst) {
       });
       tagLijst.appendChild(b);
     }
-    const hoog = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    if (inTekst) {
-      const r = vak.getBoundingClientRect();
-      tagLijst.style.bottom = '';
-      tagLijst.style.top = (r.bottom - 1) + 'px';
-      tagLijst.style.left = r.left + 'px'; tagLijst.style.right = (document.documentElement.clientWidth - r.right) + 'px';
-      tagLijst.style.maxHeight = Math.max(104, hoog - r.bottom - 8) + 'px';
-    } else {
-      const balk = vak.closest('.onderbalk').getBoundingClientRect();
-      tagLijst.style.top = ''; tagLijst.style.left = ''; tagLijst.style.right = '';
-      tagLijst.style.bottom = (window.innerHeight - balk.top + 6) + 'px';
-      tagLijst.style.maxHeight = Math.max(120, balk.top - 80) + 'px';
-    }
-    tagLijst.hidden = false;
+    tagLijstTonen(vak, inTekst);
   };
   vak.addEventListener('input', teken);
   vak.addEventListener('focus', teken);
   if (inTekst) vak.addEventListener('click', teken);
   vak.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== vak) tagLijst.hidden = true; }, 0));
 }
+/* De lijst staat direct boven het vak: boven een notitieveld (het toetsenbord zit
+   eronder), of boven de balk onderaan. De plek wordt opnieuw bepaald als het scherm
+   verschuift (toetsenbord open of dicht, tabbalk weg tijdens typen). */
+function tagLijstTonen(vak, opVak) {
+  tagLijst.__plaats = () => {
+    const r = (opVak ? vak : vak.closest('.onderbalk')).getBoundingClientRect();
+    const boven = $('midden').getBoundingClientRect().top;
+    tagLijst.style.top = '';
+    tagLijst.style.bottom = (window.innerHeight - r.top + (opVak ? -1 : 6)) + 'px';
+    if (opVak) { tagLijst.style.left = r.left + 'px'; tagLijst.style.right = (document.documentElement.clientWidth - r.right) + 'px'; }
+    else { tagLijst.style.left = ''; tagLijst.style.right = ''; }
+    tagLijst.style.maxHeight = Math.max(104, r.top - boven - 8) + 'px';
+  };
+  tagLijst.__plaats();
+  tagLijst.hidden = false;
+}
+function tagLijstHerplaatsen() { if (!tagLijst.hidden && tagLijst.__plaats) tagLijst.__plaats(); }
+if (window.visualViewport) window.visualViewport.addEventListener('resize', tagLijstHerplaatsen);
+window.addEventListener('resize', tagLijstHerplaatsen);
 /* Lijst staat vast op het scherm: bij scrollen van het scherm eronder sluiten. */
 document.addEventListener('scroll', (e) => { if (e.target !== tagLijst) tagLijst.hidden = true; }, true);
 /* Alle notities samen, zodat dezelfde tag overal gelijk gespeld wordt. */
@@ -5272,11 +5304,7 @@ tagKeuze('invoerTekst', () => artikelen.map((a) => a.notitie));
       });
       tagLijst.appendChild(b);
     }
-    const balk = vak.closest('.onderbalk').getBoundingClientRect();
-    tagLijst.style.top = ''; tagLijst.style.left = ''; tagLijst.style.right = '';
-    tagLijst.style.bottom = (window.innerHeight - balk.top + 6) + 'px';
-    tagLijst.style.maxHeight = Math.max(120, balk.top - 80) + 'px';
-    tagLijst.hidden = false;
+    tagLijstTonen(vak, false);
   };
   vak.addEventListener('input', teken);
   vak.addEventListener('focus', teken);
@@ -5293,12 +5321,12 @@ for (const ev of ['pointerdown', 'mousedown']) $('doenPlus').addEventListener(ev
 const bd = { id: '', oud: null, naam: '', notitie: '', link: '', datum: '', herhaal: '' };
 function bdGewijzigd() {
   const o = bd.oud;
-  return !!o && (schoonTekst(bd.naam) !== o.naam || schoonTekst(bd.notitie) !== o.notitie || bd.link.trim() !== o.link || bd.datum !== o.datum || bd.herhaal !== o.herhaal);
+  return !!o && (schoonTekst(bd.naam) !== o.naam || schoonTekst(bd.notitie) !== o.notitie || bd.link.trim() !== linkTekst(o.link) || bd.datum !== o.datum || bd.herhaal !== o.herhaal);
 }
 function actieOpenen(id) {
   const a = acties.find((x) => x.id === id);
   if (!a) return;
-  Object.assign(bd, { id, oud: a, naam: a.naam, notitie: a.notitie, link: a.link, datum: a.datum, herhaal: a.herhaal });
+  Object.assign(bd, { id, oud: a, naam: a.naam, notitie: a.notitie, link: linkTekst(a.link), datum: a.datum, herhaal: a.herhaal });
   bd.laag = laagOpen(() => {
     if (!bd.id) return true;
     if (bdGewijzigd()) return () => { if (!$('keuze')) actieVraag(); };
@@ -5309,7 +5337,7 @@ function actieOpenen(id) {
   doel.innerHTML = '<div class="wdkop"><h2>Actie</h2><button class="icoonknop" id="actieDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
     '<div class="veld"><label for="actieNaam">Naam</label><textarea id="actieNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
     '<div class="veld"><label for="actieNotitie">Notitie</label><textarea id="actieNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
-    '<div class="veld"><label for="actieLink">Link</label><input id="actieLink" type="url" inputmode="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
+    '<div class="veld"><label for="actieLink">Link</label><input id="actieLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
     '<div class="veld"><span class="label2" id="wanneerLabel" style="font-weight:600;color:var(--paars)">Wanneer</span><div class="segment" id="wanneerSoort" role="radiogroup" aria-labelledby="wanneerLabel"></div><div id="wanneerBlader"></div></div>' +
     '<div class="veld" id="herhaalVeld"><span class="label2" id="herhaalLabel" style="font-weight:600;color:var(--paars)">Herhalen</span><div class="segment" id="herhaalSoort" role="radiogroup" aria-labelledby="herhaalLabel"></div></div>';
   tagKeuze('actieNotitie', alleNotities, true);
@@ -5386,7 +5414,7 @@ function tekenWanneer() {
 function actieBijwerken() {
   const nu = acties.find((a) => a.id === bd.id);
   if (nu && bd.oud && bd.oud.id !== nu.id) {
-    herbasis(bd, bd.oud, nu, [['naam', 'naam'], ['notitie', 'notitie'], ['link', 'link'], ['datum', 'datum'], ['herhaal', 'herhaal']]);
+    herbasis(bd, bd.oud, nu, [['naam', 'naam'], ['notitie', 'notitie'], ['link', 'link', linkTekst], ['datum', 'datum'], ['herhaal', 'herhaal']]);
     if ($('actieNaam')) $('actieNaam').value = bd.naam;
     if ($('actieNotitie')) $('actieNotitie').value = bd.notitie;
     if ($('actieLink')) $('actieLink').value = bd.link;
@@ -5395,7 +5423,7 @@ function actieBijwerken() {
   if (nu) return;
   /* Intussen verwijderd: niet stil sluiten. */
   const o = bd.oud;
-  const link = bd.link.trim() ? veiligeLink(bd.link) : '';
+  const link = linkVanInvoer(bd.link) || '';
   const record = { naam: schoonTekst(bd.naam) || o.naam };
   if (schoonTekst(bd.notitie)) record.notitie = schoonTekst(bd.notitie);
   if (link) record.link = link;

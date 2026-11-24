@@ -826,14 +826,15 @@ const BEGIN = [
     const melk = () => [...dB.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
     melk().querySelector('.tekst').click(); await slaap(20);
     const ln = dB.getElementById('artikelLink');
-    controle('link: veld onder Notitie, type url, plaatshouder https://…', !!ln && ln.type === 'url' && ln.placeholder === 'https://…' && ln.closest('.veld').previousElementSibling.querySelector('#artikelNotitie'));
+    controle('link: veld onder Notitie, plaatshouder "Link of zoekwoorden"', !!ln && ln.placeholder === 'Link of zoekwoorden' && ln.closest('.veld').previousElementSibling.querySelector('#artikelNotitie'));
     ln.value = 'javascript:alert(1)'; ln.dispatchEvent(new wB.Event('input'));
     dB.getElementById('artikelOpslaan').click(); await slaap(20);
     controle('link: onveilig geweigerd met melding, scherm blijft open', !dB.getElementById('artikelScherm').hidden && /Alleen links met https:\/\/ zijn toegestaan/.test((dB.getElementById('m-fout') || {}).textContent || ''));
     ln.value = 'www.ah.nl/melk'; ln.dispatchEvent(new wB.Event('input'));
     dB.getElementById('artikelOpslaan').click(); await slaap(50);
     const nr = melk().querySelector('.notitie');
-    controle('link: aangevuld met https://, getoond als "ah.nl ↗" achter de notitie; melding weg', !!nr && nr.textContent === 'halfvol ah.nl ↗' && !!nr.querySelector('.link') && !dB.getElementById('m-fout'), nr && nr.textContent);
+    const regels = (el) => [...el.children].map((c) => [...c.childNodes].map((x) => x.textContent).join('+')).join(' / ');
+    controle('link: aangevuld met https://, getoond als "ah.nl ↗" op een tweede regel onder de notitie; melding weg', !!nr && regels(nr) === 'halfvol / ah.nl ↗' && !!nr.querySelector('.link') && !dB.getElementById('m-fout'), nr && nr.textContent);
     nr.querySelector('.link').click(); await slaap(20);
     controle('link: tikken opent in een nieuw tabblad zonder verwijzer, niet het bewerkscherm', geopend[0] === 'https://www.ah.nl/melk _blank noopener,noreferrer' && dB.getElementById('artikelScherm').hidden, geopend.join());
     await rust(2500);
@@ -842,6 +843,20 @@ const BEGIN = [
     const wr = [...dB.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === 'Melk');
     wr.querySelector('.link').click(); await slaap(20);
     controle('link: in de winkel opent tikken de link en vinkt niet af', geopend.length === 2 && !wr.classList.contains('gedaan') && !dB.querySelector('#winkelLijst .wrij.gedaan'));
+    /* Zoekwoorden in plaats van een link */
+    dB.getElementById('tab-boodschappen').click(); await slaap(30);
+    melk().querySelector('.tekst').click(); await slaap(20);
+    dB.getElementById('artikelLink').value = 'melk  halfvol 1l'; dB.getElementById('artikelLink').dispatchEvent(new wB.Event('input'));
+    dB.getElementById('artikelOpslaan').click(); await slaap(50);
+    controle('zoekwoorden: getoond tussen aanhalingstekens', melk().querySelector('.notitie .link').textContent === '"melk halfvol 1l" ↗', melk().querySelector('.notitie').textContent);
+    melk().querySelector('.notitie .link').click(); await slaap(20);
+    controle('zoekwoorden: tik opent Google met de zoekopdracht', geopend[2] === 'https://www.google.com/search?q=melk+halfvol+1l _blank noopener,noreferrer', geopend.join());
+    melk().querySelector('.tekst').click(); await slaap(20);
+    controle('zoekwoorden: in het bewerkveld weer als woorden', dB.getElementById('artikelLink').value === 'melk halfvol 1l');
+    dB.getElementById('artikelDicht').click(); await slaap(20);
+    controle('zoekwoorden: ongewijzigd sluiten vraagt niets', dB.getElementById('artikelScherm').hidden && !dB.getElementById('keuze'));
+    await rust(2500);
+    controle('zoekwoorden: in het bestand een gewone https-link', /^artikel;Melk;[^\n]*link=https:\/\/www\.google\.com\/search\?q=melk\+halfvol\+1l/m.test(R(odB.bestanden['thuis.json'].tekst)), R(odB.bestanden['thuis.json'].tekst));
   }
 
   /* 5m. Doen: toevoegen, groepen, afronden (herhalend schuift door), bewerken met periode en herhalen. */
@@ -926,13 +941,14 @@ const BEGIN = [
     [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma')).click(); await slaap(30);
     dD.querySelector('#winkelDetail .bewerk').click(); await slaap(20);
     const k = dD.getElementById('keuze');
-    controle('winkel bewerken: Naam, Notitie en Link', !!k.querySelector('#bewerkNotitie') && k.querySelector('#bewerkLink').type === 'url');
+    controle('winkel bewerken: Naam, Notitie en Link', !!k.querySelector('#bewerkNotitie') && k.querySelector('#bewerkLink').placeholder === 'Link of zoekwoorden');
     k.querySelector('#bewerkLink').value = 'http://gamma.nl'; k.querySelector('.knop').click(); await slaap(20);
     controle('winkel bewerken: onveilige link geweigerd, paneel blijft', !!dD.getElementById('keuze') && !!dD.querySelector('#keuze .paneelmeldingen .melding') && /https:\/\//.test(dD.querySelector('#keuze .paneelmeldingen').textContent));
     k.querySelector('#bewerkNotitie').value = 'za tot 17:00 #klussen'; k.querySelector('#bewerkLink').value = 'gamma.nl/openingstijden'; k.querySelector('.knop').click(); await slaap(30);
     dD.querySelector('#winkelDetail .terug').click(); await slaap(30);
     const gr = [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma'));
-    controle('winkel: notitie en link onder "geen afdelingen"', !!gr.querySelector('.notitie') && gr.querySelector('.notitie').textContent === 'za tot 17:00 #klussen gamma.nl ↗', gr && gr.textContent);
+    const rg = (el) => [...el.children].map((c) => [...c.childNodes].map((x) => x.textContent).join('+')).join(' / ');
+    controle('winkel: notitie, daaronder tags en link', !!gr.querySelector('.notitie') && rg(gr.querySelector('.notitie')) === 'za tot 17:00 / #klussen+gamma.nl ↗', gr && rg(gr.querySelector('.notitie')));
     const wv = dD.getElementById('winkelsTekst');
     wv.focus(); wv.value = '#kl'; wv.dispatchEvent(new wD.Event('input')); await slaap(20);
     controle('winkels: zoeken op een tag', [...dD.querySelectorAll('#winkelsOverzicht .winkelrij .nm')].map((x) => x.firstChild.textContent).join() === 'Gamma' && opties() === '#klussen1', opties());

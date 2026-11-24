@@ -111,7 +111,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, linkVanInvoer, linkTekst, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -382,6 +382,13 @@ controle('link: alleen https; zonder schema komt https:// ervoor; http, javascri
     'https://ah.nl/melk|https://www.ah.nl/p?x=1|||||||||https://ah.nl/||');
 });
 controle('link: korte naam is het domein zonder www', () => gelijk(K.linkNaam('https://www.ah.nl/x') + '|' + K.linkNaam('https://recepten.ah.nl/') , 'ah.nl|recepten.ah.nl'));
+controle('link of zoekwoorden: woorden worden een Google-zoekopdracht, terug als woorden; schema = moet een veilig adres zijn', () => {
+  const l = (x) => String(K.linkVanInvoer(x));
+  const z = K.linkVanInvoer('  philips   hue e27 ');
+  return gelijk([l('gamma.nl'), z, K.linkTekst(z), K.linkNaam(z), l('gamma'), l('http://ah.nl'), l('javascript:alert(1)'), l(''), l('x'.repeat(201)),
+    K.linkTekst('https://ah.nl/'), K.linkNaam('https://www.google.com/search?q=a&tbm=isch'), l('tomaat & ui')].join('|'),
+    'https://gamma.nl/|https://www.google.com/search?q=philips+hue+e27|philips hue e27|"philips hue e27"|https://www.google.com/search?q=gamma|null|null||null|https://ah.nl/|google.com|https://www.google.com/search?q=tomaat+%26+ui');
+});
 controle('link: een onveilige link in een handeling of het bestand wordt niet aangenomen of niet getoond', () => {
   const k = kern();
   const m = lees({ artikelen: { mel01: { naam: 'Melk', link: 'javascript:alert(1)' } } });

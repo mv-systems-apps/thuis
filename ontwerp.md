@@ -232,13 +232,18 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Aantal: tik op het soorticoon (of op "2×") en onder de regel klapt de teller
   open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam, ook
   in Boodschappen. Het aantal blijft staan na het kopen.
-- Link: apart veld onder Notitie (type url, "https://…"). Zonder https:// komt
-  dat er vanzelf voor; http, javascript, data, een naam of wachtwoord erin of
-  geen echte domeinnaam: geweigerd met "Alleen links met https:// zijn
-  toegestaan." In de lijsten "ah.nl ↗" achter de notitie; een tik opent een
-  nieuw tabblad (noopener, noreferrer). Ook bij het tonen opnieuw gecontroleerd.
-- Notitie: in het bewerkscherm onder Naam. In de lijsten paars onder de
-  winkels (zelfde letter), in Boodschappen onder de naam. Blijft staan.
+- Link: apart veld onder Notitie ("Link of zoekwoorden"). Een adres zonder https://
+  krijgt dat vanzelf; met een schema (http, javascript, data, …), een naam of
+  wachtwoord erin: geweigerd met "Alleen links met https:// zijn toegestaan."
+  Wat geen adres is ("philips hue e27") wordt een Google-zoekopdracht (gewone
+  https-link in het bestand); in het bewerkveld staan dan weer de woorden.
+  In de lijsten "ah.nl ↗" of «"philips hue e27" ↗»; een tik opent een nieuw
+  tabblad (noopener, noreferrer). Ook bij het tonen opnieuw gecontroleerd.
+- Notitie: in het bewerkscherm onder Naam, één tekst. In de lijsten paars onder
+  de winkels (zelfde letter), in Boodschappen onder de naam: eerst de tekst,
+  daaronder de tags (vet) met de link erachter. Blijft staan.
+- Tagkeuze: bij een notitieveld boven het veld (het toetsenbord zit eronder), bij
+  het zoekvak direct boven de balk; schuift mee als het scherm verschuift.
 - Per regel: links het soorticoon (knop voor het aantal), de naam, rechts het
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
