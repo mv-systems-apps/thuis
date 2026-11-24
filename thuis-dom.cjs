@@ -1910,8 +1910,22 @@ const BEGIN = [
     /* editor uit de winkel, dan van tabblad wisselen: alles netjes dicht */
     dW.getElementById('tab-winkels').click(); await slaap(30);
     open('Plus'); await slaap(30); kop('Zuivel').click(); await slaap(20);
-    [...dW.querySelectorAll('#afdelingen .item')][0].querySelector('.icoon').click(); await slaap(30);
-    controle('tik op het icoon: ook de editor (geen teller)', !dW.getElementById('artikelScherm').hidden && !dW.querySelector('#winkelDetail .teller'));
+    const kaasRij = () => [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Kaas'));
+    kaasRij().querySelector('.icoon').click(); await slaap(30);
+    const tl = () => dW.querySelector('#winkelDetail .teller');
+    controle('tik op het icoon: de teller onder het artikel, niet de editor', !!tl() && tl().dataset.id === kaasRij().dataset.id && dW.getElementById('artikelScherm').hidden && kaasRij().querySelector('.icoon').getAttribute('aria-expanded') === 'true');
+    tl().querySelector('.meer').click(); await slaap(30);
+    controle('teller +: 2× achter de naam, teller blijft open, afdeling blijft open', kaasRij().querySelector('.aantal').textContent === '2×' && !!tl() && tl().querySelector('.n').textContent === '2' && afd().includes('Zuivel2+'), afd());
+    tl().querySelector('.n').click(); await slaap(20);
+    controle('tik op het getal: teller blijft open', !!tl());
+    tl().querySelector('span').click(); await slaap(20);
+    controle('tik naast de knoppen: teller dicht', !tl());
+    kaasRij().querySelector('.aantal').click(); await slaap(20);
+    controle('tik op "2×": teller weer open', !!tl() && dW.getElementById('artikelScherm').hidden);
+    kaasRij().querySelector('.icoon').click(); await slaap(20);
+    controle('nog een tik op het icoon: teller dicht', !tl());
+    controle('teller in de winkel raakt Artikelen niet', wW.eval('scherm.teller') === '');
+    kaasRij().querySelector('.tekst').click(); await slaap(30);
     dW.getElementById('tab-doen').click(); await slaap(30);
     controle('tabblad wisselen met de editor open: editor dicht, geen deelscherm meer', dW.getElementById('artikelScherm').hidden && !dW.getElementById('midden').classList.contains('indeel') && !dW.getElementById('scherm-doen').hidden && dW.getElementById('balk-winkels').hidden);
     /* Volgorde-knop */
@@ -2004,11 +2018,13 @@ const BEGIN = [
   if (deel('5z36 aantallen bij afdelingen, Aankopen en Historie')) {
     const t = datumTekstT(0) + 'T09:00';
     const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\n' +
-      'artikel;Appels;ligt=Plus:Groente;op=' + t + '\nartikel;Melk;ligt=Plus:Zuivel;op=' + t + '\nartikel;Kaas;ligt=Plus:Zuivel;op=' + t + '\nartikel;Stroop;ligt=Plus;op=' + t + '\n');
+      'artikel;Appels;ligt=Plus:Groente;op=' + t + '\nartikel;Melk;ligt=Plus:Zuivel;op=' + t + '\nartikel;Kaas;ligt=Plus:Zuivel;op=' + t + '\nartikel;Stroop;notitie=za tot 17:00 (#klussen) [#pas "#op"];ligt=Plus;op=' + t + '\n');
     const wT = await start(odT); await rust(1500); const dT = wT.document;
     wT.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id");
     dT.getElementById('tab-winkel').click(); await slaap(50);
     const koppen = () => [...dT.querySelectorAll('#winkelLijst .afd .afdkop')].map((k) => k.firstChild.textContent + ':' + (k.querySelector('.tal') ? k.querySelector('.tal').textContent : '')).join();
+    const nst = [...dT.querySelectorAll('#winkelLijst .wrij')].find((r) => r.textContent.startsWith('Stroop')).querySelector('.notitie');
+    controle('notitie: tags op de tweede regel, lege haakjes en aanhalingstekens weg', [...nst.children].map((c) => c.textContent).join(' / ') === 'za tot 17:00 / #klussen#pas#op', [...nst.children].map((c) => c.textContent).join(' / '));
     controle('Boodschappen: aantal rechts in elke afdelingskop', koppen() === 'Afdeling?:1,Groente:1,Zuivel:2', koppen());
     const aank = dT.querySelector('#winkelLijst .naaraankopen .waarde');
     controle('Aankopen zonder aankopen: "0 artikelen"', !!aank && aank.textContent === '0 artikelen', aank && aank.textContent);

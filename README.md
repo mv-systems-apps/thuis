@@ -30,6 +30,7 @@ Tests:
 - `test-hulp.cjs` — korte regelopmaak met namen voor de testgegevens van de rooktest, omgezet naar en van thuis.json met id's (alleen voor de tests)
 - `python3 mutaties.py` — sloopt de kern op bekende plekken; elke mutatie moet worden gevangen
 - `python3 test-sw-iconen.py`, `test-sw-vorige-cache.py`, `test-sw-ontbrekend-bijbestand.py`, `test-sw-trage-404.py` — service worker in een echte browser (Playwright), gelijk aan die van de andere apps (conventies.md §3)
+- `python3 test-opmaak.py` — opmaak in een echte browser: meldingen in beeld, plek van de tagkeuze, scrollpositie na een editor, afdeling slepen met aanraken
 
 Na elke wijziging aan de app ook:
 `python3 ../apps-basis/check_app.py thuis.html --basis ../apps-basis`

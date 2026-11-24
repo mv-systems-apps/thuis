@@ -270,7 +270,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Onderaan "Afdeling?" (zelfde uiterlijk als een afdeling) als er hier
   artikelen zonder afdeling liggen.
   De naam van een afdeling lijnt uit met de soorticonen eronder. Rondje = op de
-  lijst; tik op naam of icoon opent het artikel (in het tabblad Winkels; sluiten
+  lijst; icoon of "2×" opent de teller (zoals op Artikelen); tik op de naam opent het artikel (sluiten
   brengt je terug in de winkel, op dezelfde plek). Onder een artikel alleen de
   andere winkels. Wat nergens is vastgelegd (overal te koop) staat er niet bij.
   De kop heet "Route". Rechts erin eerst een dubbel pijltje: alles open (is er iets dicht) of alles dicht.

@@ -139,7 +139,8 @@
   .stempel{text-align:center;font-size:17px;color:#6B7482;padding:4px 0 8px}
   /* Meldingen: één melding per regel, de knoppen eronder; ze blijven staan tot je
      ze wegtikt of het is opgelost (gedeelde conventie). */
-  #meldingen{display:flex;flex-direction:column;gap:8px;padding:14px 14px 0;max-width:640px;margin:0 auto}
+  /* Meldingen blijven bovenaan in beeld, ook als je naar beneden gescrold bent (sticky in het midden). */
+  #meldingen{position:sticky;top:0;z-index:4;background:var(--achter);display:flex;flex-direction:column;gap:8px;padding:14px 14px 0;max-width:640px;margin:0 auto}
   #meldingen:empty{display:none}
   .melding{background:var(--oranje-bg);color:var(--oranje);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
   .melding.info{background:#ECEAF8;color:#2E2A4F;border-left:4px solid var(--paars);padding-left:10px}
@@ -499,7 +500,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-005</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-006</div>
   </section>
 </main>
 
@@ -3261,15 +3262,17 @@ function rijUitGeheugen(a, opties) {
 }
 
 /* Eén regel: soorticoon, naam (met winkelsymbool, "nieuw", suggestie) en het rondje. */
+/* opties.teller: de teller open (anders die van Artikelen, scherm.teller). */
 function artikelRij(a, opties, wr) {
   if (wr === undefined) wr = winkelsRegel(a, opties.zonderWinkel);
+  const tellerOpen = opties.teller !== undefined ? opties.teller : scherm.teller === a.id;
   const rij = document.createElement('div');
   rij.className = 'item' + (opties.vertrekt ? ' vertrekt' : '') + (opties.archief ? ' archief' : '');
   rij.dataset.id = a.id;
   const nieuw = isNieuw(a);
   const metNotitie = !!(a.notitie || a.link);
   rij.innerHTML =
-    '<button class="icoon" type="button"' + (opties.zonderTeller ? '' : ' aria-expanded="' + (scherm.teller === a.id) + '"') + '>' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 28) + '</button>' +
+    '<button class="icoon" type="button" aria-expanded="' + tellerOpen + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 28) + '</button>' +
     '<button class="tekst" type="button"><span class="naam"><span></span>' +
     (a.aantal > 1 ? '<span class="aantal"></span>' : '') +
     (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
@@ -3277,7 +3280,7 @@ function artikelRij(a, opties, wr) {
     (metNotitie ? '<span class="notitie"></span>' : '') +
     (opties.sug || opties.hint ? '<span class="hint"></span>' : '') + '</button>' +
     '<button class="rondje" type="button" aria-pressed="' + (a.op ? 'true' : 'false') + '">' + (a.op ? RONDJE.aan : RONDJE.plus) + '</button>';
-  rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter] + (opties.zonderTeller ? '; ' + a.naam + ' openen' : ', aantal ' + a.aantal + '; aantal wijzigen'));
+  rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter] + ', aantal ' + a.aantal + '; aantal wijzigen');
   rij.querySelector('.naam > span').textContent = a.naam;
   if (a.aantal > 1) rij.querySelector('.aantal').textContent = a.aantal + '×';
   if (wr) rij.querySelector('.winkels').textContent = wr;
@@ -3286,7 +3289,7 @@ function artikelRij(a, opties, wr) {
   else if (opties.hint) rij.querySelector('.hint').textContent = opties.hint;
   rij.querySelector('.rondje').setAttribute('aria-label', a.op ? a.naam + ' staat op de lijst; van de lijst halen'
     : opties.weg ? a.naam + ' weer op de lijst zetten' : a.naam + ' op de lijst zetten');
-  if (scherm.teller !== a.id || opties.zonderTeller) return rij;
+  if (!tellerOpen) return rij;
   /* De teller onder de regel (tik op het icoon of op "2×"). */
   const frag = document.createDocumentFragment();
   frag.appendChild(rij);
@@ -3312,7 +3315,14 @@ function notitieRegel(a) {
   TAG.lastIndex = 0;
   let m;
   while ((m = TAG.exec(n))) tags.push('#' + m[2].replace(/_/g, ' '));
-  const tekst = tags.length ? n.replace(TAG, '$1').replace(/\s+/g, ' ').trim() : n;
+  /* Zonder de tags; wat er leeg omheen bleef staan ("()", '""') gaat ook weg. */
+  let tekst = n;
+  if (tags.length) {
+    tekst = n.replace(TAG, '$1');
+    /* Herhalen tot er niets meer verandert: "[ "" ]" wordt eerst "[ ]" en dan leeg. */
+    for (let vorige = ''; vorige !== tekst;) { vorige = tekst; tekst = tekst.replace(/\(\s*\)|\[\s*\]|\{\s*\}|"\s*"|'\s*'/g, ''); }
+    tekst = tekst.replace(/\s+/g, ' ').trim();
+  }
   if (tekst) { const r = document.createElement('span'); r.className = 'ntekst'; r.textContent = tekst; s.appendChild(r); }
   if (!tags.length && !a.link) return s;
   const r2 = document.createElement('span');
@@ -3463,25 +3473,30 @@ function tekenBoodschappen() {
 }
 
 /* Eén luisteraar voor alle rondjes in de lijst. */
-function lijstKlik(e) {
+/* De teller (aantal) onder een artikelregel, gedeeld door Artikelen en de winkel.
+   stand: { teller } met het id van het open artikel; teken: het scherm opnieuw tekenen;
+   doel: waar de teller staat. Geeft true als de tik voor de teller was. */
+function tellerKlik(e, stand, teken, doel) {
   const tel = e.target.closest('.teller');
   if (tel) {
     const b = e.target.closest('button');
     if (b) aantalZetten(tel.dataset.id, b.classList.contains('meer') ? 1 : -1);
     /* Ergens anders op de regel: de teller dicht, net als een tweede tik op het icoon.
        Het getal tussen de knoppen niet: net naast - of + mis tikken sluit hem dan niet. */
-    else if (!e.target.closest('.n')) { scherm.teller = ''; tekenBoodschappen(); }
-    return;
+    else if (!e.target.closest('.n')) { stand.teller = ''; teken(); }
+    return true;
   }
-  if (e.target.closest('.icoon') || e.target.closest('.aantal')) {
-    const id = e.target.closest('.item').dataset.id;
-    scherm.teller = scherm.teller === id ? '' : id;
-    tekenBoodschappen();
-    /* Valt de teller onder de rand van het scherm, dan schuift hij in beeld. */
-    const t = scherm.teller && document.querySelector('.teller');
-    if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest' });
-    return;
-  }
+  if (!(e.target.closest('.icoon') || e.target.closest('.aantal'))) return false;
+  const id = e.target.closest('.item').dataset.id;
+  stand.teller = stand.teller === id ? '' : id;
+  teken();
+  /* Valt de teller onder de rand van het scherm, dan schuift hij in beeld. */
+  const t = stand.teller && doel.querySelector('.teller');
+  if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest' });
+  return true;
+}
+function lijstKlik(e) {
+  if (tellerKlik(e, scherm, tekenBoodschappen, $('scherm-boodschappen'))) return;
   const naam = e.target.closest('.tekst');
   if (naam) { artikelOpenen(naam.closest('.item').dataset.id); return; }
   const knop = e.target.closest('.rondje');
@@ -4245,7 +4260,7 @@ $('winkelKies').addEventListener('click', winkelKiezen);
    gelden per telefoon. Verwijderen gebeurt meteen; Ongedaan maken zet het met
    dezelfde id terug, met de plekken van de artikelen. */
 const ONGEDAAN = 6 * 1000;
-const ws = { open: '', favorieten: [], dicht: { fav: false, rest: false }, volgorde: false, afdOpen: new Set() };
+const ws = { open: '', favorieten: [], dicht: { fav: false, rest: false }, volgorde: false, afdOpen: new Set(), teller: '' };
 
 function isFavoriet(id) { return ws.favorieten.indexOf(id) !== -1; }
 /* Een getal rechts in een kop zegt altijd waarvan: "3 artikelen", "1 winkel". */
@@ -4448,7 +4463,7 @@ function tekenWinkelDetail(w) {
 function tekenAanbod(doel, lijstEl, w, items) {
   doel.querySelector('.kopbalk h3').textContent = 'Artikelen';
   doel.querySelector('.kopbalk .tal').textContent = items.length ? telTekst(items.length, 'artikel', 'artikelen') : '';
-  for (const a of items) lijstEl.appendChild(artikelRij(a, { zonderWinkel: w.id, zonderTeller: true }));
+  for (const a of items) lijstEl.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id }));
   if (!items.length) lijstEl.appendChild(leegRegel('Geen artikelen'));
 }
 function leegRegel(tekst) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = tekst; return p; }
@@ -4507,21 +4522,22 @@ function tekenAfdelingen(lijstEl, w, zicht, aanbod, z) {
     if (!open) continue;
     const vak = document.createElement('div');
     vak.className = 'afdartikelen';
-    for (const a of items) vak.appendChild(artikelRij(a, { zonderWinkel: w.id, zonderTeller: true }));
+    for (const a of items) vak.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id }));
     if (!items.length) vak.appendChild(leegRegel('Geen artikelen'));
     lijstEl.appendChild(vak);
   }
 }
 
-/* Artikelen in een winkel: het rondje zet op de lijst, een tik op de naam of het
-   icoon opent het artikel. Eén luisteraar voor het hele scherm. */
+/* Artikelen in een winkel, zoals op Artikelen: het rondje zet op de lijst, het icoon
+   (of "2×") opent de teller, de naam opent het artikel. Eén luisteraar voor het hele scherm. */
 $('winkelDetail').addEventListener('click', (e) => {
+  if (tellerKlik(e, ws, tekenWinkels, $('winkelDetail'))) return;
   const rij = e.target.closest('.item');
   if (!rij) return;
   const a = artikelen.find((x) => x.id === rij.dataset.id);
   if (!a) return;
   if (e.target.closest('.rondje')) opWisselen(a, false);
-  else if (e.target.closest('.tekst') || e.target.closest('.icoon')) artikelOpenen(a.id);
+  else if (e.target.closest('.tekst')) artikelOpenen(a.id);
 });
 
 /* Verslepen aan de greep: de regel volgt de vinger, de andere schuiven opzij;
@@ -4583,7 +4599,7 @@ function slepenAan(lijstEl, w) {
 }
 
 function winkelOpenen(id) {
-  if (ws.open !== id) { ws.volgorde = false; ws.afdOpen.clear(); }
+  if (ws.open !== id) { ws.volgorde = false; ws.afdOpen.clear(); ws.teller = ''; }
   ws.open = id;
   vakLeeg($('winkelsTekst'));
   ws.laag = laagOpen(() => { ws.laag = null; winkelDicht(); return true; });
@@ -5250,8 +5266,10 @@ function tagKeuze(vakOfId, bron, inTekst) {
 /* De lijst staat direct boven het vak: boven een notitieveld (het toetsenbord zit
    eronder), of boven de balk onderaan. De plek wordt opnieuw bepaald als het scherm
    verschuift (toetsenbord open of dicht, tabbalk weg tijdens typen). */
+/* Hoe de open lijst nu geplaatst wordt (opnieuw bij verschuiven van het scherm). */
+let tagLijstPlaats = null;
 function tagLijstTonen(vak, opVak) {
-  tagLijst.__plaats = () => {
+  tagLijstPlaats = () => {
     const r = (opVak ? vak : vak.closest('.onderbalk')).getBoundingClientRect();
     const boven = $('midden').getBoundingClientRect().top;
     tagLijst.style.top = '';
@@ -5260,10 +5278,10 @@ function tagLijstTonen(vak, opVak) {
     else { tagLijst.style.left = ''; tagLijst.style.right = ''; }
     tagLijst.style.maxHeight = Math.max(104, r.top - boven - 8) + 'px';
   };
-  tagLijst.__plaats();
+  tagLijstPlaats();
   tagLijst.hidden = false;
 }
-function tagLijstHerplaatsen() { if (!tagLijst.hidden && tagLijst.__plaats) tagLijst.__plaats(); }
+function tagLijstHerplaatsen() { if (!tagLijst.hidden && tagLijstPlaats) tagLijstPlaats(); }
 if (window.visualViewport) window.visualViewport.addEventListener('resize', tagLijstHerplaatsen);
 window.addEventListener('resize', tagLijstHerplaatsen);
 /* Lijst staat vast op het scherm: bij scrollen van het scherm eronder sluiten. */
