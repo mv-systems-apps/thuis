@@ -265,6 +265,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 
 ### 5.1b Winkels (tabblad)
 - Favorieten en Overige, inklapbaar, alfabetisch; favorieten per telefoon.
+  Onder een winkel "3 afdelingen, 8 artikelen" (zonder afdelingen alleen de artikelen;
+  alles wat bij die winkel is vastgelegd), uit te zetten bij Instellingen → Weergave.
   Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
@@ -297,7 +299,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   zoeken of toevoegen; het komt daar onder "Afdeling?" met de speld,
   zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
   (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling?" met de speld en de afdelingen, elk met rechts het aantal dat er nog te halen is
-  in de route); los en grijs "Niet bij <winkel>" en "In winkelmand".
+  in de route); los en grijs "Niet bij <winkel>" en "Winkelmand", allebei
+  inklapbaar en dicht bij het kiezen van een andere winkel; open blijft open zolang
+  je in dezelfde winkel bent (ook na een ander tabblad). "Winkelmand" toont het hele
+  mandje van vandaag (alle winkels), met één knop om alles leeg te maken; ligt er ook
+  iets uit andere winkels, dan per winkel een inklapbare subkop (deze winkel bovenaan
+  en open, de andere alfabetisch en dicht).
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
@@ -323,17 +330,18 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   de route.
 - Daarna de afdelingen in de route.
 - Elke vink is direct een handeling (van de lijst, aankoopdatum erbij). Het
-  item blijft 1,5 s grijs op zijn plek en schuift dan naar "In winkelmand".
+  item blijft 1,5 s grijs op zijn plek en schuift dan naar "Winkelmand".
   Terugtikken zet het terug en haalt de aankoopdatum weg.
 - "Niet bij <winkel>": artikelen die hier niet te koop zijn, ingeklapt
   en grijs, wel af te vinken.
 - Het mandje blijft staan tot je het leegmaakt of tot de volgende dag (wat op een eerdere dag is
-  afgevinkt, gaat er vanzelf uit): rechts naast het kopje "In winkelmand" staat een icoonknop
+  afgevinkt, gaat er vanzelf uit): rechts naast het kopje "Winkelmand" staat een icoonknop
   (mandje met kruis, "Winkelmand leegmaken"). Het mandje hoort bij de telefoon (niet in
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar".
-- Het mandje is per winkel: "In winkelmand" toont alleen wat je in déze winkel afvinkte; leegmaken geldt voor deze winkel. Wat
-  je elders afvinkte, staat daar weer als je die winkel kiest.
+- Elk afgevinkt artikel onthoudt in welke winkel het in het mandje kwam; "Winkelmand"
+  toont ze allemaal, per winkel gegroepeerd zodra er meer dan één winkel in zit.
+  Leegmaken geldt voor het hele mandje (6 s Ongedaan maken).
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
 - Een artikel dat de ander op de lijst zette, krijgt "nieuw" tot je het gezien hebt.
 - Verversen elke 30 s zolang dit tabblad open is.
@@ -394,6 +402,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   1 jaar (standaard). Geldt voor beiden (in thuis.json).
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
+
+- Weergave (per telefoon, schakelaars met rechte hoeken): "Bij een winkel: aantal
+  afdelingen en artikelen" en "Bij een artikel: de winkels" (de grijze regel onder een
+  artikel: op Artikelen, ook bij zoeken met @, en in een winkel op het tabblad Winkels;
+  bij "Niet bij …" in Boodschappen blijft hij staan, daar zie je waar je heen moet).
 
 ### 5.6 Synchronisatie (in Instellingen; het wolkje opent Instellingen)
 - Bovenaan de kaart Synchroniseren de toestand: icoon, één woord (Bijgewerkt,
@@ -547,7 +560,8 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Een fout (bestaande naam, onveilige link, naam met #) is een melding bovenaan; in een paneel bovenin
   het paneel. Hij gaat weg met de editor.
 - Winkel verwijderen waar artikelen liggen: eerst bevestigen met het aantal.
-- Overal 1,5 s om een mis-tik terug te zetten; Ongedaan maken (6 s) alleen waar iets uit beeld gaat
+- Afvinken in de winkel en bij Doen: 1,5 s om een mis-tik terug te zetten. Van de lijst halen op
+  Artikelen gaat meteen naar "Van de lijst gehaald" (daar tik je hem terug). Ongedaan maken (6 s) alleen waar iets uit beeld gaat
   (§5.8). Herhalen uitzetten houdt de actie open.
 
 ### Doen

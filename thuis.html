@@ -40,6 +40,11 @@
   .rij:last-child{border-bottom:0}
   .rij .label{flex:1}
   .rij .waarde{font-size:17px;color:var(--grijs);text-align:right}
+  /* Schakelaar aan/uit, met rechte hoeken zoals de rest van de app. */
+  .schakel{position:relative;width:52px;height:32px;flex-shrink:0;border:0;padding:0;background:#CFCBE6}
+  .schakel::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+  .schakel[aria-checked="true"]{background:var(--paars)}
+  .schakel[aria-checked="true"]::after{left:23px}
   .knoprij{width:100%;border:0;border-bottom:1px solid var(--rij);background:#FFFFFF;font:inherit;color:var(--tekst);text-align:left}
   .label2{font-size:17px;color:var(--grijs)}
   .dagen{display:flex;gap:4px}
@@ -319,7 +324,7 @@
   .afd .afdkop > span:first-child{padding:6px 0}
   .afd .afdkop span{flex:1;font-size:18px;font-weight:700;color:var(--paars)}
   .afd.grijs{background:#FAFAFD}
-  /* Koppen van Niet bij, In winkelmand en Aankopen: zoals de groepskoppen elders (paars op lichtpaars). */
+  /* Koppen van Niet bij, Winkelmand en Aankopen: zoals de groepskoppen elders (paars op lichtpaars). */
   .afd.grijs .afdkop{background:#E9E6F8}
   .wrij{display:flex;align-items:center;gap:6px;padding-right:8px;border-top:1px solid var(--rij)}
   .afd > .wrij:first-child{border-top:0}
@@ -339,6 +344,10 @@
   .icoonknop{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
   /* Winkelmand leegmaken: klein (36 px) in de kop, turquoise zoals de vinkjes erin (UI). */
   .afdkop .icoonknop.mandleeg{width:36px;height:36px;background:#DDF1F2}
+  .afdkop.klapbaar{cursor:pointer}
+  .afd .afdkop.subkop{background:#F1EFFB;min-height:42px}
+  .afd .afdkop.subkop span:first-child{font-size:17px}
+  .afdkop .subpijl,.afdkop .mandpijl{width:28px;height:36px;flex-shrink:0;border:0;padding:0;margin-right:-4px;background:transparent;display:flex;align-items:center;justify-content:center}
   .afdkop .icoonknop.mandleeg svg{stroke:#0A7581}
   /* ---------- keuzelijst van onderen ---------- */
   #keuze{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(24,20,60,.35)}
@@ -375,7 +384,6 @@
   #keuze .zoeklinks{width:52px;flex:none;border:0;border-right:1px solid var(--lijn);background:#F4F3FB;display:flex;align-items:center;justify-content:center;padding:0}
   #keuze .zoekbalk input{flex:1;min-width:0;border:0;outline:none;padding:0 12px;font-size:20px}
   /* ---------- van de lijst gehaald (boodschappen) ---------- */
-  .item.vertrekt{opacity:.55}
   .weggehaald .item{opacity:.7}
   .rondsvg{flex-shrink:0}
   button:focus-visible{outline:3px solid #5EE0E8;outline-offset:2px}
@@ -484,6 +492,13 @@
       </div>
     </div>
     <div class="blok">
+      <div class="kopbalk"><h2>Weergave</h2></div>
+      <div class="kaart">
+        <div class="rij"><span class="label" id="lblWinkelTal">Bij een winkel: aantal afdelingen en artikelen</span><button class="schakel" id="swWinkelTal" type="button" role="switch" aria-labelledby="lblWinkelTal"></button></div>
+        <div class="rij"><span class="label" id="lblArtikelWinkels">Bij een artikel: de winkels</span><button class="schakel" id="swArtikelWinkels" type="button" role="switch" aria-labelledby="lblArtikelWinkels"></button></div>
+      </div>
+    </div>
+    <div class="blok">
       <div class="kopbalk"><h2>Gegevens</h2></div>
       <div class="kaart">
         <button class="rij knoprij" id="naarBackups" type="button"><span class="label">Backups</span><span class="waarde" id="backupAantal"></span>
@@ -500,7 +515,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-009</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-00C</div>
   </section>
 </main>
 
@@ -2236,9 +2251,13 @@ const KEUZES = {
   /* Aantal backups van de laatste keer dat de lijst toch al werd opgehaald (dagbackup of
      Backups openen); Instellingen toont het zonder eigen netwerkvraag. */
   backupTal: { lees: (v) => { backupTal.n = typeof v === 'number' ? v : null; }, waarde: () => backupTal.n, leeg: () => { backupTal.n = null; }, perMap: true, hulp: true },
+  /* Weergave per telefoon: aantallen bij een winkel, de winkels onder een artikel (Artikelen). */
+  weergave: { lees: (v) => { weergave.winkelTal = !(v && v.winkelTal === false); weergave.artikelWinkels = !(v && v.artikelWinkels === false); },
+    waarde: () => ({ winkelTal: weergave.winkelTal, artikelWinkels: weergave.artikelWinkels }), leeg: () => { weergave.winkelTal = true; weergave.artikelWinkels = true; } },
   doenStandaard: { lees: (v) => { doen.standaard = DOEN_FILTERS.indexOf(v) !== -1 ? v : 'week'; doen.filter = doen.standaard; }, waarde: () => doen.standaard, leeg: () => { doen.standaard = 'week'; doen.filter = 'week'; } }
 };
 const backupTal = { n: null };
+const weergave = { winkelTal: true, artikelWinkels: true };
 function backupTalZetten(n) { if (backupTal.n === n) return; backupTal.n = n; keuzeBewaren('backupTal'); if ($('backupAantal')) $('backupAantal').textContent = n; }
 function keuzeBewaren(k) { return bewaar(k, KEUZES[k].waarde()); }
 /* Keuzes wissen (op de telefoon en in het geheugen); alleenPerMap: alleen wat bij de map hoort. */
@@ -3136,7 +3155,7 @@ function svgIcoon(pad, kleur, maat) {
     '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0">' + pad + '</svg>';
 }
 
-const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', vertrekt: new Map(), weggehaald: new Map(), archiefOpen: false, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '' };
+const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', weggehaald: new Map(), archiefOpen: false, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '' };
 /* Inklappijl: rechts in een kopbalk; open wijst omlaag. */
 /* Een inklapbare kop: titel, rechts het aantal en het pijltje. Dicht: een lijn eronder
    (lijn: false = niet). klik: wat een tik doet (meestal omzetten en opnieuw tekenen). */
@@ -3152,8 +3171,6 @@ function klapKop(titel, tal, open, klik, o) {
   return kop;
 }
 function weggehaaldLegen() {
-  for (const v of scherm.vertrekt.values()) clearTimeout(v.timer);
-  scherm.vertrekt.clear();
   scherm.weggehaald.clear();
 }
 
@@ -3236,12 +3253,12 @@ function sugVan(a, vandaag) {
 function lijstVoorScherm(zoekend, vandaag, gevonden) {
   let l, titel;
   if (zoekend) { l = gevonden || zoekArtikelen(artikelen, scherm.zoek, winkels); if (scherm.zoekIn) l = l.filter((a) => inFilter(a, scherm.zoekIn, vandaag, true)); titel = 'Gevonden'; }
-  else if (scherm.filter === 'L') { l = artikelen.filter((a) => a.op || scherm.vertrekt.has(a.id)); titel = 'Op de lijst'; }
+  else if (scherm.filter === 'L') { l = artikelen.filter((a) => a.op); titel = 'Op de lijst'; }
   else if (scherm.filter === 'S') { l = artikelen.filter((a) => !a.op && sugVan(a, vandaag)); titel = 'Suggesties'; }
   /* Eenmalig: alleen wat op de lijst staat; de rest staat in het archief. */
-  else if (scherm.filter === 'E') { l = artikelen.filter((a) => a.letter === 'E' && (a.op || scherm.vertrekt.has(a.id))); titel = SOORTNAAM.E; }
+  else if (scherm.filter === 'E') { l = artikelen.filter((a) => a.letter === 'E' && a.op); titel = SOORTNAAM.E; }
   /* Geen vakje aan: alles, behalve gekochte eenmalige (die staan in het archief eronder). */
-  else if (!scherm.filter) { l = artikelen.filter((a) => inFilter(a, '', vandaag, false) || scherm.vertrekt.has(a.id)); titel = 'Alle artikelen'; }
+  else if (!scherm.filter) { l = artikelen.filter((a) => inFilter(a, '', vandaag, false)); titel = 'Alle artikelen'; }
   else { l = artikelen.filter((a) => a.letter === scherm.filter); titel = SOORTNAAM[scherm.filter]; }
   /* Rechts alleen het aantal; of iets op de lijst staat, zie je aan het rondje. */
   const aantal = scherm.filter === 'L' && !zoekend ? artikelen.filter((a) => a.op).length : l.length;
@@ -3255,8 +3272,8 @@ function rijUitGeheugen(a, opties) {
   if (scherm.teller === a.id) { rijGeheugen.delete(a.id); return artikelRij(a, opties); }
   /* Alle velden van het artikel (uit het schema, ook velden die later bijkomen); daarnaast wat het scherm erbij toont. */
   /* De winkelsregel één keer uitrekenen: voor de sleutel en voor de regel zelf. */
-  const wr = winkelsRegel(a, opties.zonderWinkel);
-  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a), !!opties.vertrekt,
+  const wr = opties.geenWinkels ? '' : winkelsRegel(a, opties.zonderWinkel);
+  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a),
     opties.sug ? suggestieTekst(opties.sug) : '', !!opties.archief, !!opties.weg, opties.hint || ''].join('\u0001');
   const g = rijGeheugen.get(a.id);
   if (g && g.sleutel === sleutel) return g.rij;
@@ -3268,10 +3285,10 @@ function rijUitGeheugen(a, opties) {
 /* Eén regel: soorticoon, naam (met winkelsymbool, "nieuw", suggestie) en het rondje. */
 /* opties.teller: de teller open (anders die van Artikelen, scherm.teller). */
 function artikelRij(a, opties, wr) {
-  if (wr === undefined) wr = winkelsRegel(a, opties.zonderWinkel);
+  if (wr === undefined) wr = opties.geenWinkels ? '' : winkelsRegel(a, opties.zonderWinkel);
   const tellerOpen = opties.teller !== undefined ? opties.teller : scherm.teller === a.id;
   const rij = document.createElement('div');
-  rij.className = 'item' + (opties.vertrekt ? ' vertrekt' : '') + (opties.archief ? ' archief' : '');
+  rij.className = 'item' + (opties.archief ? ' archief' : '');
   rij.dataset.id = a.id;
   const nieuw = isNieuw(a);
   const metNotitie = !!(a.notitie || a.link);
@@ -3368,7 +3385,7 @@ function tekenWeggehaald(zoekend) {
   const open = !scherm.dicht.weg;
   sec.appendChild(klapKop('Van de lijst gehaald', telTekst(weg.length, 'artikel', 'artikelen'), open, () => { scherm.dicht.weg = open; tekenWeggehaald(false); }));
   if (open) sec.insertAdjacentHTML('beforeend', '<div class="lijst"></div>');
-  if (open) for (const a of weg) sec.querySelector('.lijst').appendChild(rijUitGeheugen(a, { weg: true }));
+  if (open) for (const a of weg) sec.querySelector('.lijst').appendChild(rijUitGeheugen(a, { weg: true, geenWinkels: !weergave.artikelWinkels }));
   $('lijstBlok').after(sec);
 }
 
@@ -3382,7 +3399,7 @@ function tekenArchief(zoekend) {
   let sec = $('archief');
   if (sec) sec.remove();
   if (zoekend || (scherm.filter !== 'E' && scherm.filter !== '')) return;
-  const arch = artikelen.filter((a) => a.letter === 'E' && !a.op && !scherm.vertrekt.has(a.id))
+  const arch = artikelen.filter((a) => a.letter === 'E' && !a.op)
     .sort((x, y) => (x.laatst < y.laatst ? 1 : x.laatst > y.laatst ? -1 : SORTEER.compare(x.naam, y.naam)));
   if (!arch.length) return;
   sec = document.createElement('div');
@@ -3395,7 +3412,7 @@ function tekenArchief(zoekend) {
     for (const a of arch) {
       const g = a.gekocht.length && a.laatst === a.gekocht.reduce((x, y) => (y > x ? y : x));
       /* Hergebruikt, net als in de hoofdlijst. */
-      frag.appendChild(rijUitGeheugen(a, { archief: true, hint: a.laatst ? (g ? 'gekocht ' : 'van de lijst ') + datumKort(a.laatst) : '' }));
+      frag.appendChild(rijUitGeheugen(a, { archief: true, geenWinkels: !weergave.artikelWinkels, hint: a.laatst ? (g ? 'gekocht ' : 'van de lijst ') + datumKort(a.laatst) : '' }));
     }
     sec.querySelector('.lijst').appendChild(frag);
   }
@@ -3445,9 +3462,10 @@ function tekenBoodschappen() {
        Onder een artikel dan alleen de andere winkels (de gezochte staat al in de kop). */
     const wz = zoekend ? winkelZoek(scherm.zoek, winkels) : null;
     const rij = (a) => rijUitGeheugen(a, {
-      vertrekt: scherm.vertrekt.has(a.id) && !a.op,
       sug: scherm.filter === 'S' && !zoekend ? sugVan(a, vandaag) : null,
-      zonderWinkel: wz && wz.winkel ? wz.winkel.id : ''
+      zonderWinkel: wz && wz.winkel ? wz.winkel.id : '',
+      /* Instelling "Bij een artikel: de winkels" (Artikelen, ook bij @, en in een winkel). */
+      geenWinkels: !weergave.artikelWinkels
     });
     /* Een winkel zonder afdelingen: geen koppen, alleen de artikelen onder de winkelnaam. */
     if (wz && wz.winkel && wz.winkel.afdelingen.length) {
@@ -3517,22 +3535,12 @@ function opWisselen(a, opArtikelen) {
   const id = a.id;
   const t = tijdstipTekst(new Date());
   if (a.op) {
-    if (opArtikelen && (scherm.filter === 'L' || scherm.filter === 'E') && normNaam(scherm.zoek) === '') {
-      /* Even grijs op zijn plek, dan naar "Van de lijst gehaald". */
-      const timer = setTimeout(() => {
-        scherm.vertrekt.delete(id);
-        scherm.weggehaald.set(id, true);
-        tekenBoodschappen();
-      }, VERTRAGING);
-      scherm.vertrekt.set(id, { timer });
-    }
+    /* Meteen naar "Van de lijst gehaald" (geen wachttijd): een vergissing tik je daar terug. */
+    if (opArtikelen && (scherm.filter === 'L' || scherm.filter === 'E') && normNaam(scherm.zoek) === '') scherm.weggehaald.set(id, true);
     handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: a.op, nieuw: '' },
               { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: '' }]
       .concat(a.letter === 'E' ? [{ actie: 'zet', soort: 'artikel', id, veld: 'weg', oud: a.weg, nieuw: datumTekst(new Date()) }] : []));
   } else {
-    const v = scherm.vertrekt.get(id);
-    if (v) clearTimeout(v.timer);
-    scherm.vertrekt.delete(id);
     scherm.weggehaald.delete(id);
     /* Uit het archief: het hele artikel mee, zodat het terugkomt als het intussen is opgeruimd. */
     const terugRecord = a.letter === 'E' && model.artikelen.get(id)
@@ -3824,14 +3832,15 @@ function keuzeTonen(k) {
 
 /* ---------- tabblad Boodschappen (scherm-winkel): in de winkel, mandje, aankopen ---------- */
 /* Na afvinken blijft een regel even staan, zodat een mis-tik meteen terug te
-   tikken is; daarna schuift hij naar "In winkelmand" (Boodschappen) of "Van de lijst
+   tikken is; daarna schuift hij naar "Winkelmand" (Boodschappen) of "Van de lijst
    gehaald" (boodschappen). Het mandje hoort bij deze telefoon, blijft bewaard
    en wordt alleen leeggemaakt met de knop. */
 const VERTRAGING = 1500;
 const VERVERS_WINKEL = 30 * 1000;
 /* winkel.id: de gekozen winkel (per telefoon). Het mandje: artikel-id → { id, naam, winkel, op, opdoor, datum, alGekocht };
    per winkel apart, zodat er niets doorloopt van de ene winkel naar de andere. */
-const winkel = { id: '', mandje: new Map(), vertraagd: new Map(), eldersOpen: false };
+/* eldersOpen, mandjeOpen, subOpen (per winkel in het mandje): wat open staat; opnieuw bij het kiezen van een andere winkel. */
+const winkel = { id: '', mandje: new Map(), vertraagd: new Map(), eldersOpen: false, mandjeOpen: false, subOpen: new Map() };
 
 function winkelOpen() { return !$('scherm-winkel').hidden; }
 
@@ -3904,6 +3913,7 @@ function winkelKiezen() {
   });
 }
 function kiesWinkel(id) {
+  if (id !== winkel.id) { winkel.eldersOpen = false; winkel.mandjeOpen = false; winkel.subOpen.clear(); }
   winkel.id = id;
   keuzeBewaren('winkel');
   tekenWinkel();
@@ -3991,10 +4001,10 @@ function terugOpLijst(id) {
   handelen(hs);
 }
 
-function mandjeHier() { return Array.from(winkel.mandje.values()).filter((m) => m.winkel === winkel.id); }
 /* Leegmaken haalt het groepje uit beeld (de aankopen blijven); 6 s terug te zetten. */
 function mandjeLeegmaken() {
-  const weg = mandjeHier().filter((m) => !winkel.vertraagd.has(m.id));
+  /* Het hele mandje, van alle winkels. */
+  const weg = Array.from(winkel.mandje.values()).filter((m) => !winkel.vertraagd.has(m.id));
   for (const m of weg) winkel.mandje.delete(m.id);
   mandjeBewaren();
   tekenWinkel();
@@ -4069,15 +4079,52 @@ function eldersSectie(doel, w, elders, soortVan) {
   if (winkel.eldersOpen) for (const a of elders) sec.appendChild(winkelRij(a, soortVan(a) || 'elders'));
 }
 
-/* "In winkelmand", met rechts de knop om hem leeg te maken. */
+/* "Winkelmand": alles wat je vandaag in een winkel afvinkte. Eén kop met het totaal en
+   de knop om alles leeg te maken; ligt er ook iets uit andere winkels, dan per winkel een
+   inklapbare subkop (deze winkel bovenaan, open; de andere alfabetisch, dicht). */
 function mandjeSectie(doel, inMandje) {
   const leeg = document.createElement('button');
   leeg.type = 'button'; leeg.className = 'icoonknop mandleeg';
   leeg.setAttribute('aria-label', 'Winkelmand leegmaken');
   leeg.innerHTML = MANDJE_WEG;
   leeg.addEventListener('click', mandjeLeegmaken);
-  const sec = winkelSectie(doel, 'In winkelmand', true, leeg, telTekst(inMandje.length, 'artikel', 'artikelen'));
-  for (const m of inMandje) sec.appendChild(winkelRij({ id: m.id, naam: m.naam, plekken: [] }, 'gedaan'));
+  const sec = winkelSectie(doel, 'Winkelmand', true, leeg, telTekst(inMandje.length, 'artikel', 'artikelen'));
+  /* Inklapbaar zoals "Niet bij …": de hele kop opent en sluit, behalve de knop om leeg te maken. */
+  const kop = sec.querySelector('.afdkop');
+  kop.appendChild(klapPijl('mandpijl', 'Winkelmand', winkel.mandjeOpen));
+  kop.classList.add('klapbaar');
+  kop.addEventListener('click', (e) => { if (e.target.closest('.mandleeg')) return; winkel.mandjeOpen = !winkel.mandjeOpen; tekenWinkel(); });
+  if (!winkel.mandjeOpen) return;
+  const rij = (m) => winkelRij({ id: m.id, naam: m.naam, plekken: [] }, 'gedaan');
+  const hier = inMandje.filter((m) => m.winkel === winkel.id);
+  /* Alleen uit deze winkel: geen subkop. */
+  if (hier.length === inMandje.length) { for (const m of hier) sec.appendChild(rij(m)); return; }
+  const volgorde = [winkel.id].concat(winkels.filter((w) => w.id !== winkel.id).map((w) => w.id));
+  for (const id of volgorde) {
+    const l = inMandje.filter((m) => m.winkel === id);
+    if (!l.length) continue;
+    const w = winkelOpId.get(id);
+    const naam = w ? w.naam : 'Winkel';
+    const open = winkel.subOpen.has(id) ? winkel.subOpen.get(id) : id === winkel.id;
+    const sub = document.createElement('div');
+    sub.className = 'afdkop subkop klapbaar';
+    sub.innerHTML = '<span></span><span class="tal"></span>';
+    sub.firstChild.textContent = naam;
+    sub.children[1].textContent = l.length;
+    sub.appendChild(klapPijl('subpijl', naam + ' in de winkelmand', open));
+    sub.addEventListener('click', () => { winkel.subOpen.set(id, !open); tekenWinkel(); });
+    sec.appendChild(sub);
+    if (open) for (const m of l) sec.appendChild(rij(m));
+  }
+}
+/* Het pijltje van een inklapbare kop, als knop (voor het toetsenbord en de schermlezer). */
+function klapPijl(klasse, wat, open) {
+  const pijl = document.createElement('button');
+  pijl.type = 'button'; pijl.className = klasse;
+  pijl.setAttribute('aria-expanded', String(open));
+  pijl.setAttribute('aria-label', wat + ' ' + (open ? 'dichtklappen' : 'openklappen'));
+  pijl.innerHTML = KLAPPIJL(open);
+  return pijl;
 }
 
 const WINKELKOP = $('winkelKop');
@@ -4110,7 +4157,7 @@ function tekenWinkel() {
     doel.appendChild(kaart);
   }
   const open = ind.zonder.length + ind.onbekend.length + ind.groepen.reduce((n, g) => n + g.items.length, 0) + ind.elders.length;
-  const inMandje = mandjeHier().filter((m) => !winkel.vertraagd.has(m.id));
+  const inMandje = Array.from(winkel.mandje.values()).filter((m) => !winkel.vertraagd.has(m.id));
   /* Niets op de lijst: geen winkel tonen (de keuze blijft bewaard voor straks). */
   if (!open && !inMandje.length) { const p = document.createElement('div'); p.className = 'kaart leegregel'; p.textContent = 'Geen artikelen'; doel.appendChild(p); }
   else {
@@ -4400,13 +4447,20 @@ function tekenWinkelsOverzicht() {
     sec.appendChild(klapKop(titel, winkelTal(titel, rijen.length), !dicht, () => { ws.dicht[sl] = !ws.dicht[sl]; tekenWinkels(); }, { klasse: 'kop', lijn: false }));
     if (!dicht) {
       const kaart = document.createElement('div'); kaart.className = 'wkaart';
+      /* Artikelen per winkel: één keer tellen (alleen wat bij die winkel is vastgelegd). */
+      const n = new Map();
+      if (weergave.winkelTal) for (const a of artikelen) for (const p of a.plekken) n.set(p.winkel, (n.get(p.winkel) || 0) + 1);
       for (const x of rijen) {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'winkelrij';
         b.innerHTML = ICOON_PUI + '<span class="nm"></span>' + PIJL_IN;
         b.querySelector('.nm').textContent = x.naam;
-        /* Alleen bij afdelingen; "geen afdelingen" maakt de lijst onrustig. */
-        if (x.afdelingen.length) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = telTekst(x.afdelingen.length, 'afdeling', 'afdelingen'); b.querySelector('.nm').appendChild(s); }
+        /* "3 afdelingen, 8 artikelen"; zonder afdelingen alleen het aantal artikelen ("geen afdelingen" maakt de lijst onrustig). */
+        if (weergave.winkelTal) {
+          const s = document.createElement('span'); s.className = 'sub';
+          s.textContent = (x.afdelingen.length ? telTekst(x.afdelingen.length, 'afdeling', 'afdelingen') + ', ' : '') + telTekst(n.get(x.id) || 0, 'artikel', 'artikelen');
+          b.querySelector('.nm').appendChild(s);
+        }
         if (x.notitie || x.link) b.querySelector('.nm').appendChild(notitieRegel(x));
         b.addEventListener('click', () => winkelOpenen(x.id));
         kaart.appendChild(b);
@@ -4466,7 +4520,7 @@ function tekenWinkelDetail(w) {
 function tekenAanbod(doel, lijstEl, w, items) {
   doel.querySelector('.kopbalk h3').textContent = 'Artikelen';
   doel.querySelector('.kopbalk .tal').textContent = items.length ? telTekst(items.length, 'artikel', 'artikelen') : '';
-  for (const a of items) lijstEl.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id }));
+  for (const a of items) lijstEl.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id, geenWinkels: !weergave.artikelWinkels }));
   if (!items.length) lijstEl.appendChild(leegRegel('Geen artikelen'));
 }
 function leegRegel(tekst) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = tekst; return p; }
@@ -4525,7 +4579,7 @@ function tekenAfdelingen(lijstEl, w, zicht, aanbod, z) {
     if (!open) continue;
     const vak = document.createElement('div');
     vak.className = 'afdartikelen';
-    for (const a of items) vak.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id }));
+    for (const a of items) vak.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id, geenWinkels: !weergave.artikelWinkels }));
     if (!items.length) vak.appendChild(leegRegel('Geen artikelen'));
     lijstEl.appendChild(vak);
   }
@@ -5527,6 +5581,7 @@ function tekenInstellingen() {
   $('wekTijd').querySelector('span').textContent = w.tijd;
   $('aankopenBewaren').querySelector('span').textContent = String(aankopenBewaren(model));
   /* Doen: standaard filter, per telefoon. */
+  for (const [id, k] of [['swWinkelTal', 'winkelTal'], ['swArtikelWinkels', 'artikelWinkels']]) $(id).setAttribute('aria-checked', String(weergave[k]));
   const ds = $('doenStandaard');
   ds.innerHTML = '';
   for (const k of DOEN_FILTERS) {
@@ -5703,6 +5758,10 @@ function backupSluiten() {
   if (deel.el === $('backupScherm')) deelDicht();
 }
 $('naarBackups').addEventListener('click', backupsOpenen);
+/* Weergave: aan/uit, per telefoon; de lijsten tekenen bij het openen van hun tabblad opnieuw. */
+for (const [id, k] of [['swWinkelTal', 'winkelTal'], ['swArtikelWinkels', 'artikelWinkels']]) {
+  $(id).addEventListener('click', () => { weergave[k] = !weergave[k]; keuzeBewaren('weergave'); tekenInstellingen(); });
+}
 
 /* Logboek: wat de app zelf oploste of deed, per telefoon, nieuwste eerst (hooguit 100).
    Gebruikt hetzelfde subscherm als Backups. */
