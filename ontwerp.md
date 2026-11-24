@@ -269,7 +269,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
   staan notitie en link paars onder de regel, net als bij artikelen. Afdelingen horen bij deze winkel alleen
-  (de route, op volgorde). Gewoon: per afdeling het aantal artikelen en een
+  (de route, op volgorde). Gewoon: per afdeling (vet, zwart; open paars) het aantal artikelen en een
   pijltje; een tik klapt de artikelen eronder open (meer tegelijk open mag).
   Onderaan "Afdeling?" (zelfde uiterlijk als een afdeling) als er hier
   artikelen zonder afdeling liggen.

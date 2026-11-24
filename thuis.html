@@ -270,8 +270,9 @@
   .leegregel{padding:16px 14px;font-size:18px;color:var(--grijs)}
   /* Afdeling in een winkel: de naam lijnt uit met de iconen van de artikelen eronder. */
   .afdrij{width:100%;min-height:56px;display:flex;align-items:center;gap:10px;padding:4px 18px 4px 18px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;text-align:left;font:inherit;color:var(--tekst);cursor:pointer}
-  /* Open of dicht zelfde opmaak; alleen het pijltje laat de stand zien. */
-  .afdrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere;font-weight:700;color:var(--paars)}
+  /* Open of dicht zelfde dikte; een open afdeling is paars, zodat je ziet bij welke kop de artikelen eronder horen. */
+  .afdrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere;font-weight:700;color:var(--tekst)}
+  .afdrij[aria-expanded="true"] .nm{color:var(--paars)}
   .afdrij .tal{flex-shrink:0;font-size:17px;color:var(--grijs)}
   .afdartikelen{background:#FAFAFE}
   .afdartikelen .item{background:transparent}
@@ -499,7 +500,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-008</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-009</div>
   </section>
 </main>
 
