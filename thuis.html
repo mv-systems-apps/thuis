@@ -270,9 +270,9 @@
   .leegregel{padding:16px 14px;font-size:18px;color:var(--grijs)}
   /* Afdeling in een winkel: de naam lijnt uit met de iconen van de artikelen eronder. */
   .afdrij{width:100%;min-height:56px;display:flex;align-items:center;gap:10px;padding:4px 18px 4px 18px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;text-align:left;font:inherit;color:var(--tekst);cursor:pointer}
-  .afdrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere}
+  /* Open of dicht zelfde opmaak; alleen het pijltje laat de stand zien. */
+  .afdrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere;font-weight:700;color:var(--paars)}
   .afdrij .tal{flex-shrink:0;font-size:17px;color:var(--grijs)}
-  .afdrij[aria-expanded="true"] .nm{font-weight:700;color:var(--paars)}
   .afdartikelen{background:#FAFAFE}
   .afdartikelen .item{background:transparent}
   .arij .potlood{width:44px;height:44px;flex-shrink:0;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
@@ -499,7 +499,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-007</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-008</div>
   </section>
 </main>
 
