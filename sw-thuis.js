@@ -14,8 +14,12 @@
    Het versiestempel in thuis.html is een eigen teller en gaat met de hand
    omhoog. */
 
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE_NAME = 'thuis-v' + CACHE_VERSION;
+/* (de naam blijft letterlijk zo staan: check_app.py en de tests lezen hem uit dit bestand)
+   Het deel vóór het nummer, afgeleid uit de naam; voor het sorteren van oude caches
+   (thuis-v10 na thuis-v9) met slice(VOORVOEGSEL.length), nooit met een los getal. */
+const VOORVOEGSEL = CACHE_NAME.slice(0, -String(CACHE_VERSION).length);   /* 'thuis-v' */
 
 /* Zonder dit bestand is er niets om offline te openen, dus dit moet slagen. */
 const VERPLICHT = ['./thuis.html'];
@@ -23,7 +27,7 @@ const VERPLICHT = ['./thuis.html'];
    manifest en icoon zijn voor het installeren als app. Ze mogen mislukken:
    niet elke server beantwoordt een kale map, en dan zou die ene de hele
    installatie blokkeren. */
-const OPTIONEEL = ['./', './index.html', './manifest.json', './icon.svg'];
+const OPTIONEEL = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 const ASSETS = VERPLICHT.concat(OPTIONEEL);
 
 /* De eigen bestanden als pad: de cacheopslag is van de hele origin, en elke
@@ -79,13 +83,24 @@ function metGrens(req, ms, init) {
   });
 }
 
+/* Een fout antwoord (404) niet ongelezen laten liggen: dat houdt een verbinding bezet, en
+   met een paar ontbrekende bijbestanden wachtte de rest van de installatie op de grens.
+   De inhoud afbreken (cancel) maakt de verbinding meteen vrij, zonder te wachten op een
+   server die de inhoud traag stuurt; zonder body: uitlezen. Geeft altijd null. */
+function uitlezen(res) {
+  if (!res) return Promise.resolve(null);
+  if (res.body && typeof res.body.cancel === 'function') return res.body.cancel().then(() => null, () => null);
+  return typeof res.arrayBuffer === 'function' ? res.arrayBuffer().then(() => null, () => null) : Promise.resolve(null);
+}
+
 /* cache:'reload' zodat de installatie geen verouderde kopie uit de
    browsercache overneemt, en met de grens zodat een hangende verbinding de
    installatie niet eindeloos ophoudt. Een mislukking komt terug als null, zodat
    de aanroeper beslist of dat erg is. */
 function haal(url) {
   return metGrens(volledig(url).href, GRENS, { cache: 'reload' }).then(
-    (res) => (res && res.ok) ? res : null,
+    /* Ook een fout antwoord (404) afhandelen: zie uitlezen. */
+    (res) => (res && res.ok) ? res : uitlezen(res),
     () => null
   );
 }
@@ -99,8 +114,8 @@ async function uitVorigeCache(cache, u) {
   try {
     const adres = sleutel(volledig(u));
     const vorige = (await caches.keys())
-      .filter((n) => n.startsWith('thuis-v') && n !== CACHE_NAME)
-      .sort((a, b) => parseInt(b.slice(8), 10) - parseInt(a.slice(8), 10));
+      .filter((n) => n.startsWith(VOORVOEGSEL) && n !== CACHE_NAME)
+      .sort((a, b) => parseInt(b.slice(VOORVOEGSEL.length), 10) - parseInt(a.slice(VOORVOEGSEL.length), 10));
     for (const naam of vorige) {
       const oud = await (await caches.open(naam)).match(adres);
       if (oud) return await cache.put(adres, oud);

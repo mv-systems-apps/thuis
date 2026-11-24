@@ -83,8 +83,19 @@ controle('verborgen blijft verborgen, ook met een eigen display (deellinkvak na 
   /\[hidden\]\{display:none!important\}/.test(html) || 'regel [hidden]{display:none!important} ontbreekt');
 controle('opslag wordt vastgezet (navigator.storage.persist), en getoond bij App', () =>
   (/navigator\.storage\.persist\(\)/.test(scripts) && /id="appOpslag"/.test(html)) || 'persist of de regel bij App ontbreekt');
-controle('melding bij nieuwe versie verdwijnt niet vanzelf (geen timer die hem weghaalt)', () =>
-  !/setTimeout\([^)]*meldingWeg/.test(scripts) || 'een melding wordt met een timer weggehaald');
+controle('meldingen verdwijnen niet vanzelf, behalve Ongedaan maken (één timer, in ongedaanMelding)', () => {
+  /* Elke setTimeout(…) met zijn volledige argumenten (haakjes geteld), in welke schrijfwijze ook. */
+  const timers = [];
+  for (let i = scripts.indexOf('setTimeout('); i !== -1; i = scripts.indexOf('setTimeout(', i + 1)) {
+    let diepte = 0, j = i + 'setTimeout'.length;
+    for (; j < scripts.length; j++) { if (scripts[j] === '(') diepte++; else if (scripts[j] === ')' && --diepte === 0) break; }
+    const stuk = scripts.slice(i, j + 1);
+    if (/meldingWeg/.test(stuk)) timers.push({ i, stuk });
+  }
+  if (timers.length !== 1) return 'verwacht 1 timer die een melding weghaalt, gevonden: ' + timers.map((t) => t.stuk.slice(0, 60)).join(' | ');
+  const f = /function ongedaanMelding[\s\S]*?\n\}/.exec(scripts);
+  return (!!f && timers[0].i >= f.index && timers[0].i < f.index + f[0].length) || 'de timer staat niet in ongedaanMelding';
+});
 
 /* ---------- service worker ---------- */
 const swPad = path.join(path.dirname(APP), 'sw-thuis.js');
@@ -100,7 +111,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -109,7 +120,7 @@ const NU = new Date(2026, 10, 21, 10, 0); // za 21-11-2026 10:00 lokale tijd
 const B = (delen) => JSON.stringify(Object.assign({ versie: K.FORMAAT }, delen));
 const lees = (delen) => { const r = kern().leesBestand(typeof delen === 'string' ? delen : B(delen)); if (!r.ok) throw new Error(r.reden + ' ' + (r.detail || '')); return r.model; };
 const uit = (k, m) => JSON.parse(k.schrijfBestand(m));
-const H = (x) => Object.assign({ t: '2026-11-21T10:00', wie: 'Mark' }, x);
+const H = (x) => Object.assign({ t: '2026-11-21T10:00' }, x);
 const VB = {
   instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
   winkels: {
@@ -142,7 +153,7 @@ controle('bestand: BOM genegeerd bij lezen, nooit geschreven (L7)', () => { cons
 controle('bestand: geen geldige UTF-8 wordt niet gelezen', () => gelijk(K.leesBestand(new Uint8Array([0x7B, 0x7D, 0xFF])).reden, 'geen-utf8'));
 controle('bestand: kapotte JSON wordt niet gelezen', () => gelijk([K.leesBestand('{"versie": "' + K.FORMAAT + '", "artikelen": {').reden, K.leesBestand('[1]').reden].join(), 'geen-json,geen-json'));
 controle('bestand: versie — nieuwer weigert (melding bijwerken), ouder of ontbrekend ook; leeg is niet geldig (B1)', () => gelijk(
-  [K.leesBestand('{"versie": "1352903-000"}').reden, K.leesBestand('{"versie": "1352902-3FF"}').reden, K.leesBestand('{}').reden, K.leesBestand('').reden, K.leesBestand(' \n').reden].join(),
+  [K.leesBestand('{"versie": "FFFFFFFF-FFFF"}').reden, K.leesBestand('{"versie": "1352902-3FF"}').reden, K.leesBestand('{}').reden, K.leesBestand('').reden, K.leesBestand(' \n').reden].join(),
   'nieuwer-formaat,onbekend-formaat,onbekend-formaat,leeg,leeg'));
 controle('ronde: een leeg bestand op OneDrive wordt niet overschreven (B1)', () => {
   const r = K.synchroniseer('', [{ actie: 'nieuw', soort: 'artikel', id: 'mel01', velden: { naam: 'Melk' } }], NU);
@@ -297,8 +308,23 @@ controle('winkel verwijderen haalt hem ook weg bij de artikelen; ongedaan maken 
 });
 controle('vervangIds: alle id-velden van een handeling', () => {
   const k = kern();
-  const h = k.vervangIds({ actie: 'plaats', id: 'x', winkel: 'w', afd: 'a', volgorde: ['a'], artikelen: ['x'] }, new Map([['x', 'X'], ['w', 'W'], ['a', 'A']]));
-  return gelijk([h.id, h.winkel, h.afd, h.volgorde[0], h.artikelen[0]].join(''), 'XWAAX');
+  const al = new Map([['x', 'X'], ['w', 'W'], ['a', 'A']]);
+  const p = k.vervangIds({ actie: 'plaats', id: 'x', winkel: 'w', afd: 'a' }, al);
+  const v = k.vervangIds({ actie: 'volgorde', id: 'w', volgorde: ['a', 'b'] }, al);
+  const t = k.vervangIds({ actie: 'terug', soort: 'afdeling', winkel: 'w', afd: { id: 'a', naam: 'Zuivel' }, artikelen: ['x'] }, al);
+  const e = k.vervangIds({ actie: 'afdErbij', id: 'w', afd: { id: 'a', naam: 'Zuivel' } }, al);
+  return gelijk([p.id, p.winkel, p.afd, v.id, v.volgorde.join(''), t.winkel, t.afd.id, t.artikelen[0], e.id, e.afd.id].join(''), 'XWAWAbWAXWA');
+});
+controle('vervangIds: ook de sleutels en waarden van ligt bij terugzetten (winkel en artikel)', () => {
+  const k = kern(); const al = new Map([['x', 'X'], ['w', 'W'], ['a', 'A']]);
+  const tw = k.vervangIds({ actie: 'terug', soort: 'winkel', id: 'w', record: { naam: 'Plus' }, ligt: { x: 'a', y: '' } }, al);
+  const ta = k.vervangIds({ actie: 'terug', soort: 'artikel', id: 'x', record: { naam: 'Melk', ligt: { w: 'a' } } }, al);
+  return gelijk([tw.id, JSON.stringify(tw.ligt), ta.id, JSON.stringify(ta.record.ligt), ta.record.naam].join('|'), 'W|{"X":"A","y":""}|X|{"W":"A"}|Melk');
+});
+controle('handelingen: elke soort zegt welke velden een id bevatten', () => {
+  const k = kern();
+  const zonder = Object.keys(k.HANDELINGEN).filter((n) => !Array.isArray(k.HANDELINGEN[n].ids));
+  return gelijk(zonder.join(), '');
 });
 
 controle('instelling: wekelijks dag en tijd zetten; ongeldige waarden vervallen', () => {
@@ -388,6 +414,43 @@ controle('periode: grenzen van dag, maand, kwartaal en jaar', () => gelijk(['202
 controle('periode: verschuiven, ook over het jaar en de 31e naar een kortere maand', () => gelijk([K.verschuif('2026-11-27', 1, 'week'), K.verschuif('2026-01-31', 1, 'maand'), K.verschuif('2026-12', 1, 'maand'),
   K.verschuif('2026-K4', 1, 'kwartaal'), K.verschuif('2026-K2', 1, 'jaar'), K.verschuif('2026-11', 1, 'kwartaal'), K.verschuif('2026', -1, 'jaar'), K.verschuif('2026-03-01', -1, 'dag')].join(),
   '2026-12-04,2026-02-28,2027-01,2027-K1,2027-K2,2027-02,2025,2026-02-28'));
+controle('schema: de regelsleutel verandert bij elk veld, ook plekken, aankoopdatums en onbekende soort', () => {
+  const basis = { naam: 'Kaas', soort: 'eenmalig', ligt: { w1111: '' }, gekocht: ['2026-11-01'] };
+  const sl = (o) => K.recordSleutel('artikel', K.recordUitJson('artikel', 'kaa01', Object.assign({}, basis, o)));
+  const b = sl({});
+  const anders = [{ naam: 'Kazen' }, { soort: 'wekelijks' }, { aantal: '2' }, { notitie: 'x' }, { link: 'https://a.nl/' }, { ligt: { w1111: 'a1111' } }, { ligt: { w2222: '' } },
+    { op: '2026-11-23T10:00' }, { opdoor: 'Mark' }, { weg: '2026-11-23' }, { gekocht: ['2026-11-02'] }].filter((o) => sl(o) === b);
+  const a = (o) => K.recordSleutel('actie', K.recordUitJson('actie', 'act01', Object.assign({ naam: 'Bellen' }, o)));
+  const ac = ['datum', 'maanddag', 'herhaal', 'notitie', 'link', 'klaar'].filter((k) => a({ [k]: '1' }) === a({}));
+  return gelijk(anders.length + '|' + ac.join(), '0|');
+});
+controle('instellingen: standaard als hij ontbreekt of niet klopt; zet alleen geldige, zetbare velden', () => {
+  const k = kern(); const m = k.leegModel();
+  const a = [k.instelling(m, 'wekelijks', 'dag'), k.instelling(m, 'historie', 'bewaren'), k.instelling(m, 'archief', 'bewaren'), k.instelling(m, 'aankopen', 'bewaren')];
+  m.instellingen.historie = { bewaren: '9x' }; m.instellingen.wekelijks = { dag: 'vr', tijd: 7 };
+  a.push(k.instelling(m, 'historie', 'bewaren'), k.instelling(m, 'wekelijks', 'dag'), k.instelling(m, 'wekelijks', 'tijd'));
+  a.push(k.pasToe(m, H({ actie: 'instelling', naam: 'wekelijks', veld: 'teruggezet', nieuw: '2026-11-21T06:00' })).status, k.pasToe(m, H({ actie: 'instelling', naam: 'opruimen', veld: 'tot', nieuw: '2026-11-21' })).status);
+  return gelijk(a.join(), 'za,3m,1j,500,3m,vr,06:00,vervallen,vervallen');
+});
+controle('wekelijks: ontbreekt dag of tijd, dan dezelfde standaard als Instellingen (za 06:00)', () => {
+  const k = kern(); const m = k.leegModel();
+  const geen = k.wekelijksMoment(m, new Date(2026, 10, 24, 12, 0));
+  m.instellingen.wekelijks = { teruggezet: '2026-11-14T06:00' };
+  const t = k.wekelijksMoment(m, new Date(2026, 10, 24, 12, 0));
+  return gelijk(String(geen) + '|' + k.tijdstipTekst(t), 'null|2026-11-21T06:00');
+});
+controle('formaat: een omgezet bestand telt als gewijzigd en wordt in het nieuwe formaat geschreven', () => {
+  const k = kern();
+  k.MIGRATIES.push({ van: '1352902-458', naar: k.FORMAAT, doe: (d) => { d.artikelen = d.spullen; delete d.spullen; } });
+  /* Met wekelijks al gezet (dit weekend teruggezet): zonder de omzetting zou er niets veranderen. */
+  const r = k.synchroniseer('{"versie": "1352902-458", "instellingen": {"wekelijks": {"dag": "za", "tijd": "06:00", "teruggezet": "2026-11-21T06:00"}}, "spullen": {"mel01": {"naam": "Melk", "soort": "eenmalig"}}}', [], new Date(2026, 10, 24, 12, 0), null);
+  return gelijk([r.ok, r.gewijzigd, JSON.parse(r.tekst).versie === k.FORMAAT, !!JSON.parse(r.tekst).artikelen.mel01].join(), 'true,true,true,true');
+});
+controle('formaat: oude versies stap voor stap omzetten; onbekende tussenversie = niet lezen', () => {
+  const tabel = [{ van: 'A-1', naar: 'A-2', doe: (d) => { d.stap = (d.stap || '') + '1'; } }, { van: 'A-2', naar: 'A-3', doe: (d) => { d.stap = (d.stap || '') + '2'; } }];
+  const a = { versie: 'A-1' }, b = { versie: 'A-2' }, c = { versie: 'A-0' };
+  return gelijk([K.migreren(a, tabel), a.versie, a.stap, K.migreren(b, tabel), b.stap, K.migreren(c, tabel)].join(), 'true,A-3,12,true,2,false');
+});
 controle('herhalen: te laat afgeronde dag komt niet op vandaag, een lopende maand wel (punt 3)', () => gelijk([K.volgendeKeer('2026-11-16', 'week', '2026-11-23'), K.volgendeKeer('2026-11-23', 'week', '2026-11-23'), K.volgendeKeer('2026-10', 'maand', '2026-11-23'), K.volgendeKeer('2026-11-20', 'week', '2026-11-23')].join(),
   '2026-11-30,2026-11-30,2026-11,2026-11-27'));
 controle('suggestie: na vier keer de tussentijd niet meer (punt 12)', () => K.suggestie(['2026-01-01', '2026-01-08', '2026-01-15'], '2026-01-22') !== null && K.suggestie(['2026-01-01', '2026-01-08', '2026-01-15'], '2026-02-12') !== null

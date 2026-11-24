@@ -4,10 +4,10 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (23-11-2026): in gebruik, versie 1352903-00A. Dit document beschrijft
-het ontwerp zoals het gebouwd is; §7a t/m §7a8 de wijzigingen na de reviews.
+Status (24-11-2026): in gebruik, versie 1352904-001. Dit document beschrijft
+het ontwerp zoals het gebouwd is; §7a de bewuste keuzes uit de reviews.
 
-Volgt `apps-basis/conventies.md`, behalve waar §9 een bewuste afwijking noemt.
+Volgt `apps-basis/conventies.md`, behalve waar §8 een bewuste afwijking noemt.
 
 ---
 
@@ -41,7 +41,7 @@ scripts; de app gebruikt het systeemlettertype.
 - Bij elke opslag van kopie of wachtrij verandert een klein kenmerk (`stand`).
   Komt een venster in beeld en is de stand anders, dan leest het kopie en
   wachtrij opnieuw: zo schrijft het geen oude wachtrij over die van het andere
-  venster heen (M3). Normaal is dat één kleine leesactie.
+  venster heen. Normaal is dat één kleine leesactie.
 
 ### 2.3 OneDrive
 - **Aanmelden:** een eigen, kleine PKCE-flow tegen Microsoft (geen MSAL), met
@@ -60,7 +60,7 @@ scripts; de app gebruikt het systeemlettertype.
   app of de map zelf nog bereikbaar is. Zo niet: "Geen toegang meer tot de
   gedeelde map" met "Andere map koppelen" (Instellingen, deellinkvak); de lijst
   op de telefoon blijft staan. Is de map er wel en het bestand niet: de melding
-  dat het bestand weg is, met terugzetten vanaf deze telefoon (M6).
+  dat het bestand weg is, met terugzetten vanaf deze telefoon.
 - **Lezen:** eerst het item (eTag, lastModifiedDateTime en de downloadUrl). Pas
   bij een andere eTag wordt de inhoud gedownload. Is het bestand gelijk, de
   wachtrij leeg, de dag dezelfde en het wekelijkse moment niet voorbij, dan wordt
@@ -95,11 +95,21 @@ om met de hand te bewerken.
   bij de volgende wijziging, net als in de andere apps.
 - `versie`: datum en tijd van de laatste formaatwijziging in hex, zoals het
   versiestempel (`1352902-459` = 22-11-2026 11:13). Nieuwer dan de app kent:
-  niets schrijven, melding om bij te werken. Ouder of ontbrekend: niet lezen
-  (geen omzetting van oude formaten).
+  niets schrijven, melding om bij te werken. Ontbrekend: niet lezen. Ouder: stap
+  voor stap omzetten met de tabel `MIGRATIES` in de kern (ook bij een backup);
+  ontbreekt een stap, dan niet lezen. Regel: een optioneel veld erbij is géén
+  nieuw formaat (onbekende velden blijven bewaard). `FORMAAT` gaat alleen omhoog
+  bij een andere opbouw, en dan komt er een omzetting bij.
+- **Velden: één tabel.** `SCHEMA` in de kern zegt per soort welke velden er zijn,
+  hun type (`VELDTYPEN`: lezen, schrijven, vergelijken), of ze met `zet` mogen
+  veranderen (met controle) en wat er gebeurt als jullie ze allebei veranderden
+  (`samen`: melden, lijst, nieuwste, stil). Lezen, schrijven, `zet` en het geheugen
+  van de lijstregels (`recordSleutel`) volgen die tabel. Een nieuw veld: één regel
+  in `SCHEMA`; daarna alleen nog tonen (artikelLijst/actieLijst, de regel) en
+  bewerken (de editor). Alle records zijn plat (ook acties: geen apart bakje).
   Na een update met een nieuw formaat gaat de oude kopie op de telefoon weg, maar
   de wachtrij niet: die wordt alsnog verstuurd en elke handeling gecontroleerd;
-  wat niet meer past, vervalt met de gewone melding (H1, ronde 3).
+  wat niet meer past, vervalt met de gewone melding.
 - **Vaste id's.** Winkels, afdelingen, artikelen en acties hebben een id van
   vijf willekeurige tekens (kleine letters en cijfers zonder 0 o 1 l i; via
   `crypto.getRandomValues`, uniek binnen het bestand). De naam is een gewoon
@@ -109,8 +119,8 @@ om met de hand te bewerken.
 - De app schrijft één record per regel, op naam; wat leeg is, staat er niet.
   Onbekende delen en velden blijven bewaard (een oudere app op de andere
   telefoon gooit niets weg). Namen mogen elk teken bevatten.
-- Onschuldige afwijkingen zet de app stil recht en logt ze (sync-overzicht,
-  stap 9): een plek in een verwijderde winkel valt weg, een verwijderde
+- Onschuldige afwijkingen zet de app stil recht en logt ze (Instellingen →
+  Logboek): een plek in een verwijderde winkel valt weg, een verwijderde
   afdeling wordt "onbekend".
 
 ```json
@@ -139,7 +149,7 @@ om met de hand te bewerken.
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
-| `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`; `wie`, `foto` en `door` zijn gereserveerd (niet gebouwd) |
+| `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
 | `aankopen` | per id `naam`, `tijd` (afgevinkt in de winkel; niet wie) |
 | `historie` | per id `naam`, `tijd` (actie afgerond; niet wie) |
 
@@ -181,7 +191,7 @@ dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
   de instelling, dan gaan de wekelijkse artikelen die sindsdien niet gekocht
   zijn op de lijst, en wordt `teruggezet` bijgewerkt. Zo zet een telefoon die
   offline was, net gekochte bananen niet opnieuw op de lijst.
-- Acties (Doen, stap 8): een afgeronde actie opnieuw invoeren heropent hem —
+- Acties (Doen): een afgeronde actie opnieuw invoeren heropent hem —
   bij het bouwen van Doen uitwerken.
 
 ## 5. Schermen
@@ -192,7 +202,7 @@ Tabbalk met alleen iconen, vijf tabbladen: **Winkels** (winkelpui),
 **Artikelen** (klembord), **Boodschappen** (winkelwagen), **Doen** (vinkvak) en
 **Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom; niet vanaf
 de rand van het scherm (terug-gebaar van Android), niet tijdens typen en niet in
-een menu of keuzelijst. De terugknop: zie §7a3.
+een menu of keuzelijst. De terugknop: zie §7a (Bewerken, terugknop en meldingen).
 Kleur per soort: wekelijks kobalt (een 7 in een cirkel), regelmatig turquoise
 (voorraaddoos), eenmalig paars (vakje met een 1). Rechte hoeken; tekst nooit
 kleiner dan 17 px; knoppen minstens 44 px.
@@ -203,7 +213,7 @@ meegerekend). Soorticoon en iconen 24 px, lijndikte 2. Een icoonknop is een
 vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 "Waar ligt dit?"; turquoise voor "Winkelmand leegmaken", 36 px). Een lange naam loopt door naar een volgende regel.
 
-### 5.1 Boodschappen
+### 5.1 Artikelen (tabblad; in de code scherm-boodschappen)
 - Invoervak "Zoeken of toevoegen" (placeholder "Artikel"). Links een
   soortknop met menu, standaard eenmalig; rechts een +. Typen zoekt in alle
   artikelen ("Gevonden"). Een + op een bestaand artikel zet dat op de lijst.
@@ -254,9 +264,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   opent Afdeling bewerken (geen potloodje, net als bij artikelen). Onderaan "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
   winkel zonder afdeling. Verwijderen meteen, 6 s Ongedaan maken.
-- Artikelen koppelen gebeurt hier niet, maar bij het artikel (stap 8).
+- Artikelen koppelen gebeurt hier niet, maar bij het artikel.
 
-### 5.2 Winkel (tabblad)
+### 5.2 Boodschappen (tabblad; in de code scherm-winkel)
 - Per artikel leg je vast in welke winkels het te koop is, en per winkel in
   welke afdeling het daar ligt (`ligt`).
 - Van boven naar beneden: "Boodschappen" met de voortgang van de hele lijst
@@ -285,7 +295,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
   (alleen wat er niet al boven staat, rechts "2 winkels"). Kruisje rechtsboven; onderaan
   een zoekvak zonder kopje (placeholder "Winkel", + voegt toe). De laatste keuze
-  geldt per telefoon. Winkels beheren komt bij Instellingen (stap 9).
+  geldt per telefoon. Winkels beheren gebeurt op het tabblad Winkels.
 - "Afdeling onbekend": wat hier te koop is maar nog geen afdeling heeft, met de
   icoonknop "Waar ligt dit?" (kaartspeld). Die vraagt naar de
   afdelingen van déze winkel (looproute; zoeken of toevoegen onderaan). Kiezen
@@ -313,7 +323,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   terugpijl die het vak leegmaakt. Tik op de loep = invoeren.
 - Invoervak "Actie" onderaan: typen filtert, + voegt toe (een afgeronde actie
   met dezelfde naam wordt heropend). Een nieuwe actie heeft geen periode.
-- Filters bovenaan (024): Week · Maand · Kw. · Jaar · Alles, naam met het aantal
+- Filters bovenaan: Week · Maand · Kw. · Jaar · Alles, naam met het aantal
   eronder. Een filter toont Te laat en wat binnen de termijn af moet ("Deze week",
   "Deze maand", …); een maand-, kwartaal- of jaaractie dus pas in de week/maand
   waarin die eindigt. Alles toont Te laat, Deze week, Later, Zonder periode en
@@ -359,9 +369,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Vóór het terugzetten ook de dagbackup van vandaag (als die er nog niet is).
   Zet je meteen nog een backup terug (binnen een uur en zonder wijzigingen
   ertussen), dan blijft `thuis_voor_terugzetten.json` de stand van vóór de
-  eerste poging (M4).
-- Archief: "Verwijderen als niet gekocht in" 1 week, 1 mnd (standaard), 3 mnd,
-  1 jaar. Geldt voor beiden (in thuis.json).
+  eerste poging.
+- Archief: "Verwijderen als niet gekocht in" 1 week, 1 mnd, 3 mnd,
+  1 jaar (standaard). Geldt voor beiden (in thuis.json).
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
@@ -383,12 +393,13 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   de deellink vanuit de app maken.
 
 ### 5.8 Meldingen en ongedaan maken
-- Volgens de gedeelde conventies: één melding per regel met de knoppen eronder,
-  en een melding verdwijnt niet vanzelf.
-- Na verwijderen, afronden of soort wisselen staat er een melding met
-  "Ongedaan maken" en een ✕. Die blijft tot de volgende handeling of tot je hem
-  wegtikt. (De review stelde 5 s voor; dat botst met de conventie.) Ongedaan
-  maken is een nieuwe handeling, dus het werkt ook na synchroniseren.
+- Eén melding per regel met de knoppen eronder. Twee stijlen: lichtpaars met paarse
+  streep (gelukt, terug te draaien) en lichtoranje (let op of fout). Een fout in een
+  editor staat bovenaan; in een paneel bovenin dat paneel.
+- Een melding verdwijnt niet vanzelf, met één bewuste uitzondering: "Ongedaan maken"
+  (na verwijderen, afronden, mandje leegmaken) staat 6 s in beeld met een aftelbalkje
+  en een ✓ om hem weg te tikken (ongedaanMelding; zie §8). Ongedaan maken is een
+  nieuwe handeling, dus het werkt ook na synchroniseren.
 
 ### 5.9 Tags
 - Een tag is `#woord` in een notitie (artikel, winkel, actie), zoals in events
@@ -426,7 +437,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   maanden. De app ruimt op na het maken van de dagbackup (hooguit één keer per
   dag) en verwijdert alleen bestanden met precies die naam. De termijnen komen
   later als instelling.
-- Terugzetten (Instellingen, stap 9): lijst met backups, per backup de datum en
+- Terugzetten (Instellingen): lijst met backups, per backup de datum en
   het aantal winkels, artikelen en acties; vóór het terugzetten eerst een backup
   van de huidige stand.
 - Een `thuis.json` die er was en nu weg is, wordt niet stil opnieuw gemaakt.
@@ -435,168 +446,140 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Een andere map koppelen met wijzigingen in de wachtrij: eerst bevestigen; de
   wachtrij, kopie, het mandje en de keuzes horen bij de oude map en gaan weg.
 
-### 7a. Wat de app niet doet (020)
-- Een leeg thuis.json geldt als onleesbaar: niets schrijven, melding, verder op de kopie van de telefoon.
-- Bij een onleesbaar, leeg, nieuwer of verdwenen bestand probeert de app niet steeds opnieuw; het
-  wolkje zegt "niet gelukt" tot er iets verandert (app openen, Nu synchroniseren, de gewone ronde).
-  Bij een nieuwer formaat staat er een knop "App bijwerken".
-- Een wijziging die vervalt, wordt altijd gemeld.
-- Opruimen: wordt een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Na het terugzetten van
-  een backup ruimt de app die dag niets op (instelling opruimen.tot). Klokcontrole (ronde 4): na elke eigen schrijfactie geeft OneDrive de servertijd
-  (lastModifiedDateTime); de app bewaart de afwijking van de telefoonklok (`kopie.scheef`). Meer dan een
-  dag voor of achter = verdacht: wijzigingen worden opgeslagen, maar geen opruimen, geen wekelijks terug,
-  geen dagbackup en geen terugzetten (melding). Nog niets gemeten: verdacht als de telefoon meer dan een
-  maand na de laatste wijziging van het bestand staat; dan schrijft de app één keer hetzelfde bestand
-  terug om te meten (na lang niet gebruiken dus één voorzichtige ronde). Backups worden nooit opgeruimd
-  als vandaag meer dan een maand na de nieuwste andere backup ligt. Een wekelijks moment meer dan twee
-  dagen na nu telt als vorige week.
-- Na een ronde zonder verandering wordt niets opnieuw getekend.
+## 7a. Bewuste keuzes
+Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschiedenis per ronde staat in git.
 
-### 7a2. Wekelijks, mandje en aankopen (021)
-- Wekelijks gaat hooguit één keer per week terug op de lijst; een andere dag of tijd geldt vanaf de
-  volgende week. Een "van de lijst" van vóór het moment dat pas na de reset binnenkomt, haalt het
-  artikel niet van de nieuwe lijst (de aankoop blijft).
-- Mandje: per telefoon. Wat weer op de lijst staat, verwijderd is of op een eerdere dag is afgevinkt, gaat er vanzelf uit; de teller telt
-  alleen wat er nog ligt.
-- Aankopen: gedeeld, in het bestand (deel "aankopen": naam en tijd, niet wie), nieuwste eerst.
-  Instelling "Aankopen bewaren" 0 t/m 1000, standaard 500 (instellingen.aankopen.bewaren). Afvinken
-  voegt een aankoop toe, terugtikken uit het mandje haalt hem weg. In Boodschappen onder het mandje
-  de regel "Aankopen": per dag, met tijd en een zoekvak.
-
-### 7a3. Terugknop en panelen (022)
-- Eén stapel lagen (paneel, subscherm, ander tabblad dan Artikelen), elk een eigen stap in de
-  geschiedenis. Terug sluit altijd de bovenste; op Artikelen zonder lagen sluit terug de app. Een laag
-  die met het kruisje of Opslaan dichtging, laat een dode stap achter die terug overslaat.
-- Bewerkscherm of bewerkpaneel met wijzigingen: terug, kruisje of tik ernaast vraagt "Wijzigingen
-  opslaan?"; terug of het kruisje van die vraag = verder bewerken.
-- Winkel/Afdeling bewerken: een fout (bestaande naam, onveilige link) staat rood in het paneel; het
-  paneel blijft open met alles wat je invulde.
-- Winkel kiezen (bij een artikel zonder winkel, in de editor): Huidig (vast), Favorieten (inklapbaar,
-  open), Overige winkels (ingeklapt) of zonder favorieten Alle winkels (open). Elk zoekvak in een
-  keuzelijst heeft links een loep, met tekst een terugpijl die leegmaakt.
-
-### 7a4. Tekst en kleine gedragspunten (023)
-- Platte tekst: HTML-tags gaan eruit, losse < en > blijven; onzichtbare en richting-tekens gaan eruit.
-- Herhalen per maand/kwartaal/jaar onthoudt de oorspronkelijke dag (veld maanddag): 31 jan, 28 feb,
-  31 mrt. Zelf een andere datum kiezen laat dat vervallen.
-- Artikel of actie intussen verwijderd terwijl je het bewerkt: melding met "Terugzetten met mijn
-  wijzigingen".
-- Winkel verwijderen waar artikelen liggen: eerst bevestigen, met het aantal.
-- Toevoegen van iets dat er al staat: de regel licht kort op en komt in beeld.
-- Terugzetten uit het archief stuurt het hele artikel mee (komt terug als het intussen is opgeruimd).
-- Een mislukte dagbackup komt in het logboek. Elke melding heeft een eigen klok.
-
-### 7a5. Doen, offline en poetsen (024)
-- Doen: filters Week/Maand/Kw./Jaar/Alles (zie §5.3), standaard per telefoon.
-- Wekelijks terug op de lijst rekent de telefoon ook zelf uit (offline, bij
-  openen); de sync doet eerst wekelijks terug en dan de wachtrij.
-- Aanmelding: één vernieuwing tegelijk. Dagelijks opnieuw aanmelden: eerst een
-  paar weken bekijken hoe vaak het stoort (token-server, §2.4, pas daarna).
-- Poetsen: knoppen 18 px; lege lijsten één stijl; "Winkels" zonder favorieten;
-  Gekocht als kopbalk; notitie van een winkel groeit mee; naam met # ook bij
-  hernoemen geweigerd; link met toetsenbord te openen, focus blijft in een
-  paneel; teller- en afdelingsknoppen 44 px.
-
-### 7a6. Gegevens, ronde 2 (005)
-- Wekelijks: een "van de lijst" voor een wekelijks artikel van vóór de dag van het laatste wekelijkse
-  moment haalt het niet van de nieuwe lijst; de aankoop blijft. (De sync doet eerst wekelijks terug,
-  dan de wachtrij.)
-- Bestand weg: "Terugzetten vanaf deze telefoon" (de kopie wordt het nieuwe bestand) of "Leeg
-  beginnen" na bevestiging.
-- Klok: staat de telefoon meer dan een maand na de nieuwste datum in het bestand, dan geen opruimen,
-  geen wekelijkse reset en geen datum uit de toekomst; melding en logboekregel.
-- Terugzetten (archief, ongedaan maken, intussen verwijderd): alleen winkels en afdelingen die nog
-  bestaan. Wat bij het lezen rechtgezet wordt, wordt ook opgeslagen. Het logboek herhaalt geen regels.
-- Aankopen bewaren verlagen onder het huidige aantal: eerst bevestigen met het aantal.
-
-### 7a7. Zichtbaarheid en kleine punten, ronde 2 (006)
-- Toevoegen maakt altijd zichtbaar: valt het buiten het filter, dan springt Artikelen naar Op de lijst
-  en Doen naar Alles; daarna licht de regel op. Toevoegen van een gearchiveerd artikel stuurt het hele
-  artikel mee; is de naam intussen opnieuw gebruikt, dan komt dat artikel op de lijst.
-- Het Aankopen-scherm ververst mee. Tab wisselen sluit een open winkel en Backups/Logboek.
-- Editor: een winkel die de ander verwijdert, telt niet als jouw wijziging.
-- Aanmelden vervangt de pagina in de geschiedenis; een losse terugkeer zonder aanmeldpoging wordt
-  stil genegeerd als je al bent aangemeld.
-- Wekelijks: minstens 4 dagen tussen twee keer terug op de lijst (andere dag kiezen: nooit langer dan
-  ±10 dagen zonder).
-- Platte tekst: alleen bekende HTML-tags en afgesloten <!-- --> weg; "<jong>" blijft staan.
-- Aankopen bewaren = 0: geen aankopen maken, geen regel "Aankopen".
-- Map koppelen niet tijdens een synchronisatie; na terugzetten een uitgestelde sync alsnog. De kopie op
-  de telefoon wordt alleen opgeslagen als er iets veranderde. Aanmelding/map opnieuw lezen bij terugkeer.
-- Zoekvak van Aankopen staat onderaan in een eigen balk (loep/terug, kruisje), net als op de tabbladen.
-- Bewust niet: een CSP-hash (de CSP
-  is voor alle apps gelijk, check_app bewaakt dat), seconden in de aankooptijd (een oudere app op de
-  andere telefoon zou het bestand dan weigeren).
-
-### 7a8. Review ronde 3 (007)
-- Historie op Doen: elke afgeronde actie (ook herhalend) komt in een gedeeld logboek `historie`
-  (naam en moment, niet wie), zoals Aankopen. Kop "Historie" onderaan Doen; scherm per dag met
-  zoeken onderaan. Ongedaan maken of meteen terugtikken haalt de regel weg; later heropenen niet.
-  Instelling "Historie verwijderen na" 1 week, 1 mnd, 3 mnd (standaard), 1 jaar; korter vraagt
-  eerst met het aantal. Opruimen gebeurt met de rest (niet bij een verdachte klok).
-- Aankopen en Historie: een tik op een regel vraagt "Verwijderen?" en haalt hem bij allebei weg,
-  zonder Ongedaan maken (het is maar een logboekregel).
-- Archief korter bewaren vraagt eerst met het aantal (L3). Technische velden (weg, klaar, maanddag)
-  geven geen botsingsmelding; de nieuwste datum wint (L2). Een ronde zonder verandering wordt
-  overgeslagen (L8). Tijdens het verslepen van een afdeling wordt niet opnieuw getekend (L9).
-- Aanmeldfout alleen bij een eigen poging met de juiste state (L4). Leeg beginnen wist ook de
-  wachtrij (L5). Hulpgegevens (gezien, logboek, backupDag) geven geen opslagmelding (L1).
-
-### 7a9. Review ronde 4 en kleine wensen (008)
-- Klok: afwijking gemeten tegen de servertijd van eigen schrijfacties (zie §7a); terugzetten weigert
-  bij een verdachte klok; backups niet opruimen als vandaag ruim na de nieuwste andere backup ligt.
-- Actie- en winkeleditor versturen alleen wat je zelf veranderde t.o.v. de stand bij het openen.
-- Bestand niet gevonden op id: eerst op naam zoeken (nieuwe id na terugzetten of uploaden).
-- Twee keer terugzetten: alleen eigen wijzigingen tellen. Herhalen uitzetten houdt de actie open.
-- Afmelden niet tijdens een sync. Na een ronde haalt een venster alleen zijn verstuurde handelingen
-  (`hid`) uit de opgeslagen wachtrij; het stand-kenmerk wijzigt pas na gelukt opslaan.
-- Boodschappen: kaart "Winkel?" (was "Zonder winkel"), "In winkelmand" (was "In het mandje"),
-  winkelkaart alleen als er hier of elders iets te halen is, kop "Overige winkels" ook als niets nodig is.
-- Artikelen: tijdens het typen blijven de filters bovenaan. Archief standaard 1 jaar. Aankopen bewaren
-  als keuzelijst 50, 100, 250, 500 (standaard 500).
-
-### 7a10. Review dataveiligheid (009)
-- Eerste keer een map koppelen neemt de wachtrij mee; wisselen van map zegt dat wijzigingen verloren gaan.
-- Bestand opnieuw aangemaakt (andere id): melding met "Backups"; de app gaat door met het nieuwe bestand.
-- Beschadigd bestand: melding met "Backups"; terugzetten mag dan ook met wachtende wijzigingen (die
-  worden op de backup toegepast); geen dagbackup van het beschadigde bestand.
-- Koppelen blokkeert rondes; een handeling met een onverwachte vorm vervalt; naar de achtergrond met een
-  wachtrij = meteen versturen; offline met een wachtrij = nog eens om vaste opslag vragen.
-- Bewust niet: een verloren antwoord bij exact gelijktijdig dezelfde wijziging (zeldzaam, één artikel).
+### Bestand en synchroniseren
+- Een leeg, onleesbaar, nieuwer of verdwenen thuis.json: niets schrijven, melding, verder op de kopie van
+  de telefoon; niet steeds opnieuw proberen tot er iets verandert (app openen, Nu synchroniseren, de
+  gewone ronde). Nieuwer formaat: knop "App bijwerken". Beschadigd: knop "Backups"; terugzetten mag dan
+  ook met wachtende wijzigingen (die gaan op de backup); geen dagbackup van het beschadigde bestand.
+- Bestand weg: "Terugzetten vanaf deze telefoon" (de kopie wordt het nieuwe bestand) of "Leeg beginnen"
+  na bevestiging (wist ook de wachtrij). Niet gevonden op id: eerst op naam zoeken; opnieuw aangemaakt
+  (andere id): melding met "Backups", de app gaat door met het nieuwe bestand.
+- Een wijziging die vervalt, wordt altijd gemeld. Een handeling met een onverwachte vorm vervalt.
+  Technische velden (weg, klaar, maanddag) geven geen botsingsmelding; de nieuwste datum wint.
+- Wat bij het lezen rechtgezet wordt, wordt ook opgeslagen; het logboek herhaalt geen regels; een
+  mislukte dagbackup komt in het logboek. Hulpgegevens (gezien, logboek, backupDag) geven geen opslagmelding.
+- Meerdere vensters: na een ronde haalt een venster alleen zijn verstuurde handelingen (`hid`) uit de
+  opgeslagen wachtrij; het stand-kenmerk wijzigt pas na gelukt opslaan. Aanmelding en map opnieuw lezen
+  bij terugkomen. Naar de achtergrond met een wachtrij: meteen versturen; offline met een wachtrij: nog
+  eens om vaste opslag vragen.
+- Map koppelen, afmelden en terugzetten niet tijdens een synchronisatie; koppelen blokkeert rondes. De
+  eerste keer koppelen neemt de wachtrij mee; een andere map wist wachtrij, kopie en keuzes (met melding).
+- Twee keer terugzetten: alleen eigen wijzigingen tellen (Ongedaan maken gaat naar de stand van vóór de
+  eerste poging). Na terugzetten ruimt de app die dag niets op (instelling opruimen.tot).
 - Werkwijze: deel de map alleen met "Specifieke personen", niet met "Iedereen met de link".
 
-### 7a11. Review performance (009)
-- Regels buiten beeld worden niet opgemaakt (`content-visibility:auto` op .item, .actierij, .aankooprij, .wrij).
-- Archief, Weggehaald en Doen hergebruiken ongewijzigde regels (rijUitGeheugen, actieGeheugen).
-- Na een eigen ronde zonder iets van buiten: niet opnieuw inlezen en tekenen (kopie.tekst === schrijfBestand(model)).
-- Aankopen/Historie: alleen opnieuw opbouwen als regels, zoekterm of dag veranderden; zoekvorm onthouden.
-- Normaliseren van de invoer één keer vóór een zoeklus. Bewust zo gelaten: afgeleid() bouwt de lijsten
-  helemaal opnieuw (±4 ms desktop bij 800 artikelen) en zoekOpNaam is lineair (alleen bij nieuw/terug).
+### Klok
+- Na elke eigen schrijfactie geeft de opslag de servertijd; de app bewaart de afwijking van de
+  telefoonklok (`kopie.scheef`). Meer dan een dag voor of achter = verdacht: wijzigingen worden
+  opgeslagen, maar geen opruimen, geen wekelijks terug, geen dagbackup en geen terugzetten (melding).
+- Nog niets gemeten: verdacht als de telefoon meer dan een maand na de laatste wijziging van het bestand
+  staat; dan schrijft de app één keer hetzelfde bestand terug om te meten. Backups worden nooit
+  opgeruimd als vandaag meer dan een maand na de nieuwste andere backup ligt.
+- Nieuwe dag of wekelijks moment voorbij (na middernacht, of 's ochtends weer geopend): opnieuw
+  uitrekenen en tekenen, ook als het bestand niet veranderde (`dagNagaan`).
 
-### 7a12. Review UI, laatste hand (00A)
-- Koppen overal 46 px hoog met 14 px rechts; pijltjes rechts op één lijn. Tekstkolom op alle tabs op 72 px.
+### Wekelijks, mandje, aankopen en historie
+- Wekelijks gaat hooguit één keer per week terug op de lijst, minstens 4 dagen na de vorige keer; een
+  andere dag of tijd geldt vanaf de volgende week; een moment meer dan twee dagen na nu telt als vorige
+  week. De sync doet eerst wekelijks terug, dan de wachtrij; de telefoon rekent het ook zelf (offline).
+  Een "van de lijst" van vóór het moment dat pas daarna binnenkomt, haalt het niet van de nieuwe lijst.
+- Mandje: per telefoon en per winkel. Wat weer op de lijst staat, verwijderd is of op een eerdere dag is
+  afgevinkt, gaat er vanzelf uit. De voortgang telt wat in een van de mandjes ligt als gehaald.
+- Afvinken maakt een aankoop (gedeeld, naam en tijd, niet wie); terugtikken haalt hem weg. Afvinken
+  onder "Niet bij <winkel>" legt vast dat het daar te koop is; terugtikken haalt dat weer weg.
+  Aankopen bewaren: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
+  een oudere versie) = geen aankopen.
+- Historie: elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
+  haalt de regel weg; later heropenen niet. Bewaren 1 week t/m 1 jaar (standaard 3 maanden).
+- Aankopen en Historie: een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
+- Archief (eenmalig, niet op de lijst): standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
+  een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Terugzetten uit het archief stuurt het
+  hele artikel mee.
+- Suggestie: na minstens drie aankopen, als de gebruikelijke tussentijd voorbij is; stopt na vier keer
+  die tussentijd.
+
+### Bewerken, terugknop en meldingen
+- Eén stapel lagen (paneel, subscherm, ander tabblad dan Artikelen), elk een stap in de geschiedenis.
+  Terug sluit altijd de bovenste; op Artikelen zonder lagen sluit terug de app.
+- Met wijzigingen: terug, kruisje of tik ernaast vraagt "Wijzigingen opslaan?"; terug of het kruisje van
+  die vraag = verder bewerken. Editors versturen alleen wat je zelf veranderde t.o.v. de stand bij het
+  openen. Intussen verwijderd: melding met "Terugzetten met mijn wijzigingen".
+- Een fout (bestaande naam, onveilige link, naam met #) is een melding bovenaan; in een paneel bovenin
+  het paneel. Hij gaat weg met de editor.
+- Winkel verwijderen waar artikelen liggen: eerst bevestigen met het aantal.
+- Overal 1,5 s om een mis-tik terug te zetten; Ongedaan maken (6 s) alleen waar iets uit beeld gaat
+  (§5.8). Herhalen uitzetten houdt de actie open.
+
+### Doen
+- Herhalen per maand/kwartaal/jaar onthoudt de oorspronkelijke dag (maanddag): 31 jan, 28 feb, 31 mrt.
+  Een te laat afgeronde actie op een vaste dag komt niet op vandaag; een lopende maand of kwartaal wel.
+- Een afgeronde actie opnieuw intypen: een voorbije datum gaat eraf. Datum bij een vaste dag: tik op de
+  datum opent de kalender van de telefoon.
+
+### Zichtbaarheid en invoer
+- Toevoegen maakt altijd zichtbaar: buiten het filter springt Artikelen naar Op de lijst en Doen naar
+  Alles; de regel springt in beeld en licht op. Iets dat er al staat, licht op.
+- Na + blijft het toetsenbord open (Artikelen, Doen, afdelingen); een nieuwe winkel opent zijn pagina.
+  Tijdens zoeken: een rondje laat het toetsenbord open en selecteert de zoektekst. Typen verbergt "Van
+  de lijst gehaald"; een ander filter wist het.
+- Tab wisselen sluit een open winkel en Backups/Logboek. Tijdens het typen blijven de filters bovenaan.
+- Platte tekst: alleen bekende HTML-tags en afgesloten <!-- --> weg; losse < en > en "<jong>" blijven;
+  onzichtbare en richting-tekens weg.
+
+### Uiterlijk
+- Koppen 46 px met 14 px rechts; pijltjes op één lijn; tekstkolom op alle tabs op 72 px.
 - Filterknoppen even breed; past een naam niet, dan voor de hele rij korter (Wk, Mnd, Jr), gemeten.
-- "Winkel?" als eigen kaart (lichtpaarse kop), los van de winkelkaart. Voortgangsbalk altijd, ook bij 0 van 0.
-- Lege schermen: "Geen …". Logboek: "Logs" met "n van 100". Een kop die het woord al noemt ("Winkels", "Alle
-  winkels") toont alleen het getal. Actie-editor: veld "Naam". Infomelding met paarse streep links.
+- "Winkel?" als eigen kaart; voortgangsbalk altijd, ook bij 0 van 0. Lege schermen: "Geen …".
+  Een kop die het woord al noemt, toont alleen het getal. Winkelmand leegmaken: kleine turquoise knop.
 - Tijd (wekelijks) en Aankopen bewaren: eigen keuzepanelen in de stijl van de app.
-- Winkelmand leegmaken: kleine turquoise knop (36 px). Na + blijft het toetsenbord open (Artikelen, Doen,
-  afdelingen); een nieuwe winkel opent zijn pagina, dan gaat het dicht.
 
-### 7a13. Review dagelijks gebruik (00A)
-- Nieuwe dag of wekelijks moment voorbij (na middernacht, of 's ochtends weer geopend): het model wordt
-  opnieuw uitgerekend en getekend, ook als het bestand niet veranderde (dagNagaan, bij terugkomen en elke 3 min).
-- Winkelmand: wat op een eerdere dag is afgevinkt gaat er vanzelf uit (de aankopen blijven).
-- Herhalen: een te laat afgeronde actie op een vaste dag komt niet op vandaag; een lopende maand of kwartaal wel.
-- Een gewone actie afronden: melding met Ongedaan maken (ook de historieregel weg); zelf terugtikken binnen 1,5 s
-  haalt de melding weg. Een afgeronde actie opnieuw intypen: een voorbije datum gaat eraf.
-- Zoektreffer op de lijst zetten: toetsenbord blijft open, de zoektekst wordt geselecteerd.
-- Datum bij een vaste dag: tik op de datum opent de kalender van de telefoon; ‹ › blijven voor één dag.
-- Aanmelding bijna verlopen: ook gemeld bij terugkomen uit de achtergrond.
-- Afvinken onder "Niet bij <winkel>" legt vast dat het daar te koop is (afdeling onbekend); terugtikken haalt
-  dat weer weg. Typen wist "Van de lijst gehaald" niet meer (alleen verborgen); een ander filter wel.
-- Suggestie stopt na vier keer de gebruikelijke tussentijd.
-- Overal 1,5 s (VERTRAGING) om een mis-tik terug te zetten; Ongedaan maken (6 s) alleen waar iets uit beeld gaat.
+### Performance
+- Netwerk: een ronde vraagt alleen id, eTag, tijd en downloadlink op (`$select`); de inhoud alleen als
+  de eTag anders is. De naam bij Microsoft hooguit eens per week (en na opnieuw aanmelden). Het aantal
+  backups bij Instellingen is onthouden van de laatste keer dat de lijst toch al werd opgehaald.
+- Opruimen en aankopen beperken gebeuren ook op de telefoon (bouwModel, zelfde regels en klokcontrole):
+  korter bewaren is meteen te zien, ook offline.
+- Regels buiten beeld worden niet opgemaakt (`content-visibility:auto`). Lijstregels worden hergebruikt
+  zolang hun sleutel gelijk is (`recordSleutel` plus wat het scherm erbij toont).
+- Een ronde zonder verandering rekent en tekent niets; na een eigen ronde zonder iets van buiten niet
+  opnieuw inlezen. Tijdens het verslepen van een afdeling niet tekenen.
+- Bewust zo gelaten: afgeleid() bouwt de lijsten helemaal opnieuw (±4 ms bij 800 artikelen) en
+  zoekOpNaam is lineair (alleen bij nieuw/terug).
+
+### Opbouw van de code (uitbreiden)
+- Formaat: `MIGRATIES` zet een ouder bestand (ook een backup) stap voor stap om; een optioneel veld
+  erbij is geen nieuw formaat (§3).
+- Velden: één tabel `SCHEMA` (§3); alle records plat.
+- Handelingen: `HANDELINGEN` zegt per soort welke velden een id bevatten (`ids`, `nieuweId`).
+- Ongedaan maken: `omkeren(hs)` op het moment van de wijziging; één `ongedaanMelding`.
+- Per telefoon: `KEUZES`. Gedeelde instellingen: `INSTELLINGEN` en `instelling()`.
+- Editors: gedeelde `naamFout`, `linkVanInvoer`, `foutMelding`; de editors zelf blijven apart.
+- Schermbouwstenen: `bevestigPaneel`, `klapKop`, `sluitMelding`; alle iconen in één blok.
+- Opslag: alles met de gedeelde map via `OPSLAG` (nu `ONEDRIVE`): koppel, ophalen, schrijven (met
+  voorwaarde), maken (alleen als nieuw), vervangen, lijst, inhoud, inhoudOpNaam, weg. Geen verbinding
+  is een kenmerk van de fout (`geenVerbinding`). `nieuweKopie` maakt de kopie.
+- Tests: schermtests in benoemde delen (`DEEL=…`), wachten tot de sync rustig is.
+- Service worker volgens conventies.md §3: voorvoegsel afgeleid uit CACHE_NAME, oude caches op nummer,
+  een fout antwoord bij de installatie wordt afgebroken (body.cancel: de verbinding komt meteen vrij, ook als de server traag is), alle iconen uit het manifest in de cache;
+  registreren bij `isSecureContext` (https of lokaal). Tests: `test-sw-*.py`, gelijk aan de andere apps.
+- Een omgezet bestand (ouder formaat) wordt meteen in het nieuwe formaat teruggeschreven.
+- Commentaar in de code legt uit waarom, zonder verwijzingen naar reviewpunten.
+
+### Google Drive later (voorbereid, niet gebouwd)
+Een tweede object met dezelfde functies naast `ONEDRIVE`, plus een keuze bij het koppelen. Na te gaan:
+- Schrijven met een voorwaarde: Drive API v3 kent geen eTag/If-Match meer (v2 wel). Zonder voorwaarde
+  is samen bewerken niet veilig; dus v2 of een andere veilige vorm.
+- Aanmelden: nagaan of een browser-app zonder server een vernieuwbare aanmelding krijgt (Microsoft: 24 uur).
+- Toegang tot een map van de ander met beperkte rechten (alleen eigen of gekozen bestanden).
+- CSP (connect-src) en de aanmeldknop; `aanmelden`, `toegang` en `wieBenIk` zijn nu Microsoft-specifiek.
+
+### Bewust niet
+- Een CSP-hash (de CSP is voor alle apps gelijk, check_app bewaakt dat); seconden in de aankooptijd.
+- Een verloren antwoord bij exact gelijktijdig dezelfde wijziging (zeldzaam, één artikel).
+- Eigenaren of "wie" bij artikelen, acties en handelingen (alleen "opdoor" voor "nieuw").
 
 ## 7b. Veiligheid
 
@@ -610,13 +593,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Bekend risico: de vier apps delen het domein mv-systems-apps.github.io en dus
   de opslag in de browser. Later een eigen subdomein per app. Tot dan: CSP in
   alle apps en geen code van anderen; tweestapsverificatie op GitHub.
-- Links bij acties (stap 8) alleen als ze met `https://` beginnen.
+- Links bij acties alleen als ze met `https://` beginnen.
 
-## 8. Foto's (misschien later, niet gebouwd)
-Idee: verkleind tot ±1600 px JPEG, onder een vrije naam in `fotos/`, kleine
-voorbeeldjes in IndexedDB voor offline gebruik, opruimen bij verwijderen.
-
-## 9. Bewuste afwijkingen van conventies.md (op te nemen in §4)
+## 8. Bewuste afwijkingen van conventies.md (op te nemen in §4)
 
 - Gegevens gaan naar de eigen OneDrive: netwerk en aanmelden.
 - De app voegt wijzigingen van twee personen samen (events doet dat bewust
@@ -634,7 +613,7 @@ Ook: aanvullen in `maak_zips.py`, `README.md` en `nieuwe-chat.txt`, en
 controleren of `check_app.py` de app herkent. Token, wachtrij, "Ik ben", de
 laatste winkel en de koppeling met de map horen in de reset.
 
-## 10. Performance
+## 9. Performance
 
 - Eén keer parsen naar een Map op genormaliseerde naam.
 - Na verversen alleen opnieuw tekenen als de eTag veranderde.
@@ -649,7 +628,7 @@ laatste winkel en de koppeling met de map horen in de reset.
   1500 artikelen ±45 ms per tik, zoeken ±80 ms.
 - Schrijfacties bundelen.
 
-## 11. Risico's en de proef
+## 10. Risico's en de proef
 
 Het grootste risico is het aanmelden in een geïnstalleerde PWA op Edge en
 Android: komt de redirect van Microsoft terug in de app, en niet in een losse
