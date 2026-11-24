@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (24-11-2026): in gebruik, versie 1352904-001. Dit document beschrijft
+Status (24-11-2026): in gebruik, versie 1352904-002. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a de bewuste keuzes uit de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §8 een bewuste afwijking noemt.
@@ -530,6 +530,9 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   onzichtbare en richting-tekens weg.
 
 ### Uiterlijk
+- Elke knop reageert zichtbaar op indrukken (iets donkerder; kleine knoppen ook iets kleiner). Knoppen die
+  even duren (Herladen, Aanmelden, Map koppelen, Nu synchroniseren, Terugzetten, Ongedaan maken van
+  terugzetten) tonen na de tik een draaiend rondje en "…" en kunnen niet dubbel (`bezigKnop`).
 - Koppen 46 px met 14 px rechts; pijltjes op één lijn; tekstkolom op alle tabs op 72 px.
 - Filterknoppen even breed; past een naam niet, dan voor de hele rij korter (Wk, Mnd, Jr), gemeten.
 - "Winkel?" als eigen kaart; voortgangsbalk altijd, ook bij 0 van 0. Lege schermen: "Geen …".

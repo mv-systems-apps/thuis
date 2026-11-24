@@ -1751,6 +1751,11 @@ const BEGIN = [
     await wN2.eval("handelen([{ actie: 'historie', soort: 'historie', id: 'houd1', naam: 'Oud', tijd: '" + datumTekstT(-60) + "T10:00' }, { actie: 'historie', soort: 'historie', id: 'hnie1', naam: 'Nieuw', tijd: '" + datumTekstT(-2) + "T10:00' }])");
     await wN2.eval("bewarenZetten('historie', '3m', '1m')");
     controle('korter bewaren: meteen opgeruimd op de telefoon, ook zonder sync', wN2.eval("Array.from(model.historie.values()).map((x) => x.naam).join()") === 'Nieuw', wN2.eval("Array.from(model.historie.values()).map((x) => x.naam).join()"));
+    /* Bezig: een knop die even duurt, laat meteen zien dat hij werkt en kan niet dubbel. */
+    wN2.eval("herlaadMetWachtendeWorker = () => {}; melding('m-versie', 'Nieuwe versie beschikbaar.', [{ tekst: 'Herladen', klasse: 'warn', actie: herlaadVoorUpdate }])");
+    wN2.document.querySelector('#m-versie .knop').click(); await slaap(30);
+    const hk = wN2.document.querySelector('#m-versie .knop');
+    controle('herladen: knop meteen bezig (rondje, "Herladen…", uitgeschakeld)', hk.disabled && hk.classList.contains('bezig') && !!hk.querySelector('.draai') && hk.textContent === 'Herladen…');
     controle('Instellingen openen: geen netwerkvraag voor het aantal backups', odN.verzoeken.slice(voor).every((v) => !/children/.test(v)), odN.verzoeken.slice(voor).join(' | '));
   }
 

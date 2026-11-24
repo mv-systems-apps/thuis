@@ -153,6 +153,14 @@
   /* Systeemknoppen (in meldingen) omrand, zoals Afmelden, zodat ze zich onderscheiden
      van de gewone, gevulde knoppen. Sluiten en Annuleren grijs omrand. */
   .melding .knop{background:#FFFFFF;color:var(--paars);border:2px solid var(--paars)}
+  /* Indrukken: elke knop reageert meteen zichtbaar (iets donkerder; kleine knoppen ook iets kleiner). */
+  button:active:not(:disabled){filter:brightness(.9)}
+  .knop:active:not(:disabled),.icoonknop:active,.plusknop:active,.filter:active,.rondje:active,.kruis:active{transform:scale(.96)}
+  /* Bezig: na de tik op een knop die even duurt (aanmelden, herladen, koppelen, terugzetten). */
+  .knop.bezig{opacity:.8}
+  .draai{display:inline-block;width:16px;height:16px;margin-right:8px;vertical-align:-2px;box-sizing:border-box;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:draai .8s linear infinite}
+  @keyframes draai{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.draai{animation:none;border-right-color:currentColor;opacity:.6}}
   .melding .knop.tweede,.knop.grijs{color:var(--grijs);border-color:#CFCBE6}
   /* Nieuwe versie: bovenaan, in oranje, met een gevulde oranje knop (zoals events). */
   .melding .knop{position:relative;overflow:hidden}
@@ -472,7 +480,7 @@
       </div>
     </div>
     <div id="backupScherm" hidden></div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-001</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-002</div>
   </section>
 </main>
 
@@ -1854,6 +1862,21 @@ function melding(id, tekst, knoppen, soort, doel) {
 }
 /* Een melding met alleen "Sluiten" (de meest voorkomende). */
 function sluitMelding(id, tekst, soort) { melding(id, tekst, [{ tekst: 'Sluiten', tweede: true, actie: () => meldingWeg(id) }], soort); }
+/* Een knop die even bezig is: draaiend rondje en een tekst ("Herladen…"), niet nog eens
+   te tikken. Geeft herstel(): de oude tekst en stand terug (ook na terug van Microsoft). */
+function bezigKnop(knop, tekst) {
+  if (!knop || !knop.classList) return () => {};
+  if (knop.__herstel) return knop.__herstel;
+  const oud = knop.textContent, uit = knop.disabled;
+  knop.classList.add('bezig'); knop.disabled = true;
+  knop.textContent = '';
+  const d = document.createElement('span'); d.className = 'draai'; d.setAttribute('aria-hidden', 'true');
+  knop.appendChild(d); knop.appendChild(document.createTextNode(tekst));
+  knop.__herstel = () => { knop.__herstel = null; knop.classList.remove('bezig'); knop.disabled = uit; knop.textContent = oud; };
+  return knop.__herstel;
+}
+/* Terug in de app via de terugknop van de browser (uit de cache): geen knop blijft bezig. */
+window.addEventListener('pageshow', (e) => { if (e.persisted) for (const k of document.querySelectorAll('.knop.bezig')) if (k.__herstel) k.__herstel(); });
 function meldingWeg(id) {
   const el = $(id);
   if (el) el.remove();
@@ -1956,7 +1979,11 @@ async function sha256(tekst) {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(tekst)));
 }
 
-async function aanmelden() {
+async function aanmelden(e) {
+  const herstel = bezigKnop(e && e.currentTarget, 'Naar Microsoft…');
+  try { await naarMicrosoft(); } catch (fout) { herstel(); throw fout; }
+}
+async function naarMicrosoft() {
   const verifier = willekeurig(48);
   const state = willekeurig(16);
   await kvSet('pkce', { verifier, state, t: Date.now() });
@@ -2135,7 +2162,7 @@ async function mapKoppelen(toch) {
   /* Niet tijdens een lopende synchronisatie: die zou de oude map blijven gebruiken. */
   if (sync.bezig) { sluitMelding('m-map', 'Even geduld: de app is aan het synchroniseren. Probeer het zo opnieuw.'); return; }
   if (!/^https:\/\//.test(link)) { sluitMelding('m-map', 'Plak een deellink die met https:// begint.'); return; }
-  $('btnMap').disabled = true;
+  const klaarMap = bezigKnop($('btnMap'), 'Koppelen…');
   /* Zolang het koppelen loopt geen ronde: die zou nog in het oude bestand schrijven. */
   sync.bezig = true;
   try {
@@ -2156,7 +2183,7 @@ async function mapKoppelen(toch) {
   } finally {
     sync.bezig = false;
     planSync(0);
-    $('btnMap').disabled = false;
+    klaarMap();
     await toonStatus();
   }
 }
@@ -2287,7 +2314,8 @@ function herlaadMetWachtendeWorker() {
 
 /* Herladen pas als er niets meer wordt weggeschreven: de wachtrij staat dan
    veilig in IndexedDB. Hooguit 5 s wachten. */
-async function herlaadVoorUpdate() {
+async function herlaadVoorUpdate(e) {
+  bezigKnop(e && e.currentTarget, 'Herladen…');
   const tot = Date.now() + 5000;
   while (sync.bezig && Date.now() < tot) await new Promise((r) => setTimeout(r, 200));
   await kvSet('wachtrij', wachtrij);
@@ -2793,7 +2821,7 @@ async function syncRonde() {
            de laatste goede kopie op deze telefoon. Niet opnieuw proberen tot er
            iets verandert (app openen, Nu synchroniseren, de gewone ronde). */
         melding('m-bestand', [{ vet: BESTAND }, ' ' + (LEESREDEN[ronde.reden] || 'is niet te lezen.') + ' De app schrijft er niets in.'],
-          ronde.reden === 'nieuwer-formaat' ? [{ tekst: 'App bijwerken', actie: () => herlaadVoorUpdate() }]
+          ronde.reden === 'nieuwer-formaat' ? [{ tekst: 'App bijwerken', actie: herlaadVoorUpdate }]
             : [{ tekst: 'Backups', actie: () => { toonScherm('instellingen'); backupsOpenen(); } }]);
         sync.fout = BESTAND + ' ' + (LEESREDEN[ronde.reden] || 'is niet te lezen.').replace(/\.$/, '');
         return;
@@ -2908,10 +2936,13 @@ function tekenToestand(auth, map) {
   $('syncWoord').textContent = woord;
   $('syncSub').textContent = sub;
   $('btnSyncNu').hidden = !knop;
-  $('btnSyncNu').textContent = knop;
-  $('btnSyncNu').disabled = sync.bezig;
+  /* Tijdens een ronde: bezig (draaiend rondje), daarna weer de gewone tekst. */
+  const sk = $('btnSyncNu');
+  if (sk.__herstel) sk.__herstel();
+  sk.textContent = knop;
+  if (sync.bezig) bezigKnop(sk, 'Bezig…');
 }
-$('btnSyncNu').addEventListener('click', () => { if (sync.aanmelden) aanmelden(); else planSync(0); });
+$('btnSyncNu').addEventListener('click', (e) => { if (sync.aanmelden) aanmelden(e); else planSync(0); });
 
 function tekenWolk() {
   kvGet('map').then((map) => kvGet('auth').then((auth) => {
@@ -5458,12 +5489,15 @@ async function backupBekijken(b) {
   const knop = k.querySelector('.knop');
   knop.disabled = false;
   knop.addEventListener('click', async () => {
+    /* Bezig in het paneel tot het klaar is; daarna pas dicht (een fout staat dan bovenaan). */
+    bezigKnop(knop, 'Terugzetten…');
+    const gelukt = await terugzetten(new TextDecoder().decode(bytes), true);
     sluitKeuze();
-    if (await terugzetten(new TextDecoder().decode(bytes), true)) {
+    if (gelukt) {
       backupSluiten(false);
       const id = 'm-terug';
-      melding(id, ['Backup van ', { vet: datumLabel(b.datum).replace('Vandaag · ', '') }, ' teruggezet.'], [{ tekst: 'Ongedaan maken', actie: async () => {
-        meldingWeg(id);
+      melding(id, ['Backup van ', { vet: datumLabel(b.datum).replace('Vandaag · ', '') }, ' teruggezet.'], [{ tekst: 'Ongedaan maken', actie: async (e) => {
+        bezigKnop(e.currentTarget, 'Bezig…');
         try { if (await terugzetten(new TextDecoder().decode(await bestandInhoudOpNaam(VOOR_TERUGZETTEN)), false)) sluitMelding(id, 'Terugzetten ongedaan gemaakt.', 'info'); }
         catch (e) { sluitMelding(id, 'Ongedaan maken niet gelukt (' + e.message + ').'); }
       } }], 'info');
