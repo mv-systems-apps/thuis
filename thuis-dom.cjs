@@ -748,6 +748,14 @@ const BEGIN = [
     controle('aantal: + maakt er 2× van, teller blijft open', melk().querySelector('.aantal').textContent === '2×' && d8.querySelector('.teller .n').textContent === '2');
     melk().querySelector('.icoon').click(); await slaap(20);
     controle('aantal: nog een tik op het icoon sluit de teller', !d8.querySelector('.teller'));
+    melk().querySelector('.icoon').click(); await slaap(20);
+    d8.querySelector('.teller .n').click(); await slaap(20);
+    controle('aantal: tik op het getal laat de teller open', !!d8.querySelector('.teller'));
+    d8.querySelector('.teller > span').click(); await slaap(20);
+    controle('aantal: tik elders op de regel (Aantal) sluit de teller', !d8.querySelector('.teller'));
+    melk().querySelector('.icoon').click(); await slaap(20);
+    d8.querySelector('.teller').click(); await slaap(20);
+    controle('aantal: tik op de lege ruimte van de regel sluit de teller ook', !d8.querySelector('.teller'));
     melk().querySelector('.aantal').click(); await slaap(20);
     controle('aantal: tik op "2×" opent de teller ook (niet het bewerkscherm)', !!d8.querySelector('.teller') && d8.getElementById('artikelScherm').hidden);
     await rust(2500);
@@ -1974,6 +1982,24 @@ const BEGIN = [
     controle('Historie open, ander tabblad: laag dicht, alleen de balk van Artikelen', dS.getElementById('deel').hidden && !midden.classList.contains('indeel') && !dS.getElementById('balk-boodschappen').hidden &&
       dS.getElementById('balk-log').hidden && dS.getElementById('balk-doen').hidden && midden.scrollTop === 0);
     wS.close();
+  }
+
+  /* 5z36. Aantallen: per afdeling in Boodschappen; Aankopen en Historie ook bij 0. */
+  if (deel('5z36 aantallen bij afdelingen, Aankopen en Historie')) {
+    const t = datumTekstT(0) + 'T09:00';
+    const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\n' +
+      'artikel;Appels;ligt=Plus:Groente;op=' + t + '\nartikel;Melk;ligt=Plus:Zuivel;op=' + t + '\nartikel;Kaas;ligt=Plus:Zuivel;op=' + t + '\nartikel;Stroop;ligt=Plus;op=' + t + '\n');
+    const wT = await start(odT); await rust(1500); const dT = wT.document;
+    wT.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id");
+    dT.getElementById('tab-winkel').click(); await slaap(50);
+    const koppen = () => [...dT.querySelectorAll('#winkelLijst .afd .afdkop')].map((k) => k.firstChild.textContent + ':' + (k.querySelector('.tal') ? k.querySelector('.tal').textContent : '')).join();
+    controle('Boodschappen: aantal rechts in elke afdelingskop', koppen() === 'Afdeling?:1,Groente:1,Zuivel:2', koppen());
+    const aank = dT.querySelector('#winkelLijst .naaraankopen .waarde');
+    controle('Aankopen zonder aankopen: "0 artikelen"', !!aank && aank.textContent === '0 artikelen', aank && aank.textContent);
+    dT.getElementById('tab-doen').click(); await slaap(30);
+    const hist = [...dT.querySelectorAll('#doenLijst .naaraankopen')].find((k) => /Historie/.test(k.textContent));
+    controle('Historie zonder regels: "0 acties"', !!hist && hist.querySelector('.waarde').textContent === '0 acties', hist && hist.textContent);
+    wT.close();
   }
 
   if (deel('bestand: geen UTF-8, kapot, nieuwer formaat, nog geen bestand')) {

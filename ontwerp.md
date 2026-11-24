@@ -287,7 +287,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   per artikel een winkelicoon dat vraagt bij welke winkel het te koop is,
   zoeken of toevoegen; het komt daar onder "Afdeling?" met de speld,
   zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
-  (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling?" met de speld en de afdelingen
+  (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling?" met de speld en de afdelingen, elk met rechts het aantal dat er nog te halen is
   in de route); los en grijs "Niet bij <winkel>" en "In winkelmand".
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
@@ -401,8 +401,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Aanmelden bij Microsoft, dan de deellink van de gedeelde map plakken. Staat er
   nog geen `thuis.json`, dan maakt de app een leeg bestand. De voornaam komt uit
   het Microsoft-account (geen aparte "Ik ben").
-- Misschien later: "Plakken als lijst", een nieuwe lijst met standaardafdelingen,
-  de deellink vanuit de app maken.
+- Misschien later: een nieuwe lijst met standaardafdelingen, de deellink vanuit de app maken.
 
 ### 5.8 Meldingen en ongedaan maken
 - Eén melding per regel met de knoppen eronder. Twee stijlen: lichtpaars met paarse
@@ -524,6 +523,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Historie: elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
   haalt de regel weg; later heropenen niet. Bewaren 1 week t/m 1 jaar (standaard 3 maanden).
 - Aankopen en Historie: een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
+  De regel Aankopen (onder Boodschappen) en Historie (onder Doen) toont ook "0 artikelen" / "0 acties".
 - Archief (eenmalig, niet op de lijst): standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
   een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Terugzetten uit het archief stuurt het
   hele artikel mee.

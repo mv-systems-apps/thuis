@@ -261,7 +261,8 @@
   .arij{min-height:56px;display:flex;align-items:center;gap:4px;padding:4px 4px 4px 2px;background:#FFFFFF;position:relative}
   .arij .nm{flex:1;min-width:0;min-height:48px;border:0;background:transparent;padding:0 4px;font-size:20px;color:var(--tekst);text-align:left;overflow-wrap:anywhere}
   .arij.sleept{z-index:3;background:#F1EFFB;box-shadow:0 6px 16px rgba(24,20,60,.18)}
-  .greep{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
+  .greep{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .arij.sleept{-webkit-user-select:none;user-select:none}
   .leegregel{padding:16px 14px;font-size:18px;color:var(--grijs)}
   /* Afdeling in een winkel: de naam lijnt uit met de iconen van de artikelen eronder. */
   .afdrij{width:100%;min-height:56px;display:flex;align-items:center;gap:10px;padding:4px 18px 4px 18px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;text-align:left;font:inherit;color:var(--tekst);cursor:pointer}
@@ -496,7 +497,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-003</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-004</div>
   </section>
 </main>
 
@@ -3443,6 +3444,9 @@ function lijstKlik(e) {
   if (tel) {
     const b = e.target.closest('button');
     if (b) aantalZetten(tel.dataset.id, b.classList.contains('meer') ? 1 : -1);
+    /* Ergens anders op de regel: de teller dicht, net als een tweede tik op het icoon.
+       Het getal tussen de knoppen niet: net naast - of + mis tikken sluit hem dan niet. */
+    else if (!e.target.closest('.n')) { scherm.teller = ''; tekenBoodschappen(); }
     return;
   }
   if (e.target.closest('.icoon') || e.target.closest('.aantal')) {
@@ -4097,7 +4101,8 @@ function logRij(doel, soort) {
   k.className = 'kaart naaraankopen';
   k.innerHTML = '<button class="rij knoprij" type="button"><span class="label"></span><span class="waarde"></span>' + PIJL_IN + '</button>';
   k.querySelector('.label').textContent = LOG[soort].titel;
-  k.querySelector('.waarde').textContent = verz.size ? telTekst(verz.size, LOG[soort].een, LOG[soort].meer) : '';
+  /* Ook bij 0: een leeg vak lijkt op "nog niet bekend". */
+  k.querySelector('.waarde').textContent = telTekst(verz.size, LOG[soort].een, LOG[soort].meer);
   k.querySelector('button').addEventListener('click', () => logOpenen(soort));
   doel.appendChild(k);
 }
@@ -4195,11 +4200,11 @@ function tekenWinkelkaart(doel, w, ind, soortVan) {
   doel.appendChild(kaart);
   const metAfd = !!w && w.afdelingen.length > 0;
   if (ind.onbekend.length) {
-    const sec = winkelSectie(kaart, metAfd ? AFD_ONBEKEND : null);
+    const sec = winkelSectie(kaart, metAfd ? AFD_ONBEKEND : null, false, null, metAfd ? String(ind.onbekend.length) : '');
     for (const a of ind.onbekend) sec.appendChild(winkelRij(a, soortVan(a) || (metAfd ? 'onbekend' : 'gewoon')));
   }
   for (const g of ind.groepen) {
-    const sec = winkelSectie(kaart, g.afd.naam);
+    const sec = winkelSectie(kaart, g.afd.naam, false, null, String(g.items.length));
     for (const a of g.items) sec.appendChild(winkelRij(a, soortVan(a) || 'gewoon'));
   }
   const n = ind.onbekend.length + ind.groepen.reduce((t, g) => t + g.items.length, 0);
@@ -4494,22 +4499,28 @@ $('winkelDetail').addEventListener('click', (e) => {
 });
 
 /* Verslepen aan de greep: de regel volgt de vinger, de andere schuiven opzij;
-   bij loslaten één handeling met de nieuwe volgorde. */
+   bij loslaten één handeling met de nieuwe volgorde. Bewegen en loslaten worden op
+   het hele venster gevolgd (niet alleen op de greep): op een telefoon komen ze anders
+   soms niet aan, en dan blijft de regel "los" hangen. */
 function slepenAan(lijstEl, w) {
   lijstEl.addEventListener('pointerdown', (e) => {
     const greep = e.target.closest('.greep');
-    if (!greep) return;
+    if (!greep || ws.sleept) return;
     e.preventDefault();
+    const id = e.pointerId;
     const rij = greep.closest('.arij');
     const rijen = Array.from(lijstEl.querySelectorAll('.arij'));
     const van = rijen.indexOf(rij);
     const hoogte = rij.getBoundingClientRect().height || 56;
     const y0 = e.clientY;
     let naar = van;
-    if (greep.setPointerCapture && e.pointerId !== undefined) try { greep.setPointerCapture(e.pointerId); } catch (x) { /* niet nodig */ }
+    if (greep.setPointerCapture && id !== undefined) try { greep.setPointerCapture(id); } catch (x) { /* niet nodig */ }
     rij.classList.add('sleept');
     ws.sleept = true;
+    const deze = (ev) => ev.pointerId === id;
     const beweeg = (ev) => {
+      if (!deze(ev)) return;
+      if (ev.cancelable) ev.preventDefault();
       const dy = ev.clientY - y0;
       naar = Math.max(0, Math.min(rijen.length - 1, van + Math.round(dy / hoogte)));
       rij.style.transform = 'translateY(' + dy + 'px)';
@@ -4519,10 +4530,14 @@ function slepenAan(lijstEl, w) {
         r.style.transform = schuif ? 'translateY(' + schuif + 'px)' : '';
       });
     };
-    const los = () => {
-      greep.removeEventListener('pointermove', beweeg);
-      greep.removeEventListener('pointerup', los);
-      greep.removeEventListener('pointercancel', los);
+    /* Het scherm niet laten meeschuiven zolang je sleept. */
+    const geenScroll = (ev) => { if (ev.cancelable) ev.preventDefault(); };
+    const los = (ev) => {
+      if (!deze(ev)) return;
+      window.removeEventListener('pointermove', beweeg);
+      window.removeEventListener('pointerup', los);
+      window.removeEventListener('pointercancel', los);
+      greep.removeEventListener('touchmove', geenScroll);
       rijen.forEach((r) => { r.style.transform = ''; });
       rij.classList.remove('sleept');
       ws.sleept = false;
@@ -4532,10 +4547,13 @@ function slepenAan(lijstEl, w) {
         handelen([{ actie: 'volgorde', soort: 'winkel', id: w.id, volgorde }]);
       } else tekenWinkels();
     };
-    greep.addEventListener('pointermove', beweeg);
-    greep.addEventListener('pointerup', los);
-    greep.addEventListener('pointercancel', los);
+    window.addEventListener('pointermove', beweeg, { passive: false });
+    window.addEventListener('pointerup', los);
+    window.addEventListener('pointercancel', los);
+    greep.addEventListener('touchmove', geenScroll, { passive: false });
   });
+  /* Lang drukken op de greep: geen menu of tekstselectie. */
+  lijstEl.addEventListener('contextmenu', (e) => { if (e.target.closest('.greep')) e.preventDefault(); });
 }
 
 function winkelOpenen(id) {
