@@ -111,7 +111,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -446,6 +446,17 @@ controle('formaat: een omgezet bestand telt als gewijzigd en wordt in het nieuwe
   const r = k.synchroniseer('{"versie": "1352902-458", "instellingen": {"wekelijks": {"dag": "za", "tijd": "06:00", "teruggezet": "2026-11-21T06:00"}}, "spullen": {"mel01": {"naam": "Melk", "soort": "eenmalig"}}}', [], new Date(2026, 10, 24, 12, 0), null);
   return gelijk([r.ok, r.gewijzigd, JSON.parse(r.tekst).versie === k.FORMAAT, !!JSON.parse(r.tekst).artikelen.mel01].join(), 'true,true,true,true');
 });
+controle('zoeken op winkel: @Plus, @Albert Heijn, @Plus zuiv, @Plus afdeling? en @Plus?, niet meer @Plus onbekend; spaties en accenten; Albert/Albert Heijn; geen @', () => {
+  const k = kern();
+  const W = [{ id: 'pls', naam: 'Plus', afdelingen: [{ id: 'agf', naam: 'Groente & fruit' }, { id: 'zui', naam: 'Zuivel' }] }, { id: 'ahh', naam: 'Albert Heijn', afdelingen: [] }, { id: 'alb', naam: 'Albert', afdelingen: [] }];
+  const A = [{ naam: 'Melk', notitie: '', plekken: [{ winkel: 'pls', afd: 'zui' }] }, { naam: 'Appels', notitie: '', plekken: [{ winkel: 'pls', afd: 'agf' }] },
+    { naam: 'Stroopwafels', notitie: '', plekken: [{ winkel: 'pls', afd: '' }, { winkel: 'ahh', afd: '' }] }, { naam: 'Schroeven', notitie: '', plekken: [] }];
+  const n = (t) => k.zoekArtikelen(A, t, W).map((a) => a.naam).join('+');
+  const id = (t) => { const z = k.winkelZoek(t, W); return z ? (z.winkel ? z.winkel.id + ':' + z.afd : 'kies:' + z.kies) : 'null'; };
+  return gelijk([n('@Plus'), n('@plus zuiv'), n('@Plus onbekend'), n('@Albert Heijn'), n('@Alb'), String(k.winkelZoek('melk', W)), n('mel'),
+    id('@albert heijn'), id('@ALBERTHEIJN'), id('@Älbert  Héijn'), id('@Albert'), id('@Albert '), id('@Albert H'), id('@  plus groente'), n('@plus groente&fr'), n('@Plus afdeling?'), n('@Plus afd'), n('@plus?'), n('@Plus ?')].join('|'),
+    'Melk+Appels+Stroopwafels|Melk||Stroopwafels||null|Melk|ahh:|ahh:|ahh:|kies:albert|alb:|kies:alberth|pls:groente|Appels|Stroopwafels|Stroopwafels|Stroopwafels|Stroopwafels');
+});
 controle('formaat: oude versies stap voor stap omzetten; onbekende tussenversie = niet lezen', () => {
   const tabel = [{ van: 'A-1', naar: 'A-2', doe: (d) => { d.stap = (d.stap || '') + '1'; } }, { van: 'A-2', naar: 'A-3', doe: (d) => { d.stap = (d.stap || '') + '2'; } }];
   const a = { versie: 'A-1' }, b = { versie: 'A-2' }, c = { versie: 'A-0' };
@@ -714,7 +725,7 @@ controle('backups: laatste 14 dagen plus de eerste van elke maand (12 maanden); 
 const AL = K.artikelLijst(lees(VB));
 const WL = K.winkelLijst(lees(VB));
 const win = (id) => WL.find((w) => w.id === id);
-controle('winkel: AH — in looproute, zonder winkels (Cadeau) apart, Koffie (afdeling onbekend) staat niet op de lijst', () => {
+controle('winkel: AH — in de route, zonder winkels (Cadeau) apart, Koffie (afdeling onbekend) staat niet op de lijst', () => {
   const ind = K.winkelIndeling(AL, win('ah001'));
   return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.onbekend.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam + ':' + g.items.map((a) => a.naam)).join() + '|' + ind.elders.map((a) => a.naam).join(),
     'Cadeau||Zuivel:Melk|Schroeven');
@@ -726,6 +737,14 @@ controle('winkel: te koop hier maar afdeling onbekend staat onder onbekend, niet
 controle('winkel: Gamma — geen melk, wel schroeven', () => {
   const ind = K.winkelIndeling(AL, win('gam01'));
   return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam).join() + '|' + ind.elders.map((a) => a.naam).join(), 'Cadeau|IJzerwaren|Melk');
+});
+controle('winkel: aanbod per afdeling (ook niet op de lijst); verdwenen afdeling = onbekend; zonder winkels hoort er niet bij', () => {
+  const W = { id: 'pls', afdelingen: [{ id: 'agf', naam: 'Groente' }, { id: 'zui', naam: 'Zuivel' }] };
+  const A = [{ naam: 'Appels', op: '', plekken: [{ winkel: 'pls', afd: 'agf' }] }, { naam: 'Melk', op: 'x', plekken: [{ winkel: 'ahh', afd: '' }, { winkel: 'pls', afd: 'zui' }] },
+    { naam: 'Kaas', op: '', plekken: [{ winkel: 'pls', afd: 'weg' }] }, { naam: 'Stroop', op: '', plekken: [{ winkel: 'pls', afd: '' }] },
+    { naam: 'Schroeven', op: 'x', plekken: [] }, { naam: 'Brood', op: '', plekken: [{ winkel: 'ahh', afd: '' }] }];
+  const r = K.winkelAanbod(A, W);
+  return gelijk([...r.per].map(([id, l]) => id + ':' + l.map((a) => a.naam).join('+')).join() + '|' + r.onbekend.map((a) => a.naam).join('+'), 'agf:Appels,zui:Melk|Kaas+Stroop');
 });
 controle('winkelkeuze: nodig = iets dat nergens anders te koop is; ook elders telt mee maar maakt niet nodig', () => {
   const t = K.winkelTellingen(AL, WL).map((x) => x.naam + ':' + (x.moet ? 'nodig' : 'kan') + ':' + x.alleen.join('+') + '/' + x.ook.join('+')).join();
@@ -750,8 +769,8 @@ controle('zoeken: deel van de naam, zonder hoofdletters en accenten', () => {
   return gelijk(K.zoekArtikelen(al, 'creme FRAI').map((a) => a.naam).join() + '|' + K.zoekArtikelen(al, 'cafe').map((a) => a.naam).join(), 'Crème fraîche|Café-noir');
 });
 
-controle('invoer staat onderaan (boven de tabbalk), soortmenu klapt naar boven', () =>
-  (/<\/main>\s*<div class="onderbalk" id="balk-boodschappen">/.test(html) && /\.menu\{position:absolute;z-index:10;bottom:/.test(html)) || 'invoer niet onderaan');
+controle('invoer staat onderaan (boven de tabbalk), met een vergrootglas links (geen soortmenu meer)', () =>
+  (/<\/main>\s*<div class="onderbalk" id="balk-boodschappen">/.test(html) && !/id="soortMenu"/.test(html)) || 'invoer niet onderaan, of nog een soortmenu');
 
 controle('tabbalk staat altijd in beeld: body vast aan de schermranden, geen 100dvh; scherm krimpt met het toetsenbord', () =>
   (/body\{[^}]*position:fixed;inset:0\}/.test(html) && !/body\{[^}]*100dvh/.test(html) && /interactive-widget=resizes-content/.test(html)) || 'opbouw klopt niet');

@@ -52,6 +52,8 @@ MUTATIES = [
   ("losse < weer weg", "    .replace(/<!--(?:[^-]|-(?!->))*-->/g, ' ')", "    .replace(/<!--(?:[^-]|-(?!->))*-->/g, ' ').replace(/[<>]/g, '')"),
   ("onzichtbare tekens blijven", "\\u180E\\u200B-\\u200F", "\\u180E\\u200C"),
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
+  ("aanbod: zonder winkels telt mee", "    const p = a.plekken.find((x) => x.winkel === winkel.id);\n    if (!p) continue;", "    const p = a.plekken.find((x) => x.winkel === winkel.id) || { afd: '' };"),
+  ("aanbod: verdwenen afdeling kwijt", "    if (p.afd && per.has(p.afd)) per.get(p.afd).push(a); else onbekend.push(a);", "    if (p.afd && per.has(p.afd)) per.get(p.afd).push(a); else if (!p.afd) onbekend.push(a);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))
 t = open(os.path.join(hier, 'thuis.html'), encoding='utf-8').read()

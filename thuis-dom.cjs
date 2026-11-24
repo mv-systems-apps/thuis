@@ -275,11 +275,11 @@ const BEGIN = [
   controle('winkel: AH gekozen; Bananen in de winkelkaart zonder kop of speld (geen afdelingen); kop gevuld paars',
     d.getElementById('winkelNaam').textContent === 'Albert Heijn' && rijVan('Bananen').closest('.winkelkaart').contains(d.getElementById('winkelKies')) &&
     !rijVan('Bananen').closest('.afd').querySelector('.afdkop') && !rijVan('Bananen').querySelector('.waar'));
-  /* De eerste afdeling komt uit de Winkels-tab; daarna wel "Afdeling onbekend" met de speld. */
+  /* De eerste afdeling komt uit de Winkels-tab; daarna wel "Afdeling?" met de speld. */
   w.eval("handelen([{ actie: 'afdErbij', soort: 'winkel', id: winkels.find((x) => x.naam === 'Albert Heijn').id, afd: { id: nieuweId(), naam: 'Groente & fruit' } }])");
   await slaap(50);
-  controle('winkel met afdelingen: "Afdeling onbekend" in de winkelkaart, als afdeling, met speld',
-    rijVan('Bananen').closest('.afd').querySelector('.afdkop span').textContent === 'Afdeling onbekend' && !rijVan('Bananen').closest('.afd').classList.contains('grijs') && !!rijVan('Bananen').querySelector('.waar'));
+  controle('winkel met afdelingen: "Afdeling?" in de winkelkaart, als afdeling, met speld',
+    rijVan('Bananen').closest('.afd').querySelector('.afdkop span').textContent === 'Afdeling?' && !rijVan('Bananen').closest('.afd').classList.contains('grijs') && !!rijVan('Bananen').querySelector('.waar'));
   rijVan('Bananen').querySelector('.waar').click();
   k = d.getElementById('keuze');
   controle('keuzelijst afdeling: placeholder Afdeling', k.querySelector('#keuzeZoek').placeholder === 'Afdeling');
@@ -412,6 +412,11 @@ const BEGIN = [
   await slaap(50);
   controle('winkel: detail open met afdelingen', !d.getElementById('winkelDetail').hidden && d.querySelector('#winkelDetail h2').textContent === 'Albert Heijn' && d.getElementById('winkelsTekst').placeholder === 'Afdeling');
   for (const afd of ['Brood', 'Zuivel']) { d.getElementById('winkelsTekst').value = afd; d.getElementById('winkelsPlus').click(); await slaap(20); }
+  controle('winkel: gewoon geen greepjes, wel afdelingen met aantal en pijltje', !d.querySelector('#afdelingen .greep') && [...d.querySelectorAll('#afdelingen .afdrij .nm')].map((x) => x.textContent).join() === 'Groente & fruit,Brood,Zuivel' &&
+    d.querySelector('#winkelDetail .kopbalk .volgorde').getAttribute('aria-pressed') === 'false');
+  d.querySelector('#winkelDetail .kopbalk .volgorde').click(); await slaap(20);
+  controle('Volgorde aan: greepjes en potloden, knop ingedrukt', d.querySelectorAll('#afdelingen .arij .greep').length === 3 && d.querySelectorAll('#afdelingen .arij .potlood').length === 3 &&
+    d.querySelector('#winkelDetail .kopbalk .volgorde').getAttribute('aria-pressed') === 'true');
   const afdNamen = () => [...d.querySelectorAll('#afdelingen .arij .nm')].map((x) => x.textContent).join();
   controle('afdelingen toevoegen, achteraan', afdNamen() === 'Groente & fruit,Brood,Zuivel', afdNamen());
   /* verslepen: Zuivel twee plekken omhoog */
@@ -439,8 +444,8 @@ const BEGIN = [
   /* hernoemen: tik op de naam (geen potloodje meer) */
   [...d.querySelectorAll('#afdelingen .arij')].find((r) => r.querySelector('.nm').textContent === 'Groente & fruit').querySelector('.nm').click();
   let p = d.getElementById('keuze');
-  controle('tik op de naam opent "Afdeling bewerken" met de naam, prullenbak links van Opslaan; geen potloodje in de regel',
-    !!p && p.getAttribute('aria-label') === 'Afdeling bewerken' && p.querySelector('#bewerkNaam').value === 'Groente & fruit' && p.querySelector('.bewerkknoppen').firstElementChild.classList.contains('prul') && !d.querySelector('#afdelingen .potlood'));
+  controle('tik op de naam opent "Afdeling bewerken" met de naam, prullenbak links van Opslaan',
+    !!p && p.getAttribute('aria-label') === 'Afdeling bewerken' && p.querySelector('#bewerkNaam').value === 'Groente & fruit' && p.querySelector('.bewerkknoppen').firstElementChild.classList.contains('prul'));
   p.querySelector('#bewerkNaam').value = 'AGF'; p.querySelector('.knop').click();
   await rust(2500);
   const t5f = R(od.bestanden['thuis.json'].tekst);
@@ -512,19 +517,19 @@ const BEGIN = [
   d.getElementById('tab-boodschappen').click();
   const filterKnop = (naam) => [...d.querySelectorAll('#filters .filter')].find((b) => b.getAttribute('aria-label').startsWith(naam));
   filterKnop('Wekelijks').click();
-  controle('soort volgt het filter: Wekelijks gekozen → soortknop wekelijks', /wekelijks/.test(d.getElementById('invoerSoort').getAttribute('aria-label')));
+  controle('soort volgt het filter: Wekelijks gekozen → vergrootglas (soort wekelijks)', /wekelijks/.test(d.getElementById('invoerZoek').getAttribute('aria-label')));
   const vak2 = d.getElementById('invoerTekst');
   vak2.focus(); vak2.value = 'Kaas'; vak2.dispatchEvent(new w.Event('input', { bubbles: true }));
-  controle('typen: links annuleren, soortknop weg, + in de kleur van wekelijks',
-    !d.getElementById('invoerTerug').hidden && d.getElementById('invoerSoort').hidden && /rgb\(29, 63, 175\)|#1D3FAF/i.test(d.getElementById('invoerPlus').style.background), d.getElementById('invoerPlus').style.background);
+  controle('typen: links annuleren, vergrootglas weg, + in de kleur van wekelijks',
+    !d.getElementById('invoerTerug').hidden && d.getElementById('invoerZoek').hidden && /rgb\(29, 63, 175\)|#1D3FAF/i.test(d.getElementById('invoerPlus').style.background), d.getElementById('invoerPlus').style.background);
   d.getElementById('invoerPlus').click();
   await rust(2500);
   controle('toevoegen in filter Wekelijks: nieuw artikel is wekelijks', /^artikel;Kaas;soort=wekelijks;/m.test(R(od.bestanden['thuis.json'].tekst)), R(od.bestanden['thuis.json'].tekst));
   vak2.value = 'ka'; vak2.dispatchEvent(new w.Event('input', { bubbles: true }));
   d.getElementById('invoerTerug').click();
-  controle('annuleren: vak leeg, lijst terug, soortknop terug', vak2.value === '' && d.getElementById('lijstTitel').textContent === 'Wekelijks' && !d.getElementById('invoerSoort').hidden);
+  controle('annuleren: vak leeg, lijst terug, vergrootglas terug', vak2.value === '' && d.getElementById('lijstTitel').textContent === 'Wekelijks' && !d.getElementById('invoerZoek').hidden);
   filterKnop('Op de lijst').click();
-  controle('filter Op de lijst → soortknop eenmalig', /eenmalig/.test(d.getElementById('invoerSoort').getAttribute('aria-label')));
+  controle('filter Op de lijst → soort eenmalig', /eenmalig/.test(d.getElementById('invoerZoek').getAttribute('aria-label')));
 
   /* zoekvak leegmaken met het kruisje */
   d.getElementById('tab-boodschappen').click();
@@ -899,6 +904,9 @@ const BEGIN = [
     controle('tags: # toont de tags uit de notities (niet uit namen), met aantal', !dD.getElementById('tagLijst').hidden && opties() === '#buiten1,#kerst1', opties());
     vak.value = '#k'; vak.dispatchEvent(new wD.Event('input')); await slaap(20);
     controle('tags: verder typen filtert', opties() === '#kerst1', opties());
+    vak.value = ' # k'; vak.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('tags: ook met een spatie ervoor en na de # (" # k")', !dD.getElementById('tagLijst').hidden && opties() === '#kerst1', opties());
+    vak.value = '#k'; vak.dispatchEvent(new wD.Event('input')); await slaap(20);
     dD.querySelector('#tagLijst .tagoptie').click(); await slaap(20);
     controle('tags: kiezen zet #kerst in het vak, sluit de lijst, toont alleen wat de tag heeft (vet)', vak.value === '#kerst' && dD.getElementById('tagLijst').hidden
       && namenInLijst(wD).join() === 'Kaarsen' && dD.querySelector('#lijst .notitie .tag').textContent === '#kerst', namenInLijst(wD).join());
@@ -1398,7 +1406,7 @@ const BEGIN = [
     controle('aankopen: zoekvak onderaan in eigen balk', !dA.getElementById('balk-log').hidden && !sch.contains(zk));
     controle('aankopen: zoeken filtert', rijen() === 'Brood');
     sch.querySelector('.terug').click(); await slaap(50);
-    controle('aankopen: terug naar Boodschappen, zoekbalk weg en leeg', sch.hidden && !dA.getElementById('scherm-winkel').classList.contains('sub') && dA.getElementById('balk-log').hidden && zk.value === '');
+    controle('aankopen: terug naar Boodschappen, zoekbalk weg en leeg', sch.hidden && !dA.getElementById('midden').classList.contains('indeel') && dA.getElementById('balk-log').hidden && zk.value === '');
     [...lijstA.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Brood')).click(); await rust(2600);
     controle('terugtikken uit het mandje: ook uit de gedeelde aankopen', !/^aankoop;Brood;/m.test(R(odA.bestanden['thuis.json'].tekst)) && /^aankoop;Melk;/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst));
     dA.getElementById('tab-instellingen').click(); await slaap(50);
@@ -1767,6 +1775,205 @@ const BEGIN = [
     await rust(1500);
     controle('vangnet: zonder downloadlink bij de selectie toch het bestand gelezen', wS.eval("artikelen.some((a) => a.naam === 'Thee')") && odS.verzoeken.some((v) => /^GET https:\/\/graph.*\/items\/[^/?]+$/.test(v)), odS.verzoeken.join(' | '));
     controle('vangnet: geen foutmelding', !wS.eval('sync.fout'), wS.eval('sync.fout'));
+  }
+
+  /* 5z33. Zoeken op winkel met @: winkels boven de balk, kiezen, per afdeling (route), verder typen, + voegt niets toe. */
+  if (deel('5z33 zoeken op winkel met @ (artikelen)')) {
+    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\nwinkel;Albert Heijn\n' +
+      'artikel;Appels;ligt=Plus:Groente\nartikel;Melk;ligt=Plus:Zuivel\nartikel;Kaas;ligt=Plus:Zuivel|Albert Heijn\nartikel;Stroopwafels;ligt=Plus\nartikel;Schroeven\n');
+    const wW = await start(odW);
+    await rust(1500);
+    const dW = wW.document, vak = dW.getElementById('invoerTekst');
+    controle('balk: links een vergrootglas, geen soortmenu', !dW.getElementById('soortMenu') && /Zoeken/.test(dW.getElementById('invoerZoek').getAttribute('aria-label')));
+    vak.focus(); vak.value = '@'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    const opties = [...dW.querySelectorAll('#tagLijst .tagoptie')].map((b) => b.textContent);
+    controle('@: de winkels boven de balk, met het aantal artikelen', !dW.getElementById('tagLijst').hidden && opties.join() === '@Albert Heijn1,@Plus4', opties.join());
+    [...dW.querySelectorAll('#tagLijst .tagoptie')].find((b) => /Plus/.test(b.textContent)).click(); await slaap(20);
+    const koppen = () => [...dW.querySelectorAll('#lijst .zoekgroep .kopnaam')].map((k) => k.textContent).join();
+    const namen = () => [...dW.querySelectorAll('#lijst .item')].map((r) => r.querySelector('.naam > span').textContent).join();
+    controle('@Plus: per afdeling in de volgorde van de route, onderaan zonder afdeling', vak.value === '@Plus ' && dW.getElementById('tagLijst').hidden && dW.activeElement === vak
+      && dW.getElementById('lijstTitel').textContent === 'Plus' && koppen() === 'Groente,Zuivel,Afdeling?' && namen() === 'Appels,Kaas,Melk,Stroopwafels', koppen() + ' | ' + namen());
+    vak.value = '@Plus zuiv'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('@Plus zuiv: alleen Zuivel', koppen() === 'Zuivel' && namen() === 'Kaas,Melk', koppen() + ' | ' + namen());
+    const voor = wW.eval('artikelen.length');
+    dW.getElementById('invoerPlus').click(); await slaap(20);
+    controle('@…: de + voegt niets toe', wW.eval('artikelen.length') === voor);
+    vak.value = '@Albert Heijn '; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('winkel zonder afdelingen: geen kop "Afdeling?", alleen de artikelen', koppen() === '' && namen() === 'Kaas', koppen() + ' | ' + namen());
+    /* Het eerste teken beslist: "@#" zoekt een winkel die met # begint (geen), "#@" een tag die met @ begint (geen). */
+    vak.focus(); vak.value = '@'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('@: winkellijst zichtbaar, ook nadat de tagcode reageerde', !dW.getElementById('tagLijst').hidden && dW.getElementById('tagLijst').getAttribute('aria-label') === 'Winkels');
+    /* Omgekeerde volgorde nabootsen: een tagkeuze die ná de winkelkeuze luistert, mag het lijstje niet weghalen. */
+    wW.eval("tagKeuze('invoerTekst', () => artikelen.map((a) => a.notitie))");
+    vak.value = '@P'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('@ met de tagcode ná de winkelcode: winkellijst blijft zichtbaar', !dW.getElementById('tagLijst').hidden && /Plus/.test(dW.getElementById('tagLijst').textContent));
+    vak.value = '@#'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('"@#": zoekt een winkel die met # begint → geen lijst', dW.getElementById('tagLijst').hidden);
+    vak.value = '#@'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('"#@": zoekt een tag die met @ begint → geen lijst', dW.getElementById('tagLijst').hidden);
+    /* Spatie na @: werkt ook. */
+    vak.value = '@ plus zuiv'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('"@ plus zuiv" (spatie na @, kleine letters): zelfde als "@Plus zuiv"', koppen() === 'Zuivel' && namen() === 'Kaas,Melk', koppen() + ' | ' + namen());
+    vak.value = '  @plus'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('"  @plus" (spaties ervoor): ook de Plus', dW.getElementById('lijstTitel').textContent === 'Plus' && namen() === 'Appels,Kaas,Melk,Stroopwafels', namen());
+    /* Soort volgt het filter dat je tijdens het zoeken aantikt. */
+    vak.focus(); vak.value = 'Peren'; vak.dispatchEvent(new wW.Event('input')); await slaap(20);
+    [...dW.querySelectorAll('#filters .filter')][2].click(); await slaap(20);
+    dW.getElementById('invoerPlus').click(); await slaap(30);
+    controle('tijdens zoeken Wekelijks aangetikt → nieuw artikel wekelijks', wW.eval("(artikelen.find((a) => a.naam === 'Peren') || {}).soort") === 'wekelijks', wW.eval("(artikelen.find((a) => a.naam === 'Peren') || {}).soort"));
+  }
+
+  /* 5z34. Winkel: afdelingen openen toont de artikelen; volgorde en bewerken achter een knop; zonder afdelingen meteen de artikelen. */
+  if (deel('5z34 winkel: artikelen per afdeling')) {
+    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel|Brood\nwinkel;Albert Heijn\nwinkel;Gamma\n' +
+      'artikel;Appels;ligt=Plus:Groente\nartikel;Melk;ligt=Plus:Zuivel\nartikel;Kaas;ligt=Plus:Zuivel|Albert Heijn\nartikel;Stroopwafels;ligt=Plus|Albert Heijn\nartikel;Schroeven\n');
+    const wW = await start(odW);
+    await rust(1500);
+    const dW = wW.document;
+    dW.getElementById('tab-winkels').click(); await slaap(30);
+    const open = (naam) => { [...dW.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith(naam)).click(); };
+    open('Plus'); await slaap(30);
+    const afd = () => [...dW.querySelectorAll('#afdelingen .afdrij')].map((r) => r.querySelector('.nm').textContent + r.querySelector('.tal').textContent + (r.getAttribute('aria-expanded') === 'true' ? '+' : '')).join();
+    const items = () => [...dW.querySelectorAll('#afdelingen .item')].map((r) => r.querySelector('.naam > span').textContent).join();
+    controle('afdelingen in de route met aantal, Afdeling? onderaan, alles dicht', afd() === 'Groente1,Zuivel2,Brood0,Afdeling?1' && items() === '' && !dW.querySelector('#afdelingen .greep'), afd());
+    const kop = (n) => [...dW.querySelectorAll('#afdelingen .afdrij')].find((r) => r.querySelector('.nm').textContent === n);
+    const alles = () => dW.querySelector('#winkelDetail .alles');
+    controle('knop "alles": openen als er iets dicht is', alles().getAttribute('aria-label') === 'Alle afdelingen openen' && !alles().hidden);
+    alles().click(); await slaap(20);
+    controle('alles open, knop zegt nu sluiten', afd() === 'Groente1+,Zuivel2+,Brood0+,Afdeling?1+' && alles().getAttribute('aria-label') === 'Alle afdelingen sluiten', afd());
+    kop('Brood').click(); await slaap(20);
+    controle('één dicht: de knop opent weer alles', alles().getAttribute('aria-label') === 'Alle afdelingen openen');
+    alles().click(); await slaap(20); alles().click(); await slaap(20);
+    controle('alles dicht', afd() === 'Groente1,Zuivel2,Brood0,Afdeling?1', afd());
+    kop('Zuivel').click(); await slaap(20);
+    kop('Afdeling?').click(); await slaap(20);
+    controle('meer afdelingen tegelijk open, met hun artikelen', afd() === 'Groente1,Zuivel2+,Brood0,Afdeling?1+' && items() === 'Kaas,Melk,Stroopwafels', afd() + ' | ' + items());
+    const kaas = [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Kaas'));
+    controle('onder een artikel alleen de andere winkels', kaas.querySelector('.winkels').textContent === 'Albert Heijn', kaas.querySelector('.winkels').textContent);
+    kop('Brood').click(); await slaap(20);
+    controle('lege afdeling open: "Geen artikelen"', /Geen artikelen/.test(dW.getElementById('afdelingen').textContent));
+    kop('Brood').click(); await slaap(20);
+    /* rondje: op de lijst, de afdeling blijft open */
+    [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.rondje').click(); await slaap(30);
+    controle('rondje zet op de lijst; afdeling blijft open', wW.eval("!!artikelen.find((a) => a.naam === 'Melk').op") && afd() === 'Groente1,Zuivel2+,Brood0,Afdeling?1+' &&
+      [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.rondje').getAttribute('aria-pressed') === 'true');
+    [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.rondje').click(); await slaap(30);
+    controle('nog eens: weer eraf', wW.eval("!artikelen.find((a) => a.naam === 'Melk').op"));
+    /* tik op de naam: de editor in het tabblad Winkels; sluiten → terug in de winkel, afdelingen nog open */
+    [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Kaas')).querySelector('.tekst').click(); await slaap(30);
+    controle('tik op de naam: editor open, op het tabblad Winkels', !dW.getElementById('artikelScherm').hidden && !dW.getElementById('scherm-winkels').hidden && dW.getElementById('artikelScherm').parentNode.id === 'deel' && dW.getElementById('scherm-winkels').getBoundingClientRect && wW.getComputedStyle(dW.getElementById('scherm-winkels')).display === 'none' &&
+      dW.getElementById('artikelNaam').value === 'Kaas' && dW.getElementById('balk-winkels').hidden && !dW.getElementById('balk-artikel').hidden);
+    dW.getElementById('artikelDicht').click(); await slaap(30);
+    controle('editor dicht: terug in de winkel, afdelingen nog open', dW.getElementById('artikelScherm').hidden && !dW.getElementById('winkelDetail').hidden && !dW.getElementById('balk-winkels').hidden &&
+      !dW.getElementById('midden').classList.contains('indeel') && afd() === 'Groente1,Zuivel2+,Brood0,Afdeling?1+', afd());
+    /* terugknop: eerst het artikel dicht, dan de winkel */
+    [...dW.querySelectorAll('#afdelingen .item')].find((r) => r.textContent.startsWith('Melk')).querySelector('.tekst').click(); await slaap(30);
+    wW.history.back(); await slaap(80);
+    controle('terugknop vanuit het artikel: terug in de winkel, afdelingen nog open', dW.getElementById('artikelScherm').hidden && !dW.getElementById('winkelDetail').hidden &&
+      !dW.getElementById('midden').classList.contains('indeel') && afd() === 'Groente1,Zuivel2+,Brood0,Afdeling?1+', afd());
+    wW.history.back(); await slaap(80);
+    controle('nog eens terug: het overzicht van de winkels', dW.getElementById('winkelDetail').hidden && !dW.getElementById('winkelsOverzicht').hidden && !dW.getElementById('scherm-winkels').hidden);
+    open('Plus'); await slaap(30);
+    /* daarna op Artikelen: de editor opent daar weer gewoon */
+    dW.getElementById('tab-boodschappen').click(); await slaap(30);
+    const iv = dW.getElementById('invoerTekst'); iv.value = 'Appels'; iv.dispatchEvent(new wW.Event('input')); await slaap(20);
+    const rij = [...dW.querySelectorAll('#lijst .item')][0];
+    rij.querySelector('.tekst').click(); await slaap(30);
+    controle('editor vanuit Artikelen: weer op Artikelen', !dW.getElementById('artikelScherm').hidden && !dW.getElementById('scherm-boodschappen').hidden && wW.getComputedStyle(dW.getElementById('scherm-boodschappen')).display === 'none');
+    dW.getElementById('artikelDicht').click(); await slaap(30);
+    iv.value = ''; iv.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('editor dicht: Artikelen terug met de balk', dW.getElementById('artikelScherm').hidden && !dW.getElementById('balk-boodschappen').hidden && !dW.getElementById('midden').classList.contains('indeel'));
+    /* editor uit de winkel, dan van tabblad wisselen: alles netjes dicht */
+    dW.getElementById('tab-winkels').click(); await slaap(30);
+    open('Plus'); await slaap(30); kop('Zuivel').click(); await slaap(20);
+    [...dW.querySelectorAll('#afdelingen .item')][0].querySelector('.icoon').click(); await slaap(30);
+    controle('tik op het icoon: ook de editor (geen teller)', !dW.getElementById('artikelScherm').hidden && !dW.querySelector('#winkelDetail .teller'));
+    dW.getElementById('tab-doen').click(); await slaap(30);
+    controle('tabblad wisselen met de editor open: editor dicht, geen deelscherm meer', dW.getElementById('artikelScherm').hidden && !dW.getElementById('midden').classList.contains('indeel') && !dW.getElementById('scherm-doen').hidden && dW.getElementById('balk-winkels').hidden);
+    /* Volgorde-knop */
+    dW.getElementById('tab-winkels').click(); await slaap(30);
+    open('Plus'); await slaap(30);
+    dW.querySelector('#winkelDetail .kopbalk .volgorde').click(); await slaap(20);
+    controle('Volgorde: geen knop "alles"', dW.querySelector('#winkelDetail .alles').hidden);
+    controle('Volgorde: greepjes en potloden, geen artikelen, geen Afdeling?', dW.querySelectorAll('#afdelingen .arij .greep').length === 3 && dW.querySelectorAll('#afdelingen .potlood').length === 3 &&
+      !dW.querySelector('#afdelingen .afdrij') && !dW.querySelector('#afdelingen .item'));
+    dW.querySelector('#afdelingen .potlood').click(); await slaap(20);
+    controle('potlood: "Afdeling bewerken"', !!dW.getElementById('keuze') && dW.getElementById('keuze').getAttribute('aria-label') === 'Afdeling bewerken' && dW.getElementById('bewerkNaam').value === 'Groente');
+    dW.querySelector('#keuze .kruis').click(); await slaap(20);
+    dW.querySelector('#winkelDetail .kopbalk .volgorde').click(); await slaap(20);
+    controle('ster: vaste naam, alleen ingedrukt wisselt', (() => { const st = dW.querySelector('#winkelDetail .ster'); const v = st.getAttribute('aria-pressed'); st.click();
+      const st2 = dW.querySelector('#winkelDetail .ster'); const ok = st2.getAttribute('aria-label') === 'Favoriet' && st2.getAttribute('aria-pressed') !== v; st2.click(); return ok; })());
+    controle('Volgorde-knop: vaste naam, alleen ingedrukt wisselt', dW.querySelector('#winkelDetail .volgorde').getAttribute('aria-label') === 'Volgorde wijzigen');
+    controle('nog eens op de knop: weer gewoon', !dW.querySelector('#afdelingen .greep') && dW.querySelectorAll('#afdelingen .afdrij').length === 4);
+    /* zoeken in de winkel: alleen passende afdelingen */
+    const vk = dW.getElementById('winkelsTekst');
+    vk.value = 'zui'; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('zoeken in de winkel: alleen Zuivel', afd() === 'Zuivel2', afd());
+    vk.value = 'afd'; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('zoeken op "afd": de regel "Afdeling?" (zoekt op wat er staat)', afd() === 'Afdeling?1', afd());
+    vk.value = 'xyz'; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
+    controle('zoeken zonder treffer: Niets gevonden', /Niets gevonden/.test(dW.getElementById('afdelingen').textContent) && !dW.querySelector('#afdelingen .afdrij'));
+    vk.value = ''; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
+    /* een andere winkel: niets open, Volgorde uit */
+    dW.querySelector('#winkelDetail .kopbalk .volgorde').click(); await slaap(20);
+    dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
+    open('Albert Heijn'); await slaap(30);
+    controle('winkel zonder afdelingen: meteen de artikelen onder "Artikelen", geen Volgorde- en alles-knop', dW.querySelector('#winkelDetail .kopbalk h3').textContent === 'Artikelen' &&
+      dW.querySelector('#winkelDetail .kopbalk .tal').textContent === '2 artikelen' && items() === 'Kaas,Stroopwafels' && !dW.querySelector('#winkelDetail .volgorde') && !dW.querySelector('#winkelDetail .alles'), items());
+    dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
+    open('Gamma'); await slaap(30);
+    controle('winkel zonder artikelen: "Geen artikelen"', /Geen artikelen/.test(dW.getElementById('afdelingen').textContent) && dW.querySelector('#winkelDetail .kopbalk .tal').textContent === '');
+    dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
+    open('Plus'); await slaap(30);
+    controle('opnieuw geopend: alles dicht, Volgorde uit', afd() === 'Groente1,Zuivel2,Brood0,Afdeling?1' && dW.querySelector('#winkelDetail .volgorde').getAttribute('aria-pressed') === 'false', afd());
+    wW.close();
+  }
+
+  /* 5z35. Deelschermen: het tabblad eronder tekent niet zolang er iets open is, wel bij sluiten; zelfde scrollpositie en balk. */
+  if (deel('5z35 deelschermen: tabblad eronder en scrollpositie')) {
+    const nu = new Date(); const tijd = datumTekstT(0) + 'T09:00';
+    const odS = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Afval;herhaal=week;datum=' + datumTekstT(3) + '\nactie;Bellen\n' +
+      'historie;Bellen;tijd=' + tijd + '\naankoop;Melk;tijd=' + tijd + '\nartikel;Melk;op=' + tijd + '\n');
+    const wS = await start(odS); await rust(1500); const dS = wS.document;
+    const midden = dS.getElementById('midden');
+    dS.getElementById('tab-doen').click(); await slaap(30);
+    wS.eval("doen.filter = 'alles'; tekenDoen()");
+    midden.scrollTop = 150;
+    const aid = wS.eval("acties.find((a) => a.naam === 'Afval').id");
+    [...dS.querySelectorAll('#doenLijst .actierij')].find((r) => r.textContent.includes('Afval')).querySelector('.nm').click(); await slaap(30);
+    controle('actie-editor open: in de laag, Doen verborgen, balk Opslaan', !dS.getElementById('actieScherm').hidden && midden.classList.contains('indeel') && dS.getElementById('balk-doen').hidden && !dS.getElementById('balk-actie').hidden && midden.scrollTop === 0);
+    const lijstVoor = dS.getElementById('doenLijst').innerHTML;
+    const j = JSON.parse(odS.bestanden['thuis.json'].tekst); j.acties.nwx01 = { naam: 'Ramen lappen' }; odS.zet('thuis.json', JSON.stringify(j));
+    wS.eval('planSync(0)'); await rust(2500);
+    controle('sync met de editor open: Doen eronder niet hertekend', wS.eval("acties.some((a) => a.naam === 'Ramen lappen')") && dS.getElementById('doenLijst').innerHTML === lijstVoor && !/Ramen lappen/.test(dS.getElementById('doenLijst').textContent));
+    dS.getElementById('actieDicht').click(); await slaap(30);
+    controle('editor dicht: Doen bijgewerkt, zelfde scrollpositie, balk Doen terug', /Ramen lappen/.test(dS.getElementById('doenLijst').textContent) && midden.scrollTop === 150 &&
+      !midden.classList.contains('indeel') && dS.getElementById('deel').hidden && !dS.getElementById('balk-doen').hidden && dS.getElementById('balk-actie').hidden, midden.scrollTop);
+    /* Historie */
+    midden.scrollTop = 120;
+    [...dS.querySelectorAll('#doenLijst .naaraankopen')].find((k) => /Historie/.test(k.textContent)).querySelector('button').click(); await slaap(30);
+    controle('Historie open: balk zoeken, Doen-balk weg, bovenaan', !dS.getElementById('historieScherm').hidden && !dS.getElementById('balk-log').hidden && dS.getElementById('balk-doen').hidden && midden.scrollTop === 0);
+    const doenVoor = dS.getElementById('doenLijst').innerHTML;
+    const j2 = JSON.parse(odS.bestanden['thuis.json'].tekst); j2.acties.nwx02 = { naam: 'Gras maaien' }; odS.zet('thuis.json', JSON.stringify(j2));
+    wS.eval('planSync(0)'); await rust(2500);
+    controle('sync met Historie open: Doen eronder niet hertekend', wS.eval("acties.some((a) => a.naam === 'Gras maaien')") && dS.getElementById('doenLijst').innerHTML === doenVoor);
+    dS.querySelector('#historieScherm .terug').click(); await slaap(30);
+    controle('Historie dicht: Doen bijgewerkt', /Gras maaien/.test(dS.getElementById('doenLijst').textContent));
+    controle('Historie dicht: zelfde plek, balk Doen terug, zoekbalk weg', midden.scrollTop === 120 && !dS.getElementById('balk-doen').hidden && dS.getElementById('balk-log').hidden && dS.getElementById('historieScherm').innerHTML === '');
+    /* Aankopen (Boodschappen heeft geen eigen balk) */
+    dS.getElementById('tab-winkel').click(); await slaap(50);
+    midden.scrollTop = 80;
+    dS.querySelector('#winkelLijst .naaraankopen button').click(); await slaap(30);
+    controle('Aankopen open: zoekbalk, in de laag', !dS.getElementById('aankopenScherm').hidden && !dS.getElementById('balk-log').hidden && midden.classList.contains('indeel'));
+    wS.history.back(); await slaap(100);
+    controle('Aankopen dicht met terug: zelfde plek, geen balk', midden.scrollTop === 80 && dS.getElementById('balk-log').hidden && !midden.classList.contains('indeel') && !dS.getElementById('scherm-winkel').hidden);
+    /* Historie open en dan een ander tabblad: alles dicht, nieuw tabblad bovenaan */
+    dS.getElementById('tab-doen').click(); await slaap(30);
+    [...dS.querySelectorAll('#doenLijst .naaraankopen')].find((k) => /Historie/.test(k.textContent)).querySelector('button').click(); await slaap(30);
+    dS.getElementById('tab-boodschappen').click(); await slaap(30);
+    controle('Historie open, ander tabblad: laag dicht, alleen de balk van Artikelen', dS.getElementById('deel').hidden && !midden.classList.contains('indeel') && !dS.getElementById('balk-boodschappen').hidden &&
+      dS.getElementById('balk-log').hidden && dS.getElementById('balk-doen').hidden && midden.scrollTop === 0);
+    wS.close();
   }
 
   if (deel('bestand: geen UTF-8, kapot, nieuwer formaat, nog geen bestand')) {

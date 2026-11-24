@@ -8,11 +8,11 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (24 november 2026, versie 1352904-002): in gebruik. Werkt: aanmelden
+Stand (24 november 2026, versie 1352904-003): in gebruik. Werkt: aanmelden
 bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
 (lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
 tabbladen met vegen rondom:
-- **Winkels**: favorieten en overige, afdelingen per winkel in looproute,
+- **Winkels**: favorieten en overige, afdelingen per winkel in route,
   notitie en link per winkel.
 - **Artikelen**: toevoegen, zoeken (ook op #tags), filters, op en van de lijst,
   aantal, notitie en link, bewerkscherm, archief voor eenmalige artikelen.

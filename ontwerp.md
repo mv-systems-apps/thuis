@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (24-11-2026): in gebruik, versie 1352904-002. Dit document beschrijft
+Status (24-11-2026): in gebruik, versie 1352904-003. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a de bewuste keuzes uit de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §8 een bewuste afwijking noemt.
@@ -115,7 +115,7 @@ om met de hand te bewerken.
   `crypto.getRandomValues`, uniek binnen het bestand). De naam is een gewoon
   veld: hernoemen verandert alleen de naam, verwijzingen blijven kloppen. Er
   is geen hernoem-spoor meer.
-- Afdelingen horen bij één winkel, als lijst op volgorde (de looproute).
+- Afdelingen horen bij één winkel, als lijst op volgorde (de route).
 - De app schrijft één record per regel, op naam; wat leeg is, staat er niet.
   Onbekende delen en velden blijven bewaard (een oudere app op de andere
   telefoon gooit niets weg). Namen mogen elk teken bevatten.
@@ -147,7 +147,7 @@ om met de hand te bewerken.
 | deel | velden |
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
-| `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in looproute |
+| `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
 | `aankopen` | per id `naam`, `tijd` (afgevinkt in de winkel; niet wie) |
@@ -215,7 +215,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 
 ### 5.1 Artikelen (tabblad; in de code scherm-boodschappen)
 - Invoervak "Zoeken of toevoegen" (placeholder "Artikel"). Links een
-  soortknop met menu, standaard eenmalig; rechts een +. Typen zoekt in alle
+  vergrootglas (de soort van een nieuw artikel volgt het filter); rechts een +. Typen zoekt in alle
   artikelen ("Gevonden"). Een + op een bestaand artikel zet dat op de lijst.
 - Tijdens het typen verdwijnen de onderbalken, zodat er ruimte is voor de
   resultaten.
@@ -260,8 +260,20 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
   staan notitie en link paars onder de regel, net als bij artikelen. Afdelingen horen bij deze winkel alleen
-  (de route, op volgorde): greep vooraan om te verslepen; tik op de naam
-  opent Afdeling bewerken (geen potloodje, net als bij artikelen). Onderaan "Afdeling".
+  (de route, op volgorde). Gewoon: per afdeling het aantal artikelen en een
+  pijltje; een tik klapt de artikelen eronder open (meer tegelijk open mag).
+  Onderaan "Afdeling?" (zelfde uiterlijk als een afdeling) als er hier
+  artikelen zonder afdeling liggen.
+  De naam van een afdeling lijnt uit met de soorticonen eronder. Rondje = op de
+  lijst; tik op naam of icoon opent het artikel (in het tabblad Winkels; sluiten
+  brengt je terug in de winkel, op dezelfde plek). Onder een artikel alleen de
+  andere winkels. Wat nergens is vastgelegd (overal te koop) staat er niet bij.
+  De kop heet "Route". Rechts erin eerst een dubbel pijltje: alles open (is er iets dicht) of alles dicht.
+  Daarnaast "Volgorde" (pijltjes): dan een greep vooraan om te
+  verslepen en een potlood (ook tik op de naam) voor Afdeling bewerken; aan =
+  gevuld paars met een vinkje, nog een tik zet het terug. Een winkel zonder
+  afdelingen toont meteen de artikelen onder "Artikelen". Een andere winkel
+  openen: alles dicht, Volgorde uit. Onderaan "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
   winkel zonder afdeling. Verwijderen meteen, 6 s Ongedaan maken.
 - Artikelen koppelen gebeurt hier niet, maar bij het artikel.
@@ -273,10 +285,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   ("1 van 7 artikelen"; wat in een van de mandjes ligt telt als gehaald);
   "Winkel?" (kaart met een grijze kop en een doorgestreept winkeltje;
   per artikel een winkelicoon dat vraagt bij welke winkel het te koop is,
-  zoeken of toevoegen; het komt daar onder "Afdeling onbekend" met de speld,
+  zoeken of toevoegen; het komt daar onder "Afdeling?" met de speld,
   zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
-  (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling onbekend" met de speld en de afdelingen
-  in looproute); los en grijs "Niet bij <winkel>" en "In winkelmand".
+  (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling?" met de speld en de afdelingen
+  in de route); los en grijs "Niet bij <winkel>" en "In winkelmand".
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
@@ -296,12 +308,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   (alleen wat er niet al boven staat, rechts "2 winkels"). Kruisje rechtsboven; onderaan
   een zoekvak zonder kopje (placeholder "Winkel", + voegt toe). De laatste keuze
   geldt per telefoon. Winkels beheren gebeurt op het tabblad Winkels.
-- "Afdeling onbekend": wat hier te koop is maar nog geen afdeling heeft, met de
+- "Afdeling?": wat hier te koop is maar nog geen afdeling heeft, met de
   icoonknop "Waar ligt dit?" (kaartspeld). Die vraagt naar de
-  afdelingen van déze winkel (looproute; zoeken of toevoegen onderaan). Kiezen
+  afdelingen van déze winkel (route; zoeken of toevoegen onderaan). Kiezen
   legt vast: te koop hier, in die afdeling; een nieuwe afdeling komt achteraan
   de route.
-- Daarna de afdelingen in looproute.
+- Daarna de afdelingen in de route.
 - Elke vink is direct een handeling (van de lijst, aankoopdatum erbij). Het
   item blijft 1,5 s grijs op zijn plek en schuift dan naar "In winkelmand".
   Terugtikken zet het terug en haalt de aankoopdatum weg.
@@ -411,6 +423,23 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - In een notitie (artikel, winkel, actie): `#` typen toont direct onder het vak
   alle tags uit alle notities; verder typen filtert, tikken maakt het woord af met
   een spatie en je typt door. Hoofdletters en accenten tellen niet mee.
+
+### 5.9b Zoeken op winkel (@)
+- Artikelen: links in de balk een vergrootglas (geen soortmenu meer); een nieuw artikel krijgt de soort
+  van het filter, een andere soort zet je in de editor.
+- "@" in het zoekvak toont de winkels boven de balk, met hoeveel artikelen er te koop zijn. Kiezen zet
+  "@Winkel " in het vak (toetsenbord blijft open). De lijst toont dan alles wat daar te koop is, per
+  afdeling in de volgorde van de route, onderaan "Afdeling?". Verder typen zoekt in de
+  afdelingen ("@Plus zuiv"; "@Plus?" of "@Plus afd" voor zonder afdeling). Winkelnamen met spaties mogen.
+- Met "@" vooraan voegt de + niets toe (zoals bij "#"). De filterknoppen tellen en zoeken mee; tik je
+  tijdens het zoeken Eenmalig/Wekelijks/Regelmatig aan, dan krijgt een nieuw artikel die soort.
+- Spaties, hoofdletters en accenten tellen niet ("@albertheijn", "@ plus zuiv", ook een spatie ervoor).
+  Begint een winkelnaam met een andere ("Albert", "Albert Heijn"), dan blijft de keuzelijst staan; de
+  langere wint bij doortypen.
+- Weergave zoals de winkelkaart op Boodschappen: paarse kop met de winkelnaam, lichtpaarse
+  afdelingskoppen; een winkel zonder afdelingen zonder koppen. Onder een artikel alleen de andere winkels.
+- Bewust: artikelen zonder winkel ("Winkel?") komen niet mee bij "@Winkel" (anders loopt elke winkel vol
+  met wat nog geen winkel heeft).
 
 ### 5.10 Letters
 - Lege lijsten overal hetzelfde: een witte kaart, links, grijs, 18 px.
@@ -551,6 +580,9 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   opnieuw inlezen. Tijdens het verslepen van een afdeling niet tekenen.
 - Bewust zo gelaten: afgeleid() bouwt de lijsten helemaal opnieuw (±4 ms bij 800 artikelen) en
   zoekOpNaam is lineair (alleen bij nieuw/terug).
+- Bewust zo gelaten: in een winkel worden de artikelregels van de open afdelingen bij elke tekening
+  opnieuw gemaakt, niet hergebruikt. Het zijn er weinig (alleen open afdelingen), en een regel uit het
+  geheugen van Artikelen kan niet op twee plekken tegelijk staan.
 
 ### Opbouw van de code (uitbreiden)
 - Formaat: `MIGRATIES` zet een ouder bestand (ook een backup) stap voor stap om; een optioneel veld
@@ -561,6 +593,10 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Per telefoon: `KEUZES`. Gedeelde instellingen: `INSTELLINGEN` en `instelling()`.
 - Editors: gedeelde `naamFout`, `linkVanInvoer`, `foutMelding`; de editors zelf blijven apart.
 - Schermbouwstenen: `bevestigPaneel`, `klapKop`, `sluitMelding`; alle iconen in één blok.
+- Deelschermen (artikel- en actie-editor, Aankopen, Historie, Backups, Logboek): `deelOpen(el, balk)`
+  en `deelDicht()`. Ze openen in één laag (`#deel`) boven het tabblad waar je bent; dat tabblad blijft
+  staan, dus bij sluiten zijn open afdelingen en scrollpositie er nog. Een editor kan zo vanaf elk
+  tabblad openen. Met een deelscherm open tekent alleen dat; het tabblad tekent bij sluiten.
 - Opslag: alles met de gedeelde map via `OPSLAG` (nu `ONEDRIVE`): koppel, ophalen, schrijven (met
   voorwaarde), maken (alleen als nieuw), vervangen, lijst, inhoud, inhoudOpNaam, weg. Geen verbinding
   is een kenmerk van de fout (`geenVerbinding`). `nieuweKopie` maakt de kopie.
