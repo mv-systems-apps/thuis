@@ -224,6 +224,9 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   lijst staat; gekocht of van de lijst gehaald gaat een eenmalig artikel naar
   het "Archief" eronder (ingeklapt, nieuwste eerst, grijs, met "gekocht 19 nov"
   of "van de lijst 14 jul"; de + zet het terug). Zoeken vindt ook het archief.
+  Nog een tik op het gekozen vakje zet het uit: "Alle artikelen" (alles behalve
+  het archief, dat eronder staat; een nieuw artikel wordt eenmalig). Bij het
+  openen van de app staat "Op de lijst" aan.
   Elke lijst heeft een kopbalk (lichtpaars, paarse titel, rechts het aantal).
   Overal geldt de volgorde eenmalig,
   wekelijks, regelmatig. Suggesties: artikelen die langer geleden
@@ -242,8 +245,9 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Notitie: in het bewerkscherm onder Naam, één tekst. In de lijsten paars onder
   de winkels (zelfde letter), in Boodschappen onder de naam: eerst de tekst,
   daaronder de tags (vet) met de link erachter. Blijft staan.
-- Tagkeuze: bij een notitieveld boven het veld (het toetsenbord zit eronder), bij
-  het zoekvak direct boven de balk; schuift mee als het scherm verschuift.
+- Tagkeuze: zwevend boven het vak waarin je typt (notitie: 6 px, het toetsenbord zit
+  eronder; zoekvak: 9 px, zodat ook de focusrand zichtbaar blijft), even breed, met een
+  paarse rand en een lichte schaduw; schuift mee als het scherm verschuift.
 - Per regel: links het soorticoon (knop voor het aantal), de naam, rechts het
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
@@ -297,12 +301,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
-- Bovenin de winkelnaam; een tik opent de keuzelijst "Waar ga je heen?" met
+- Bovenin de winkelnaam; een tik opent de keuzelijst "Welke winkel?" met
   gelijke koppen (paars op lichtpaars, rechts het aantal winkels): "Nodig"
-  (winkels met iets dat nergens anders te koop is; onder de naam die
-  artikelen op één regel, afgekapt met "…", en grijs "+n" voor wat ook elders
-  kan), "Kan ook" (alles ook elders; geen namen, rechts het aantal; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels vet met een
-  paars icoon en ingeklapt "Overige winkels". De
+  (winkels met iets dat nergens anders te koop is; daaronder grijs die artikelen
+  bij naam als het er één of twee zijn, anders "26 alleen hier"; rechts het totaal), "Kan ook" (alles ook elders; geen namen, rechts het aantal; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels met een
+  paars icoon (niet vet) en ingeklapt "Overige winkels". De
   gekozen winkel staat bovenaan onder de vaste kop "Huidig" (geen pijl), met een
   paarse streep links, en niet nog eens in een groep.
 - Staat er niets op de lijst, dan geen winkelkaart: alleen "Geen artikelen"

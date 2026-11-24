@@ -301,8 +301,8 @@ const BEGIN = [
   d.getElementById('winkelKies').click();
   k = d.getElementById('keuze');
   const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
-  controle('winkelkeuze: gekozen winkel bovenaan onder vaste kop Huidig (streep, geen pijl), AH onder "Nodig" (Bananen alleen daar), vet met paars icoon; geen Overige als er niets over is, kruisje, zoekvak onderaan',
-    JSON.stringify(zicht) === '["Huidig","Lidl centrum","Nodig1 winkel","Albert HeijnBananen1 artikel"]' && k.querySelector('.uitklapper.vast') && !k.querySelector('.uitklapper.vast svg') && k.querySelector('.optie').classList.contains('actief') && k.querySelectorAll('.optie')[1].classList.contains('sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
+  controle('winkelkeuze: gekozen winkel bovenaan onder vaste kop Huidig (streep, geen pijl), AH onder "Nodig" (Bananen alleen daar), niet vet, met paars icoon; geen Overige als er niets over is, kruisje, zoekvak onderaan',
+    JSON.stringify(zicht) === '["Huidig","Lidl centrum","Nodig1 winkel","Albert HeijnBananen1 artikel"]' && k.querySelector('.uitklapper.vast') && !k.querySelector('.uitklapper.vast svg') && k.querySelector('.optie').classList.contains('actief') && !k.querySelector('.sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
   controle('winkelkeuze: elke winkel één keer', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Lidl centrum,Albert Heijn');
   k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
   controle('keuzelijst: typen filtert (één keer, ook al staat hij in twee secties)', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn');
@@ -1249,7 +1249,7 @@ const BEGIN = [
     wV2.close();
   }
 
-  /* 5z17. Waar ga je heen? zonder iets nodig: toch een kop boven de overige winkels. */
+  /* 5z17. Welke winkel? zonder iets nodig: toch een kop boven de overige winkels. */
   if (deel('5z17 Waar ga je heen? zonder iets nodig: toch een kop boven de overige winkels.')) {
     const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;Lidl\nartikel;Hhh;op=2026-11-20T10:00\n');
     const wW = await start(odW); await rust(800);
@@ -1257,8 +1257,18 @@ const BEGIN = [
     wW.document.getElementById('tab-winkel').click(); await slaap(30);
     wW.eval('winkelKiezen()');
     const kop = wW.document.querySelector('#keuze').textContent;
-    controle('waar ga je heen, niets nodig: kop Overige winkels onder Huidig', /Huidig/.test(kop) && /Overige winkels/.test(kop), kop);
+    controle('welke winkel, niets nodig: kop Overige winkels onder Huidig', /Huidig/.test(kop) && /Overige winkels/.test(kop), kop);
+    const kz = wW.document.getElementById('keuze');
+    controle('titel "Welke winkel?"; ook overige winkels met het winkelsymbool', /Welke winkel\?/.test(kz.querySelector('.kop').textContent) && [...kz.querySelectorAll('.optie')].every((o) => !!o.querySelector('svg')), kz.innerHTML.slice(0, 200));
     wW.close();
+    /* Veel artikelen alleen hier: een telling in plaats van namen. */
+    const odV = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\n' +
+      ['Aa', 'Bb', 'Cc'].map((n) => 'artikel;' + n + ';ligt=Plus;op=2026-11-20T10:00\n').join('') + 'artikel;Dd;ligt=Plus|AH;op=2026-11-20T10:00\nartikel;Ee;ligt=AH;op=2026-11-20T10:00\n');
+    const wV = await start(odV); await rust(800);
+    wV.eval("winkel.id = ''"); wV.eval('winkelKiezen()');
+    const sub = (n) => { const o = [...wV.document.querySelectorAll('#keuze .optie')].find((x) => x.textContent.startsWith(n)); return o && o.querySelector('.sub') ? o.querySelector('.sub').textContent : ''; };
+    controle('drie of meer alleen hier: "3 alleen hier"; één: de naam', sub('Plus') === '3 alleen hier' && sub('AH') === 'Ee', sub('Plus') + ' | ' + sub('AH'));
+    wV.close();
   }
 
   /* 5z18. M5 ronde 4: herhalen uitzetten bij een eerder afgeronde actie → blijft open. */
@@ -2032,6 +2042,29 @@ const BEGIN = [
     const hist = [...dT.querySelectorAll('#doenLijst .naaraankopen')].find((k) => /Historie/.test(k.textContent));
     controle('Historie zonder regels: "0 acties"', !!hist && hist.querySelector('.waarde').textContent === '0 acties', hist && hist.textContent);
     wT.close();
+  }
+
+  /* 5z37. Filters op Artikelen uitzetten: nog een tik op het gekozen vakje = alle artikelen. */
+  if (deel('5z37 filter uit: alle artikelen')) {
+    const t = datumTekstT(0) + 'T09:00';
+    const odF = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n' +
+      'artikel;Appels;soort=wekelijks;op=' + t + '\nartikel;Bananen;soort=wekelijks\nartikel;Kaas;soort=regelmatig\nartikel;Lamp;op=' + t + '\nartikel;Schroeven;gekocht=' + datumTekstT(-2) + '\n');
+    const wF = await start(odF); await rust(1500); const dF = wF.document;
+    const knop = (i) => [...dF.querySelectorAll('#filters .filter')][i];
+    const namen = () => [...dF.querySelectorAll('#lijst .item')].map((r) => naamVanRij(r)).join();
+    controle('standaard: Op de lijst aan', knop(0).getAttribute('aria-pressed') === 'true' && namen() === 'Appels,Bananen,Lamp', namen());  /* Bananen: wekelijks terug op de lijst */
+    knop(0).click(); await slaap(30);
+    controle('nog een tik: geen vakje aan, "Alle artikelen", gekochte eenmalige in het archief', [...dF.querySelectorAll('#filters .filter')].every((b) => b.getAttribute('aria-pressed') === 'false') &&
+      dF.getElementById('lijstTitel').textContent === 'Alle artikelen' && namen() === 'Appels,Bananen,Kaas,Lamp' && !!dF.getElementById('archief') && /1 artikel/.test(dF.getElementById('archief').textContent), namen() + ' | ' + ((dF.getElementById('archief') || {}).textContent || 'geen archief'));
+    controle('alle artikelen: aantal rechts', dF.getElementById('lijstAantal').textContent === '4 artikelen', dF.getElementById('lijstAantal').textContent);
+    const iv = dF.getElementById('invoerTekst'); iv.value = 'Peren'; iv.dispatchEvent(new wF.Event('input')); dF.getElementById('invoerPlus').click(); await slaap(50);
+    iv.value = ''; iv.dispatchEvent(new wF.Event('input')); iv.blur(); await slaap(30);
+    controle('nieuw zonder vakje: eenmalig, op de lijst, filter blijft uit', wF.eval("(artikelen.find((a) => a.naam === 'Peren') || {}).soort") === 'eenmalig' && wF.eval('scherm.filter') === '' && /Peren/.test(namen()), wF.eval('scherm.filter') + ' ' + namen());
+    knop(2).click(); await slaap(30);
+    controle('een ander vakje: weer gewoon dat filter', knop(2).getAttribute('aria-pressed') === 'true' && namen() === 'Appels,Bananen', namen());
+    knop(2).click(); await slaap(30);
+    controle('en weer uit', wF.eval('scherm.filter') === '' && dF.getElementById('lijstTitel').textContent === 'Alle artikelen');
+    wF.close();
   }
 
   if (deel('bestand: geen UTF-8, kapot, nieuwer formaat, nog geen bestand')) {

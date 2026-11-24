@@ -82,7 +82,8 @@
   .bewerkknoppen .prul{width:56px;height:56px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FBE4E5}
   #balk-artikel .knop,#balk-actie .knop{flex:1;min-height:56px;font-size:18px}
   /* ---------- tags kiezen ---------- */
-  #tagLijst{position:fixed;left:14px;right:14px;z-index:25;overflow-y:auto;background:#FFFFFF;border:1px solid #CFCBE6;box-shadow:0 10px 28px rgba(30,20,80,.22)}
+  /* Paarse rand zoals het vak waarin je typt; de schaduw laat zien dat hij erboven zweeft (bij een notitie ligt hij over Naam). */
+  #tagLijst{position:fixed;left:14px;right:14px;z-index:25;overflow-y:auto;background:#FFFFFF;border:2px solid var(--paars);box-shadow:0 10px 28px rgba(30,20,80,.28)}
   #tagLijst .tagoptie{width:100%;min-height:52px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:6px;padding:0 14px;font-size:20px;color:var(--tekst);text-align:left}
   #tagLijst .tagoptie:first-child{border-top:0}
   #tagLijst .h{color:var(--paars);font-weight:700}
@@ -360,8 +361,6 @@
   /* De gekozen optie: lichtpaars met een paarse streep links. */
   #keuze .optie.actief{color:var(--paars);font-weight:700;border-left:5px solid var(--paars);padding-left:11px}
   #keuze .optie.actief .sub{font-weight:400}
-  #keuze .optie.sterk .nm{font-weight:700}
-  #keuze .optie.sterk .sub{font-weight:400}
   #keuze .optie .sub .grijs{color:var(--grijs);flex-shrink:0}
   #keuze .optie.metsub .sub{display:flex;gap:6px;color:var(--tekst)}
   #keuze .optie.metsub .sub .namen{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -500,7 +499,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352904-006</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352904-007</div>
   </section>
 </main>
 
@@ -3162,7 +3161,7 @@ function weggehaaldLegen() {
 function soortVanFilter() {
   /* Tijdens het zoeken telt het filter dat je dan aantikt (Wekelijks → een nieuw artikel wordt wekelijks). */
   const f = normNaam(scherm.zoek) && scherm.zoekIn ? scherm.zoekIn : scherm.filter;
-  return 'EWR'.indexOf(f) !== -1 ? f : 'E';
+  return f && 'EWR'.indexOf(f) !== -1 ? f : 'E';
 }
 /* Tijdens het typen (vak actief of met tekst): links annuleren in plaats van het
    vergrootglas, en het + in de kleur van de soort. */
@@ -3184,6 +3183,7 @@ function tekenSoortknop() {
 
 /* Hoort een artikel bij een filter? Bij zoeken telt Eenmalig ook het archief mee. */
 function inFilter(a, k, vandaag, zoekend) {
+  if (!k) return a.letter !== 'E' || zoekend || !!a.op;
   if (k === 'L') return !!a.op;
   if (k === 'S') return !a.op && !!sugVan(a, vandaag);
   if (k === 'E') return a.letter === 'E' && (zoekend || !!a.op);
@@ -3213,7 +3213,8 @@ function tekenFilters(zoekend, gevonden) {
     b.addEventListener('mousedown', (e) => { if (zoekend) e.preventDefault(); });
     b.addEventListener('click', () => {
       if (zoekend) scherm.zoekIn = scherm.zoekIn === k ? '' : k;
-      else scherm.filter = k;
+      /* Nog een tik op het gekozen vakje: uit, dan alle artikelen. */
+      else scherm.filter = scherm.filter === k ? '' : k;
       scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); invoerBijwerken(); weggehaaldLegen(); tekenBoodschappen();
     });
     f.appendChild(b);
@@ -3238,6 +3239,8 @@ function lijstVoorScherm(zoekend, vandaag, gevonden) {
   else if (scherm.filter === 'S') { l = artikelen.filter((a) => !a.op && sugVan(a, vandaag)); titel = 'Suggesties'; }
   /* Eenmalig: alleen wat op de lijst staat; de rest staat in het archief. */
   else if (scherm.filter === 'E') { l = artikelen.filter((a) => a.letter === 'E' && (a.op || scherm.vertrekt.has(a.id))); titel = SOORTNAAM.E; }
+  /* Geen vakje aan: alles, behalve gekochte eenmalige (die staan in het archief eronder). */
+  else if (!scherm.filter) { l = artikelen.filter((a) => inFilter(a, '', vandaag, false) || scherm.vertrekt.has(a.id)); titel = 'Alle artikelen'; }
   else { l = artikelen.filter((a) => a.letter === scherm.filter); titel = SOORTNAAM[scherm.filter]; }
   /* Rechts alleen het aantal; of iets op de lijst staat, zie je aan het rondje. */
   const aantal = scherm.filter === 'L' && !zoekend ? artikelen.filter((a) => a.op).length : l.length;
@@ -3377,7 +3380,7 @@ function datumKort(d) {
 function tekenArchief(zoekend) {
   let sec = $('archief');
   if (sec) sec.remove();
-  if (zoekend || scherm.filter !== 'E') return;
+  if (zoekend || (scherm.filter !== 'E' && scherm.filter !== '')) return;
   const arch = artikelen.filter((a) => a.letter === 'E' && !a.op && !scherm.vertrekt.has(a.id))
     .sort((x, y) => (x.laatst < y.laatst ? 1 : x.laatst > y.laatst ? -1 : SORTEER.compare(x.naam, y.naam)));
   if (!arch.length) return;
@@ -3688,7 +3691,6 @@ function keuzeOptie(o, kies) {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'optie' + (o.actief ? ' actief' : '');
   b.innerHTML = (o.icoon || '') + '<span class="nm"></span>' + (o.aantal ? '<span class="tal"></span>' : '');
-  if (o.sterk) b.classList.add('sterk');
   if (Array.isArray(o.sub)) b.classList.add('metsub');
   b.querySelector('.nm').textContent = o.naam;
   /* sub: tekst, of stukken waarvan { grijs: '…' } grijs wordt. */
@@ -3858,18 +3860,18 @@ function nieuwGezien() {
 }
 function mandjeBewaren() { keuzeBewaren('mandje'); }
 
-/* "Waar ga je heen?": eerst de winkels die nodig zijn (iets dat nergens
+/* "Welke winkel?": eerst de winkels die nodig zijn (iets dat nergens
    anders te koop is), dan wat ook kan, dan ingeklapt de overige winkels. */
 function winkelKiezen() {
   const tel = winkelTellingen(artikelen, winkels);
   /* Alfabetisch: welke winkel je eerst doet, hangt van de route af (parkeren
      en zo), niet van de lijst. */
   const optie = (x) => ({
-    id: x.id, naam: x.naam, aantal: x.aantal, actief: x.id === winkel.id, sterk: true,
+    id: x.id, naam: x.naam, aantal: x.aantal, actief: x.id === winkel.id,
     icoon: ICOON_WINKEL('#4B3CC0'),
-    /* Bij Nodig: wat alleen hier te koop is (afgekapt op één regel), grijs "+n"
-       voor wat ook elders kan. Bij Kan ook geen namen: het aantal staat rechts. */
-    sub: x.moet ? [x.alleen.join(', ')].concat(x.ook.length ? [{ grijs: '+' + x.ook.length }] : []) : null
+    /* Bij Nodig: wat alleen hier te koop is; één of twee bij naam, meer als telling
+       ("26 alleen hier"; rechts staat het totaal). Bij Kan ook niets: het aantal staat rechts. */
+    sub: x.moet ? (x.alleen.length <= 2 ? x.alleen.join(', ') : x.alleen.length + ' alleen hier') : null
   });
   /* De gekozen winkel bovenaan onder een vaste kop "Huidig" (met de streep); de groepen daaronder zonder hem. */
   const anders = (x) => x.id !== winkel.id;
@@ -3879,7 +3881,7 @@ function winkelKiezen() {
   const gekozen = huidigeWinkel();
   if (gekozen) {
     const x = tel.find((y) => y.id === gekozen.id);
-    secties.push({ titel: 'Huidig', vast: true, opties: [x ? optie(x) : { id: gekozen.id, naam: gekozen.naam, actief: true }] });
+    secties.push({ titel: 'Huidig', vast: true, opties: [x ? optie(x) : { id: gekozen.id, naam: gekozen.naam, actief: true, icoon: ICOON_WINKEL('#4B3CC0') }] });
   }
   if (moet.length) secties.push({ titel: 'Nodig', tal: telTekst(moet.length, 'winkel', 'winkels'), opties: moet.map(optie) });
   /* "Kan ook" pak je pas als het alsnog moet: ingeklapt. Is er niets nodig,
@@ -3888,9 +3890,9 @@ function winkelKiezen() {
   /* Altijd een kop, zoals in de andere keuzelijsten: zonder iets nodig of te koop is
      de groep open; met een gekozen winkel heet hij "Overige winkels", anders "Alle winkels". */
   if (rest.length) secties.push({ titel: tel.length || gekozen ? 'Overige winkels' : 'Alle winkels', ingeklapt: tel.length > 0, tal: String(rest.length),
-    opties: rest.map((w) => ({ id: w.id, naam: w.naam, actief: w.id === winkel.id })) });
+    opties: rest.map((w) => ({ id: w.id, naam: w.naam, actief: w.id === winkel.id, icoon: ICOON_WINKEL('#4B3CC0') })) });
   keuzeLijst({
-    titel: 'Waar ga je heen?',
+    titel: 'Welke winkel?',
     secties,
     kies: (id) => kiesWinkel(id),
     zoek: { placeholder: 'Winkel', nieuw: (naam) => {
@@ -5270,12 +5272,13 @@ function tagKeuze(vakOfId, bron, inTekst) {
 let tagLijstPlaats = null;
 function tagLijstTonen(vak, opVak) {
   tagLijstPlaats = () => {
-    const r = (opVak ? vak : vak.closest('.onderbalk')).getBoundingClientRect();
+    /* Zwevend, even breed als het vak; de paarse rand van het vak (en bij het
+       zoekvak ook de lichtblauwe focusrand van 3 px) blijft zichtbaar. */
+    const r = (opVak ? vak : vak.closest('.invoerbalk')).getBoundingClientRect();
     const boven = $('midden').getBoundingClientRect().top;
     tagLijst.style.top = '';
-    tagLijst.style.bottom = (window.innerHeight - r.top + (opVak ? -1 : 6)) + 'px';
-    if (opVak) { tagLijst.style.left = r.left + 'px'; tagLijst.style.right = (document.documentElement.clientWidth - r.right) + 'px'; }
-    else { tagLijst.style.left = ''; tagLijst.style.right = ''; }
+    tagLijst.style.bottom = (window.innerHeight - r.top + (opVak ? 6 : 9)) + 'px';
+    tagLijst.style.left = r.left + 'px'; tagLijst.style.right = (document.documentElement.clientWidth - r.right) + 'px';
     tagLijst.style.maxHeight = Math.max(104, r.top - boven - 8) + 'px';
   };
   tagLijstPlaats();

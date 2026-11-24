@@ -1,7 +1,7 @@
 """Opmaak in een echte browser: wat de schermtests (jsdom, zonder opmaak) niet kunnen zien.
   1. Een melding blijft bovenaan in beeld, ook als je ver naar beneden gescrold bent.
-  2. De tagkeuze staat direct boven het notitieveld, en direct boven de balk onderaan
-     (ook als de tabbalk tijdens het typen verdwijnt).
+  2. De tagkeuze zweeft net boven het notitieveld en boven het zoekvak, zonder de
+     randen van het vak te bedekken (ook als de tabbalk tijdens het typen verdwijnt).
   3. Na het sluiten van een artikel sta je weer op dezelfde plek in de winkel.
   4. Een afdeling verslepen met aanraken (touch) verandert de volgorde.
 
@@ -61,16 +61,16 @@ async def main():
         await pg.evaluate("() => { toonScherm('doen'); actieOpenen('ac1'); }"); await pg.wait_for_timeout(100)
         await pg.click('#actieNotitie'); await pg.keyboard.press('Control+A'); await pg.keyboard.type('#'); await pg.wait_for_timeout(150)
         t = await pg.evaluate("() => { const l = document.getElementById('tagLijst'), v = document.getElementById('actieNotitie'); return [l.hidden, l.getBoundingClientRect().bottom, v.getBoundingClientRect().top, l.getBoundingClientRect().top]; }")
-        check('tagkeuze: zichtbaar en direct boven het notitieveld', not t[0] and abs(t[1] - t[2]) <= 2 and t[3] >= 0, t)
+        check('tagkeuze: zichtbaar, 6 px boven het notitieveld (paarse rand blijft zichtbaar)', not t[0] and round(t[2] - t[1]) == 6 and t[3] >= 0, t)
         await pg.evaluate("() => actieDicht()")
         await pg.evaluate("() => toonScherm('boodschappen')"); await pg.wait_for_timeout(100)
         await pg.click('#invoerTekst'); await pg.keyboard.type('#'); await pg.wait_for_timeout(150)
-        boven = "() => { const l = document.getElementById('tagLijst'), b = document.getElementById('balk-boodschappen'); return [l.hidden, Math.round(b.getBoundingClientRect().top - l.getBoundingClientRect().bottom)]; }"
+        boven = "() => { const l = document.getElementById('tagLijst'), b = document.querySelector('#balk-boodschappen .invoerbalk'); return [l.hidden, Math.round(b.getBoundingClientRect().top - l.getBoundingClientRect().bottom)]; }"
         t1 = await pg.evaluate(boven)
         await pg.evaluate("() => { volleHoogte.h = 2000; typenBijwerken(); }")  # zoals een open toetsenbord: de tabbalk gaat weg; await pg.wait_for_timeout(100)
         t2 = await pg.evaluate(boven)
         tb = await pg.evaluate("() => document.body.classList.contains('typen')")
-        check('tagkeuze: 6 px boven de balk, ook als de tabbalk verdwijnt', not t1[0] and t1[1] == 6 and tb and not t2[0] and t2[1] == 6, (t1, tb, t2))
+        check('tagkeuze: 9 px boven het zoekvak (paarse en blauwe rand zichtbaar), ook als de tabbalk verdwijnt', not t1[0] and t1[1] == 9 and tb and not t2[0] and t2[1] == 9, (t1, tb, t2))
         await pg.evaluate("() => { volleHoogte.h = innerHeight; document.body.classList.remove('typen'); const v = document.getElementById('invoerTekst'); v.value = ''; v.dispatchEvent(new Event('input')); v.blur(); }")
 
         # 3. Scrollpositie terug na het sluiten van een artikel uit de winkel
