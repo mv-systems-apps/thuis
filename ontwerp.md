@@ -150,7 +150,7 @@ om met de hand te bewerken.
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
-| `aankopen` | per id `naam`, `tijd` (afgevinkt in de winkel; niet wie) |
+| `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id; afgevinkt in de winkel; niet wie) |
 | `historie` | per id `naam`, `tijd` (actie afgerond; niet wie) |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
@@ -299,12 +299,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   zoeken of toevoegen; het komt daar onder "Afdeling?" met de speld,
   zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
   (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling?" met de speld en de afdelingen, elk met rechts het aantal dat er nog te halen is
-  in de route); los en grijs "Niet bij <winkel>" en "Winkelmand", allebei
+  in de route); los en grijs "Niet bij <winkel>" (met een winkelicoon dat "Welke winkel?" opent) en "Winkelmand", allebei
   inklapbaar en dicht bij het kiezen van een andere winkel; open blijft open zolang
   je in dezelfde winkel bent (ook na een ander tabblad). "Winkelmand" toont het hele
   mandje van vandaag (alle winkels), met één knop om alles leeg te maken; ligt er ook
-  iets uit andere winkels, dan per winkel een inklapbare subkop (deze winkel bovenaan
-  en open, de andere alfabetisch en dicht).
+  iets uit andere winkels, dan per winkel een inklapbare subkop (wit, vet; zwart, open paars) (deze winkel bovenaan
+  en open, de andere alfabetisch en dicht; ligt er in deze winkel nog niets, dan alles dicht).
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
@@ -404,9 +404,10 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
 - Weergave (per telefoon, schakelaars met rechte hoeken): "Bij een winkel: aantal
-  afdelingen en artikelen" en "Bij een artikel: de winkels" (de grijze regel onder een
+  afdelingen en artikelen", "Bij een artikel: de winkels" en "Bij een aankoop: de winkel" (in Aankopen).
+  "Bij een artikel: de winkels" gaat over de grijze regel onder een
   artikel: op Artikelen, ook bij zoeken met @, en in een winkel op het tabblad Winkels;
-  bij "Niet bij …" in Boodschappen blijft hij staan, daar zie je waar je heen moet).
+  bij "Niet bij …" in Boodschappen blijft hij staan, daar zie je waar je heen moet.
 
 ### 5.6 Synchronisatie (in Instellingen; het wolkje opent Instellingen)
 - Bovenaan de kaart Synchroniseren de toestand: icoon, één woord (Bijgewerkt,
@@ -544,6 +545,9 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Historie: elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
   haalt de regel weg; later heropenen niet. Bewaren 1 week t/m 1 jaar (standaard 3 maanden).
 - Aankopen en Historie: een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
+  Zonder tijdstip (de dag zegt genoeg). Bij een aankoop grijs de winkel eronder (een
+  aankoop onthoudt de winkel, optioneel veld `winkel`; oudere aankopen hebben hem niet),
+  uit te zetten bij Instellingen → Weergave.
   De regel Aankopen (onder Boodschappen) en Historie (onder Doen) toont ook "0 artikelen" / "0 acties".
 - Archief (eenmalig, niet op de lijst): standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
   een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Terugzetten uit het archief stuurt het
@@ -614,7 +618,9 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Ongedaan maken: `omkeren(hs)` op het moment van de wijziging; één `ongedaanMelding`.
 - Per telefoon: `KEUZES`. Gedeelde instellingen: `INSTELLINGEN` en `instelling()`.
 - Editors: gedeelde `naamFout`, `linkVanInvoer`, `foutMelding`; de editors zelf blijven apart.
-- Schermbouwstenen: `bevestigPaneel`, `klapKop`, `sluitMelding`; alle iconen in één blok.
+- Schermbouwstenen: `bevestigPaneel`, `klapbareKop` (elke kop die open en dicht gaat: kopbalken,
+  afdelingen, Niet bij, Winkelmand en de subkoppen; met of zonder knop erin), `sluitMelding`;
+  alle iconen in één blok.
 - Deelschermen (artikel- en actie-editor, Aankopen, Historie, Backups, Logboek): `deelOpen(el, balk)`
   en `deelDicht()`. Ze openen in één laag (`#deel`) boven het tabblad waar je bent; dat tabblad blijft
   staan, dus bij sluiten zijn open afdelingen en scrollpositie er nog. Een editor kan zo vanaf elk
@@ -636,6 +642,12 @@ Een tweede object met dezelfde functies naast `ONEDRIVE`, plus een keuze bij het
 - Aanmelden: nagaan of een browser-app zonder server een vernieuwbare aanmelding krijgt (Microsoft: 24 uur).
 - Toegang tot een map van de ander met beperkte rechten (alleen eigen of gekozen bestanden).
 - CSP (connect-src) en de aanmeldknop; `aanmelden`, `toegang` en `wieBenIk` zijn nu Microsoft-specifiek.
+
+### Open punt: winkelmand en aankopen
+Het mandje (per telefoon: artikel, winkel, dag, plus wat nodig is om terug te zetten) en de
+aankopen (gedeeld: artikel, winkel, tijd) bewaren voor vandaag grotendeels hetzelfde. Na het
+uitproberen van de huidige winkelmand kiezen: zo laten, of "Gekocht vandaag" (de aankopen van
+vandaag uit het gedeelde bestand, per winkel; geen mandje per telefoon en geen leegknop meer).
 
 ### Bewust niet
 - Een CSP-hash (de CSP is voor alle apps gelijk, check_app bewaakt dat); seconden in de aankooptijd.

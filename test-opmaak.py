@@ -4,6 +4,7 @@
      randen van het vak te bedekken (ook als de tabbalk tijdens het typen verdwijnt).
   3. Na het sluiten van een artikel sta je weer op dezelfde plek in de winkel.
   4. Een afdeling verslepen met aanraken (touch) verandert de volgorde.
+  5. Tikvlakken in Boodschappen (winkelicoon, leegknop, subkoppen) zijn minstens 44 px.
 
   python3 test-opmaak.py            (vanuit de map van de app)
   APP=<map> python3 test-opmaak.py  (een andere versie van de app)
@@ -99,6 +100,17 @@ async def main():
         await pg.wait_for_timeout(200)
         n2 = await pg.evaluate(namen)
         check('slepen met aanraken: Brood twee plekken omhoog', n1 == 'Groente,Zuivel,Brood' and n2 == 'Brood,Groente,Zuivel', (n1, n2))
+
+        # 5. Tikvlakken in Boodschappen minstens 44 px (winkelicoon, leegknop, subkoppen)
+        await pg.evaluate("""() => { const d = datumTekst(new Date());
+          winkel.mandje.set('a00', { id: 'a00', naam: 'Artikel 00', winkel: 'pls', op: '', opdoor: '', datum: d });
+          winkel.mandje.set('a02', { id: 'a02', naam: 'Artikel 02', winkel: 'ahh', op: '', opdoor: '', datum: d });
+          handelen([{ actie: 'nieuw', soort: 'winkel', id: 'ahh', velden: { naam: 'AH' } }, { actie: 'nieuw', soort: 'artikel', id: 'nb1', velden: { naam: 'Elders', ligt: { ahh: '' } } }]);
+          handelen([{ actie: 'zet', soort: 'artikel', id: 'nb1', veld: 'op', oud: '', nieuw: tijdstipTekst(new Date()) }]);
+          winkel.id = 'pls'; winkel.mandjeOpen = true; toonScherm('winkel'); }""")
+        await pg.wait_for_timeout(150)
+        maten = await pg.evaluate("() => [...document.querySelectorAll('#winkelLijst .winkelkies, #winkelLijst .mandleeg, #winkelLijst .subkop')].map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
+        check('tikvlakken in Boodschappen minstens 44 px', len(maten) >= 4 and all(m[2] >= 44 and (m[1] >= 44) for m in maten), maten)
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()

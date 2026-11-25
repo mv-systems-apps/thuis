@@ -311,12 +311,12 @@ const BEGIN = [
   k = d.getElementById('keuze');
   [...k.querySelectorAll('.optie')].find((b) => b.textContent.startsWith('Lidl')).click();
   await slaap(100);
-  const eldersKop = d.querySelector('#winkelLijst .uitklap');
+  const eldersKop = (d.querySelector('#winkelLijst .elderspijl') || {}).parentNode;
   controle('winkel: in de Lidl staat Bananen onder "Niet bij Lidl centrum", rechts "1 artikel"', !!eldersKop && eldersKop.querySelector('span').textContent === 'Niet bij Lidl centrum' && eldersKop.querySelector('.tal').textContent === '1 artikel', eldersKop && eldersKop.textContent);
   if (eldersKop) { eldersKop.click(); await slaap(20); }
   const bananenElders = [...d.querySelectorAll('#winkelLijst .afd.grijs .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === 'Bananen');
   controle('winkel: onder de naam in grijs waar het wel te koop is', !!bananenElders && bananenElders.querySelector('.nm .winkels').textContent === 'Albert Heijn', bananenElders && bananenElders.textContent);
-  if (eldersKop) { d.querySelector('#winkelLijst .uitklap').click(); await slaap(20); }
+  if (eldersKop) { d.querySelector('#winkelLijst .elderspijl').click(); await slaap(20); }
   const losRij = d.querySelector('#winkelLijst .wrij .naarwinkel') && d.querySelector('#winkelLijst .wrij .naarwinkel').closest('.wrij');
   const losNaam = losRij ? losRij.querySelector('.nm').textContent : '';
   if (losRij) {
@@ -364,8 +364,8 @@ const BEGIN = [
   const mk = () => [...d.querySelectorAll('#winkelLijst .afdkop')].find((h) => h.firstChild.textContent === 'Winkelmand');
   controle('winkelmand: in de Lidl ook het mandje van de AH (dicht), voortgang blijft 1', !!mk() && mk().querySelector('.tal').textContent === '1 artikel' && !mk().parentNode.querySelector('.wrij') && /^1 van/.test(d.getElementById('winkelTeller').textContent), d.getElementById('winkelTeller').textContent);
   mk().querySelector('span').click(); await slaap(20);
-  const subs = () => [...d.querySelectorAll('#winkelLijst .subkop')].map((h) => h.firstChild.textContent + ':' + h.querySelector('.subpijl').getAttribute('aria-expanded')).join();
-  controle('winkelmand open in de Lidl: subkop Albert Heijn, dicht (niet de huidige winkel)', subs() === 'Albert Heijn:false' && !mk().parentNode.querySelector('.wrij'), subs());
+  const subs = () => [...d.querySelectorAll('#winkelLijst .subkop')].map((h) => h.firstChild.textContent + ':' + h.getAttribute('aria-expanded')).join();
+  controle('winkelmand open in de Lidl (zelf nog leeg): alle subkoppen dicht', subs() === 'Albert Heijn:false' && !mk().parentNode.querySelector('.wrij'), subs());
   d.querySelector('#winkelLijst .subkop').click(); await slaap(20);
   controle('subkop open: Bananen eronder', subs() === 'Albert Heijn:true' && /Bananen/.test(mk().parentNode.textContent), subs());
   d.getElementById('winkelKies').click();
@@ -1166,6 +1166,7 @@ const BEGIN = [
     controle('historie: kop onderaan Doen met het aantal', !!kop && /2/.test(kop.textContent));
     kop.querySelector('button').click(); await slaap(50);
     const hs = dH2.getElementById('historieScherm');
+    controle('historie: zonder tijdstip', !dH2.querySelector('#historieScherm .aankooprij .tijd'));
     controle('historie: scherm met de regels, zoekbalk onderaan, Doen-balk weg', !hs.hidden && hs.querySelectorAll('.aankooprij').length === 2 && !dH2.getElementById('balk-log').hidden && dH2.getElementById('balk-doen').hidden);
     [...hs.querySelectorAll('.aankooprij')].find((r) => /Bellen/.test(r.textContent)).click(); await slaap(20);
     const vH = dH2.getElementById('keuze');
@@ -1434,7 +1435,7 @@ const BEGIN = [
     controle('afvinken: twee in het mandje, teller 2 van 2', /Winkelmand/.test(lijstA.textContent) && dA.getElementById('winkelTeller').textContent === '2 van 2 artikelen', dA.getElementById('winkelTeller').textContent);
     await rust(2500);
     const tA = R(odA.bestanden['thuis.json'].tekst);
-    controle('afvinken: aankopen in het gedeelde bestand (naam en tijd, niet wie)', (tA.match(/^aankoop;(Melk|Brood);tijd=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/gm) || []).length === 2, tA);
+    controle('afvinken: aankopen in het gedeelde bestand (naam, tijd en winkel, niet wie)', (tA.match(/^aankoop;(Melk|Brood);tijd=\d{4}-\d{2}-\d{2}T\d{2}:\d{2};winkel=\w+$/gm) || []).length === 2, tA);
     wA.eval('winkel.mandjeOpen = true; tekenWinkel()');
     const melk = wA.eval("artikelen.find((a) => a.naam === 'Melk').id");
     wA.eval("handelen([{ actie: 'zet', soort: 'artikel', id: '" + melk + "', veld: 'op', oud: '', nieuw: '2026-11-28T06:00' }])");
@@ -1443,8 +1444,9 @@ const BEGIN = [
     controle('mandje: weer op de lijst = uit het mandje, niet dubbel; teller telt alleen wat er nog ligt (B6)', !/Melk/.test(mandjeTekst) && /Brood/.test(mandjeTekst) && dA.getElementById('winkelTeller').textContent === '1 van 2 artikelen', mandjeTekst + ' ' + dA.getElementById('winkelTeller').textContent);
     lijstA.querySelector('.naaraankopen button').click(); await slaap(30);
     const sch = dA.getElementById('aankopenScherm');
-    const rijen = () => [...sch.querySelectorAll('.aankooprij .nm')].map((x) => x.textContent).sort().join();
-    controle('aankopen: lijst per dag met tijd, kop "Vandaag"', !sch.hidden && rijen() === 'Brood,Melk' && /^Vandaag/.test(sch.querySelector('.kopbalk h3').textContent) && /^\d{2}:\d{2}$/.test(sch.querySelector('.aankooprij .tijd').textContent), rijen());
+    const rijen = () => [...sch.querySelectorAll('.aankooprij .nm')].map((x) => x.firstChild.textContent).sort().join();
+    const subs = () => [...sch.querySelectorAll('.aankooprij .sub')].map((x) => x.textContent).join();
+    controle('aankopen: lijst per dag zonder tijdstip, kop "Vandaag", met de winkel eronder', !sch.hidden && rijen() === 'Brood,Melk' && /^Vandaag/.test(sch.querySelector('.kopbalk h3').textContent) && !sch.querySelector('.aankooprij .tijd') && subs() === [1, 2].map(() => wA.eval('winkels[0].naam')).join(), rijen() + ' | ' + subs());
     const zk = dA.getElementById('logZoek'); zk.value = 'bro'; zk.dispatchEvent(new wA.Event('input'));
     controle('aankopen: zoekvak onderaan in eigen balk', !dA.getElementById('balk-log').hidden && !sch.contains(zk));
     controle('aankopen: zoeken filtert', rijen() === 'Brood');
@@ -2087,9 +2089,12 @@ const BEGIN = [
     dM.getElementById('tab-winkel').click(); await slaap(30);
     const lijst = dM.getElementById('winkelLijst');
     [...lijst.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Melk')).click(); await rust(1800);
-    const stand = () => [!!lijst.querySelector('.uitklap[aria-expanded="true"]'), !!lijst.querySelector('.mandpijl[aria-expanded="true"]')].join();
+    const stand = () => [!!lijst.querySelector('.elderspijl[aria-expanded="true"]'), !!lijst.querySelector('.mandpijl[aria-expanded="true"]')].join();
     controle('na afvinken: Niet bij en Winkelmand dicht', stand() === 'false,false', stand());
-    lijst.querySelector('.uitklap').click(); await slaap(20);
+    lijst.querySelector('.elderspijl').closest('.afdkop').querySelector('span').click(); await slaap(20);
+    lijst.querySelector('.winkelkies').click(); await slaap(20);
+    controle('winkelicoon bij Niet bij: opent "Welke winkel?", klapt niet', !!dM.getElementById('keuze') && /Welke winkel/.test(dM.querySelector('#keuze .kop').textContent) && stand().startsWith('true'), stand());
+    dM.querySelector('#keuze .kruis').click(); await slaap(20);
     lijst.querySelector('.mandpijl').closest('.afdkop').querySelector('span').click(); await slaap(20);
     controle('allebei open', stand() === 'true,true', stand());
     dM.getElementById('tab-boodschappen').click(); await slaap(20); dM.getElementById('tab-winkel').click(); await slaap(30);
@@ -2101,7 +2106,7 @@ const BEGIN = [
     /* In de AH ook iets afvinken: twee winkels in het mandje. */
     [...lijst.querySelectorAll('.wrij .vink')].find((b) => b.textContent.includes('Kaas')).click(); await rust(1800);
     lijst.querySelector('.mandpijl').closest('.afdkop').querySelector('span').click(); await slaap(20);
-    const subs = () => [...lijst.querySelectorAll('.subkop')].map((h) => h.firstChild.textContent + ':' + h.querySelector('.subpijl').getAttribute('aria-expanded')).join();
+    const subs = () => [...lijst.querySelectorAll('.subkop')].map((h) => h.firstChild.textContent + ':' + h.getAttribute('aria-expanded')).join();
     controle('twee winkels: huidige (AH) bovenaan en open, Plus dicht; kop telt alles', subs() === 'AH:true,Plus:false' && lijst.querySelector('.mandpijl').closest('.afdkop').querySelector('.tal').textContent === '2 artikelen', subs());
     controle('één knop leegmaken, op de hoofdkop', lijst.querySelectorAll('.mandleeg').length === 1 && !lijst.querySelector('.subkop .mandleeg'));
     lijst.querySelector('.mandleeg').click(); await slaap(30);
@@ -2136,7 +2141,7 @@ const BEGIN = [
     wG.eval("ws.afdOpen.add(winkels.find((w) => w.naam === 'Plus').afdelingen[0].id); tekenWinkels()");
     const mw = [...dG.querySelectorAll('#winkelDetail .item')].find((r) => naamVanRij(r) === 'Melk');
     controle('in een winkel ook geen andere winkels onder het artikel', !!mw && !mw.querySelector('.winkels'));
-    controle('per telefoon bewaard', wG.eval("JSON.stringify(KEUZES.weergave.waarde())") === '{"winkelTal":false,"artikelWinkels":false}');
+    controle('per telefoon bewaard', wG.eval("JSON.stringify(KEUZES.weergave.waarde())") === '{"winkelTal":false,"artikelWinkels":false,"aankoopWinkel":true}');
     dG.querySelector('#winkelDetail .terug').click(); await slaap(20);
     dG.getElementById('tab-instellingen').click(); await slaap(30);
     sw2.click(); await slaap(20);
