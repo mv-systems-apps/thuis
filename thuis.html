@@ -518,7 +518,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-001</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-002</div>
   </section>
 </main>
 
@@ -683,8 +683,9 @@ const SCHEMA = {
     link: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => veiligeLink(v) === v) },
     klaar: { type: 'tekst', zet: true, samen: 'nieuwste' }
   },
-  /* winkel: de id van de winkel waar het gekocht is (optioneel; oudere aankopen hebben hem niet). */
-  aankoop: { tijd: { type: 'tijdstip' }, winkel: { type: 'tekst' } },
+  /* winkel: de id van de winkel waar het gekocht is (optioneel; oudere aankopen hebben hem niet).
+     onzeker: "1" als het onder "Niet bij …" is afgevinkt (de app nam aan dat het daar te koop was). */
+  aankoop: { tijd: { type: 'tijdstip' }, winkel: { type: 'tekst' }, onzeker: { type: 'tekst', geldig: OOK_LEEG((v) => v === '1') } },
   historie: { tijd: { type: 'tijdstip' } }
 };
 const VELDEN = {};
@@ -1143,6 +1144,7 @@ function handelAankoop(model, h, verz) {
   if (verz.has(h.id)) return { status: 'al' };
   const o = { naam: h.naam, tijd: h.tijd };
   if (h.soort === 'aankoop' && isTekst(h.winkel) && h.winkel) o.winkel = h.winkel;
+  if (h.soort === 'aankoop' && h.onzeker === '1') o.onzeker = '1';
   try { verz.set(h.id, recordUitJson(h.soort, h.id, o)); } catch (e) { return { status: 'vervallen', reden: 'ongeldig' }; }
   return { status: 'ok' };
 }
@@ -4008,15 +4010,15 @@ function afvinken(a) {
   const nu = tijdstipTekst(new Date());
   /* Aankopen bewaren = 0: geen aankoop maken. */
   const aankoop = aankopenBewaren(model) > 0 ? nieuweId() : '';
-  /* Afgevinkt onder "Niet bij <winkel>": dan is het hier dus te koop (afdeling nog onbekend). */
-  const geplaatst = !!(winkel.id && winkelOpId.has(winkel.id) && !teKoopIn(a, winkel.id));
-  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop, geplaatst });
+  /* Afgevinkt onder "Niet bij <winkel>": de aankoop krijgt een vraagteken bij de winkel; de app
+     legt niet vast dat het hier te koop is (misschien kwam het ergens anders vandaan). */
+  const nietBij = !!(winkel.id && winkelOpId.has(winkel.id) && !teKoopIn(a, winkel.id));
+  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop });
   mandjeBewaren();
-  const hs = (aankoop ? [Object.assign({ actie: 'aankoop', soort: 'aankoop', id: aankoop, naam: a.naam, tijd: nu }, winkelOpId.has(winkel.id) ? { winkel: winkel.id } : {})] : []).concat([
+  const hs = (aankoop ? [Object.assign({ actie: 'aankoop', soort: 'aankoop', id: aankoop, naam: a.naam, tijd: nu }, winkelOpId.has(winkel.id) ? { winkel: winkel.id } : {}, nietBij ? { onzeker: '1' } : {})] : []).concat([
     { actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' },
     { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: a.opdoor, nieuw: '' }]);
   if (!al) hs.push({ actie: 'gekocht', soort: 'artikel', id: a.id, datum });
-  if (geplaatst) hs.push({ actie: 'plaats', soort: 'artikel', id: a.id, winkel: winkel.id, afd: '' });
   winkel.vertraagd.set(a.id, setTimeout(() => { winkel.vertraagd.delete(a.id); if (winkelOpen()) tekenWinkel(); }, VERTRAGING));
   handelen(hs);
 }
@@ -4032,8 +4034,6 @@ function terugOpLijst(id) {
               { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: '', nieuw: m.opdoor }];
   if (!m.alGekocht) hs.push({ actie: 'nietGekocht', soort: 'artikel', id, datum: m.datum });
   if (m.aankoop) hs.push({ actie: 'weg', soort: 'aankoop', id: m.aankoop });
-  /* Een mis-tik onder "Niet bij": de winkel er ook weer af. */
-  if (m.geplaatst) hs.push({ actie: 'plaats', soort: 'artikel', id, winkel: m.winkel, afd: null });
   handelen(hs);
 }
 
@@ -4269,8 +4269,10 @@ function tekenLog() {
     r.innerHTML = '<span class="nm"></span>';
     r.querySelector('.nm').textContent = x.naam;
     const w = soort === 'aankoop' && weergave.aankoopWinkel && x.winkel ? winkelOpId.get(x.winkel) : null;
-    if (w) { const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = w.naam; r.querySelector('.nm').appendChild(sub); }
-    r.setAttribute('aria-label', x.naam + (w ? ', ' + w.naam : '') + ', verwijderen');
+    /* "Plus?": afgevinkt onder "Niet bij Plus" (de app nam aan dat het daar te koop was). */
+    const wn = w ? w.naam + (x.onzeker ? '?' : '') : '';
+    if (w) { const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = wn; r.querySelector('.nm').appendChild(sub); }
+    r.setAttribute('aria-label', x.naam + (w ? ', ' + wn : '') + ', verwijderen');
     lijst.appendChild(r);
     n++;
   }

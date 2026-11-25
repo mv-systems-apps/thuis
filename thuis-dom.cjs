@@ -1719,13 +1719,18 @@ const BEGIN = [
     await slaap(30);
     wD.eval("const __m = winkel.mandje.get(artikelen.find((a) => a.naam === 'Brood').id); __m.datum = verschuif(datumTekst(new Date()), -1, 'dag'); mandjeOpschonen();");
     controle('mandje: afgevinkt op een eerdere dag gaat eruit (punt 2)', wD.eval('winkel.mandje.size') === 0);
-    /* Punt 9: afvinken onder "Niet bij" legt de winkel vast; terugtikken haalt hem weer weg. */
+    /* Afvinken onder "Niet bij": niet vastleggen dat het hier te koop is; de aankoop krijgt "Plus?". */
     const kid = wD.eval("artikelen.find((a) => a.naam === 'Kaas').id");
     const pid = wD.eval('winkel.id');
     wD.eval("afvinken(artikelen.find((a) => a.id === '" + kid + "'))"); await slaap(30);
-    controle('niet bij: afvinken legt vast dat het hier te koop is (punt 9)', wD.eval("model.artikelen.get('" + kid + "').ligt.has('" + pid + "')") && wD.eval("winkel.mandje.get('" + kid + "').geplaatst") === true);
+    const aank = wD.eval("JSON.stringify(Array.from(model.aankopen.values()).filter((x) => x.naam === 'Kaas').map((x) => [x.winkel, x.onzeker]))");
+    controle('niet bij: afvinken legt niet vast dat het hier te koop is; aankoop met winkel en vraagteken', !wD.eval("model.artikelen.get('" + kid + "').ligt.has('" + pid + "')") && aank === JSON.stringify([[pid, '1']]), aank);
+    wD.eval("logOpenen('aankoop')"); await slaap(30);
+    const sub = [...dD.querySelectorAll('#aankopenScherm .aankooprij')].find((r) => r.querySelector('.nm').firstChild.textContent === 'Kaas').querySelector('.sub').textContent;
+    controle('Aankopen: "Plus?" onder het artikel', sub === wD.eval('huidigeWinkel().naam') + '?', sub);
+    wD.eval('logSluiten()'); await slaap(20);
     wD.eval("terugOpLijst('" + kid + "')"); await slaap(30);
-    controle('niet bij: terugtikken haalt de winkel er weer af (punt 9)', !wD.eval("model.artikelen.get('" + kid + "').ligt.has('" + pid + "')") && wD.eval("model.artikelen.get('" + kid + "').ligt.size") === 1);
+    controle('niet bij: terugtikken laat de winkels van het artikel ongemoeid', !wD.eval("model.artikelen.get('" + kid + "').ligt.has('" + pid + "')") && wD.eval("model.artikelen.get('" + kid + "').ligt.size") === 1);
     /* Punt 10: typen wist "Van de lijst gehaald" niet. */
     dD.getElementById('tab-boodschappen').click(); await slaap(30);
     wD.eval("scherm.filter = 'L'; tekenBoodschappen()");

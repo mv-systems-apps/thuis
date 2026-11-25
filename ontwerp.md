@@ -150,7 +150,7 @@ om met de hand te bewerken.
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
-| `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id; afgevinkt in de winkel; niet wie) |
+| `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id) en `onzeker` ("1": afgevinkt onder Niet bij); niet wie |
 | `historie` | per id `naam`, `tijd` (actie afgerond; niet wie) |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
@@ -539,7 +539,8 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Mandje: per telefoon en per winkel. Wat weer op de lijst staat, verwijderd is of op een eerdere dag is
   afgevinkt, gaat er vanzelf uit. De voortgang telt wat in een van de mandjes ligt als gehaald.
 - Afvinken maakt een aankoop (gedeeld, naam en tijd, niet wie); terugtikken haalt hem weg. Afvinken
-  onder "Niet bij <winkel>" legt vast dat het daar te koop is; terugtikken haalt dat weer weg.
+  onder "Niet bij <winkel>" legt níet vast dat het daar te koop is; de aankoop krijgt wel de
+  winkel met een vraagteken (in Aankopen "Plus?"; veld `onzeker`).
   Aankopen bewaren: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
   een oudere versie) = geen aankopen.
 - Historie: elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken

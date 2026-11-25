@@ -745,14 +745,14 @@ controle('winkel: Gamma — geen melk, wel schroeven', () => {
   const ind = K.winkelIndeling(AL, win('gam01'));
   return gelijk(ind.zonder.map((a) => a.naam).join() + '|' + ind.groepen.map((g) => g.afd.naam).join() + '|' + ind.elders.map((a) => a.naam).join(), 'Cadeau|IJzerwaren|Melk');
 });
-controle('aankoop met winkel: bewaard in het bestand; zonder winkel (oud) ook goed; winkel-id volgt een samenvoeging', () => {
+controle('aankoop met winkel (en vraagteken): bewaard in het bestand; zonder winkel (oud) ook goed; winkel-id volgt een samenvoeging', () => {
   const k = kern();
   const m = k.leegModel();
-  k.pasToe(m, { actie: 'aankoop', soort: 'aankoop', id: 'aan01', naam: 'Melk', tijd: '2026-11-25T09:00', winkel: 'pls01' });
+  k.pasToe(m, { actie: 'aankoop', soort: 'aankoop', id: 'aan01', naam: 'Melk', tijd: '2026-11-25T09:00', winkel: 'pls01', onzeker: '1' });
   k.pasToe(m, { actie: 'aankoop', soort: 'aankoop', id: 'aan02', naam: 'Brood', tijd: '2026-11-25T09:01' });
   const j = JSON.parse(k.schrijfBestand(m));
   const h = k.vervangIds({ actie: 'aankoop', soort: 'aankoop', id: 'aan03', naam: 'Kaas', tijd: '2026-11-25T09:02', winkel: 'oud01' }, new Map([['oud01', 'nie01']]));
-  return gelijk([j.aankopen.aan01.winkel, String(j.aankopen.aan02.winkel), h.winkel].join('|'), 'pls01|undefined|nie01');
+  return gelijk([j.aankopen.aan01.winkel, j.aankopen.aan01.onzeker, String(j.aankopen.aan02.winkel), String(j.aankopen.aan02.onzeker), h.winkel].join('|'), 'pls01|1|undefined|undefined|nie01');
 });
 controle('winkel: aanbod per afdeling (ook niet op de lijst); verdwenen afdeling = onbekend; zonder winkels hoort er niet bij', () => {
   const W = { id: 'pls', afdelingen: [{ id: 'agf', naam: 'Groente' }, { id: 'zui', naam: 'Zuivel' }] };
