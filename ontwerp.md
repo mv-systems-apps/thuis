@@ -239,7 +239,8 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   (standaard dicht, tussen Op de lijst en Van de lijst gehaald): artikelen die langer
   geleden gekocht zijn dan gewoonlijk (minstens 3 aankopen nodig).
 - Recepten (filter): Favorieten (per telefoon, ster in het recept) en Overige, alfabetisch,
-  inklapbaar; onder de naam "6 artikelen" en de notitie. Onderaan "Recept": typen zoekt (ook op
+  inklapbaar; het aantal artikelen rechts vóór het pijltje (zoals bij een afdeling), de notitie
+  onder de naam; van een link alleen het ↗-icoontje achter de naam (de link zelf in het recept). Onderaan "Recept": typen zoekt (ook op
   #tag; categorieën doe je met tags), + maakt een recept (of opent het bestaande) en opent het.
 - Een recept: terug, naam, ster, potlood (naam, notitie, link, verwijderen). Notitie, tags en
   link staan in een witte band onder de kop (over de volle breedte, op de lijn van de naam) die
@@ -301,7 +302,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
-  staan notitie en link paars onder de regel, net als bij artikelen; in de winkel zelf in
+  staat de notitie met tags paars onder de regel; van een link alleen het ↗-icoontje achter de naam
+  (rustiger; de link zelf in de winkel); in de winkel zelf in
   dezelfde meescrollende band onder de kop als bij een recept. Afdelingen horen bij deze winkel alleen
   (de route, op volgorde). Gewoon: per afdeling een rij (zwart, niet vet) met het aantal artikelen en
   een pijltje ›. Onderaan "Afdeling?" (zelfde uiterlijk) als er hier artikelen zonder afdeling liggen.

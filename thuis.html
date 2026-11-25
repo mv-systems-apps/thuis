@@ -297,6 +297,8 @@
   .winkelrij{width:100%;min-height:60px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:19px;padding:6px 12px 6px 14px;text-align:left;color:var(--tekst)}
   /* Winkels en recepten: de rij is tikbaar, de naam is de knop (tags en link staan ernaast, niet erin). */
   div.lijstrij{cursor:pointer}
+  .lijstrij .heeftlink{display:inline-block;margin-left:8px;color:var(--paars);vertical-align:-1px}
+  .lijstrij .tal{flex-shrink:0;font-size:17px;color:var(--grijs);margin-right:-9px}
   .winkelrij .naamknop{display:block;width:100%;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:left;overflow-wrap:anywhere}
   .winkelrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere}
   .winkelrij .sub{display:block;font-size:17px;color:var(--grijs)}
@@ -562,7 +564,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-019</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-01A</div>
   </section>
 </main>
 
@@ -3950,11 +3952,17 @@ $('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald
 
 /* Een rij in de lijst Winkels of Recepten: het hele vlak is tikbaar, maar alleen de naam is een
    knop, zodat de tags en de link in de notitie er niet in zitten (knop in knop). */
-function lijstRij(klasse, icoon, naam, open) {
+/* Met een link alleen het icoontje achter de naam (rustiger); de link zelf staat in het scherm
+   van de winkel of het recept. tal: het aantal rechts, vóór het pijltje (zoals bij een afdeling). */
+function lijstRij(klasse, icoon, naam, open, x, tal) {
   const rij = document.createElement('div');
   rij.className = 'winkelrij lijstrij' + (klasse ? ' ' + klasse : '');
-  rij.innerHTML = icoon + '<span class="nm"><button class="naamknop" type="button"></button></span>' + PIJL_IN;
+  rij.innerHTML = icoon + '<span class="nm"><button class="naamknop" type="button"></button></span>' +
+    (tal !== undefined ? '<span class="tal"></span>' : '') + PIJL_IN;
   rij.querySelector('.naamknop').textContent = naam;
+  if (x && x.link) { const l = document.createElement('span'); l.className = 'heeftlink'; l.innerHTML = EXTERN; l.setAttribute('role', 'img'); l.setAttribute('aria-label', 'met link'); rij.querySelector('.naamknop').appendChild(l); }
+  if (tal !== undefined) rij.querySelector('.tal').textContent = String(tal);
+
   rij.addEventListener('click', open);
   return rij;
 }
@@ -3978,12 +3986,10 @@ function tekenRecepten(zoekend) {
     if (!dicht) {
       const kaart = document.createElement('div'); kaart.className = 'wkaart';
       for (const r of rijen) {
-        const b = lijstRij('receptrij', svgIcoon(PADEN.K, KLEUR.K, 24), r.naam, () => receptOpenen(r.id));
-        b.dataset.id = r.id;
         const n = r.artikelen.filter((x) => artikelOpId.has(x.id)).length;
-        const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = telTekst(n, 'artikel', 'artikelen');
-        b.querySelector('.nm').appendChild(sub);
-        if (r.notitie || r.link) b.querySelector('.nm').appendChild(notitieRegel(r, 'recept'));
+        const b = lijstRij('receptrij', svgIcoon(PADEN.K, KLEUR.K, 24), r.naam, () => receptOpenen(r.id), r, n);
+        b.dataset.id = r.id;
+        if (r.notitie) b.querySelector('.nm').appendChild(notitieRegel({ notitie: r.notitie }, 'recept'));
         kaart.appendChild(b);
       }
       sec.appendChild(kaart);
@@ -5102,14 +5108,14 @@ function tekenWinkelsOverzicht() {
     if (!dicht) {
       const kaart = document.createElement('div'); kaart.className = 'wkaart';
       for (const x of rijen) {
-        const b = lijstRij('', ICOON_WINKEL('#4B3CC0'), x.naam, () => winkelOpenen(x.id));
+        const b = lijstRij('', ICOON_WINKEL('#4B3CC0'), x.naam, () => winkelOpenen(x.id), x);
         /* "3 afdelingen, 8 artikelen"; zonder afdelingen alleen het aantal artikelen ("geen afdelingen" maakt de lijst onrustig). */
         if (weergave.winkelTal) {
           const s = document.createElement('span'); s.className = 'sub';
           s.textContent = (x.afdelingen.length ? telTekst(x.afdelingen.length, 'afdeling', 'afdelingen') + ', ' : '') + telTekst(n.get(x.id) || 0, 'artikel', 'artikelen');
           b.querySelector('.nm').appendChild(s);
         }
-        if (x.notitie || x.link) b.querySelector('.nm').appendChild(notitieRegel(x, 'winkel'));
+        if (x.notitie) b.querySelector('.nm').appendChild(notitieRegel({ notitie: x.notitie }, 'winkel'));
         kaart.appendChild(b);
       }
       sec.appendChild(kaart);

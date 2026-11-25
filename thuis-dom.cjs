@@ -960,7 +960,7 @@ const BEGIN = [
     dD.querySelector('#winkelDetail .terug').click(); await slaap(30);
     const gr = [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma'));
     const rg = (el) => [...el.children].map((c) => [...c.childNodes].map((x) => x.textContent).join('+')).join(' / ');
-    controle('winkel: notitie, daaronder tags en link', !!gr.querySelector('.notitie') && rg(gr.querySelector('.notitie')) === 'za tot 17:00 / #klussen+gamma.nl', gr && rg(gr.querySelector('.notitie')));
+    controle('winkel in de lijst: notitie, daaronder de tags; van de link alleen het icoontje achter de naam', !!gr.querySelector('.notitie') && rg(gr.querySelector('.notitie')) === 'za tot 17:00 / #klussen' && !!gr.querySelector('.naamknop .heeftlink') && !gr.querySelector('.link'), gr && rg(gr.querySelector('.notitie')));
     const wv = dD.getElementById('winkelsTekst');
     wv.focus(); wv.value = '#kl'; wv.dispatchEvent(new wD.Event('input')); await slaap(20);
     controle('winkels: zoeken op een tag', [...dD.querySelectorAll('#winkelsOverzicht .winkelrij .nm')].map((x) => x.firstChild.textContent).join() === 'Gamma' && opties() === '#klussen1', opties());
@@ -2286,11 +2286,11 @@ const BEGIN = [
     sug().querySelector('.kopbalk').click(); await slaap(20);
     controle('Suggesties open: Koffie met de suggestie, rondje zet op de lijst', !!sug().querySelector('.item') && naamVanRij(sug().querySelector('.item')) === 'Koffie' && !!sug().querySelector('.item .hint'));
     [...dR.querySelectorAll('#filters .filter')][4].click(); await slaap(20);
-    const rec = () => [...dR.querySelectorAll('#receptBlok .receptrij')].map((r) => r.querySelector('.nm').firstChild.textContent + ':' + r.querySelector('.sub').textContent).join();
-    controle('Recepten: één groep "Recepten", invoer "Recept"', rec() === 'Lasagne:2 artikelen' && dR.querySelector('#receptBlok .kop .kopnaam').textContent === 'Recepten' && dR.getElementById('invoerTekst').placeholder === 'Recept', rec());
+    const rec = () => [...dR.querySelectorAll('#receptBlok .receptrij')].map((r) => r.querySelector('.nm').firstChild.textContent + ':' + r.querySelector('.tal').textContent).join();
+    controle('Recepten: één groep "Recepten", invoer "Recept"', rec() === 'Lasagne:2' && dR.querySelector('#receptBlok .kop .kopnaam').textContent === 'Recepten' && dR.getElementById('invoerTekst').placeholder === 'Recept', rec());
     const vak = dR.getElementById('invoerTekst');
     vak.focus(); vak.value = '#pas'; vak.dispatchEvent(new wR.Event('input')); await slaap(20);
-    controle('Recepten: zoeken op #tag', rec() === 'Lasagne:2 artikelen', rec());
+    controle('Recepten: zoeken op #tag', rec() === 'Lasagne:2', rec());
     vak.value = ''; vak.dispatchEvent(new wR.Event('input')); vak.blur(); await slaap(20);
     dR.querySelector('#receptBlok .receptrij').click(); await slaap(30);
     const rijR = (n) => [...dR.querySelectorAll('#receptArtikelen .item')].find((r) => naamVanRij(r) === n);
@@ -2376,6 +2376,14 @@ const BEGIN = [
     dR.querySelector('#winkelDetail .kopnotitie .tag').click(); await slaap(30);
     controle('tag in de winkelkop: winkel dicht, Winkels zoekt op #dichtbij', !wR.eval('ws.open') && dR.getElementById('winkelsTekst').value === '#dichtbij' && !dR.getElementById('scherm-winkels').hidden);
     controle('nergens een tag of link in een knop (winkels, recepten, artikelen, Boodschappen)', !!dR.querySelector('#winkelsOverzicht .winkelrij .naamknop') && !!dR.querySelector('#winkelsOverzicht .winkelrij .tag') && !dR.querySelector('button .tag, button .link'), [!!dR.querySelector('#winkelsOverzicht .winkelrij .naamknop'), !!dR.querySelector('#winkelsOverzicht .winkelrij .tag'), ((dR.querySelector('#scherm-winkels button .tag, #scherm-winkels button .link, #scherm-boodschappen button .tag') || {}).closest && dR.querySelector('#scherm-winkels button .tag, #scherm-winkels button .link, #scherm-boodschappen button .tag').closest('button').outerHTML.slice(0, 300))].join(' '));
+    wR.eval("handelen([{ actie: 'zet', soort: 'winkel', id: winkels.find((w) => w.naam === 'Plus').id, veld: 'link', oud: '', nieuw: 'https://www.plus.nl/' }])"); await slaap(30);
+    const plusRij = [...dR.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Plus'));
+    controle('winkellijst met link: alleen het icoontje achter de naam, geen link', !!plusRij && !!plusRij.querySelector('.naamknop .heeftlink') && !plusRij.querySelector('.link') && /#dichtbij/.test(plusRij.textContent), wR.eval("JSON.stringify(winkels.find((w) => w.naam === 'Plus').link)") + ' ' + (plusRij && plusRij.innerHTML.slice(0, 400)));
+    plusRij.click(); await slaap(30);
+    controle('in de winkel zelf: de link staat er wel (tikbaar)', !!dR.querySelector('#winkelDetail .kopnotitie .link'));
+    dR.querySelector('#winkelDetail .terug').click(); await slaap(20);
+    wR.eval("handelen([{ actie: 'zet', soort: 'winkel', id: winkels.find((w) => w.naam === 'Plus').id, veld: 'link', oud: 'https://www.plus.nl/', nieuw: '' }])"); await slaap(30);
+    { const iv = dR.getElementById('winkelsTekst'); iv.value = '#dichtbij'; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
     dR.getElementById('tab-winkel').click(); await slaap(30);
     const melkTag = [...dR.querySelectorAll('#scherm-winkel .notitie .tag')].find((t) => t.textContent === '#zuivel');
     controle('Boodschappen: tag buiten de afvinkknop, een tik op de regel vinkt nog steeds af (knop = het rondje)', !!melkTag && !melkTag.closest('button') && !!melkTag.closest('.vink') && !!melkTag.closest('.vink').querySelector('button.vinkrond[aria-label]'));
@@ -2384,7 +2392,7 @@ const BEGIN = [
     { const iv = dR.getElementById('invoerTekst'); iv.value = ''; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
     wR.eval("receptOpenen('pas01')"); await slaap(30);
     dR.querySelector('#receptBlok .kopnotitie .tag').click(); await slaap(30);
-    controle('tag in de receptkop: recept dicht, Recepten zoekt op #pasta (Lasagne is verwijderd: alleen Pasta verde)', !wR.eval('rs.open') && wR.eval('receptModus()') && balk() === '#pasta' && rec() === 'Pasta verde:0 artikelen', balk() + ' ' + rec());
+    controle('tag in de receptkop: recept dicht, Recepten zoekt op #pasta (Lasagne is verwijderd: alleen Pasta verde)', !wR.eval('rs.open') && wR.eval('receptModus()') && balk() === '#pasta' && rec() === 'Pasta verde:0', balk() + ' ' + rec());
     { const iv = dR.getElementById('invoerTekst'); iv.value = ''; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
     wR.eval("doen.filter = 'alles'"); dR.getElementById('tab-doen').click(); await slaap(30);
     dR.querySelector('#scherm-doen .notitie .tag').click(); await slaap(30);
