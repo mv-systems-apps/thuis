@@ -37,7 +37,7 @@ MUTATIES = [
   ("instelling: standaard bij ongeldige waarde kwijt", "  return isTekst(v) && spec.geldig(v) ? v : (spec.standaard || '');", "  return v || (spec.standaard || '');"),
   ("constructor-veld kwijt", "if (!Object.prototype.hasOwnProperty.call(o, k)) Object.defineProperty(", "if (!(k in o)) Object.defineProperty("),
   ("aankopen niet beperkt", "  if (model.aankopen.size <= n) return 0;", "  return 0;"),
-  ("aankoop dubbel", "  if (verz.has(h.id)) return { status: 'al' };\n  try { verz.set(h.id, recordUitJson(h.soort", "  try { verz.set(h.id + 'x', recordUitJson(h.soort"),
+  ("aankoop dubbel", "  if (verz.has(h.id)) return { status: 'al' };\n  const o = { naam: h.naam, tijd: h.tijd };", "  const o = { naam: h.naam, tijd: h.tijd }; if (verz.has(h.id)) h = Object.assign({}, h, { id: h.id + 'x' });"),
   ("historie niet opgeruimd", "  for (const r of Array.from(model.historie.values())) if (r.tijd.slice(0, 10) < hg)", "  for (const r of []) if (r.tijd.slice(0, 10) < hg)"),
   ("maand vergeet de dag", "Math.min(dagWens || x.getDate(), laatste)", "Math.min(x.getDate(), laatste)"),
   ("B1: afvinken van vorige week haalt nieuwe week weg", "&& model.nu && wk.teruggezet <= model.nu && String(h.t || '').slice(0, 10) < wk.teruggezet.slice(0, 10)) return { status: 'al' };", "&& false) return { status: 'al' };"),
