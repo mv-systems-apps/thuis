@@ -54,7 +54,8 @@ MUTATIES = [
   ("alle backups weg", "return lijstB.filter((b) => !(b.d >= grensDag || (b.maand >= grensMaand && eersteVanMaand.has(b.n)))).map((b) => b.n);", "return lijstB.map((b) => b.n);"),
   ("aanbod: zonder winkels telt mee", "    const p = a.plekken.find((x) => x.winkel === winkel.id);\n    if (!p) continue;", "    const p = a.plekken.find((x) => x.winkel === winkel.id) || { afd: '' };"),
   ("aanbod: verdwenen afdeling kwijt", "    if (p.afd && per.has(p.afd)) per.get(p.afd).push(a); else onbekend.push(a);", "    if (p.afd && per.has(p.afd)) per.get(p.afd).push(a); else if (!p.afd) onbekend.push(a);"),
-  ("link: schema wordt zoekopdracht", "  if (v || /^[a-z][a-z0-9+.-]*:\\S/i.test(t)) return v;", "  if (v) return v;"),
+  ("link: schema wordt zoekopdracht", "  if (/^[a-z][a-z0-9+.-]*:\\/\\//i.test(t)) return veiligeLink(t);", ""),
+  ("link: elke punt is een adres", "ADRES_EXTENSIE.test(host)", "/\\./.test(host)"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))
 t = open(os.path.join(hier, 'thuis.html'), encoding='utf-8').read()

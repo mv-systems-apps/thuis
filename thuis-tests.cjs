@@ -382,12 +382,14 @@ controle('link: alleen https; zonder schema komt https:// ervoor; http, javascri
     'https://ah.nl/melk|https://www.ah.nl/p?x=1|||||||||https://ah.nl/||');
 });
 controle('link: korte naam is het domein zonder www', () => gelijk(K.linkNaam('https://www.ah.nl/x') + '|' + K.linkNaam('https://recepten.ah.nl/') , 'ah.nl|recepten.ah.nl'));
-controle('link of zoekwoorden: woorden worden een Google-zoekopdracht, terug als woorden; schema = moet een veilig adres zijn', () => {
+controle('link of zoekwoorden: alleen een adres als het er echt op lijkt (extensie of /); schema:// = moet een veilig adres zijn; de rest een Google-zoekopdracht', () => {
   const l = (x) => String(K.linkVanInvoer(x));
   const z = K.linkVanInvoer('  philips   hue e27 ');
   return gelijk([l('gamma.nl'), z, K.linkTekst(z), K.linkNaam(z), l('gamma'), l('http://ah.nl'), l('javascript:alert(1)'), l(''), l('x'.repeat(201)),
-    K.linkTekst('https://ah.nl/'), K.linkNaam('https://www.google.com/search?q=a&tbm=isch'), l('tomaat & ui')].join('|'),
-    'https://gamma.nl/|https://www.google.com/search?q=philips+hue+e27|philips hue e27|"philips hue e27"|https://www.google.com/search?q=gamma|null|null||null|https://ah.nl/|google.com|https://www.google.com/search?q=tomaat+%26+ui');
+    K.linkTekst('https://ah.nl/'), K.linkNaam('https://www.google.com/search?q=a&tbm=isch'), l('tomaat & ui'),
+    l('ah.nl/bonus'), l('Dr.Oetker'), l('AH:bonus'), K.linkTekst(K.linkVanInvoer('AH:bonus')), l('1/2'), l('ftp://ah.nl')].join('|'),
+    'https://gamma.nl/|https://www.google.com/search?q=philips+hue+e27|philips hue e27|"philips hue e27"|https://www.google.com/search?q=gamma|null|https://www.google.com/search?q=javascript%3Aalert(1)||null|https://ah.nl/|google.com|https://www.google.com/search?q=tomaat+%26+ui|' +
+    'https://ah.nl/bonus|https://www.google.com/search?q=Dr.Oetker|https://www.google.com/search?q=AH%3Abonus|AH:bonus|https://www.google.com/search?q=1%2F2|null');
 });
 controle('link: een onveilige link in een handeling of het bestand wordt niet aangenomen of niet getoond', () => {
   const k = kern();

@@ -203,8 +203,9 @@ Tabbalk met alleen iconen, vijf tabbladen: **Winkels** (winkelpui),
 **Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom; niet vanaf
 de rand van het scherm (terug-gebaar van Android), niet tijdens typen en niet in
 een menu of keuzelijst. De terugknop: zie §7a (Bewerken, terugknop en meldingen).
-Kleur per soort: wekelijks kobalt (een 7 in een cirkel), regelmatig turquoise
-(voorraaddoos), eenmalig paars (vakje met een 1). Rechte hoeken; tekst nooit
+Kleur en vorm per soort: eenmalig orchidee #8E33A6 (vierkant met 1), wekelijks kobalt (rondje met 7),
+regelmatig turquoise (zeshoek met n, "n keer"); het teken staat precies in het midden, 9 hoog.
+Ook zonder kleur te onderscheiden aan de vorm. Rechte hoeken; tekst nooit
 kleiner dan 17 px; knoppen minstens 44 px.
 
 Maten: het rondje (op/van de lijst, afvinken) is overal 28 px en krimpt nooit;
@@ -235,12 +236,14 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Aantal: tik op het soorticoon (of op "2×") en onder de regel klapt de teller
   open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam (vet paars, 18 px, geen badge), ook
   in Boodschappen. Het aantal blijft staan na het kopen.
-- Link: apart veld onder Notitie ("Link of zoekwoorden"). Een adres zonder https://
-  krijgt dat vanzelf; met een schema (http, javascript, data, …), een naam of
-  wachtwoord erin: geweigerd met "Alleen links met https:// zijn toegestaan."
-  Wat geen adres is ("philips hue e27") wordt een Google-zoekopdracht (gewone
-  https-link in het bestand); in het bewerkveld staan dan weer de woorden.
-  In de lijsten "ah.nl ↗" of «"philips hue e27" ↗»; een tik opent een nieuw
+- Link: apart veld onder Notitie ("Link of zoekwoorden"). Een adres is één woord met
+  een bekende extensie (.nl, .com, .be, .de, .eu, .org, .net, .shop, .info, …) of een "/"
+  ("gamma.nl", "ah.nl/bonus"); dat krijgt https:// vanzelf. Met "schema://" ervoor
+  (http://, ftp://, …), een naam of wachtwoord erin: geweigerd met "Alleen links met
+  https:// zijn toegestaan." Al het andere ("philips hue e27", "Dr.Oetker", "AH:bonus",
+  ook "javascript:…") wordt een Google-zoekopdracht (gewone https-link in het bestand);
+  in het bewerkveld staan dan weer de woorden.
+  In de lijsten "ah.nl" of «"philips hue e27"», onderstreept, met erachter het icoon "pijl uit een vierkantje" (rechte hoeken); een tik opent een nieuw
   tabblad (noopener, noreferrer). Ook bij het tonen opnieuw gecontroleerd.
 - Notitie: in het bewerkscherm onder Naam, één tekst. In de lijsten paars onder
   de winkels (zelfde letter), in Boodschappen onder de naam: eerst de tekst,
@@ -286,7 +289,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   dezelfde plek). Onder een artikel alleen de andere winkels.
 - Onderaan "Artikel": typen filtert de artikelen van de afdeling en toont boven de balk eerst de
   artikelen van deze winkel die in een andere afdeling of onder "Afdeling?" liggen (grijs eronder
-  waar; een tik verplaatst het hierheen), dan artikelen uit andere winkels (winkelicoon erachter;
+  waar; een tik verplaatst het hierheen), dan artikelen uit andere winkels (grijs winkelicoon erachter;
   een tik opent een paneel met de winkels en afdelingen waar het ligt en als laatste regel, paars,
   "+ <deze winkel>" met deze afdeling; Annuleren of Voeg toe, de andere winkels blijven), dan
   "+ Nieuw: "…"" (niet als de precieze naam al in het lijstje staat). Nergens vastgelegd: geen
@@ -314,7 +317,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
 - Vier hoofdgroepen, even hoog (46 px), paars verloop met witte letters: de gekozen winkel,
-  "Elders", "Winkelmand" en "Historie" (de aankopen). De winkelkop klapt de winkel open en dicht
+  "Elders", "Winkelmand" en "Aankopen". De winkelkop klapt de winkel open en dicht
   (open bij het kiezen van een winkel); het winkelicoon erin opent de keuzelijst. De afdelingen
   eronder zijn lichtpaars.
 - De winkelnaam; een tik op het winkelicoon opent de keuzelijst "Welke winkel?" met
@@ -351,7 +354,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Elk afgevinkt artikel onthoudt in welke winkel het in het mandje kwam; "Winkelmand"
   toont ze allemaal, met de winkel onder het artikel.
   Leegmaken geldt voor het hele mandje (6 s Ongedaan maken).
-- Geen toevoegen op dit tabblad: dat gaat via Lijst.
+- Geen toevoegen op dit tabblad: dat gaat via Artikelen.
 - Een artikel dat de ander op de lijst zette, krijgt "nieuw" tot je het gezien hebt.
 - Verversen elke 30 s zolang dit tabblad open is.
 
@@ -407,13 +410,16 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Zet je meteen nog een backup terug (binnen een uur en zonder wijzigingen
   ertussen), dan blijft `thuis_voor_terugzetten.json` de stand van vóór de
   eerste poging.
-- Archief: "Verwijderen als niet gekocht in" 1 week, 1 mnd, 3 mnd,
-  1 jaar (standaard). Geldt voor beiden (in thuis.json).
+- Volgorde van de blokken: Synchroniseren, Wekelijks terug op de lijst, Aankopen,
+  Weergave, Doen, Gegevens, App.
+- Aankopen: eerst "Bijhouden" (aantal), dan "Verwijderen als niet
+  gekocht in" (eenmalige artikelen in het archief) 1 week, 1 mnd, 3 mnd, 1 jaar (standaard).
+  Geldt voor beiden (in thuis.json).
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
 - Weergave (per telefoon, schakelaars met rechte hoeken): "Aantallen bij winkel",
-  "Winkels bij artikel" en "Winkel in Historie" (de aankoophistorie in Boodschappen).
+  "Winkels bij artikel" en "Winkel bij aankoop" (in Aankopen in Boodschappen).
   Standaard uit, uit, aan; een keuze die je zelf maakte blijft staan.
   "Winkels bij artikel" gaat over de grijze regel onder een
   artikel: op Artikelen, ook bij zoeken met @, en in een winkel op het tabblad Winkels;
@@ -541,7 +547,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Nieuwe dag of wekelijks moment voorbij (na middernacht, of 's ochtends weer geopend): opnieuw
   uitrekenen en tekenen, ook als het bestand niet veranderde (`dagNagaan`).
 
-### Wekelijks, mandje, aankopen en historie
+### Wekelijks, mandje, Aankopen en Gedaan
 - Wekelijks gaat hooguit één keer per week terug op de lijst, minstens 4 dagen na de vorige keer; een
   andere dag of tijd geldt vanaf de volgende week; een moment meer dan twee dagen na nu telt als vorige
   week. De sync doet eerst wekelijks terug, dan de wachtrij; de telefoon rekent het ook zelf (offline).
@@ -552,15 +558,15 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Afvinken maakt een aankoop (gedeeld, naam, tijd en winkel, niet wie); terugtikken haalt hem weg. Afvinken
   onder "Elders" legt níet vast dat het daar te koop is; de aankoop krijgt wel de
   winkel met een vraagteken (in Aankopen "Plus?"; veld `onzeker`).
-  Aankopen bewaren: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
+  Aankopen bijhouden: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
   een oudere versie) = geen aankopen.
-- Historie: elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
-  haalt de regel weg; later heropenen niet. Bewaren 1 week t/m 1 jaar (standaard 3 maanden).
-- Aankopen en Historie: een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
+- Gedaan (Doen; in de code en het bestand `historie`): elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
+  haalt de regel weg; later heropenen niet. "Afgeronde acties verwijderen na" 1 week t/m 1 jaar (standaard 3 maanden); korter vraagt eerst ("12 afgeronde acties verwijderen?").
+- Aankopen (Boodschappen) en Gedaan (Doen): een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
   Zonder tijdstip (de dag zegt genoeg). Bij een aankoop grijs de winkel eronder (een
   aankoop onthoudt de winkel, optioneel veld `winkel`; oudere aankopen hebben hem niet),
   uit te zetten bij Instellingen → Weergave.
-  De regel Aankopen (onder Boodschappen) en Historie (onder Doen) toont ook "0".
+  De regels Aankopen onder Boodschappen en Gedaan onder Doen tonen ook "0". Het woord "Historie" komt in de app niet meer voor.
 - Archief (eenmalig, niet op de lijst): standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
   een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Terugzetten uit het archief stuurt het
   hele artikel mee.
@@ -604,7 +610,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Filterknoppen even breed; past een naam niet, dan voor de hele rij korter (Wk, Mnd, Jr), gemeten.
 - "Winkel?" als eigen kaart; voortgangsbalk altijd, ook bij 0 van 0. Lege schermen: "Geen …".
   Een kop die het woord al noemt, toont alleen het getal. Winkelmand leegmaken: kleine turquoise knop.
-- Tijd (wekelijks) en Aankopen bewaren: eigen keuzepanelen in de stijl van de app.
+- Tijd (wekelijks) en Aankopen bijhouden: eigen keuzepanelen in de stijl van de app.
 
 ### Performance
 - Netwerk: een ronde vraagt alleen id, eTag, tijd en downloadlink op (`$select`); de inhoud alleen als
@@ -633,7 +639,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Schermbouwstenen: `bevestigPaneel`, `klapbareKop` (elke kop die open en dicht gaat: kopbalken,
   afdelingen, Elders en Winkelmand; met of zonder knop erin), `sluitMelding`;
   alle iconen in één blok.
-- Deelschermen (artikel- en actie-editor, Aankopen, Historie, Backups, Logboek): `deelOpen(el, balk)`
+- Deelschermen (artikel- en actie-editor, Aankopen, Gedaan, Backups, Logboek): `deelOpen(el, balk)`
   en `deelDicht()`. Ze openen in één laag (`#deel`) boven het tabblad waar je bent; dat tabblad blijft
   staan, dus bij sluiten zijn open afdelingen en scrollpositie er nog. Een editor kan zo vanaf elk
   tabblad openen. Met een deelscherm open tekent alleen dat; het tabblad tekent bij sluiten.
@@ -655,16 +661,12 @@ Een tweede object met dezelfde functies naast `ONEDRIVE`, plus een keuze bij het
 - Toegang tot een map van de ander met beperkte rechten (alleen eigen of gekozen bestanden).
 - CSP (connect-src) en de aanmeldknop; `aanmelden`, `toegang` en `wieBenIk` zijn nu Microsoft-specifiek.
 
-### Open punt: winkelmand en aankopen
-Het mandje (per telefoon: artikel, winkel, dag, plus wat nodig is om terug te zetten) en de
-aankopen (gedeeld: artikel, winkel, tijd) bewaren voor vandaag grotendeels hetzelfde. Na het
-uitproberen van de huidige winkelmand kiezen: zo laten, of "Gekocht vandaag" (de aankopen van
-vandaag uit het gedeelde bestand, per winkel; geen mandje per telefoon en geen leegknop meer).
-
 ### Bewust niet
 - Een CSP-hash (de CSP is voor alle apps gelijk, check_app bewaakt dat); seconden in de aankooptijd.
 - Een verloren antwoord bij exact gelijktijdig dezelfde wijziging (zeldzaam, één artikel).
 - Eigenaren of "wie" bij artikelen, acties en handelingen (alleen "opdoor" voor "nieuw").
+- "Gekocht vandaag" in plaats van de winkelmand: de mand wordt niet vanzelf leeg (een deel
+  vrijdag, de rest zaterdag), dus "vandaag" past niet; de winkelmand blijft.
 
 ## 7b. Veiligheid
 

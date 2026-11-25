@@ -4,8 +4,10 @@
      randen van het vak te bedekken (ook als de tabbalk tijdens het typen verdwijnt).
   3. Na het sluiten van een artikel sta je weer op dezelfde plek in de afdeling, en terug uit
      een afdeling op dezelfde plek in de route.
+  3b. De eerste letter na scrollen sluit het keuzelijstje niet; zelf scrollen wel.
   4. Een afdeling verslepen met aanraken (touch) verandert de volgorde.
-  5. Tikvlakken in Boodschappen (winkelicoon, leegknop) zijn minstens 44 px.
+  5. Tikvlakken in Boodschappen (winkelicoon, leegknop) en elders (Volgorde, ster, potlood,
+     soorticoon, schakelaarregels) zijn minstens 44 px; tik op de tekst zet een schakelaar om.
   6. Een lange winkelnaam loopt door op een tweede regel in plaats van afgekapt te worden.
 
   python3 test-opmaak.py            (vanuit de map van de app)
@@ -96,6 +98,19 @@ async def main():
         terug = await pg.evaluate("() => document.getElementById('midden').scrollTop")
         check('scrollpositie: afdeling begint bovenaan, terug naar de route op dezelfde plek', route == 300 and inafd == 0 and terug == route, (route, inafd, terug))
 
+        # 3b. Eerste letter na scrollen: het keuzelijstje blijft staan (het scherm gaat naar boven, dat sluit het niet)
+        await pg.evaluate("""() => { const h = []; for (let i = 0; i < 20; i++) h.push({ actie: 'nieuw', soort: 'artikel', id: 'zz' + String(i).padStart(3, '0'), velden: { naam: 'Zuivel ' + i, ligt: { pls: 'zui' } } });
+          handelen(h); afdelingOpenen('zui'); document.getElementById('midden').scrollTop = 400; }""")
+        await pg.wait_for_timeout(100)
+        gescrold = await pg.evaluate("() => document.getElementById('midden').scrollTop")
+        await pg.click('#winkelsTekst'); await pg.keyboard.type('z'); await pg.wait_for_timeout(400)
+        zicht = await pg.evaluate("() => !document.getElementById('tagLijst').hidden && document.querySelectorAll('#tagLijst .tagoptie').length")
+        check('eerste letter na scrollen: keuzelijstje blijft staan', gescrold > 100 and bool(zicht), (gescrold, zicht))
+        await pg.mouse.move(195, 300); await pg.mouse.wheel(0, 200); await pg.wait_for_timeout(150)
+        dicht = await pg.evaluate("() => document.getElementById('tagLijst').hidden")
+        check('zelf scrollen sluit het keuzelijstje', dicht, dicht)
+        await pg.evaluate("() => { const v = document.getElementById('winkelsTekst'); v.value = ''; v.dispatchEvent(new Event('input')); v.blur(); afdelingDicht(true); }")
+
         # 4. Afdeling verslepen met aanraken
         await pg.evaluate("() => { ws.volgorde = true; tekenWinkels(); document.getElementById('midden').scrollTop = 0; }")
         await pg.wait_for_timeout(100)
@@ -122,6 +137,18 @@ async def main():
         await pg.wait_for_timeout(150)
         maten = await pg.evaluate("() => [...document.querySelectorAll('#winkelLijst .winkelkies, #winkelLijst .mandleeg')].map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
         check('tikvlakken in Boodschappen minstens 44 px', len(maten) >= 2 and all(m[2] >= 44 and (m[1] >= 44) for m in maten), maten)
+
+        # 5b. Tikvlakken elders: Volgorde, ster, potlood, soorticoon; schakelaars over de hele regel
+        await pg.evaluate("() => { toonScherm('winkels'); winkelOpenen('pls'); }"); await pg.wait_for_timeout(100)
+        m2 = await pg.evaluate("() => [...document.querySelectorAll('#winkelDetail .kopknop, #winkelDetail .icoonknop')].map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
+        await pg.evaluate("() => afdelingOpenen('zui')"); await pg.wait_for_timeout(100)
+        m2 += await pg.evaluate("() => [...document.querySelectorAll('#winkelDetail .item .icoon')].slice(0, 1).map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
+        await pg.evaluate("() => { afdelingDicht(true); winkelDicht(); toonScherm('instellingen'); }"); await pg.wait_for_timeout(100)
+        m2 += await pg.evaluate("() => ['swWinkelTal', 'swArtikelWinkels', 'swAankoopWinkel'].map((id) => { const r = document.getElementById(id).closest('.rij').getBoundingClientRect(); return [id, Math.round(r.width), Math.round(r.height)]; })")
+        check('tikvlakken elders minstens 44 px (Volgorde, ster, potlood, soorticoon, schakelaarregels)', len(m2) >= 7 and all(x[1] >= 44 and x[2] >= 44 for x in m2), m2)
+        aan = await pg.evaluate("() => { const v = weergave.winkelTal; document.getElementById('lblWinkelTal').click(); const n = weergave.winkelTal; document.getElementById('lblWinkelTal').click(); return v !== n && weergave.winkelTal === v; }")
+        check('tik op de tekst van een schakelaar zet hem om', aan, aan)
+        await pg.evaluate("() => toonScherm('winkel')")
 
         # 6. Lange winkelnaam: niet afgekapt maar op twee regels, aantal en knoppen blijven rechts
         await pg.evaluate("() => { handelen([{ actie: 'zet', soort: 'winkel', id: 'pls', veld: 'naam', oud: 'Plus', nieuw: 'Albert Heijn XL Arnhem Centrum' }]); winkel.kaartOpen = true; tekenWinkel(); }")
