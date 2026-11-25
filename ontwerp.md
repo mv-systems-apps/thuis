@@ -94,7 +94,7 @@ om met de hand te bewerken.
   wordt bij het lezen genegeerd en nooit geschreven (RFC 8259); hij verdwijnt
   bij de volgende wijziging, net als in de andere apps.
 - `versie`: datum en tijd van de laatste formaatwijziging in hex, zoals het
-  versiestempel (`1352902-459` = 22-11-2026 11:13). Nieuwer dan de app kent:
+  versiestempel (`1352905-7DA` = 25-11-2026 20:10, recepten erbij; daarvoor `1352902-459`). Nieuwer dan de app kent:
   niets schrijven, melding om bij te werken. Ontbrekend: niet lezen. Ouder: stap
   voor stap omzetten met de tabel `MIGRATIES` in de kern (ook bij een backup);
   ontbreekt een stap, dan niet lezen. Regel: een optioneel veld erbij is géén
@@ -125,7 +125,7 @@ om met de hand te bewerken.
 
 ```json
 {
-"versie": "1352902-459",
+"versie": "1352905-7DA",
 "instellingen": {
  "wekelijks": {"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"},
  "archief": {"bewaren":"1m"}
@@ -148,7 +148,8 @@ om met de hand te bewerken.
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`, `auto` (ja/nee, standaard ja); `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
-| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums); `voor` (recept-id → { `naam`, `aantal` }: waarvoor het extra op de lijst staat; het regeltje toont de huidige naam van het recept; de naam wordt onthouden (bij verwijderen de laatste), zodat het regeltje klopt als het recept weg is; van de lijst of afgevinkt = leeg); `opvoor` ("1" = staat alleen voor recepten op de lijst, het eigen aantal telt dan niet) |
+| `recepten` | `naam`, `notitie` (met #tags), `link`, `artikelen` (artikel-id → aantal "1" t/m "99") |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
 | `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id) en `onzeker` ("1": afgevinkt onder Elders); niet wie |
 | `historie` | per id `naam`, `tijd` (actie afgerond; niet wie) |
@@ -160,7 +161,8 @@ Opruimen door de app: afgeronde acties na 3 maanden; historie na de ingestelde
 tijd (standaard 3 maanden); aankopen boven het ingestelde aantal; eenmalige artikelen in
 het archief (niet op de lijst) die de ingestelde tijd niet gekocht zijn
 (`instellingen.archief.bewaren`: `1w`, `1m`, `3m`, `1j` standaard; de laatste
-dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
+dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan; een artikel
+in een recept blijft altijd staan, anders verdwijnt het ongemerkt uit dat recept).
 
 ## 4. Samenvoegen
 
@@ -224,7 +226,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Tijdens het typen verdwijnen de onderbalken, zodat er ruimte is voor de
   resultaten.
 - Filterknoppen (icoon + aantal): Op de lijst, Eenmalig, Wekelijks,
-  Regelmatig, Suggesties (lampje). Eenmalig toont (en telt) alleen wat op de
+  Regelmatig, Recepten (kookpan; telt recepten). Eenmalig toont (en telt) alleen wat op de
   lijst staat; gekocht of van de lijst gehaald gaat een eenmalig artikel naar
   het "Archief" eronder (ingeklapt, nieuwste eerst, grijs, met "gekocht 19 nov"
   of "van de lijst 14 jul"; de + zet het terug). Zoeken vindt ook het archief.
@@ -233,9 +235,32 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   openen van de app staat "Op de lijst" aan.
   Elke lijst heeft een kopbalk (lichtpaars, paarse titel, rechts het aantal).
   Overal geldt de volgorde eenmalig,
-  wekelijks, regelmatig. Suggesties: artikelen die langer geleden
-  gekocht zijn dan gewoonlijk (minstens 3 aankopen nodig). Zonder historie
-  staat er uitleg.
+  wekelijks, regelmatig. Suggesties: onder Op de lijst een inklapbare kop met het lampje
+  (standaard dicht, tussen Op de lijst en Van de lijst gehaald): artikelen die langer
+  geleden gekocht zijn dan gewoonlijk (minstens 3 aankopen nodig).
+- Recepten (filter): Favorieten (per telefoon, ster in het recept) en Overige, alfabetisch,
+  inklapbaar; onder de naam "6 artikelen" en de notitie. Onderaan "Recept": typen zoekt (ook op
+  #tag; categorieën doe je met tags), + maakt een recept (of opent het bestaande) en opent het.
+- Een recept: terug, naam, ster, potlood (naam, notitie, link, verwijderen). Notitie, tags en
+  link staan in een witte band onder de kop (over de volle breedte, op de lijn van de naam) die
+  meescrolt; de kop zelf blijft klein en staat vast. Zo blijft het rustig bij veel of lange tags.
+  Daaronder "Artikelen", alfabetisch, met het aantal van het recept; icoon of "4×" opent de
+  teller (− n +, minimaal 1, met een prullenbak: uit het recept, met Ongedaan maken). Het
+  rondje zet het artikel voor dit recept op de lijst (of haalt dat recept er weer af); niet
+  het hele recept in één keer, want wat je in huis hebt, hoef je niet te kopen. Onderaan
+  "Artikel": typen filtert en toont boven de balk artikelen die nog niet in het recept staan,
+  en "+ Nieuw" (een nieuw artikel wordt eenmalig).
+- Aantallen met recepten: één regel, opgeteld. Melk staat 3× (wekelijks) op de lijst, Lasagne
+  heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", grijs eronder "3 + 4 Lasagne + 2
+  Pannenkoeken". Stond het er alleen voor recepten op: "4 Lasagne + 2 Pannenkoeken" (één
+  recept: alleen "Lasagne"). Het aantal in een recept aanpassen telt mee op de lijst. Van de
+  lijst (rondje op Artikelen) of afgevinkt: de recepten gaan eraf, het eigen aantal blijft (melk
+  weer 3×); terugtikken in de winkelmand of onder "Van de lijst gehaald" zet ze terug. Staat het er alleen voor recepten op, dan is + in de teller "ook zelf nodig": het eigen aantal telt weer mee (3 + 4 Lasagne = 7×); − doet dan niets. Gaat het laatste recept eraf terwijl
+  het er alleen daarvoor op stond, dan gaat het van de lijst. Wekelijks terug telt het eigen
+  aantal weer mee. Het regeltje staat overal waar een aantal en een rondje staan (Artikelen,
+  Boodschappen, de tab Winkels, het recept), niet in de Winkelmand, Aankopen, Van de lijst
+  gehaald en het Archief. Een recept verwijderen laat de lijst ongemoeid; een artikel
+  verwijderen haalt het ook uit de recepten (Ongedaan maken zet het terug).
 - Aantal: tik op het soorticoon (of op "2×") en onder de regel klapt de teller
   open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam (vet paars, 18 px, geen badge), ook
   in Boodschappen. Het aantal blijft staan na het kopen.
@@ -250,7 +275,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   tabblad (noopener, noreferrer). Ook bij het tonen opnieuw gecontroleerd.
 - Notitie: in het bewerkscherm onder Naam, één tekst. In de lijsten paars onder
   de winkels (zelfde letter), in Boodschappen onder de naam: eerst de tekst,
-  daaronder de tags (vet) met de link erachter. Blijft staan.
+  daaronder de tags met de link erachter (niets vet; de link onderstreept met ↗). Blijft staan.
 - Tagkeuze: zwevend boven het vak waarin je typt (notitie: 6 px, het toetsenbord zit
   eronder; zoekvak: 9 px, zodat ook de focusrand zichtbaar blijft), even breed, met een
   paarse rand en een lichte schaduw; schuift mee als het scherm verschuift.
@@ -276,7 +301,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
-  staan notitie en link paars onder de regel, net als bij artikelen. Afdelingen horen bij deze winkel alleen
+  staan notitie en link paars onder de regel, net als bij artikelen; in de winkel zelf in
+  dezelfde meescrollende band onder de kop als bij een recept. Afdelingen horen bij deze winkel alleen
   (de route, op volgorde). Gewoon: per afdeling een rij (zwart, niet vet) met het aantal artikelen en
   een pijltje ›. Onderaan "Afdeling?" (zelfde uiterlijk) als er hier artikelen zonder afdeling liggen.
   De kop heet "Route", rechts het aantal afdelingen (alleen het getal) en "Volgorde" (pijltjes):
@@ -417,11 +443,13 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Zet je meteen nog een backup terug (binnen een uur en zonder wijzigingen
   ertussen), dan blijft `thuis_voor_terugzetten.json` de stand van vóór de
   eerste poging.
-- Volgorde van de blokken: Synchroniseren, Wekelijks terug op de lijst, Aankopen,
-  Weergave, Doen, Gegevens, App.
-- Aankopen: eerst "Bijhouden" (aantal), dan "Verwijderen als niet
-  gekocht in" (eenmalige artikelen in het archief) 1 week, 1 mnd, 3 mnd, 1 jaar (standaard).
-  Geldt voor beiden (in thuis.json).
+- Volgorde van de blokken: Synchroniseren, Wekelijks terug op de lijst,
+  Weergave, Doen, Bewaren, Gegevens, App.
+- Doen: alleen "Standaard tonen".
+- Bewaren (alles over hoe lang iets blijft; geldt voor beiden, in thuis.json):
+  "Aankopen" (aantal), "Archief: verwijderen als niet gekocht in" (eenmalige
+  artikelen in het archief) 1 week, 1 mnd, 3 mnd, 1 jaar (standaard), en
+  "Afgeronde acties: verwijderen na".
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
@@ -459,7 +487,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 
 ### 5.9 Tags
 - Een tag is `#woord` in een notitie (artikel, winkel, actie), zoals in events
-  maar zonder subtags; `_` wordt getoond als spatie. In de lijst vet.
+  maar zonder subtags; `_` wordt getoond als spatie. Niet vet; alleen de link is onderstreept.
+  Namen van winkels en recepten in de lijsten ook niet vet: zwart tegen paars onderscheidt genoeg.
+- Een tag is tikbaar: zoeken op die tag waar dat soort staat, zoals de tag kiezen in het zoekvak.
+  Artikel (ook in de winkel of een recept) → Artikelen, in alle artikelen; recept → Recepten;
+  winkel → Winkels; actie → Doen. Een open recept of winkel gaat dicht. De link blijft de pagina openen.
 - In elk zoekvak: `#` toont de tags met aantal boven de balk; verder typen
   filtert, tikken kiest. Met `#` zoekt het vak alleen op tags in de notitie
   (begint met); zonder `#` op de naam. Een `#` in een naam mag, maar telt niet als tag.
@@ -568,7 +600,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   Aankopen bijhouden: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
   een oudere versie) = geen aankopen.
 - Gedaan (Doen; in de code en het bestand `historie`): elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
-  haalt de regel weg; later heropenen niet. "Afgeronde acties verwijderen na" 1 week t/m 1 jaar (standaard 3 maanden); korter vraagt eerst ("12 afgeronde acties verwijderen?").
+  haalt de regel weg; later heropenen niet. "Afgeronde acties: verwijderen na" (blok Bewaren) 1 week t/m 1 jaar (standaard 3 maanden); korter vraagt eerst ("12 afgeronde acties verwijderen?").
 - Aankopen (Boodschappen) en Gedaan (Doen): een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
   Zonder tijdstip (de dag zegt genoeg). Bij een aankoop grijs de winkel eronder (een
   aankoop onthoudt de winkel, optioneel veld `winkel`; oudere aankopen hebben hem niet),
@@ -618,6 +650,9 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - "Winkel?" als eigen kaart; voortgangsbalk altijd, ook bij 0 van 0. Lege schermen: "Geen …".
   Een kop die het woord al noemt, toont alleen het getal. Winkelmand leegmaken: kleine turquoise knop.
 - Tijd (wekelijks) en Aankopen bijhouden: eigen keuzepanelen in de stijl van de app.
+- Geen knop in een knop: in elke lijst (artikelen, Boodschappen, acties, winkels, recepten) is de hele
+  regel tikbaar, maar alleen de naam (of het afvinkrondje) is de knop; de notitie met tikbare tags
+  en de link staat ernaast. Zo zijn ze voor schermlezer en toetsenbord apart te bereiken.
 
 ### Performance
 - Netwerk: een ronde vraagt alleen id, eTag, tijd en downloadlink op (`$select`); de inhoud alleen als

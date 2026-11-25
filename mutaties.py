@@ -3,7 +3,7 @@ welke controles rood worden. Faalt (exitcode 1) als een mutatie niet meer aangri
 of door geen enkele controle wordt gevangen.   python3 mutaties.py"""
 import subprocess, os, shutil, sys, tempfile
 MUTATIES = [
-  ("allebei op de lijst = botsing", "if (h.veld === 'op' && cur !== '' && nieuw !== '') return { status: 'al' };", ""),
+  ("allebei op de lijst = botsing", "if (h.veld === 'op' && cur !== '' && nieuw !== '') { if (r.opvoor) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }", ""),
   ("na het moment gekocht telt niet", "if (r.gekocht.some((d) => d >= mDatum)) continue;", ""),
   ("verwijderd artikel weer aanmaken", "  return r ? regel.doe(model, h, verz, r) : VERVALLEN;", "  return r ? regel.doe(model, h, verz, r) : { status: 'ok' };"),
   ("geen UTF-8-controle", "new TextDecoder('utf-8', { fatal: true })", "new TextDecoder('utf-8')"),
@@ -18,7 +18,7 @@ MUTATIES = [
   ("zonder winkel bij onbekend", "    if (!a.plekken.length) { zonder.push(a); continue; }", ""),
   ("ook-elders maakt nodig", "    const alleen = hier.filter((a) => a.plekken.length === 1).map((a) => a.naam);", "    const alleen = hier.map((a) => a.naam);"),
   ("archief negeert weg", "  return (r.weg || '') > g ? r.weg : g;", "  return g;"),
-  ("archief negeert de instelling", "    const dagen = BEWAREN[instelling(model, 'archief', 'bewaren')];", "    const dagen = BEWAREN['1j'];"),
+  ("archief negeert de instelling", "  const archiefGrens = grens(BEWAREN[instelling(model, 'archief', 'bewaren')]);", "  const archiefGrens = grens(BEWAREN['1j']);"),
   ("aantal niet gecontroleerd", "    aantal: { type: 'aantal', zet: true, geldig: OOK_LEEG((v) => AANTAL.test(v)) },", "    aantal: { type: 'aantal', zet: true },"),
   ("link: http toegestaan", "  if (u.protocol !== 'https:' || u.username || u.password) return null;", "  if (u.username || u.password) return null;"),
   ("herhalen slaat voorbije niet over", "  for (let i = 0; i < 1000 && voorbij(x); i++) x = verschuif(x, 1, herhaal, dagWens);", ""),
@@ -58,6 +58,15 @@ MUTATIES = [
   ("wekelijks: automatisch uit genegeerd", "  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;", ""),
   ("wekelijks: uit vergeet het moment", "  inst.teruggezet = mTekst;\n  if (vorige === '') return 0;", "  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;\n  inst.teruggezet = mTekst;\n  if (vorige === '') return 0;"),
   ("wekelijks: afhalen genegeerd ook als het niet automatisch gaat", "wk && wk.teruggezet && instelling(model, 'wekelijks', 'auto') !== 'nee'", "wk && wk.teruggezet"),
+  ("recepten: van de lijst laat de recepten staan", "    if (h.soort === 'artikel' && h.veld === 'op') { r.opvoor = ''; if (nieuw === '') r.voor.clear(); }", "    if (h.soort === 'artikel' && h.veld === 'op') { r.opvoor = ''; }"),
+  ("recepten: laatste recept eraf, toch op de lijst", "    if (!r.voor.size && r.opvoor) {\n      r.op = '';", "    if (false) {\n      r.op = '';"),
+  ("recepten: eigen aantal telt altijd mee", "  const eigen = r.opvoor ? 0 : (+r.aantal || 1);", "  const eigen = +r.aantal || 1;"),
+  ("recepten: verwijderd artikel blijft in het recept", "  if (h.soort === 'artikel') for (const r of model.recepten.values()) r.artikelen.delete(h.id);", ""),
+  ("recepten: aantal 0 toegestaan", "const RECEPT_AANTAL = /^([1-9]|[1-9]\\d)$/;", "const RECEPT_AANTAL = /^(\\d|[1-9]\\d)$/;"),
+  ("archief: receptartikel wordt opgeruimd", "!r.op && !inRecept.has(r.id) ? laatsteDag(r)", "!r.op ? laatsteDag(r)"),
+  ("recepten: regeltje houdt de oude naam", "naam: ((model && model.recepten.get(recept)) || x).naam", "naam: x.naam"),
+  ("recepten: verwijderd na hernoemen, oude naam", "if (x) x.naam = weg.naam;", "if (x) x.naam = x.naam;"),
+  ("recepten: zelf erbij in dezelfde minuut telt niet", "nieuw !== '' && r.opvoor) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }", "nieuw !== '' && false) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }"),
   ("link: elke punt is een adres", "ADRES_EXTENSIE.test(host)", "/\\./.test(host)"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

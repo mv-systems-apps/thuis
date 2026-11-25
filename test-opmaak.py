@@ -35,7 +35,7 @@ DATA = r"""() => {
   const afd = [['agf', 'Groente'], ['zui', 'Zuivel'], ['brd', 'Brood']];
   for (let i = 0; i < 12; i++) afd.push(['x' + String(i).padStart(2, '0'), 'Afdeling ' + i]);
   m.winkels.set('pls', { id: 'pls', naam: 'Plus', notitie: '', link: '', afdelingen: afd.map(([id, naam]) => ({ id, naam, extra: Object.create(null) })), extra: Object.create(null) });
-  const A = (id, naam, af, op) => m.artikelen.set(id, { id, naam, soort: 'eenmalig', ligt: new Map([['pls', af]]), op: op ? nu : '', opdoor: '', aantal: '', notitie: id === 'a00' ? '#zuivel' : '', link: '', weg: '', gekocht: [], extra: Object.create(null) });
+  const A = (id, naam, af, op) => m.artikelen.set(id, { id, naam, soort: 'eenmalig', ligt: new Map([['pls', af]]), op: op ? nu : '', opdoor: '', aantal: '', notitie: id === 'a00' ? '#zuivel' : '', link: '', weg: '', gekocht: [], voor: new Map(), opvoor: '', extra: Object.create(null) });
   for (let i = 0; i < 20; i++) A('a' + String(i).padStart(2, '0'), 'Artikel ' + String(i).padStart(2, '0'), i < 10 ? 'zui' : 'agf', i % 2);
   model = leesBestand(schrijfBestand(m)).model; afgeleid(); gekoppeld = true;
   handelen([{ actie: 'nieuw', soort: 'actie', id: 'ac1', velden: { naam: 'Keuken', notitie: '#Ronnie' } }, { actie: 'nieuw', soort: 'actie', id: 'ac2', velden: { naam: 'Schilderen', notitie: '#Ronnie' } }]);
@@ -158,6 +158,13 @@ async def main():
             rechts: Math.round(r(k).right - r(document.getElementById('winkelPijl')).right), tal: document.getElementById('winkelHier').textContent }; }""")
         await pg.screenshot(path='/tmp/langenaam-echt.png', clip={'x': 0, 'y': 0, 'width': 390, 'height': 300})
         check('lange winkelnaam op twee regels, niet afgekapt', kop['tekst'] == 'Albert Heijn XL Arnhem Centrum' and kop['vol'] and 40 <= kop['hoog'] <= 56 and kop['kop'] >= 46 and 0 <= kop['rechts'] <= 20 and kop['tal'].isdigit(), kop)
+
+        # 7. Niets vet in notities (tags, link) en bij namen van winkels: vet suggereert tikbaar
+        await pg.evaluate("() => { winkel.kaartOpen = false; toonScherm('winkels'); }"); await pg.wait_for_timeout(100)
+        gew = await pg.evaluate("""() => { const d = document.createElement('div'); d.className = 'item'; d.appendChild(notitieRegel({ notitie: 'Tekst #tag', link: 'https://www.plus.nl' }));
+          document.getElementById('scherm-winkels').appendChild(d); const w = (e) => e ? getComputedStyle(e).fontWeight : 'geen';
+          const r = [w(d.querySelector('.tag')), w(d.querySelector('.link')), w(document.querySelector('#scherm-winkels .winkelrij .nm'))]; d.remove(); return r; }""")
+        check('tags, link en winkelnaam niet vet', gew == ['400', '400', '400'], gew)
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()

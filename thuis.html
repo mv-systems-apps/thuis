@@ -263,16 +263,24 @@
   /* Lange namen lopen door op een volgende regel; winkelsymbool en "nieuw" lopen mee. */
   .item .naam{display:block;font-size:20px;line-height:1.25;overflow-wrap:anywhere;padding:4px 0}
   /* De notitie onder de winkels, zelfde letter, in paars. */
-  .notitie .tag{font-weight:700}
+  /* Tikbaar (zoeken op de tag); het tikvlak iets hoger dan de tekst. */
+  .notitie .tag{font-weight:400;cursor:pointer;padding:6px 0;margin:-6px 0}
   .notitie .ntekst,.notitie .ntags{display:block}
   .notitie .ntags{display:flex;flex-wrap:wrap;column-gap:12px}
-  .notitie .link{font-weight:600;cursor:pointer;white-space:nowrap}
+  .notitie .link{cursor:pointer;white-space:nowrap}
   .notitie .link .lt{text-decoration:underline;white-space:normal}
   .notitie .link svg{margin-left:4px;vertical-align:-1px}
   .item .notitie,.wrij .notitie,.actierij .notitie,.winkelrij .notitie{display:block;font-size:17px;font-weight:400;color:var(--paars);line-height:1.3;margin-top:-2px;padding-bottom:4px;overflow-wrap:anywhere}
   .item .winkels,.wrij .winkels{display:block;font-size:17px;font-weight:400;color:var(--grijs);line-height:1.3;margin-top:-2px;padding-bottom:4px}
   /* In de winkelmand: de winkel niet doorgestreept (inline-block houdt de doorhaling van de naam tegen). */
   .wrij.gedaan .winkels{display:inline-block;width:100%;text-decoration:none}
+  /* Waarom dit aantal op de lijst staat ("3 + 4 Lasagne"): grijs onder de naam. */
+  .item .voorregel,.wrij .voorregel{display:block;font-size:17px;font-weight:400;color:var(--grijs);line-height:1.3}
+  /* Notitie, tags en link onder de kop van een recept of winkel: scrollt mee, de kop blijft klein. */
+  .kopnotitie{margin:0 -14px 14px;padding:8px 16px 12px 58px;background:#FFFFFF;border-bottom:1px solid var(--lijn)}
+  #winkelDetail .kopnotitie{margin-top:-12px;margin-bottom:2px}
+  .kopnotitie .notitie{display:block;font-size:17px;line-height:1.3;color:var(--paars);overflow-wrap:anywhere}
+  .teller .uit{margin-left:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
   .item .naam .nieuw{margin-left:6px;white-space:nowrap}
   .item .hint{font-size:17px;color:var(--grijs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item .nieuw{padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600}
@@ -287,6 +295,9 @@
   .wkaart > *{border-top:1px solid var(--rij)}
   .wkaart > *:first-child{border-top:0}
   .winkelrij{width:100%;min-height:60px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:19px;padding:6px 12px 6px 14px;text-align:left;color:var(--tekst)}
+  /* Winkels en recepten: de rij is tikbaar, de naam is de knop (tags en link staan ernaast, niet erin). */
+  div.lijstrij{cursor:pointer}
+  .winkelrij .naamknop{display:block;width:100%;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:left;overflow-wrap:anywhere}
   .winkelrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere}
   .winkelrij .sub{display:block;font-size:17px;color:var(--grijs)}
   .wdkop{position:sticky;top:-14px;z-index:2;margin:-14px -14px 0;height:60px;display:flex;align-items:center;gap:6px;padding:0 8px 0 4px;background:#FFFFFF;border-bottom:1px solid var(--lijn)}
@@ -360,6 +371,9 @@
   .wrij{display:flex;align-items:center;gap:6px;padding-right:8px;border-top:1px solid var(--rij)}
   .afd > .wrij:first-child{border-top:0}
   .wrij .vink{flex:1;min-width:0;min-height:56px;border:0;background:transparent;display:flex;align-items:center;gap:12px;padding:4px 6px 4px 17px;color:var(--tekst);text-align:left}
+  div.vink,.item div.tekst,.actierij div.tekst{cursor:pointer}
+  .wrij .vinkrond{flex:none;border:0;background:transparent;padding:0;margin:0;display:flex;cursor:pointer}
+  .item .tekstknop,.actierij .tekstknop{display:flex;flex-direction:column;width:100%;min-width:0;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
   .wrij .vink .nm{flex:1;min-width:0;font-size:20px;font-weight:400;line-height:1.25;overflow-wrap:anywhere}
   .wrij.gedaan .vink{color:#6B7482}
   .wrij.gedaan .vink .nm{text-decoration:line-through;font-weight:400}
@@ -398,6 +412,7 @@
   #keuze .optie{width:100%;min-height:56px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:20px;color:var(--tekst);text-align:left}
   #keuze .optie .nm{flex:1;min-width:0;line-height:1.3;overflow-wrap:anywhere}
   #keuze .optie .sub{display:block;font-size:17px;color:var(--grijs)}
+  /* Welke winkel?: de winkelnamen vet. */
   /* De gekozen optie: lichtpaars met een paarse streep links. */
   #keuze .optie.actief{color:var(--paars);font-weight:700;border-left:5px solid var(--paars);padding-left:11px}
   #keuze .optie.actief .sub{font-weight:400}
@@ -457,6 +472,7 @@
       <button class="kopknop" type="button" id="wekAlles" hidden aria-label="Alle wekelijkse op de lijst"></button>
       <div class="lijst" id="lijst"></div>
     </div>
+    <div id="receptBlok" hidden></div>
   </section>
 
   <section class="scherm" id="scherm-winkel" aria-labelledby="tab-winkel" hidden>
@@ -508,13 +524,6 @@
       </div>
     </div>
     <div class="blok">
-      <div class="kopbalk"><h2>Aankopen</h2></div>
-      <div class="kaart">
-        <div class="rij"><span class="label" id="aankopenLabel">Bijhouden</span><button class="mveld" id="aankopenBewaren" type="button" aria-labelledby="aankopenLabel aankopenBewaren" aria-haspopup="dialog"><span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
-        <div class="veld"><span class="label2">Verwijderen als niet gekocht in</span><div class="dagen" id="archiefBewaren" role="radiogroup" aria-label="Verwijderen als niet gekocht in"></div></div>
-      </div>
-    </div>
-    <div class="blok">
       <div class="kopbalk"><h2>Weergave</h2></div>
       <div class="kaart">
         <div class="rij"><span class="label" id="lblWinkelTal">Aantallen bij winkel</span><button class="schakel" id="swWinkelTal" type="button" role="switch" aria-labelledby="lblWinkelTal"></button></div>
@@ -526,7 +535,14 @@
       <div class="kopbalk"><h2>Doen</h2></div>
       <div class="kaart">
         <div class="veld"><span class="label2">Standaard tonen</span><div class="dagen" id="doenStandaard" role="radiogroup" aria-label="Standaard tonen"></div></div>
-        <div class="veld"><span class="label2">Afgeronde acties verwijderen na</span><div class="dagen" id="historieBewaren" role="radiogroup" aria-label="Afgeronde acties verwijderen na"></div></div>
+      </div>
+    </div>
+    <div class="blok">
+      <div class="kopbalk"><h2>Bewaren</h2></div>
+      <div class="kaart">
+        <div class="rij"><span class="label" id="aankopenLabel">Aankopen</span><button class="mveld" id="aankopenBewaren" type="button" aria-labelledby="aankopenLabel aankopenBewaren" aria-haspopup="dialog"><span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+        <div class="veld"><span class="label2">Archief: verwijderen als niet gekocht in</span><div class="dagen" id="archiefBewaren" role="radiogroup" aria-label="Archief: verwijderen als niet gekocht in"></div></div>
+        <div class="veld"><span class="label2">Afgeronde acties: verwijderen na</span><div class="dagen" id="historieBewaren" role="radiogroup" aria-label="Afgeronde acties: verwijderen na"></div></div>
       </div>
     </div>
     <div class="blok">
@@ -546,7 +562,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-018</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-019</div>
   </section>
 </main>
 
@@ -664,8 +680,8 @@ const $ = (id) => document.getElementById(id);
 
 /* ---------- kern: formaat en velden (SCHEMA) ---------- */
 /* Formaat: datum en tijd van de laatste formaatwijziging in hex, zoals het
-   versiestempel van de app: 1352902-459 = 20261122, 11:13. */
-const FORMAAT = '1352902-459';
+   versiestempel van de app: 1352905-7DA = 20261125, 20:10 (recepten). */
+const FORMAAT = '1352905-7DA';
 const SOORTEN = ['eenmalig', 'wekelijks', 'regelmatig'];
 const MAX_GEKOCHT = 6;
 const SORTEER = new Intl.Collator('nl', { sensitivity: 'base', numeric: true });
@@ -701,7 +717,19 @@ const SCHEMA = {
     op: { type: 'tekst', zet: true, samen: 'lijst' },
     opdoor: { type: 'tekst', zet: true, samen: 'lijst' },
     weg: { type: 'datum', zet: true, geldig: OOK_LEEG((v) => DATUM.test(v)), samen: 'nieuwste' },
-    gekocht: { type: 'datums' }
+    gekocht: { type: 'datums' },
+    /* Recepten waarvoor het (extra) op de lijst staat: recept-id → { naam, aantal }. De naam
+       wordt onthouden, zodat het regeltje blijft kloppen als het recept intussen weg is.
+       Alleen via de handeling "voor"; van de lijst of gekocht maakt het leeg. */
+    voor: { type: 'voor' },
+    /* "1": staat alleen voor recepten op de lijst (het eigen aantal telt dan niet mee). */
+    opvoor: { type: 'tekst', geldig: OOK_LEEG((v) => v === '1') }
+  },
+  /* Een recept: artikelen met het aantal dat het recept nodig heeft (artikel-id → "1"–"99"). */
+  recept: {
+    notitie: { type: 'tekst', zet: true },
+    link: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => veiligeLink(v) === v) },
+    artikelen: { type: 'receptArtikelen' }
   },
   actie: {
     datum: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => !!periodeSoort(v)) },
@@ -718,7 +746,7 @@ const SCHEMA = {
 };
 const VELDEN = {};
 for (const soort of Object.keys(SCHEMA)) VELDEN[soort] = ['naam'].concat(Object.keys(SCHEMA[soort]));
-const DEEL = { winkels: 'winkel', artikelen: 'artikel', acties: 'actie', aankopen: 'aankoop', historie: 'historie' };
+const DEEL = { winkels: 'winkel', artikelen: 'artikel', recepten: 'recept', acties: 'actie', aankopen: 'aankoop', historie: 'historie' };
 /* Logboeken met naam en tijd: aankopen (afgevinkt) en historie (actie afgerond). */
 const LOG_SOORTEN = ['aankoop', 'historie'];
 const TIJDSTIP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -752,14 +780,14 @@ function datumTekst(d) { return d.getFullYear() + '-' + tweeCijfers(d.getMonth()
 function tijdstipTekst(d) { return datumTekst(d) + 'T' + tweeCijfers(d.getHours()) + ':' + tweeCijfers(d.getMinutes()); }
 
 function leegModel() {
-  return { instellingen: Object.create(null), winkels: new Map(), artikelen: new Map(), acties: new Map(), aankopen: new Map(), historie: new Map(),
+  return { instellingen: Object.create(null), winkels: new Map(), artikelen: new Map(), recepten: new Map(), acties: new Map(), aankopen: new Map(), historie: new Map(),
     extra: Object.create(null), opgelost: [] };
 }
 function verzameling(model, soort) {
-  return soort === 'winkel' ? model.winkels : soort === 'artikel' ? model.artikelen : soort === 'actie' ? model.acties : soort === 'aankoop' ? model.aankopen : soort === 'historie' ? model.historie : null;
+  return soort === 'winkel' ? model.winkels : soort === 'artikel' ? model.artikelen : soort === 'recept' ? model.recepten : soort === 'actie' ? model.acties : soort === 'aankoop' ? model.aankopen : soort === 'historie' ? model.historie : null;
 }
 function bestaatId(model, id) {
-  if (model.winkels.has(id) || model.artikelen.has(id) || model.acties.has(id) || model.aankopen.has(id) || model.historie.has(id)) return true;
+  if (model.winkels.has(id) || model.artikelen.has(id) || model.recepten.has(id) || model.acties.has(id) || model.aankopen.has(id) || model.historie.has(id)) return true;
   for (const w of model.winkels.values()) if (w.afdelingen.some((a) => a.id === id)) return true;
   return false;
 }
@@ -832,6 +860,35 @@ const VELDTYPEN = {
     schrijf: (v) => (v.length ? v.slice() : undefined),
     sleutel: (v) => v.join(',')
   },
+  /* voor: recept-id → { naam, aantal }. */
+  voor: {
+    lees: (v, k, fout) => {
+      if (v !== undefined && !isObject(v)) fout('voor is geen object');
+      const m = new Map();
+      for (const id of Object.keys(v || {})) {
+        const x = v[id];
+        if (!ID_PATROON.test(id) || !isObject(x) || !isTekst(x.naam) || !schoonTekst(x.naam) || !isTekst(x.aantal) || !RECEPT_AANTAL.test(x.aantal)) fout('ongeldig recept bij artikel');
+        m.set(id, { naam: x.naam, aantal: x.aantal });
+      }
+      return m;
+    },
+    schrijf: (m) => { if (!m.size) return undefined; const o = {}; for (const [id, x] of m) o[id] = { naam: x.naam, aantal: x.aantal }; return o; },
+    sleutel: (m) => Array.from(m, ([id, x]) => id + ':' + x.naam + ':' + x.aantal).join(',')
+  },
+  /* artikelen van een recept: artikel-id → aantal ("1"–"99"). */
+  receptArtikelen: {
+    lees: (v, k, fout) => {
+      if (v !== undefined && !isObject(v)) fout('artikelen is geen object');
+      const m = new Map();
+      for (const id of Object.keys(v || {})) {
+        if (!ID_PATROON.test(id) || !isTekst(v[id]) || !RECEPT_AANTAL.test(v[id])) fout('ongeldig artikel in recept');
+        m.set(id, v[id]);
+      }
+      return m;
+    },
+    schrijf: (m) => { if (!m.size) return undefined; const o = {}; for (const [id, n] of m) o[id] = n; return o; },
+    sleutel: (m) => Array.from(m, ([id, n]) => id + ':' + n).join(',')
+  },
   afdelingen: {
     lees: (v, k, fout) => {
       const afd = v === undefined ? [] : v;
@@ -885,8 +942,11 @@ function recordSleutel(soort, r) {
    het geparste JSON-object aan (alleen de opbouw; de gewone controle volgt daarna).
    Regel: een optioneel veld erbij is géén nieuw formaat (onbekende velden blijven
    bewaard); FORMAAT gaat alleen omhoog bij een andere opbouw, en dan komt hier
-   een omzetting bij. Nog leeg: het huidige formaat is het eerste dat in gebruik is. */
-const MIGRATIES = [];
+   een omzetting bij (ook als er niets om te zetten valt: dan alleen het nummer). */
+/* Van het eerste formaat naar dat met recepten erbij (deel "recepten", bij een artikel "voor" en
+   "opvoor"). Niets om te zetten; het nieuwe nummer zorgt dat een oudere app het bestand
+   niet meer schrijft (die zou "voor" laten staan als iets van de lijst gaat). */
+const MIGRATIES = [{ van: '1352902-459', naar: '1352905-7DA', doe: () => {} }];
 /* Zet data om naar FORMAAT; true als dat lukt. tabel alleen voor de tests. */
 function migreren(data, tabel) {
   const lijst = tabel || MIGRATIES;
@@ -965,6 +1025,15 @@ function rechtzetten(model) {
     const v = r;
     if (v.datum && !periodeSoort(v.datum)) model.opgelost.push(r.naam + ': onbekende datum "' + v.datum + '", getoond zonder periode');
   }
+  /* Een recept met een artikel dat niet meer bestaat: dat artikel eruit. */
+  for (const rec of model.recepten.values()) {
+    for (const aid of Array.from(rec.artikelen.keys())) if (!model.artikelen.has(aid)) { rec.artikelen.delete(aid); model.rechtgezet++; model.opgelost.push(rec.naam + ': verwijzing naar een verwijderd artikel weggehaald'); }
+  }
+  /* "voor" zonder "op" (of "opvoor" zonder "voor") kan niet: rechtzetten. */
+  for (const a of model.artikelen.values()) {
+    if (!a.op && (a.voor.size || a.opvoor)) { a.voor.clear(); a.opvoor = ''; model.rechtgezet++; }
+    else if (a.opvoor && !a.voor.size) { a.opvoor = ''; model.rechtgezet++; }
+  }
   for (const a of model.artikelen.values()) {
     for (const [w, afd] of Array.from(a.ligt)) {
       const winkel = model.winkels.get(w);
@@ -1024,7 +1093,7 @@ const VERVALLEN = { status: 'vervallen' };
    (standaard h.id). Een nieuwe handeling: hier een regel, met zijn ids. */
 const HANDELINGEN = {
   nieuw: { soort: null, bestaand: false, doe: handelNieuw, ids: ['id'] },
-  terug: { soort: null, bestaand: false, doe: handelTerug, ids: ['id', 'winkel', 'afd.id', 'artikelen', 'ligt{}', 'record.ligt{}'] },
+  terug: { soort: null, bestaand: false, doe: handelTerug, ids: ['id', 'winkel', 'afd.id', 'artikelen', 'ligt{}', 'record.ligt{}', 'recepten{}', 'record.artikelen{}'] },
   weg: { soort: null, bestaand: false, doe: handelWeg, ids: ['id'] },
   zet: { soort: null, bestaand: true, doe: handelZet, ids: ['id'] },
   gekocht: { soort: 'artikel', bestaand: true, doe: handelGekocht, ids: ['id'] },
@@ -1036,7 +1105,9 @@ const HANDELINGEN = {
   volgorde: { soort: 'winkel', bestaand: true, doe: handelVolgorde, ids: ['id', 'volgorde'] },
   instelling: { soort: null, bestaand: false, doe: handelInstelling, ids: [] },
   aankoop: { soort: 'aankoop', bestaand: false, doe: handelAankoop, ids: ['id', 'winkel'] },
-  historie: { soort: 'historie', bestaand: false, doe: handelAankoop, ids: ['id'] }
+  historie: { soort: 'historie', bestaand: false, doe: handelAankoop, ids: ['id'] },
+  receptArtikel: { soort: 'recept', bestaand: true, doe: handelReceptArtikel, ids: ['id', 'artikel'] },
+  voor: { soort: 'artikel', bestaand: true, doe: handelVoor, ids: ['id', 'recept'] }
 };
 function pasToe(model, h) {
   const regel = eigen(HANDELINGEN, h.actie);
@@ -1095,6 +1166,16 @@ function handelTerug(model, h, verz) {
       else if (afd && !winkel.afdelingen.some((x) => x.id === afd)) a.ligt.set(w, '');
     }
   }
+  if (h.soort === 'artikel' && isObject(h.recepten)) {
+    for (const rid of Object.keys(h.recepten)) {
+      const rec = model.recepten.get(rid);
+      if (rec && RECEPT_AANTAL.test(h.recepten[rid]) && !rec.artikelen.has(h.id)) rec.artikelen.set(h.id, h.recepten[rid]);
+    }
+  }
+  if (h.soort === 'recept') {
+    const rec = verz.get(h.id);
+    for (const aid of Array.from(rec.artikelen.keys())) if (!model.artikelen.has(aid)) rec.artikelen.delete(aid);
+  }
   if (h.soort === 'winkel') {
     const afd = verz.get(h.id).afdelingen;
     for (const id of Object.keys(h.ligt || {})) {
@@ -1108,14 +1189,21 @@ function handelTerug(model, h, verz) {
 function handelWeg(model, h, verz) {
   if (!verz) return { status: 'vervallen', reden: 'onbekend' };
   if (!verz.has(h.id)) return { status: 'al' };
+  const weg = verz.get(h.id);
   verz.delete(h.id);
   if (h.soort === 'winkel') for (const a of model.artikelen.values()) a.ligt.delete(h.id);
+  /* Een verwijderd artikel staat ook in geen recept meer. Een verwijderd recept laat de
+     lijst ongemoeid ("voor" onthoudt de naam, de laatste: ook na hernoemen). */
+  if (h.soort === 'artikel') for (const r of model.recepten.values()) r.artikelen.delete(h.id);
+  if (h.soort === 'recept') for (const a of model.artikelen.values()) { const x = a.voor.get(h.id); if (x) x.naam = weg.naam; }
   return { status: 'ok' };
 }
 
 /* Aantal bij een artikel: "2" t/m "99" (zonder = 1). Welke velden met "zet" mogen
    veranderen, staat in SCHEMA; de rest (afdelingen, plekken) alleen via hun eigen handeling. */
 const AANTAL = /^([2-9]|[1-9]\d)$/;
+/* Aantal in een recept: "1" t/m "99" (een recept noemt het aantal altijd). */
+const RECEPT_AANTAL = /^([1-9]|[1-9]\d)$/;
 function handelZet(model, h, verz, r) {
   if (h.veld === 'naam') return zetNaam(verz, h, r);
   const spec = eigen(SCHEMA, h.soort) && eigen(SCHEMA[h.soort], h.veld);
@@ -1128,10 +1216,14 @@ function handelZet(model, h, verz, r) {
   const oud = h.oud || '', nieuw = h.nieuw || '';
   const zet = () => {
     doel[h.veld] = nieuw;
+    /* Van de lijst (ook afvinken): de recepten gaan er ook af. Zelf op de lijst gezet: het
+       eigen aantal telt weer mee. */
+    if (h.soort === 'artikel' && h.veld === 'op') { r.opvoor = ''; if (nieuw === '') r.voor.clear(); }
     /* Wordt een artikel eenmalig, dan loopt de bewaartijd van het archief vanaf nu (anders ruimt opruimen het meteen op). */
     if (h.soort === 'artikel' && h.veld === 'soort' && nieuw === 'eenmalig' && DATUM.test(String(h.t || '').slice(0, 10)) && String(h.t).slice(0, 10) > (r.weg || '')) r.weg = String(h.t).slice(0, 10);
   };
-  if (cur === nieuw) return { status: 'al' };
+  /* Zelf op de lijst gezet terwijl het er alleen voor recepten op stond (ook in dezelfde minuut): het eigen aantal telt weer mee. */
+  if (cur === nieuw) { if (h.soort === 'artikel' && h.veld === 'op' && nieuw !== '' && r.opvoor) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }
   /* Een wekelijks artikel dat vóór de dag van het wekelijkse moment van de lijst
      ging, maar pas daarna binnenkomt: dat gold voor de vorige week, niet voor de
      nieuwe lijst. De aankoop zelf blijft staan. */
@@ -1143,7 +1235,7 @@ function handelZet(model, h, verz, r) {
   if (spec.samen === 'lijst') {
     /* Op of van de lijst: staat het er bij beiden op, dan is er niets te doen;
        anders wint de laatste handeling, zonder melding. */
-    if (h.veld === 'op' && cur !== '' && nieuw !== '') return { status: 'al' };
+    if (h.veld === 'op' && cur !== '' && nieuw !== '') { if (r.opvoor) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }
     zet();
     return { status: 'ok' };
   }
@@ -1234,6 +1326,42 @@ function handelAfdWeg(model, h, verz, r) {
   return { status: 'ok' };
 }
 
+/* Een artikel in een recept zetten, het aantal wijzigen (aantal "1"–"99") of eruit halen (''). */
+function handelReceptArtikel(model, h, verz, r) {
+  if (!model.artikelen.has(h.artikel)) return VERVALLEN;
+  const n = h.aantal || '';
+  if (n !== '' && (!isTekst(n) || !RECEPT_AANTAL.test(n))) return { status: 'vervallen', reden: 'ongeldig' };
+  if ((r.artikelen.get(h.artikel) || '') === n) return { status: 'al' };
+  if (n === '') r.artikelen.delete(h.artikel); else r.artikelen.set(h.artikel, n);
+  return { status: 'ok' };
+}
+
+/* Een artikel voor een recept op de lijst (aantal "1"–"99"), het aantal wijzigen, of dat
+   recept er weer af (''). Stond het er nog niet op, dan komt het erop, alleen voor
+   recepten (opvoor). Gaat het laatste recept eraf terwijl het alleen daarvoor op de lijst
+   stond, dan gaat het van de lijst (een eenmalig artikel naar het archief, vanaf die dag). */
+function handelVoor(model, h, verz, r) {
+  if (!isTekst(h.recept) || !ID_PATROON.test(h.recept)) return { status: 'vervallen', reden: 'ongeldig' };
+  const n = h.aantal || '';
+  if (n !== '' && (!isTekst(n) || !RECEPT_AANTAL.test(n) || !isTekst(h.naam) || !schoonTekst(h.naam))) return { status: 'vervallen', reden: 'ongeldig' };
+  const nu = r.voor.get(h.recept);
+  if (n === '') {
+    if (!nu) return { status: 'al' };
+    r.voor.delete(h.recept);
+    if (!r.voor.size && r.opvoor) {
+      r.op = ''; r.opdoor = ''; r.opvoor = '';
+      const dag = String(h.t || '').slice(0, 10);
+      if (r.soort === 'eenmalig' && DATUM.test(dag) && dag > (r.weg || '')) r.weg = dag;
+    }
+    return { status: 'ok' };
+  }
+  const naam = schoonTekst(h.naam);
+  if (nu && nu.aantal === n && nu.naam === naam && r.op) return { status: 'al' };
+  r.voor.set(h.recept, { naam, aantal: n });
+  if (!r.op) { r.op = TIJDSTIP.test(String(h.t || '')) ? h.t : tijdstipTekst(new Date()); r.opdoor = isTekst(h.wie) ? h.wie : ''; r.opvoor = '1'; }
+  return { status: 'ok' };
+}
+
 /* ---------- kern: gedeelde instellingen (INSTELLINGEN) ---------- */
 /* Bewaartijden voor archief en historie, in dagen. */
 const BEWAREN = { '1w': 7, '1m': 31, '3m': 92, '1j': 365 };
@@ -1301,6 +1429,15 @@ function vervangIds(h, alias) {
       if (veld === 'ligt{}') n.ligt = nieuw; else n.record = Object.assign({}, h.record, { ligt: nieuw });
       continue;
     }
+    /* Alleen de sleutels zijn id's (artikel- of recept-id → aantal). */
+    if (veld === 'recepten{}' || veld === 'record.artikelen{}') {
+      const bron = veld === 'recepten{}' ? h.recepten : (isObject(h.record) ? h.record.artikelen : null);
+      if (!isObject(bron)) continue;
+      const nieuw = {};
+      for (const k of Object.keys(bron)) nieuw[a(k)] = bron[k];
+      if (veld === 'recepten{}') n.recepten = nieuw; else n.record = Object.assign({}, n.record || h.record, { artikelen: nieuw });
+      continue;
+    }
     if (Array.isArray(h[veld])) n[veld] = h[veld].map(a);
     else if (veld in h) n[veld] = a(h[veld]);
   }
@@ -1366,8 +1503,10 @@ function wekelijksTerug(model, nu) {
   if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;
   let n = 0;
   for (const r of model.artikelen.values()) {
-    if (r.soort !== 'wekelijks' || r.op) continue;
+    /* Staat het er alleen voor een recept op, dan telt het eigen aantal nu weer mee. */
+    if (r.soort !== 'wekelijks' || (r.op && !r.opvoor)) continue;
     if (r.gekocht.some((d) => d >= mDatum)) continue;
+    if (r.op) { r.opvoor = ''; n++; continue; }
     r.op = mTekst;
     r.opdoor = '';
     n++;
@@ -1376,13 +1515,23 @@ function wekelijksTerug(model, nu) {
 }
 
 /* De laatste dag van een eenmalig artikel: laatste aankoop of van de lijst. */
+/* Eenmalige artikelen in het archief die sinds de grens niet gekocht zijn. Een artikel dat in
+   een recept staat blijft (anders verdwijnt het ongemerkt uit dat recept). */
+function archiefOpruimbaar(model, grensDag) {
+  const inRecept = new Set();
+  for (const rec of model.recepten.values()) for (const id of rec.artikelen.keys()) inRecept.add(id);
+  return Array.from(model.artikelen.values()).filter((r) => {
+    const l = r.soort === 'eenmalig' && !r.op && !inRecept.has(r.id) ? laatsteDag(r) : '';
+    return l && l < grensDag;
+  });
+}
 function laatsteDag(r) {
   const g = r.gekocht.length ? r.gekocht.reduce((x, y) => (y > x ? y : x)) : '';
   return (r.weg || '') > g ? r.weg : g;
 }
 
 /* Opruimen: afgeronde acties zonder herhaling na 92 dagen; eenmalige artikelen
-   in het archief die de ingestelde tijd (standaard 1 jaar) niet gekocht zijn.
+   in het archief die de ingestelde tijd (standaard 1 jaar) niet gekocht zijn en niet in een recept staan.
    Zonder datum blijft een artikel staan. */
 /* De nieuwste datum in het bestand (aankopen, van de lijst, op de lijst, afgerond, wekelijks). */
 function nieuwsteDatum(model) {
@@ -1420,11 +1569,8 @@ function opruimen(model, nu) {
   for (const r of Array.from(model.acties.values())) {
     if (r.klaar && !r.herhaal && r.klaar < grens(92)) { model.acties.delete(r.id); n++; }
   }
-  for (const r of Array.from(model.artikelen.values())) {
-    const dagen = BEWAREN[instelling(model, 'archief', 'bewaren')];
-    const laatst = r.soort === 'eenmalig' && !r.op ? laatsteDag(r) : '';
-    if (laatst && laatst < grens(dagen)) { model.artikelen.delete(r.id); n++; }
-  }
+  const archiefGrens = grens(BEWAREN[instelling(model, 'archief', 'bewaren')]);
+  for (const r of archiefOpruimbaar(model, archiefGrens)) { model.artikelen.delete(r.id); n++; }
   const hg = historieGrens(model, nu);
   for (const r of Array.from(model.historie.values())) if (r.tijd.slice(0, 10) < hg) { model.historie.delete(r.id); n++; }
   return n;
@@ -1520,10 +1666,32 @@ function artikelLijst(model) {
     id: r.id, naam: r.naam, sleutel: normNaam(r.naam), zoek: zoekVorm(r.naam), soort: r.soort, letter: SOORT_LETTER[r.soort], aantal: +r.aantal || 1, notitie: r.notitie, link: veiligeLink(r.link) || '',
     plekken: Array.from(r.ligt, ([winkel, afd]) => ({ winkel, afd })),
     op: r.op, opdoor: r.opdoor, weg: r.weg, gekocht: r.gekocht.slice(), laatst: laatsteDag(r),
+    /* Recepten: voor = [{ recept, naam, aantal }] (op naam); opAantal = wat er op de lijst staat
+       (het eigen aantal, tenzij alleen voor recepten, plus de recepten); voorTekst = het
+       regeltje ("3 + 4 Lasagne", of alleen "Lasagne"). */
+    ...voorVan(r, model),
     /* Het record zelf: de sleutel voor het geheugen van de lijstregels (recordSleutel) wordt
        pas uitgerekend als de regel getekend wordt, niet voor alle artikelen bij elke tik. */
     rec: r
   }));
+}
+/* De naam is die van het recept zelf (ook na hernoemen); bestaat het niet meer, dan de onthouden naam. */
+function voorVan(r, model) {
+  const voor = Array.from(r.voor, ([recept, x]) => ({ recept, naam: ((model && model.recepten.get(recept)) || x).naam, aantal: +x.aantal })).sort((a, b) => SORTEER.compare(a.naam, b.naam));
+  const eigen = r.opvoor ? 0 : (+r.aantal || 1);
+  const opAantal = eigen + voor.reduce((t, x) => t + x.aantal, 0);
+  let voorTekst = '';
+  if (voor.length) {
+    /* Aantal en recept blijven bij elkaar op één regel (vaste spatie). */
+    const delen = voor.map((x) => (voor.length === 1 && r.opvoor && x.aantal === opAantal ? '' : x.aantal + '\u00A0') + x.naam);
+    voorTekst = (eigen ? eigen + ' + ' : '') + delen.join(' + ');
+  }
+  return { voor, opvoor: !!r.opvoor, opAantal, voorTekst };
+}
+/* Recepten op naam, met hun artikelen (artikel-id → aantal) en een zoekvorm. */
+function receptLijst(model) {
+  return opNaam(model.recepten).map((r) => ({ id: r.id, naam: r.naam, zoek: zoekVorm(r.naam), notitie: r.notitie || '', link: veiligeLink(r.link) || '',
+    artikelen: Array.from(r.artikelen, ([id, n]) => ({ id, aantal: +n })) }));
 }
 function winkelLijst(model) {
   return opNaam(model.winkels).map((w) => ({ id: w.id, naam: w.naam, notitie: w.notitie || '', link: veiligeLink(w.link) || '',
@@ -2134,6 +2302,7 @@ function tabWisselen(vorig, naam) {
   if (logStand.open) logSluiten();
   /* Een open winkel of Backups/Logboek sluit bij wisselen, zodat terug meteen werkt. */
   if (naam !== 'winkels' && ws.open) winkelSluiten();
+  if (naam !== 'boodschappen' && rs.open) receptDicht(false);
   if (naam !== 'instellingen' && !$('backupScherm').hidden) backupSluiten();
   if (naam === 'winkel') { tekenWinkel(); planSync(0); }
   if (naam === 'winkels') tekenWinkels();
@@ -2296,6 +2465,7 @@ async function aanmeldingOpTijd() {
 const KEUZES = {
   winkel: { lees: (v) => { winkel.id = v || ''; }, waarde: () => winkel.id, leeg: () => { winkel.id = ''; }, perMap: true },
   favorieten: { lees: (v) => { ws.favorieten = v || []; }, waarde: () => ws.favorieten, leeg: () => { ws.favorieten = []; }, perMap: true },
+  receptFav: { lees: (v) => { rs.favorieten = Array.isArray(v) ? v : []; }, waarde: () => rs.favorieten, leeg: () => { rs.favorieten = []; }, perMap: true },
   gezien: { lees: (v) => { gezien.klaar = new Set(v || []); }, waarde: () => Array.from(gezien.klaar), leeg: () => { gezien.klaar.clear(); gezien.inBeeld.clear(); }, perMap: true, hulp: true },
   mandje: { lees: (v) => { winkel.mandje = new Map((v || []).filter((x) => x && x.id).map((x) => [x.id, x])); }, waarde: () => Array.from(winkel.mandje.values()), leeg: () => { winkel.mandje.clear(); }, perMap: true },
   /* Aantal backups van de laatste keer dat de lijst toch al werd opgehaald (dagbackup of
@@ -2581,6 +2751,9 @@ let artikelen = [];        // artikelLijst(model), één keer per wijziging
 let acties = [];           // actieLijst(model), idem
 let winkels = [];          // winkelLijst(model), één keer per wijziging
 let winkelOpId = new Map();
+let recepten = [];         // receptLijst(model), idem
+let receptOpId = new Map();
+let artikelOpId = new Map();
 let ik = '';
 let gekoppeld = false;
 const sync = { gepeild: false, overslaan: '', bezig: false, opnieuw: false, klok: null, laatst: 0, fout: '', offline: false, aanmelden: false, geenToegang: false };
@@ -2591,6 +2764,9 @@ function afgeleid() {
   artikelen = artikelLijst(model);
   winkels = winkelLijst(model);
   winkelOpId = new Map(winkels.map((w) => [w.id, w]));
+  artikelOpId = new Map(artikelen.map((a) => [a.id, a]));
+  recepten = receptLijst(model);
+  receptOpId = new Map(recepten.map((r) => [r.id, r]));
   acties = actieLijst(model);
   mandjeOpschonen();
 }
@@ -3191,8 +3367,8 @@ const TERUG_PIJL = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" 
 const WIS_KNOP = '<button class="wis" type="button" aria-label="Leegmaken" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8D96A6" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>';
 
 /* ---------- tabblad Artikelen (scherm-boodschappen) ---------- */
-const KLEUR = { E: '#8E33A6', W: '#1D3FAF', R: '#0A7581', L: '#4B3CC0', S: '#9A5B06' };
-const TINT = { E: '#F2E6F6', W: '#E3E8FA', R: '#DDF1F2', L: '#E9E6F8', S: '#FBF0DA' };
+const KLEUR = { E: '#8E33A6', W: '#1D3FAF', R: '#0A7581', L: '#4B3CC0', S: '#9A5B06', K: '#B0452A' };
+const TINT = { E: '#F2E6F6', W: '#E3E8FA', R: '#DDF1F2', L: '#E9E6F8', S: '#FBF0DA', K: '#F8E6E0' };
 const SOORTNAAM = { E: 'Eenmalig', W: 'Wekelijks', R: 'Regelmatig' };
 /* Soorticonen: een eigen vorm met een teken precies in het midden (9 hoog, van 7,5 tot 16,5).
    Hoe vaker, hoe meer hoeken: Eenmalig rondje met 1, Wekelijks vierkant met 7, Regelmatig zeshoek
@@ -3203,13 +3379,19 @@ const PADEN = {
   R: '<path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"></path><path d="M9.4 7.5V16.5M9.4 10.1a2.6 2.6 0 0 1 5.2 0V16.5"></path>',
   L: '<path d="M9 6h11M9 12h11M9 18h11"></path><path d="M3.5 6l1.2 1.2L7 4.8M3.5 12l1.2 1.2L7 10.8M3.5 18l1.2 1.2L7 16.8"></path>',
   S: '<path d="M9 18h6M10 21h4"></path><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"></path>'
+,
+  /* Recepten: een kookpan. */
+  K: '<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"></path><path d="M2 10h20M8 6c0-1 1-1.5 1-2.5M12 6c0-1 1-1.5 1-2.5M16 6c0-1 1-1.5 1-2.5"></path>'
 };
 function svgIcoon(pad, kleur, maat) {
   return '<svg width="' + maat + '" height="' + maat + '" viewBox="0 0 24 24" fill="none" stroke="' + kleur +
     '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0">' + pad + '</svg>';
 }
 
-const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', weggehaald: new Map(), archiefOpen: false, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '' };
+const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', weggehaald: new Map(), archiefOpen: false, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '', sugOpen: false };
+/* Recepten op Artikelen: open = het open recept (id), teller = het artikel met de teller open,
+   dicht = welke groep dicht is, favorieten per telefoon. */
+const rs = { open: '', teller: '', laag: null, scroll: 0, dicht: { fav: false, rest: false }, favorieten: [] };
 /* Eén inklapbare kop voor de hele app: titel, rechts het aantal en het pijltje (open
    wijst omlaag). o: { klasse, naamKlasse?, titel, tal, open, klik, knop?, pijlKlasse? }.
    Zonder knop is de hele kop één knop. Met een knop erin (leegmaken, winkel kiezen) is de
@@ -3263,6 +3445,8 @@ function soortVanFilter() {
   const f = normNaam(scherm.zoek) && scherm.zoekIn ? scherm.zoekIn : scherm.filter;
   return f && 'EWR'.indexOf(f) !== -1 ? f : 'E';
 }
+/* Op Artikelen: de recepten in beeld (filter Recepten, of bij zoeken het vakje Recepten). */
+function receptModus() { return normNaam(scherm.zoek) ? scherm.zoekIn === 'K' : scherm.filter === 'K'; }
 /* Tijdens het typen (vak actief of met tekst): links annuleren in plaats van het
    vergrootglas, en het + in de kleur van de soort. */
 function invoerBijwerken() {
@@ -3285,7 +3469,7 @@ function tekenSoortknop() {
 function inFilter(a, k, vandaag, zoekend) {
   if (!k) return a.letter !== 'E' || zoekend || !!a.op;
   if (k === 'L') return !!a.op;
-  if (k === 'S') return !a.op && !!sugVan(a, vandaag);
+  if (k === 'K') return false;
   if (k === 'E') return a.letter === 'E' && (zoekend || !!a.op);
   return a.letter === k;
 }
@@ -3295,11 +3479,13 @@ function tekenFilters(zoekend, gevonden) {
   const vandaag = datumTekst(new Date());
   const bron = zoekend ? gevonden : artikelen;
   const tel = {};
-  for (const k of ['L', 'E', 'W', 'R', 'S']) tel[k] = bron.filter((a) => inFilter(a, k, vandaag, zoekend)).length;
-  const namen = { L: 'Op de lijst', E: 'Eenmalig', W: 'Wekelijks', R: 'Regelmatig', S: 'Suggesties' };
+  for (const k of ['L', 'E', 'W', 'R']) tel[k] = bron.filter((a) => inFilter(a, k, vandaag, zoekend)).length;
+  /* Recepten tellen recepten (bij zoeken: de recepten die passen). */
+  tel.K = zoekend ? receptenGevonden(scherm.zoek).length : recepten.length;
+  const namen = { L: 'Op de lijst', E: 'Eenmalig', W: 'Wekelijks', R: 'Regelmatig', K: 'Recepten' };
   const f = $('filters');
   f.innerHTML = '';
-  for (const k of ['L', 'E', 'W', 'R', 'S']) {
+  for (const k of ['L', 'E', 'W', 'R', 'K']) {
     const aan = zoekend ? scherm.zoekIn === k : scherm.filter === k;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'filter';
@@ -3336,7 +3522,6 @@ function lijstVoorScherm(zoekend, vandaag, gevonden) {
   let l, titel;
   if (zoekend) { l = gevonden || zoekArtikelen(artikelen, scherm.zoek, winkels); if (scherm.zoekIn) l = l.filter((a) => inFilter(a, scherm.zoekIn, vandaag, true)); titel = 'Gevonden'; }
   else if (scherm.filter === 'L') { l = artikelen.filter((a) => a.op); titel = 'Op de lijst'; }
-  else if (scherm.filter === 'S') { l = artikelen.filter((a) => !a.op && sugVan(a, vandaag)); titel = 'Suggesties'; }
   /* Eenmalig: alleen wat op de lijst staat; de rest staat in het archief. */
   else if (scherm.filter === 'E') { l = artikelen.filter((a) => a.letter === 'E' && a.op); titel = SOORTNAAM.E; }
   /* Geen vakje aan: alles, behalve gekochte eenmalige (die staan in het archief eronder). */
@@ -3355,7 +3540,8 @@ function rijUitGeheugen(a, opties) {
   /* Alle velden van het artikel (uit het schema, ook velden die later bijkomen); daarnaast wat het scherm erbij toont. */
   /* De winkelsregel één keer uitrekenen: voor de sleutel en voor de regel zelf. */
   const wr = opties.geenWinkels ? '' : winkelsRegel(a, opties.zonderWinkel);
-  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a),
+  /* voorTekst: de receptnamen komen uit de recepten zelf (hernoemen verandert het artikel niet). */
+  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a), a.voorTekst,
     opties.sug ? suggestieTekst(opties.sug) : '', !!opties.archief, !!opties.weg, opties.hint || ''].join('\u0001');
   const g = rijGeheugen.get(a.id);
   if (g && g.sleutel === sleutel) return g.rij;
@@ -3369,6 +3555,12 @@ function rijUitGeheugen(a, opties) {
 function artikelRij(a, opties, wr) {
   if (wr === undefined) wr = opties.geenWinkels ? '' : winkelsRegel(a, opties.zonderWinkel);
   const tellerOpen = opties.teller !== undefined ? opties.teller : scherm.teller === a.id;
+  /* In een recept: het aantal van het recept, en het rondje zegt of het voor dit recept op de lijst staat.
+     Elders: op de lijst het aantal met de recepten erbij, en waarom ("3 + 4 Lasagne"). */
+  const rec = opties.recept || null;
+  const aan = rec ? a.voor.some((v) => v.recept === rec.id) : !!a.op;
+  const n = rec ? rec.aantal : a.op ? a.opAantal : a.aantal;
+  const voorTekst = a.op && !opties.archief && !opties.weg ? a.voorTekst : '';
   const rij = document.createElement('div');
   rij.className = 'item' + (opties.archief ? ' archief' : '');
   rij.dataset.id = a.id;
@@ -3376,21 +3568,25 @@ function artikelRij(a, opties, wr) {
   const metNotitie = !!(a.notitie || a.link);
   rij.innerHTML =
     '<button class="icoon" type="button" aria-expanded="' + tellerOpen + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 28) + '</button>' +
-    '<button class="tekst" type="button"><span class="naam"><span></span>' +
-    (a.aantal > 1 ? '<span class="aantal"></span>' : '') +
+    '<div class="tekst"><button class="tekstknop" type="button"><span class="naam"><span></span>' +
+    (n > 1 ? '<span class="aantal"></span>' : '') +
     (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
-    (wr ? '<span class="winkels"></span>' : '') +
+    (voorTekst ? '<span class="voorregel"></span>' : '') +
+    (wr ? '<span class="winkels"></span>' : '') + '</button>' +
+    /* Notitie (tags, link) buiten de knop: geen knop in knop. Een tik erop opent het artikel nog steeds. */
     (metNotitie ? '<span class="notitie"></span>' : '') +
-    (opties.sug || opties.hint ? '<span class="hint"></span>' : '') + '</button>' +
-    '<button class="rondje" type="button" aria-pressed="' + (a.op ? 'true' : 'false') + '">' + (a.op ? RONDJE.aan : RONDJE.plus) + '</button>';
-  rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter] + ', aantal ' + a.aantal + '; aantal wijzigen');
+    (opties.sug || opties.hint ? '<span class="hint"></span>' : '') + '</div>' +
+    '<button class="rondje" type="button" aria-pressed="' + aan + '">' + (aan ? RONDJE.aan : RONDJE.plus) + '</button>';
+  rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter] + ', aantal ' + n + '; aantal wijzigen');
   rij.querySelector('.naam > span').textContent = a.naam;
-  if (a.aantal > 1) rij.querySelector('.aantal').textContent = a.aantal + '×';
+  if (n > 1) rij.querySelector('.aantal').textContent = n + '×';
+  if (voorTekst) rij.querySelector('.voorregel').textContent = voorTekst;
   if (wr) rij.querySelector('.winkels').textContent = wr;
   if (metNotitie) rij.querySelector('.notitie').replaceWith(notitieRegel(a));
   if (opties.sug) rij.querySelector('.hint').textContent = suggestieTekst(opties.sug);
   else if (opties.hint) rij.querySelector('.hint').textContent = opties.hint;
-  rij.querySelector('.rondje').setAttribute('aria-label', a.op ? a.naam + ' staat op de lijst; van de lijst halen'
+  rij.querySelector('.rondje').setAttribute('aria-label', rec ? a.naam + (aan ? ' staat voor ' + rec.naam + ' op de lijst; eraf halen' : ' voor ' + rec.naam + ' op de lijst zetten')
+    : a.op ? a.naam + ' staat op de lijst; van de lijst halen'
     : opties.weg ? a.naam + ' weer op de lijst zetten' : a.naam + ' op de lijst zetten');
   if (!tellerOpen) return rij;
   /* De teller onder de regel (tik op het icoon of op "2×"). */
@@ -3399,10 +3595,12 @@ function artikelRij(a, opties, wr) {
   const t = document.createElement('div');
   t.className = 'teller';
   t.dataset.id = a.id;
-  t.innerHTML = '<span>Aantal</span><button class="min" type="button" aria-label="Minder">−</button><span class="n"></span><button class="meer" type="button" aria-label="Meer">+</button>';
-  t.querySelector('.n').textContent = a.aantal;
-  t.querySelector('.min').disabled = a.aantal <= 1;
-  t.querySelector('.meer').disabled = a.aantal >= 99;
+  t.innerHTML = '<span>Aantal</span><button class="min" type="button" aria-label="Minder">−</button><span class="n"></span><button class="meer" type="button" aria-label="Meer">+</button>' +
+    (rec ? '<button class="uit" type="button" aria-label="Uit dit recept halen">' + PRULLENBAK + '</button>' : '');
+  const tn = rec ? rec.aantal : a.aantal;
+  t.querySelector('.n').textContent = tn;
+  t.querySelector('.min').disabled = tn <= 1 || (!rec && a.op && a.opvoor);
+  t.querySelector('.meer').disabled = tn >= 99;
   frag.appendChild(t);
   return frag;
 }
@@ -3411,7 +3609,9 @@ function artikelRij(a, opties, wr) {
 const EXTERN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M14 3h7v7M21 3l-9 9"></path><path d="M19 13v8H3V5h8"></path></svg>';
 /* Notitie en link onder de naam: paars, de link als "ah.nl" met het icoon erachter, die in een nieuw
    tabblad opent (zonder verwijzer, zonder band met de app). */
-function notitieRegel(a) {
+/* Een notitie met tags en link. Een tag is tikbaar: zoeken op die tag, waar dat soort thuishoort
+   (soort: artikel, recept, winkel, actie). */
+function notitieRegel(a, soort) {
   const s = document.createElement('span');
   s.className = 'notitie';
   /* Eerste regel de tekst, daaronder de tags en de link (in het bewerkveld blijft het één tekst). */
@@ -3419,7 +3619,7 @@ function notitieRegel(a) {
   const tags = [];
   TAG.lastIndex = 0;
   let m;
-  while ((m = TAG.exec(n))) tags.push('#' + m[2].replace(/_/g, ' '));
+  while ((m = TAG.exec(n))) tags.push(m[2]);
   /* Zonder de tags; wat er leeg omheen bleef staan ("()", '""') gaat ook weg. */
   let tekst = n;
   if (tags.length) {
@@ -3432,7 +3632,16 @@ function notitieRegel(a) {
   if (!tags.length && !a.link) return s;
   const r2 = document.createElement('span');
   r2.className = 'ntags';
-  for (const t of tags) { const b = document.createElement('b'); b.className = 'tag'; b.textContent = t; r2.appendChild(b); }
+  for (const t of tags) {
+    const b = document.createElement('span');
+    b.className = 'tag'; b.setAttribute('role', 'button'); b.tabIndex = 0;
+    b.textContent = '#' + t.replace(/_/g, ' ');
+    b.setAttribute('aria-label', 'Zoek op #' + t.replace(/_/g, ' '));
+    const zoek = (e) => { e.stopPropagation(); e.preventDefault(); tagZoeken('#' + t, soort || 'artikel'); };
+    b.addEventListener('click', zoek);
+    b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') zoek(e); });
+    r2.appendChild(b);
+  }
   if (a.link) {
     const l = document.createElement('span');
     l.className = 'link';
@@ -3450,9 +3659,43 @@ function notitieRegel(a) {
   return s;
 }
 
+/* Tik op een tag: naar de lijst waar dat soort staat en zoek op de tag (zoals de tag kiezen in het zoekvak). */
+function tagZoeken(tag, soort) {
+  sluitKeuze();
+  const actiefScherm = () => TABS.find((n) => !$('scherm-' + n).hidden);
+  let vak;
+  if (soort === 'winkel') {
+    if (actiefScherm() !== 'winkels') toonScherm('winkels');
+    if (ws.open) winkelSluiten();
+    vak = $('winkelsTekst');
+  } else if (soort === 'actie') {
+    if (actiefScherm() !== 'doen') toonScherm('doen');
+    doen.zoekIn = '';
+    vak = $('doenTekst');
+  } else {
+    if (actiefScherm() !== 'boodschappen') toonScherm('boodschappen');
+    if (rs.open) receptDicht(false);
+    /* Opnieuw beginnen: een recept-tag zoekt in Recepten, een artikel-tag in alle artikelen. */
+    scherm.zoek = ''; scherm.zoekIn = '';
+    if (soort === 'recept') scherm.filter = 'K'; else if (scherm.filter === 'K') scherm.filter = 'L';
+    vak = $('invoerTekst');
+  }
+  vak.value = tag;
+  vak.dispatchEvent(new Event('input'));
+  vak.blur();
+  tagLijst.hidden = true;
+}
+
 function aantalZetten(id, stap) {
   const a = artikelen.find((x) => x.id === id);
   if (!a) return;
+  /* Staat het er alleen voor recepten op: + betekent "ook zelf nodig", het eigen aantal telt dan
+     mee (3 + 4 Lasagne); − doet dan niets. */
+  if (a.op && a.opvoor) {
+    if (stap > 0) handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: a.op, nieuw: tijdstipTekst(new Date()) },
+      { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]);
+    return;
+  }
   const nieuw = Math.max(1, Math.min(99, a.aantal + stap));
   if (nieuw === a.aantal) return;
   handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'aantal', oud: a.aantal > 1 ? String(a.aantal) : '', nieuw: nieuw > 1 ? String(nieuw) : '' }]);
@@ -3516,10 +3759,24 @@ function tekenBoodschappen() {
     return;
   }
   const zoekend = normNaam(scherm.zoek) !== '';
-  $('filters').hidden = false;
+  /* Een open recept: eigen scherm, zonder filters. */
+  const inRecept = !!(rs.open && receptOpId.get(rs.open));
+  if (rs.open && !inRecept) receptDicht(false);
+  $('filters').hidden = inRecept;
   /* Zoeken één keer per toets; filters en lijst gebruiken hetzelfde resultaat. */
-  const gevonden = zoekend ? zoekArtikelen(artikelen, scherm.zoek, winkels) : null;
-  tekenFilters(zoekend, gevonden);
+  const gevonden = zoekend && !inRecept ? zoekArtikelen(artikelen, scherm.zoek, winkels) : null;
+  if (!inRecept) tekenFilters(zoekend, gevonden);
+  const recModus = inRecept || receptModus();
+  $('lijstBlok').hidden = recModus;
+  $('receptBlok').hidden = !recModus;
+  $('invoerTekst').placeholder = inRecept ? 'Artikel' : recModus ? 'Recept' : 'Artikel';
+  $('invoerTekst').setAttribute('aria-label', recModus && !inRecept ? 'Recept zoeken of toevoegen' : 'Artikel zoeken of toevoegen');
+  if (recModus) {
+    for (const id of ['weggehaald', 'archief', 'suggesties']) { const x = $(id); if (x) x.remove(); }
+    tagLijst.hidden = !inRecept || tagLijst.hidden;
+    if (inRecept) tekenRecept(receptOpId.get(rs.open)); else tekenRecepten(zoekend);
+    return;
+  }
   const vandaag = datumTekst(new Date());
   const { lijst: lijstNu, titel, onder } = lijstVoorScherm(zoekend, vandaag, gevonden);
   const wzTitel = zoekend ? winkelZoek(scherm.zoek, winkels) : null;
@@ -3543,7 +3800,7 @@ function tekenBoodschappen() {
   if (!lijstNu.length) {
     const p = document.createElement('div');
     p.className = 'leeg';
-    p.textContent = zoekend ? 'Niets gevonden' : scherm.filter === 'S' ? 'Geen suggesties' : 'Geen artikelen';
+    p.textContent = zoekend ? 'Niets gevonden' : 'Geen artikelen';
     l.appendChild(p);
   } else {
     if (rijGeheugen.size > artikelen.length + 50) rijGeheugen.clear();
@@ -3552,7 +3809,6 @@ function tekenBoodschappen() {
        Onder een artikel dan alleen de andere winkels (de gezochte staat al in de kop). */
     const wz = zoekend ? winkelZoek(scherm.zoek, winkels) : null;
     const rij = (a) => rijUitGeheugen(a, {
-      sug: scherm.filter === 'S' && !zoekend ? sugVan(a, vandaag) : null,
       zonderWinkel: wz && wz.winkel ? wz.winkel.id : '',
       /* Instelling "Bij een artikel: de winkels" (Artikelen, ook bij @, en in een winkel). */
       geenWinkels: !weergave.artikelWinkels
@@ -3582,6 +3838,29 @@ function tekenBoodschappen() {
   }
   tekenWeggehaald(zoekend);
   tekenArchief(zoekend);
+  tekenSuggesties(zoekend);
+}
+
+/* Suggesties: onder Op de lijst (niet tijdens zoeken), inklapbaar, standaard dicht. */
+function tekenSuggesties(zoekend) {
+  let sec = $('suggesties');
+  if (sec) sec.remove();
+  if (zoekend || scherm.filter !== 'L') return;
+  const vandaag = datumTekst(new Date());
+  const sug = artikelen.filter((a) => !a.op && sugVan(a, vandaag));
+  if (!sug.length) return;
+  sec = document.createElement('div');
+  sec.id = 'suggesties';
+  sec.className = 'blok';
+  const kop = klapKop('Suggesties', String(sug.length), scherm.sugOpen, () => { scherm.sugOpen = !scherm.sugOpen; tekenSuggesties(false); });
+  kop.insertAdjacentHTML('afterbegin', svgIcoon(PADEN.S, KLEUR.S, 22));
+  sec.appendChild(kop);
+  if (scherm.sugOpen) {
+    const l = document.createElement('div'); l.className = 'lijst';
+    for (const a of sug) l.appendChild(rijUitGeheugen(a, { sug: sugVan(a, vandaag), geenWinkels: !weergave.artikelWinkels }));
+    sec.appendChild(l);
+  }
+  $('lijstBlok').after(sec);
 }
 
 /* Eén luisteraar voor alle rondjes in de lijst. */
@@ -3626,13 +3905,18 @@ function opWisselen(a, opArtikelen) {
   const t = tijdstipTekst(new Date());
   if (a.op) {
     /* Meteen naar "Van de lijst gehaald" (geen wachttijd): een vergissing tik je daar terug. */
-    if (opArtikelen && (scherm.filter === 'L' || scherm.filter === 'E') && normNaam(scherm.zoek) === '') scherm.weggehaald.set(id, true);
+    /* Onthoud de recepten, zodat terugtikken ze er weer bij zet (zoals in de winkel). */
+    if (opArtikelen && (scherm.filter === 'L' || scherm.filter === 'E') && normNaam(scherm.zoek) === '') scherm.weggehaald.set(id, { voor: a.voor.map((v) => ({ recept: v.recept, naam: v.naam, aantal: String(v.aantal) })), opvoor: a.opvoor });
     handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: a.op, nieuw: '' },
               { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: '' }]
       .concat(a.letter === 'E' ? [{ actie: 'zet', soort: 'artikel', id, veld: 'weg', oud: a.weg, nieuw: datumTekst(new Date()) }] : []));
   } else {
+    const w = scherm.weggehaald.get(id);
     scherm.weggehaald.delete(id);
-    handelen(opDeLijst(a, t));
+    const voor = w && w.voor ? w.voor.map((v) => ({ actie: 'voor', soort: 'artikel', id, recept: v.recept, naam: v.naam, aantal: v.aantal, wie: ik })) : [];
+    /* Stond het er alleen voor recepten op, dan zetten de recepten het er weer op (zonder eigen aantal). */
+    handelen(voor.length && w.opvoor ? opDeLijst(a, t).filter((h) => h.actie === 'terug').map((h) => { delete h.record.op; delete h.record.opdoor; return h; }).concat(voor)
+      : opDeLijst(a, t).concat(voor));
   }
 }
 /* De handelingen om een artikel (dat er niet op staat) op de lijst te zetten, door "ik" op tijdstip t.
@@ -3662,11 +3946,263 @@ $('wekAlles').addEventListener('click', () => {
   handelen(hs);
   ongedaanMelding([telTekst(niet.length, 'wekelijks artikel', 'wekelijkse artikelen') + ' op de lijst gezet.'], terug);
 });
-$('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald') || e.target.closest('#archief .lijst')) lijstKlik(e); });
+$('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald') || e.target.closest('#archief .lijst') || e.target.closest('#suggesties .lijst')) lijstKlik(e); });
+
+/* Een rij in de lijst Winkels of Recepten: het hele vlak is tikbaar, maar alleen de naam is een
+   knop, zodat de tags en de link in de notitie er niet in zitten (knop in knop). */
+function lijstRij(klasse, icoon, naam, open) {
+  const rij = document.createElement('div');
+  rij.className = 'winkelrij lijstrij' + (klasse ? ' ' + klasse : '');
+  rij.innerHTML = icoon + '<span class="nm"><button class="naamknop" type="button"></button></span>' + PIJL_IN;
+  rij.querySelector('.naamknop').textContent = naam;
+  rij.addEventListener('click', open);
+  return rij;
+}
+
+/* ---------- recepten (filter op Artikelen) ---------- */
+/* Recepten die passen bij de zoektekst (naam, notitie en #tags, zoals bij artikelen). */
+function receptenGevonden(tekst) { return recepten.filter((r) => zoekPast(r.naam, r.notitie, tekst)); }
+function isFavRecept(id) { return rs.favorieten.indexOf(id) !== -1; }
+/* De lijst: Favorieten (per telefoon) en Overige, alfabetisch en inklapbaar, zoals de winkels. */
+function tekenRecepten(zoekend) {
+  const doel = $('receptBlok');
+  doel.innerHTML = '';
+  const alle = zoekend ? receptenGevonden(scherm.zoek) : recepten;
+  const fav = alle.filter((r) => isFavRecept(r.id));
+  const groepen = [['fav', 'Favorieten', fav], ['rest', recepten.some((r) => isFavRecept(r.id)) ? 'Overige' : 'Recepten', alle.filter((r) => !isFavRecept(r.id))]];
+  for (const [sl, titel, rijen] of groepen) {
+    if (!rijen.length) continue;
+    const sec = document.createElement('section'); sec.className = 'wsectie';
+    const dicht = rs.dicht[sl] && !zoekend;
+    sec.appendChild(klapKop(titel, String(rijen.length), !dicht, () => { rs.dicht[sl] = !rs.dicht[sl]; tekenBoodschappen(); }, { klasse: 'kop', lijn: false }));
+    if (!dicht) {
+      const kaart = document.createElement('div'); kaart.className = 'wkaart';
+      for (const r of rijen) {
+        const b = lijstRij('receptrij', svgIcoon(PADEN.K, KLEUR.K, 24), r.naam, () => receptOpenen(r.id));
+        b.dataset.id = r.id;
+        const n = r.artikelen.filter((x) => artikelOpId.has(x.id)).length;
+        const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = telTekst(n, 'artikel', 'artikelen');
+        b.querySelector('.nm').appendChild(sub);
+        if (r.notitie || r.link) b.querySelector('.nm').appendChild(notitieRegel(r, 'recept'));
+        kaart.appendChild(b);
+      }
+      sec.appendChild(kaart);
+    }
+    doel.appendChild(sec);
+  }
+  if (!doel.firstChild) {
+    const p = document.createElement('div'); p.className = 'kaart leegregel';
+    p.textContent = zoekend ? 'Niets gevonden' : 'Geen recepten';
+    doel.appendChild(p);
+  }
+}
+
+/* Een recept: terug, naam, ster en potlood; daaronder de artikelen (alfabetisch) met het aantal
+   van het recept, de teller en het rondje (voor dit recept op de lijst). Typen in "Artikel" filtert
+   en toont boven de balk artikelen om toe te voegen. */
+/* Notitie, tags en link van een recept of winkel als band onder de kop. */
+function kopNotitie(doel, x, soort) {
+  if (!x.notitie && !x.link) return;
+  const d = document.createElement('div');
+  d.className = 'kopnotitie';
+  d.appendChild(notitieRegel(x, soort));
+  doel.querySelector('.wdkop').after(d);
+}
+function tekenRecept(r) {
+  const doel = $('receptBlok');
+  doel.innerHTML = '<div class="wdkop"><button class="terug" type="button"></button><h2></h2>' +
+    '<button class="icoonknop ster" type="button" aria-label="Favoriet"></button><button class="icoonknop bewerk" type="button" aria-label="Recept bewerken">' + POTLOOD() + '</button></div>' +
+    '<div class="blok"><div class="kopbalk"><h3>Artikelen</h3><span class="tal"></span></div><div class="wkaart" id="receptArtikelen"></div></div>';
+  doel.querySelector('.terug').innerHTML = PIJL_TERUG;
+  doel.querySelector('.terug').setAttribute('aria-label', 'Terug naar Recepten');
+  doel.querySelector('.terug').addEventListener('click', () => receptDicht(true));
+  doel.querySelector('h2').textContent = r.naam;
+  kopNotitie(doel, r, 'recept');
+  const fav = isFavRecept(r.id);
+  const ster = doel.querySelector('.ster');
+  ster.innerHTML = STER(fav);
+  ster.setAttribute('aria-pressed', String(fav));
+  ster.addEventListener('click', () => {
+    rs.favorieten = rs.favorieten.filter((f) => f !== r.id);
+    if (!fav) rs.favorieten.push(r.id);
+    keuzeBewaren('receptFav');
+    tekenBoodschappen();
+  });
+  doel.querySelector('.bewerk').addEventListener('click', () => receptBewerken(r));
+  const z = zoekVorm(scherm.zoek);
+  const items = r.artikelen.map((x) => [artikelOpId.get(x.id), x.aantal]).filter(([a]) => a)
+    .sort((x, y) => SORTEER.compare(x[0].naam, y[0].naam));
+  const zicht = z ? items.filter(([a]) => a.zoek.indexOf(z) !== -1) : items;
+  doel.querySelector('.kopbalk .tal').textContent = String(zicht.length);
+  const lijstEl = doel.querySelector('#receptArtikelen');
+  for (const [a, n] of zicht) lijstEl.appendChild(artikelRij(a, { recept: { id: r.id, naam: r.naam, aantal: n }, teller: rs.teller === a.id, geenWinkels: !weergave.artikelWinkels }));
+  if (!zicht.length) lijstEl.appendChild(leegRegel(z ? 'Niets gevonden' : 'Geen artikelen'));
+  receptKeuze(r);
+}
+/* Boven de balk: artikelen die (nog) niet in het recept staan, en "+ Nieuw" (eenmalig). */
+function receptKeuze(r) {
+  const vak = $('invoerTekst');
+  const v = schoonTekst(vak.value);
+  const z = zoekVorm(v);
+  if (!z || document.activeElement !== vak || v[0] === '#' || v[0] === '@') { tagLijst.hidden = true; return; }
+  const erin = new Set(r.artikelen.map((x) => x.id));
+  const kandidaten = artikelen.filter((a) => !erin.has(a.id) && a.zoek.indexOf(z) !== -1);
+  const nn = normNaam(v);
+  tagLijst.innerHTML = '';
+  tagLijst.setAttribute('aria-label', 'Artikelen');
+  const optie = (naam, klik, nieuw, a) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tagoptie' + (nieuw ? ' nieuw' : ''); b.setAttribute('role', 'option');
+    b.innerHTML = (a ? svgIcoon(PADEN[a.letter], KLEUR[a.letter], 22) : '') + '<span class="nm"></span>';
+    b.querySelector('.nm').textContent = naam;
+    b.addEventListener('pointerdown', (e) => e.preventDefault());
+    b.addEventListener('mousedown', (e) => e.preventDefault());
+    b.addEventListener('click', klik);
+    tagLijst.appendChild(b);
+  };
+  for (const a of kandidaten) optie(a.naam, () => { invoerLeeg(); handelen([{ actie: 'receptArtikel', soort: 'recept', id: r.id, artikel: a.id, aantal: '1' }]); }, false, a);
+  if (!erin.has((artikelen.find((a) => a.sleutel === nn) || {}).id) && !kandidaten.some((a) => a.sleutel === nn)) optie('+ Nieuw: "' + v + '"', () => receptArtikelToevoegen(), true);
+  if (!tagLijst.firstChild) { tagLijst.hidden = true; return; }
+  tagLijstTonen(vak, false);
+}
+function invoerLeeg() {
+  vakLeeg($('invoerTekst'));
+  scherm.zoek = ''; scherm.zoekIn = '';
+  tagLijst.hidden = true;
+  invoerBijwerken();
+}
+/* + of Enter in een recept: een bestaand artikel erbij (aantal 1), of een nieuw eenmalig artikel. */
+function receptArtikelToevoegen() {
+  const r = receptOpId.get(rs.open);
+  const v = schoonTekst($('invoerTekst').value);
+  if (!r) return;
+  if (!v) { $('invoerTekst').focus(); return; }
+  if (v[0] === '#' || v[0] === '@') { $('invoerTekst').blur(); return; }
+  invoerLeeg();
+  const nn = normNaam(v); // één keer, niet per element
+  const bestaand = artikelen.find((a) => a.sleutel === nn);
+  if (bestaand) {
+    if (r.artikelen.some((x) => x.id === bestaand.id)) { tekenBoodschappen(); return; }
+    handelen([{ actie: 'receptArtikel', soort: 'recept', id: r.id, artikel: bestaand.id, aantal: '1' }]);
+    return;
+  }
+  const id = nieuweId();
+  handelen([{ actie: 'nieuw', soort: 'artikel', id, velden: { naam: v, soort: 'eenmalig' } },
+            { actie: 'receptArtikel', soort: 'recept', id: r.id, artikel: id, aantal: '1' }]);
+}
+/* Nieuw recept (of het bestaande met die naam) en meteen openen. */
+function receptMaken(naam) {
+  const nn = normNaam(naam); // één keer, niet per element
+  const bestaand = recepten.find((r) => normNaam(r.naam) === nn);
+  invoerLeeg();
+  $('invoerTekst').blur();
+  const id = bestaand ? bestaand.id : nieuweId();
+  if (!bestaand) handelen([{ actie: 'nieuw', soort: 'recept', id, velden: { naam } }]);
+  receptOpenen(id);
+}
+function receptOpenen(id) {
+  rs.scroll = $('midden').scrollTop;
+  rs.open = id; rs.teller = '';
+  scherm.filter = 'K';
+  invoerLeeg();
+  rs.laag = laagOpen(() => { rs.laag = null; receptDicht(true); return true; });
+  tekenBoodschappen();
+  naarBoven();
+}
+function receptDicht(tekenen) {
+  rs.open = ''; rs.teller = '';
+  if (rs.laag) { laagDicht(rs.laag); rs.laag = null; }
+  invoerLeeg();
+  if (!tekenen) return;
+  tekenBoodschappen();
+  $('midden').scrollTop = rs.scroll;
+}
+/* Het rondje in een recept: voor dit recept op de lijst, of dat recept er weer af. */
+function receptRondje(r, a) {
+  const x = r.artikelen.find((y) => y.id === a.id);
+  if (!x) return;
+  if (a.voor.some((v) => v.recept === r.id)) handelen([{ actie: 'voor', soort: 'artikel', id: a.id, recept: r.id, aantal: '' }]);
+  else handelen([{ actie: 'voor', soort: 'artikel', id: a.id, recept: r.id, naam: r.naam, aantal: String(x.aantal), wie: ik }]);
+}
+/* De teller in een recept: het aantal van het recept; staat het al voor dit recept op de lijst, dan telt de lijst mee. */
+function receptAantalZetten(r, a, stap) {
+  const x = r.artikelen.find((y) => y.id === a.id);
+  if (!x) return;
+  const nieuw = Math.max(1, Math.min(99, x.aantal + stap));
+  if (nieuw === x.aantal) return;
+  const hs = [{ actie: 'receptArtikel', soort: 'recept', id: r.id, artikel: a.id, aantal: String(nieuw) }];
+  if (a.voor.some((v) => v.recept === r.id)) hs.push({ actie: 'voor', soort: 'artikel', id: a.id, recept: r.id, naam: r.naam, aantal: String(nieuw), wie: ik });
+  handelen(hs);
+}
+/* Uit het recept (prullenbak in de teller), met Ongedaan maken. */
+function receptArtikelUit(r, a) {
+  const x = r.artikelen.find((y) => y.id === a.id);
+  if (!x) return;
+  const opLijst = a.voor.find((v) => v.recept === r.id);
+  rs.teller = '';
+  const hs = [{ actie: 'receptArtikel', soort: 'recept', id: r.id, artikel: a.id, aantal: '' }];
+  const terug = [{ actie: 'receptArtikel', soort: 'recept', id: r.id, artikel: a.id, aantal: String(x.aantal) }];
+  if (opLijst) {
+    hs.push({ actie: 'voor', soort: 'artikel', id: a.id, recept: r.id, aantal: '' });
+    terug.push({ actie: 'voor', soort: 'artikel', id: a.id, recept: r.id, naam: r.naam, aantal: String(opLijst.aantal), wie: ik });
+  }
+  handelen(hs);
+  ongedaanMelding([{ vet: a.naam }, ' uit ', { vet: r.naam }, ' gehaald.'], terug);
+}
+/* Eén luisteraar voor het receptscherm: teller, rondje, naam (opent het artikel). */
+$('receptBlok').addEventListener('click', (e) => {
+  const r = receptOpId.get(rs.open);
+  if (!r) return;
+  const tel = e.target.closest('.teller');
+  if (tel) {
+    const b = e.target.closest('button');
+    const a = artikelOpId.get(tel.dataset.id);
+    if (b && a) { if (b.classList.contains('uit')) receptArtikelUit(r, a); else receptAantalZetten(r, a, b.classList.contains('meer') ? 1 : -1); }
+    else if (!e.target.closest('.n')) { rs.teller = ''; tekenBoodschappen(); }
+    return;
+  }
+  const rij = e.target.closest('.item');
+  if (!rij) return;
+  const a = artikelOpId.get(rij.dataset.id);
+  if (!a) return;
+  if (e.target.closest('.icoon') || e.target.closest('.aantal')) { rs.teller = rs.teller === a.id ? '' : a.id; tekenBoodschappen(); return; }
+  if (e.target.closest('.rondje')) { receptRondje(r, a); return; }
+  if (e.target.closest('.tekst')) artikelOpenen(a.id);
+});
+/* Het rondje laat het vak niet los, zodat het toetsenbord open blijft. */
+for (const ev of ['pointerdown', 'mousedown']) $('receptBlok').addEventListener(ev, (e) => { if (document.activeElement === $('invoerTekst') && e.target.closest('.rondje')) e.preventDefault(); });
+
+function receptBewerken(r) {
+  bewerkPaneel({
+    titel: 'Recept bewerken', naam: r.naam, wegLabel: 'Recept verwijderen',
+    metNotitie: true, notitie: r.notitie, link: r.link,
+    opslaan: (nieuw, extra) => {
+      const nn = normNaam(nieuw); // één keer, niet per element
+      const nf = naamFout(nieuw, r.naam, recepten.some((x) => x.id !== r.id && normNaam(x.naam) === nn), 'een recept');
+      if (nf) return nf;
+      if (!model.recepten.get(r.id)) { sluitKeuze(); receptDicht(true); return; } // intussen verwijderd
+      const h = [];
+      if (nieuw !== r.naam) h.push({ actie: 'zet', soort: 'recept', id: r.id, veld: 'naam', oud: r.naam, nieuw });
+      for (const veld of ['notitie', 'link']) if (extra[veld] !== (r[veld] || '')) h.push({ actie: 'zet', soort: 'recept', id: r.id, veld, oud: r[veld] || '', nieuw: extra[veld] });
+      if (h.length) handelen(h);
+    },
+    /* De lijst blijft zoals hij is: wat voor dit recept op de lijst staat, houdt zijn regeltje. */
+    verwijder: () => {
+      if (!model.recepten.get(r.id)) { receptDicht(true); return; }
+      const record = recordNaarJson('recept', model.recepten.get(r.id));
+      receptDicht(true);
+      handelen([{ actie: 'weg', soort: 'recept', id: r.id }]);
+      verwijderdMelding([{ vet: r.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'recept', id: r.id, record }]);
+    }
+  });
+}
+
 
 function toevoegen() {
   const naam = schoonTekst($('invoerTekst').value);
   if (!naam) { $('invoerTekst').focus(); return; }
+  if (rs.open) { receptArtikelToevoegen(); return; }
+  if (receptModus()) { if (naam[0] === '#') { $('invoerTekst').blur(); return; } receptMaken(naam); return; }
   /* Met # of @ vooraan is het zoeken (tag of winkel), geen nieuw artikel. */
   if (naam[0] === '#' || naam[0] === '@') { $('invoerTekst').blur(); return; }
   const nn = normNaam(naam); // één keer, niet per element
@@ -3732,7 +4268,7 @@ $('invoerTekst').addEventListener('input', () => {
   const was = normNaam(scherm.zoek) !== '';
   scherm.zoek = $('invoerTekst').value;
   const is = normNaam(scherm.zoek) !== '';
-  if (!was && is) scherm.zoekIn = '';
+  if (!was && is) scherm.zoekIn = scherm.filter === 'K' ? 'K' : '';
   /* "Van de lijst gehaald" blijft bewaard tijdens het typen (verborgen) en komt terug als het vak leeg is;
      alleen een ander filter wist het. */
   if (was && !is && scherm.zoekIn) { if (scherm.zoekIn !== scherm.filter) weggehaaldLegen(); scherm.filter = scherm.zoekIn; scherm.nieuwSoort = soortVanFilter(); tekenSoortknop(); scherm.zoekIn = ''; } invoerBijwerken(); tekenBoodschappen(); });
@@ -4081,7 +4617,9 @@ function afvinken(a) {
   /* Afgevinkt onder "Elders": de aankoop krijgt een vraagteken bij de winkel; de app
      legt niet vast dat het hier te koop is (misschien kwam het ergens anders vandaan). */
   const nietBij = !!(winkel.id && winkelOpId.has(winkel.id) && !teKoopIn(a, winkel.id));
-  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop, nietBij });
+  winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop, nietBij,
+    /* Recepten: om ze bij terugzetten weer op de lijst te krijgen, en voor de 1,5 s dat het nog staat. */
+    voor: a.voor.map((v) => ({ recept: v.recept, naam: v.naam, aantal: String(v.aantal) })), opvoor: a.opvoor, opAantal: a.opAantal, voorTekst: a.voorTekst });
   mandjeBewaren();
   const hs = (aankoop ? [Object.assign({ actie: 'aankoop', soort: 'aankoop', id: aankoop, naam: a.naam, tijd: nu }, winkelOpId.has(winkel.id) ? { winkel: winkel.id } : {}, nietBij ? { onzeker: '1' } : {})] : []).concat([
     { actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' },
@@ -4098,8 +4636,10 @@ function terugOpLijst(id) {
   winkel.vertraagd.delete(id);
   winkel.mandje.delete(id);
   mandjeBewaren();
-  const hs = [{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: m.op || tijdstipTekst(new Date()) },
-              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: '', nieuw: m.opdoor }];
+  /* Stond het er alleen voor recepten op, dan zetten de recepten het er weer op (zonder eigen aantal). */
+  const voor = (m.voor || []).map((v) => ({ actie: 'voor', soort: 'artikel', id, recept: v.recept, naam: v.naam, aantal: v.aantal, wie: m.opdoor || ik }));
+  const hs = (m.opvoor && voor.length ? [] : [{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: m.op || tijdstipTekst(new Date()) },
+              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: '', nieuw: m.opdoor }]).concat(voor);
   if (!m.alGekocht) hs.push({ actie: 'nietGekocht', soort: 'artikel', id, datum: m.datum });
   if (m.aankoop) hs.push({ actie: 'weg', soort: 'aankoop', id: m.aankoop });
   handelen(hs);
@@ -4124,13 +4664,16 @@ function winkelRij(a, soort) {
   const rij = document.createElement('div');
   const gedaan = soort === 'gedaan';
   rij.className = 'wrij' + (gedaan ? ' gedaan' : '');
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'vink';
-  b.setAttribute('aria-pressed', String(gedaan));
-  b.innerHTML = (gedaan ? RONDJE.gedaan : soort === 'elders' ? RONDJE.elders : RONDJE.leeg) + '<span class="nm"></span>';
+  /* De hele regel vinkt af, maar alleen het rondje is de knop: de notitie (tags, link) zit er niet in. */
+  const b = document.createElement('div');
+  b.className = 'vink';
+  b.innerHTML = '<button class="vinkrond" type="button" aria-pressed="' + gedaan + '">' + (gedaan ? RONDJE.gedaan : soort === 'elders' ? RONDJE.elders : RONDJE.leeg) + '</button><span class="nm"></span>';
   b.querySelector('.nm').textContent = a.naam;
-  if (a.aantal > 1) { const n = document.createElement('span'); n.className = 'aantal'; n.textContent = a.aantal + '×'; b.querySelector('.nm').appendChild(n); }
-  b.setAttribute('aria-label', (a.aantal > 1 ? a.aantal + '× ' : '') + (gedaan ? a.naam + ', in de winkelmand; terugzetten' : a.naam + ' afvinken'));
+  /* Op de lijst: het aantal met de recepten erbij (in de winkelmand geen aantal). */
+  const tal = a.op ? a.opAantal : a.aantal;
+  if (tal > 1) { const n = document.createElement('span'); n.className = 'aantal'; n.textContent = tal + '×'; b.querySelector('.nm').appendChild(n); }
+  if (!gedaan && a.op && a.voorTekst) { const v = document.createElement('span'); v.className = 'voorregel'; v.textContent = a.voorTekst; b.querySelector('.nm').appendChild(v); }
+  b.querySelector('.vinkrond').setAttribute('aria-label', (tal > 1 ? tal + '× ' : '') + (gedaan ? a.naam + ', in de winkelmand; terugzetten' : a.naam + ' afvinken'));
   if (!gedaan && isNieuw(a)) {
     const n = document.createElement('span'); n.className = 'nieuw'; n.textContent = 'nieuw';
     n.style.cssText = 'padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600;flex-shrink:0';
@@ -4221,7 +4764,7 @@ function tekenWinkel() {
   /* Net afgevinkt (1,5 s): nog op zijn plek, als gedaan. */
   const zicht = artikelen.map((a) => {
     const m = winkel.vertraagd.has(a.id) && winkel.mandje.get(a.id);
-    return m ? Object.assign({}, a, { op: m.op || 'x', opdoor: m.opdoor }) : a;
+    return m ? Object.assign({}, a, { op: m.op || 'x', opdoor: m.opdoor, opAantal: m.opAantal || a.aantal, voorTekst: m.voorTekst || '' }) : a;
   });
   const ind = winkelIndeling(zicht, w);
   const soortVan = (a) => winkel.vertraagd.has(a.id) ? 'gedaan' : null;
@@ -4559,18 +5102,14 @@ function tekenWinkelsOverzicht() {
     if (!dicht) {
       const kaart = document.createElement('div'); kaart.className = 'wkaart';
       for (const x of rijen) {
-        const b = document.createElement('button');
-        b.type = 'button'; b.className = 'winkelrij';
-        b.innerHTML = ICOON_WINKEL('#4B3CC0') + '<span class="nm"></span>' + PIJL_IN;
-        b.querySelector('.nm').textContent = x.naam;
+        const b = lijstRij('', ICOON_WINKEL('#4B3CC0'), x.naam, () => winkelOpenen(x.id));
         /* "3 afdelingen, 8 artikelen"; zonder afdelingen alleen het aantal artikelen ("geen afdelingen" maakt de lijst onrustig). */
         if (weergave.winkelTal) {
           const s = document.createElement('span'); s.className = 'sub';
           s.textContent = (x.afdelingen.length ? telTekst(x.afdelingen.length, 'afdeling', 'afdelingen') + ', ' : '') + telTekst(n.get(x.id) || 0, 'artikel', 'artikelen');
           b.querySelector('.nm').appendChild(s);
         }
-        if (x.notitie || x.link) b.querySelector('.nm').appendChild(notitieRegel(x));
-        b.addEventListener('click', () => winkelOpenen(x.id));
+        if (x.notitie || x.link) b.querySelector('.nm').appendChild(notitieRegel(x, 'winkel'));
         kaart.appendChild(b);
       }
       sec.appendChild(kaart);
@@ -4594,6 +5133,7 @@ function tekenWinkelDetail(w) {
     '<div class="blok"><div class="kopbalk"><h3></h3><span class="tal"></span>' +
     (metAfd ? '<button class="volgorde kopknop" type="button"></button>' : '') + '</div><div class="wkaart" id="afdelingen"></div></div>';
   doel.querySelector('h2').textContent = w.naam;
+  kopNotitie(doel, w, 'winkel');
   const fav = isFavoriet(w.id);
   const ster = doel.querySelector('.ster');
   ster.innerHTML = STER(fav);
@@ -5214,9 +5754,12 @@ const LINK_FOUT = ['Alleen links met ', { vet: 'https://' }, ' zijn toegestaan.'
 function artikelVerwijderen() {
   const o = bw.oud;
   const record = recordNaarJson('artikel', model.artikelen.get(o.id));
+  /* In welke recepten het stond (met het aantal), zodat Ongedaan maken het daar terugzet. */
+  const recepten = {};
+  for (const r of model.recepten.values()) if (r.artikelen.has(o.id)) recepten[r.id] = r.artikelen.get(o.id);
   artikelDicht();
   handelen([{ actie: 'weg', soort: 'artikel', id: o.id }]);
-  verwijderdMelding([{ vet: o.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'artikel', id: o.id, record }]);
+  verwijderdMelding([{ vet: o.naam }, ' verwijderd.'], [{ actie: 'terug', soort: 'artikel', id: o.id, record, recepten }]);
 }
 
 /* Sluiten met wijzigingen: eerst vragen. Het kruisje van de vraag = verder bewerken. */
@@ -5272,23 +5815,24 @@ function actieRij(a, vandaag, groep) {
   const klaar = !a.open || doen.vertrekt.has(a.id);
   rij.className = 'actierij' + (klaar ? ' afgerond' : '') + (doen.vertrekt.has(a.id) ? ' vertrekt' : '');
   rij.dataset.id = a.id;
-  rij.innerHTML = '<button class="rondje" type="button"></button><button class="tekst" type="button"><span class="nm"></span></button>';
+  rij.innerHTML = '<button class="rondje" type="button"></button><div class="tekst"><button class="tekstknop" type="button"><span class="nm"></span></button></div>';
   const r = rij.querySelector('.rondje');
   r.innerHTML = klaar ? RONDJE.gedaan : RONDJE.leeg;
   r.setAttribute('aria-label', klaar ? a.naam + ' heropenen' : a.naam + ' afronden');
   rij.querySelector('.nm').textContent = a.naam;
   const tekst = rij.querySelector('.tekst');
+  const knop = rij.querySelector('.tekstknop');
   if (!a.open) {
     const w = document.createElement('span'); w.className = 'wanneer';
     w.textContent = 'afgerond ' + periodeTekst(a.klaar.slice(0, 10), vandaag);
-    tekst.appendChild(w);
+    knop.appendChild(w);
   } else if (a.datum) {
     const w = document.createElement('span'); w.className = 'wanneer' + (groep === 'laat' ? ' laat' : '');
     w.textContent = periodeTekst(a.datum, vandaag);
     if (a.herhaal) { w.appendChild(document.createTextNode(' · ')); const h = document.createElement('span'); h.innerHTML = HERHAAL_IC; w.appendChild(h); w.appendChild(document.createTextNode(HERHAAL_TEKST[a.herhaal])); }
-    tekst.appendChild(w);
+    knop.appendChild(w);
   }
-  if (a.notitie || a.link) tekst.appendChild(notitieRegel(a));
+  if (a.notitie || a.link) tekst.appendChild(notitieRegel(a, 'actie'));
   return rij;
 }
 /* Actieregels hergebruiken: alleen een regel waarvan iets veranderde, wordt opnieuw gemaakt. */
@@ -5594,14 +6138,15 @@ document.addEventListener('scroll', (e) => {
 function alleNotities() {
   return artikelen.map((a) => a.notitie).concat(winkels.map((w) => w.notitie), acties.map((a) => a.notitie));
 }
-tagKeuze('invoerTekst', () => artikelen.map((a) => a.notitie));
+tagKeuze('invoerTekst', () => (receptModus() && !rs.open ? recepten.map((r) => r.notitie) : artikelen.map((a) => a.notitie)), false, () => !!rs.open && !/^\s*#/.test($('invoerTekst').value));
 /* Winkelkeuze in het zoekvak van Artikelen: "@" toont de winkels boven de balk (met hoeveel
    artikelen er te koop zijn), net als de tags bij "#". Kiezen zet "@Winkel " in het vak;
    verder typen zoekt in de afdelingen. Het toetsenbord blijft open. */
 (function winkelKeuze() {
   const vak = $('invoerTekst');
   const teken = () => {
-    const wz = document.activeElement === vak ? winkelZoek(vak.value, winkels) : null;
+    /* In Recepten geen winkelkeuze (@ zoekt daar niet op winkel). */
+    const wz = document.activeElement === vak && !receptModus() && !rs.open ? winkelZoek(vak.value, winkels) : null;
     if (!wz || wz.winkel) { if (wz) tagLijst.hidden = true; return; }
     const tel = new Map();
     for (const a of artikelen) for (const pl of a.plekken) tel.set(pl.winkel, (tel.get(pl.winkel) || 0) + 1);
@@ -5889,7 +6434,7 @@ function tekenArchiefInstelling() {
   tekenBewaarInstelling('archief', 'archiefBewaren', (k) => {
     const nuD = new Date();
     const grens = datumTekst(new Date(nuD.getFullYear(), nuD.getMonth(), nuD.getDate() - BEWAREN[k]));
-    return Array.from(model.artikelen.values()).filter((r) => { const l = r.soort === 'eenmalig' && !r.op ? laatsteDag(r) : ''; return l && l < grens; }).length;
+    return archiefOpruimbaar(model, grens).length;
   }, 'artikel', 'artikelen', 'het archief');
 }
 /* Aankopen bewaren: kiezen uit 50, 100, 250, 500 in een eigen keuzelijst. Een eerder

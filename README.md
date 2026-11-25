@@ -8,7 +8,7 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (25 november 2026, versie 1352905-018): in gebruik. Werkt: aanmelden
+Stand (25 november 2026, versie 1352905-019): in gebruik. Werkt: aanmelden
 bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
 (lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
 tabbladen met vegen rondom:
@@ -18,14 +18,15 @@ tabbladen met vegen rondom:
   nieuw maakt.
 - **Artikelen**: toevoegen, zoeken (ook op #tags en @winkel), filters (ook allemaal
   uit), op en van de lijst, aantal, notitie en link (of zoekwoorden), bewerkscherm,
-  archief voor eenmalige artikelen.
+  archief voor eenmalige artikelen, suggesties onder Op de lijst, recepten (per artikel op de
+  lijst, aantallen opgeteld met "3 + 4 Lasagne" eronder). Tags zijn tikbaar (zoeken op die tag).
 - **Boodschappen**: winkelkeuze (Huidig, Nodig, Alternatief), per afdeling
   afvinken, Elders, één winkelmand voor alle winkels (per telefoon), gedeelde
   Aankopen (per dag, met zoeken).
 - **Doen**: acties met periode en herhalen, filters Week/Maand/Kw./Jaar/Alles,
   inklapbare groepen, Gedaan (afgeronde acties).
 - **Instellingen**: synchroniseren, wekelijks terug op de lijst,
-  aankopen (bijhouden, archief), weergave, Doen, backups, logboek.
+  weergave, Doen, Bewaren (aankopen, archief, afgeronde acties), backups, logboek.
 
 Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie
@@ -35,7 +36,7 @@ Tests:
 - `test-hulp.cjs` — korte regelopmaak met namen voor de testgegevens van de rooktest, omgezet naar en van thuis.json met id's (alleen voor de tests)
 - `python3 mutaties.py` — sloopt de kern op bekende plekken; elke mutatie moet worden gevangen
 - `python3 test-sw-iconen.py`, `test-sw-vorige-cache.py`, `test-sw-ontbrekend-bijbestand.py`, `test-sw-trage-404.py` — service worker in een echte browser (Playwright), gelijk aan die van de andere apps (conventies.md §3)
-- `python3 test-opmaak.py` — opmaak in een echte browser: meldingen in beeld, plek van de tagkeuze, scrollpositie (editor, afdeling), keuzelijstje na scrollen, afdeling slepen met aanraken, tikvlakken, lange winkelnaam
+- `python3 test-opmaak.py` — opmaak in een echte browser: meldingen in beeld, plek van de tagkeuze, scrollpositie (editor, afdeling), keuzelijstje na scrollen, afdeling slepen met aanraken, tikvlakken, lange winkelnaam, niets vet in notities
 
 Na elke wijziging aan de app ook:
 `python3 ../apps-basis/check_app.py thuis.html --basis ../apps-basis`
