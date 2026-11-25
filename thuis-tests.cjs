@@ -569,6 +569,12 @@ controle('wekelijks: offline van de lijst vóór het moment, gesynct na de reset
   const laterAf = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'ban01', veld: 'op', oud: '2026-11-21T06:00', nieuw: '', t: '2026-11-21T09:00' })], NU);
   return gelijk(b.op + '|' + b.gekocht.join() + '|' + (JSON.parse(laterAf.tekst).artikelen.ban01.op || ''), '2026-11-21T06:00|2026-11-14,2026-11-20|');
 });
+controle('wekelijks niet automatisch: offline van de lijst vóór het moment, gesynct daarna → gewoon van de lijst', () => {
+  const na = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00', auto: 'nee' } },
+    artikelen: { ban01: { naam: 'Bananen', soort: 'wekelijks', op: '2026-11-14T06:00', gekocht: ['2026-11-14'] } } });
+  const r = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'ban01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' })], NU);
+  return gelijk(JSON.parse(r.tekst).artikelen.ban01.op || '', '');
+});
 controle('wekelijks: hooguit één keer per week; tijd later zetten op dezelfde dag geeft geen tweede reset (K11)', () => {
   const k = kern();
   const m = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '10:00', teruggezet: '2026-11-21T06:00' } },

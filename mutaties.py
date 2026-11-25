@@ -57,6 +57,7 @@ MUTATIES = [
   ("link: schema wordt zoekopdracht", "  if (/^[a-z][a-z0-9+.-]*:\\/\\//i.test(t)) return veiligeLink(t);", ""),
   ("wekelijks: automatisch uit genegeerd", "  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;", ""),
   ("wekelijks: uit vergeet het moment", "  inst.teruggezet = mTekst;\n  if (vorige === '') return 0;", "  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;\n  inst.teruggezet = mTekst;\n  if (vorige === '') return 0;"),
+  ("wekelijks: afhalen genegeerd ook als het niet automatisch gaat", "wk && wk.teruggezet && instelling(model, 'wekelijks', 'auto') !== 'nee'", "wk && wk.teruggezet"),
   ("link: elke punt is een adres", "ADRES_EXTENSIE.test(host)", "/\\./.test(host)"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

@@ -205,8 +205,9 @@ Tabbalk met alleen iconen, vijf tabbladen: **Winkels** (winkelpui),
 **Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom; niet vanaf
 de rand van het scherm (terug-gebaar van Android), niet tijdens typen en niet in
 een menu of keuzelijst. De terugknop: zie §7a (Bewerken, terugknop en meldingen).
-Kleur en vorm per soort: eenmalig orchidee #8E33A6 (vierkant met 1), wekelijks kobalt (rondje met 7),
-regelmatig turquoise (zeshoek met n, "n keer"); het teken staat precies in het midden, 9 hoog.
+Kleur en vorm per soort, hoe vaker hoe meer hoeken: eenmalig orchidee #8E33A6 (rondje met 1),
+wekelijks kobalt (vierkant met 7), regelmatig turquoise (zeshoek met n, "n keer"); het teken staat
+precies in het midden, 9 hoog.
 Ook zonder kleur te onderscheiden aan de vorm. Rechte hoeken; tekst nooit
 kleiner dan 17 px; knoppen minstens 44 px.
 
@@ -557,7 +558,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Wekelijks gaat hooguit één keer per week terug op de lijst, minstens 4 dagen na de vorige keer; een
   andere dag of tijd geldt vanaf de volgende week; een moment meer dan twee dagen na nu telt als vorige
   week. De sync doet eerst wekelijks terug, dan de wachtrij; de telefoon rekent het ook zelf (offline).
-  Een "van de lijst" van vóór het moment dat pas daarna binnenkomt, haalt het niet van de nieuwe lijst.
+  Een "van de lijst" van vóór het moment dat pas daarna binnenkomt, haalt het niet van de nieuwe lijst (alleen als Automatisch aan staat; uit telt het afhalen gewoon).
 - Mandje: per telefoon, alle winkels samen. Wat weer op de lijst staat of verwijderd is, gaat er
   vanzelf uit; verder blijft het staan tot je het leegmaakt (ook de volgende dag). De voortgang
   telt wat in het mandje ligt als gehaald.

@@ -11,7 +11,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
   :root{
-    --kobalt:#1D3FAF; --paars:#4B3CC0; --violet:#7A3FC8; --turkoois:#0A7581; --eenmalig:#8E33A6;
+    --kopknop:44px; --kobalt:#1D3FAF; --paars:#4B3CC0; --violet:#7A3FC8; --turkoois:#0A7581; --eenmalig:#8E33A6;
     --tekst:#18202B; --zacht:#3A4250; --grijs:#5A6472; --lijn:#DEDCEE; --rij:#EFEEF7; --achter:#F4F3FB;
     --oranje-bg:#FFF5E6; --oranje:#6B3D02; --rood:#B42318;
   }
@@ -235,9 +235,12 @@
   .kopbalk svg{flex-shrink:0}
   #lijstPijl{display:flex}
   #lijstBlok{position:relative}
-  #wekAlles{position:absolute;top:1px;right:42px;z-index:1;width:44px;height:44px;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
+  /* Een knop naast de kopknop van de lijst (die zelf een knop is): zwevend, rechts vóór het
+     pijltje (kopbalk-padding 14 + pijltje 20 + tussenruimte 8); het pijltje schuift een
+     knopbreedte op. */
+  #wekAlles{position:absolute;top:1px;right:calc(14px + 20px + 8px);z-index:1;margin:0}
   #wekAlles[hidden]{display:none}
-  #lijstKop.metknop #lijstPijl{margin-left:52px}
+  #lijstKop.metknop #lijstPijl{margin-left:calc(var(--kopknop) + 8px)}
   #lijstPijl:empty{display:none}
   button.kopbalk{cursor:pointer}
   .blok{display:flex;flex-direction:column}
@@ -305,7 +308,7 @@
   .afdrij .tal{flex-shrink:0;font-size:17px;color:var(--grijs)}
   .arij .potlood{width:44px;height:44px;flex-shrink:0;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
   /* Volgorde aan/uit in de kop: aan is gevuld paars met een vinkje. */
-  .kopbalk .kopknop{width:44px;height:44px;flex-shrink:0;margin:-4px 0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
+  .kopbalk .kopknop,#wekAlles{width:var(--kopknop);height:var(--kopknop);flex-shrink:0;margin:-4px 0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
   .kopbalk .kopknop[hidden]{display:none}
   .kopbalk .volgorde{margin-right:-8px}
   .kopbalk .volgorde[aria-pressed="true"]{background:var(--paars)}
@@ -543,7 +546,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-015</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-018</div>
   </section>
 </main>
 
@@ -1133,7 +1136,8 @@ function handelZet(model, h, verz, r) {
      ging, maar pas daarna binnenkomt: dat gold voor de vorige week, niet voor de
      nieuwe lijst. De aankoop zelf blijft staan. */
   const wk = model.instellingen.wekelijks;
-  if (h.soort === 'artikel' && h.veld === 'op' && nieuw === '' && r.soort === 'wekelijks' && wk && wk.teruggezet
+  /* Alleen als het automatisch gaat: anders is er niets teruggezet en telt het afhalen gewoon. */
+  if (h.soort === 'artikel' && h.veld === 'op' && nieuw === '' && r.soort === 'wekelijks' && wk && wk.teruggezet && instelling(model, 'wekelijks', 'auto') !== 'nee'
       && model.nu && wk.teruggezet <= model.nu && String(h.t || '').slice(0, 10) < wk.teruggezet.slice(0, 10)) return { status: 'al' };
   if (cur === oud) { zet(); return { status: 'ok' }; }
   if (spec.samen === 'lijst') {
@@ -3190,11 +3194,12 @@ const WIS_KNOP = '<button class="wis" type="button" aria-label="Leegmaken" hidde
 const KLEUR = { E: '#8E33A6', W: '#1D3FAF', R: '#0A7581', L: '#4B3CC0', S: '#9A5B06' };
 const TINT = { E: '#F2E6F6', W: '#E3E8FA', R: '#DDF1F2', L: '#E9E6F8', S: '#FBF0DA' };
 const SOORTNAAM = { E: 'Eenmalig', W: 'Wekelijks', R: 'Regelmatig' };
-/* Soorticonen: een eigen vorm met een teken precies in het midden (9 hoog, van 7,5 tot 16,5):
-   Eenmalig vierkant met 1, Wekelijks rondje met 7, Regelmatig zeshoek met n ("n keer"). */
+/* Soorticonen: een eigen vorm met een teken precies in het midden (9 hoog, van 7,5 tot 16,5).
+   Hoe vaker, hoe meer hoeken: Eenmalig rondje met 1, Wekelijks vierkant met 7, Regelmatig zeshoek
+   met n ("n keer"). */
 const PADEN = {
-  E: '<rect x="4" y="4" width="16" height="16"></rect><path d="M10.2 9.3l2.2-1.8V16.5"></path>',
-  W: '<circle cx="12" cy="12" r="8.5"></circle><path d="M9.5 7.5h5l-3.1 9"></path>',
+  E: '<circle cx="12" cy="12" r="8.5"></circle><path d="M10.2 9.3l2.2-1.8V16.5"></path>',
+  W: '<rect x="4" y="4" width="16" height="16"></rect><path d="M9.5 7.5h5l-3.1 9"></path>',
   R: '<path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"></path><path d="M9.4 7.5V16.5M9.4 10.1a2.6 2.6 0 0 1 5.2 0V16.5"></path>',
   L: '<path d="M9 6h11M9 12h11M9 18h11"></path><path d="M3.5 6l1.2 1.2L7 4.8M3.5 12l1.2 1.2L7 10.8M3.5 18l1.2 1.2L7 16.8"></path>',
   S: '<path d="M9 18h6M10 21h4"></path><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"></path>'
@@ -3627,12 +3632,17 @@ function opWisselen(a, opArtikelen) {
       .concat(a.letter === 'E' ? [{ actie: 'zet', soort: 'artikel', id, veld: 'weg', oud: a.weg, nieuw: datumTekst(new Date()) }] : []));
   } else {
     scherm.weggehaald.delete(id);
-    /* Uit het archief: het hele artikel mee, zodat het terugkomt als het intussen is opgeruimd. */
-    const terugRecord = a.letter === 'E' && model.artikelen.get(id)
-      ? [{ actie: 'terug', soort: 'artikel', id, record: Object.assign(recordNaarJson('artikel', model.artikelen.get(id)), { op: t, opdoor: ik }) }] : [];
-    handelen(terugRecord.concat([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
-              { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]));
+    handelen(opDeLijst(a, t));
   }
+}
+/* De handelingen om een artikel (dat er niet op staat) op de lijst te zetten, door "ik" op tijdstip t.
+   Uit het archief gaat het hele artikel mee, zodat het terugkomt als het intussen is opgeruimd. */
+function opDeLijst(a, t) {
+  const id = a.id;
+  const terug = a.letter === 'E' && model.artikelen.get(id)
+    ? [{ actie: 'terug', soort: 'artikel', id, record: Object.assign(recordNaarJson('artikel', model.artikelen.get(id)), { op: t, opdoor: ik }) }] : [];
+  return terug.concat([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
+    { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: a.opdoor, nieuw: ik }]);
 }
 $('lijst').addEventListener('click', lijstKlik);
 /* Het rondje laat het vak niet los, zodat het toetsenbord open blijft. */
@@ -3646,7 +3656,7 @@ $('wekAlles').addEventListener('click', () => {
   if (!niet.length) return;
   const hs = [], terug = [];
   for (const a of niet) {
-    hs.push({ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: '', nieuw: t }, { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: a.opdoor, nieuw: ik });
+    hs.push(...opDeLijst(a, t));
     terug.push({ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: t, nieuw: '' }, { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: ik, nieuw: a.opdoor });
   }
   handelen(hs);
@@ -3665,11 +3675,7 @@ function toevoegen() {
   const id = bestaand ? bestaand.id : nieuweId();
   if (bestaand) {
     if (!bestaand.op) {
-      /* Uit het archief: het hele artikel mee, net als met de + in het archief. */
-      const terug = bestaand.letter === 'E' && model.artikelen.get(id)
-        ? [{ actie: 'terug', soort: 'artikel', id, record: Object.assign(recordNaarJson('artikel', model.artikelen.get(id)), { op: t, opdoor: ik }) }] : [];
-      handelen(terug.concat([{ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: t },
-                { actie: 'zet', soort: 'artikel', id, veld: 'opdoor', oud: bestaand.opdoor, nieuw: ik }]));
+      handelen(opDeLijst(bestaand, t));
     }
   } else {
     handelen([{ actie: 'nieuw', soort: 'artikel', id, velden: { naam, soort: LETTER_SOORT[scherm.nieuwSoort], op: t, opdoor: ik } }]);
@@ -6007,14 +6013,16 @@ $('swWekAuto').addEventListener('click', () => {
   const nu = instelling(model, 'wekelijks', 'auto');
   handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'auto', oud: nu, nieuw: nu === 'ja' ? 'nee' : 'ja' }]).then(() => { tekenInstellingen(); tekenBoodschappen(); });
 });
-$('swWekAuto').closest('.rij').classList.add('tikbaar');
-$('swWekAuto').closest('.rij').addEventListener('click', (e) => { if (!e.target.closest('.schakel')) $('swWekAuto').click(); });
-for (const [id, k] of SCHAKELAARS) {
-  $(id).addEventListener('click', () => { weergave[k] = !weergave[k]; keuzeBewaren('weergave'); tekenInstellingen(); });
-  /* De hele regel is tikbaar (de schakelaar zelf is maar 32 px hoog). */
+/* De hele regel van een schakelaar is tikbaar (de schakelaar zelf is maar 32 px hoog). */
+function tikbareRij(id) {
   const rij = $(id).closest('.rij');
   rij.classList.add('tikbaar');
   rij.addEventListener('click', (e) => { if (!e.target.closest('.schakel')) $(id).click(); });
+}
+tikbareRij('swWekAuto');
+for (const [id, k] of SCHAKELAARS) {
+  $(id).addEventListener('click', () => { weergave[k] = !weergave[k]; keuzeBewaren('weergave'); tekenInstellingen(); });
+  tikbareRij(id);
 }
 
 /* Logboek: wat de app zelf oploste of deed, per telefoon, nieuwste eerst (hooguit 100).
