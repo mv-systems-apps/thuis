@@ -150,7 +150,7 @@ om met de hand te bewerken.
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
-| `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id) en `onzeker` ("1": afgevinkt onder Niet bij); niet wie |
+| `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id) en `onzeker` ("1": afgevinkt onder Elders); niet wie |
 | `historie` | per id `naam`, `tijd` (actie afgerond; niet wie) |
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
@@ -252,8 +252,8 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   rondje voor op of van de lijst. Tik op de naam opent het bewerkscherm; daar
   wissel je de soort. Een artikel dat alleen in bepaalde winkels ligt, krijgt
   onder de naam een grijs regeltje met die winkels ("Albert Heijn · Plus");
-  zo ook onder "Niet bij <winkel>" in Boodschappen. Een getal rechts in een
-  kop zegt altijd waarvan: "6 artikelen", "2 winkels", "3 afdelingen". Wat de ander op de lijst zette, krijgt "nieuw" tot
+  zo ook onder "Elders" in Boodschappen. Een getal rechts in een
+  kop is altijd alleen het getal ("6"), zonder woord. Voortgang: "2 van 13". Subregels houden hun woorden ("3 afdelingen, 8 artikelen"). Wat de ander op de lijst zette, krijgt "nieuw" tot
   je het gezien hebt (in beeld op Artikelen of Boodschappen en dat scherm
   verlaten); per telefoon bewaard, niet in het bestand.
 - Geen knop "Naar de winkel": de winkel is een eigen tabblad.
@@ -271,47 +271,52 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
   staan notitie en link paars onder de regel, net als bij artikelen. Afdelingen horen bij deze winkel alleen
-  (de route, op volgorde). Gewoon: per afdeling (vet, zwart; open paars) het aantal artikelen en een
-  pijltje; een tik klapt de artikelen eronder open (meer tegelijk open mag).
-  Onderaan "Afdeling?" (zelfde uiterlijk als een afdeling) als er hier
-  artikelen zonder afdeling liggen.
-  De naam van een afdeling lijnt uit met de soorticonen eronder. Rondje = op de
-  lijst; icoon of "2×" opent de teller (zoals op Artikelen); tik op de naam opent het artikel (sluiten
-  brengt je terug in de winkel, op dezelfde plek). Onder een artikel alleen de
-  andere winkels. Wat nergens is vastgelegd (overal te koop) staat er niet bij.
-  De kop heet "Route". Rechts erin eerst een dubbel pijltje: alles open (is er iets dicht) of alles dicht.
-  Daarnaast "Volgorde" (pijltjes): dan een greep vooraan om te
-  verslepen en een potlood (ook tik op de naam) voor Afdeling bewerken; aan =
-  gevuld paars met een vinkje, nog een tik zet het terug. Een winkel zonder
-  afdelingen toont meteen de artikelen onder "Artikelen". Een andere winkel
-  openen: alles dicht, Volgorde uit. Onderaan "Afdeling".
+  (de route, op volgorde). Gewoon: per afdeling een rij (zwart, niet vet) met het aantal artikelen en
+  een pijltje ›. Onderaan "Afdeling?" (zelfde uiterlijk) als er hier artikelen zonder afdeling liggen.
+  De kop heet "Route", rechts het aantal afdelingen (alleen het getal) en "Volgorde" (pijltjes):
+  dan een greep vooraan om te verslepen en een potlood (ook tik op de naam) voor Afdeling bewerken;
+  aan = gevuld paars met een vinkje, nog een tik zet het terug. Een winkel zonder afdelingen toont
+  meteen de artikelen onder "Artikelen". Een andere winkel openen: Volgorde uit. Onderaan "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
   winkel zonder afdeling. Verwijderen meteen, 6 s Ongedaan maken.
-- Artikelen koppelen gebeurt hier niet, maar bij het artikel.
+- Eén afdeling (tik op een rij): eigen scherm met terug (naar de route, op dezelfde plek; ook de
+  terugknop), de naam met de winkel eronder, en een potlood (Afdeling bewerken: naam, verwijderen;
+  niet bij "Afdeling?"). Daaronder "Artikelen" met het aantal: rondje = op de lijst; icoon of "2×"
+  opent de teller; tik op de naam opent het artikel (sluiten brengt je terug in de afdeling, op
+  dezelfde plek). Onder een artikel alleen de andere winkels.
+- Onderaan "Artikel": typen filtert de artikelen van de afdeling en toont boven de balk de artikelen
+  van deze winkel die in een andere afdeling of onder "Afdeling?" liggen (rechts waar), plus
+  "+ Nieuw: "…"". Andere winkels niet. Een tik verplaatst het artikel hierheen. + of Enter: bestaat
+  de naam al (ook in een andere winkel), dan krijgt dat artikel deze winkel en afdeling erbij;
+  anders een nieuw artikel, soort regelmatig (niet op de lijst), meteen hier.
 
 ### 5.2 Boodschappen (tabblad; in de code scherm-winkel)
 - Per artikel leg je vast in welke winkels het te koop is, en per winkel in
   welke afdeling het daar ligt (`ligt`).
 - Van boven naar beneden: "Boodschappen" met de voortgang van de hele lijst
-  ("1 van 7 artikelen"; wat in een van de mandjes ligt telt als gehaald);
+  ("1 van 7"; wat in een van de mandjes ligt telt als gehaald);
   "Winkel?" (kaart met een grijze kop en een doorgestreept winkeltje;
   per artikel een winkelicoon dat vraagt bij welke winkel het te koop is,
   zoeken of toevoegen; het komt daar onder "Afdeling?" met de speld,
   zonder meteen naar de afdeling te vragen); de gekozen winkel als één kaart
-  (kop gevuld paars met winkelicoon en de winkelkeuze, rechts "4 artikelen", dan "Afdeling?" met de speld en de afdelingen, elk met rechts het aantal dat er nog te halen is
-  in de route); los en grijs "Niet bij <winkel>" (met een winkelicoon dat "Welke winkel?" opent) en "Winkelmand", allebei
+  (kop gevuld paars, de winkelnaam groot en turquoise (20 px, mag op twee regels), rechts "4", het winkelicoon en de pijl, dan "Afdeling?" met de speld en de afdelingen, elk met rechts het aantal dat er nog te halen is
+  in de route); los en grijs "Elders" (met een winkelicoon dat "Welke winkel?" opent) en "Winkelmand", allebei
   inklapbaar en dicht bij het kiezen van een andere winkel; open blijft open zolang
   je in dezelfde winkel bent (ook na een ander tabblad). "Winkelmand" toont het hele
-  mandje van vandaag (alle winkels), met één knop om alles leeg te maken; ligt er ook
-  iets uit andere winkels, dan per winkel een inklapbare subkop (wit, vet; zwart, open paars) (deze winkel bovenaan
-  en open, de andere alfabetisch en dicht; ligt er in deze winkel nog niets, dan alles dicht).
+  mandje (alle winkels), met één knop om alles leeg te maken; geen subkoppen, maar onder
+  elk artikel grijs de winkel ("Plus?" als het onder Elders is afgevinkt), net als in
+  Aankopen. Eerst deze winkel, dan de andere alfabetisch.
 - Heeft een winkel geen afdelingen, dan staan de artikelen zonder kop in de
   winkelkaart en vraagt de app nergens naar een afdeling (ook niet in het
   bewerkscherm). Afdelingen maak je in de Winkels-tab.
-- Bovenin de winkelnaam; een tik opent de keuzelijst "Welke winkel?" met
-  gelijke koppen (paars op lichtpaars, rechts het aantal winkels): "Nodig"
+- Vier hoofdgroepen, even hoog (46 px), paars verloop met witte letters: de gekozen winkel,
+  "Elders", "Winkelmand" en "Historie" (de aankopen). De winkelkop klapt de winkel open en dicht
+  (open bij het kiezen van een winkel); het winkelicoon erin opent de keuzelijst. De afdelingen
+  eronder zijn lichtpaars.
+- De winkelnaam; een tik op het winkelicoon opent de keuzelijst "Welke winkel?" met
+  gelijke koppen (paars op lichtpaars, rechts alleen het aantal winkels, zonder woord): "Nodig"
   (winkels met iets dat nergens anders te koop is; daaronder grijs die artikelen
-  bij naam als het er één of twee zijn, anders "26 alleen hier"; rechts het totaal), "Kan ook" (alles ook elders; geen namen, rechts het aantal; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels met een
+  bij naam als het er één of twee zijn, anders "26 alleen hier"; rechts het totaal), "Alternatief" (alles ook elders; geen namen, rechts het aantal; ingeklapt; is er niets nodig, dan heet die groep "Te koop bij" en staat hij open); alle winkels met een
   paars icoon (niet vet) en ingeklapt "Overige winkels". De
   gekozen winkel staat bovenaan onder de vaste kop "Huidig" (geen pijl), met een
   paarse streep links, en niet nog eens in een groep.
@@ -320,7 +325,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Alleen wat bij een winkel is vastgelegd telt, met het aantal; binnen elke
   groep alfabetisch (de volgorde van je route hangt niet van de lijst af); bij een of twee artikelen staan ze eronder. Rechts "2
   artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
-  (alleen wat er niet al boven staat, rechts "2 winkels"). Kruisje rechtsboven; onderaan
+  (alleen wat er niet al boven staat, rechts "2"). Kruisje rechtsboven; onderaan
   een zoekvak zonder kopje (placeholder "Winkel", + voegt toe). De laatste keuze
   geldt per telefoon. Winkels beheren gebeurt op het tabblad Winkels.
 - "Afdeling?": wat hier te koop is maar nog geen afdeling heeft, met de
@@ -332,7 +337,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Elke vink is direct een handeling (van de lijst, aankoopdatum erbij). Het
   item blijft 1,5 s grijs op zijn plek en schuift dan naar "Winkelmand".
   Terugtikken zet het terug en haalt de aankoopdatum weg.
-- "Niet bij <winkel>": artikelen die hier niet te koop zijn, ingeklapt
+- "Elders": artikelen die hier niet te koop zijn, ingeklapt
   en grijs, wel af te vinken.
 - Het mandje blijft staan tot je het leegmaakt, ook de volgende dag (boodschappen over twee dagen
   verdeeld); wat weer op de lijst komt (bv. wekelijks terug) gaat eruit. Rechts naast het kopje "Winkelmand" staat een icoonknop
@@ -340,7 +345,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar".
 - Elk afgevinkt artikel onthoudt in welke winkel het in het mandje kwam; "Winkelmand"
-  toont ze allemaal, per winkel gegroepeerd zodra er meer dan één winkel in zit.
+  toont ze allemaal, met de winkel onder het artikel.
   Leegmaken geldt voor het hele mandje (6 s Ongedaan maken).
 - Geen toevoegen op dit tabblad: dat gaat via Lijst.
 - Een artikel dat de ander op de lijst zette, krijgt "nieuw" tot je het gezien hebt.
@@ -357,7 +362,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   waarin die eindigt. Alles toont Te laat, Deze week, Later, Zonder periode en
   Afgerond. Standaard Week; in Instellingen per telefoon te kiezen. Tijdens
   zoeken is geen filter actief; een tik zoekt alleen daarin.
-- Groepen met kopbalken, vroegste eerst; vandaag en morgen heten zo. Per regel het rondje en de
+- Groepen met inklapbare kopbalken (open; dicht blijft dicht tot je hem weer opent, tijdens zoeken open), vroegste eerst; vandaag en morgen heten zo. Per regel het rondje en de
   naam; eronder grijs de periode ("vr 27 nov", "december", "K4", "2027"; het
   jaar alleen als het niet dit jaar is) en het herhaalteken met "week"; daaronder
   paars de notitie en de link.
@@ -403,11 +408,11 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - App: browser, aanmelding geldig, opslag vastgezet; versiestempel onderaan.
 - Winkels en afdelingen: tabblad Winkels (5.1b). Later: personen (Doen).
 
-- Weergave (per telefoon, schakelaars met rechte hoeken): "Bij een winkel: aantal
-  afdelingen en artikelen", "Bij een artikel: de winkels" en "Bij een aankoop: de winkel" (in Aankopen).
-  "Bij een artikel: de winkels" gaat over de grijze regel onder een
+- Weergave (per telefoon, schakelaars met rechte hoeken): "Aantallen bij winkel",
+  "Winkels bij artikel" en "Winkel in Historie" (de aankoophistorie in Boodschappen).
+  "Winkels bij artikel" gaat over de grijze regel onder een
   artikel: op Artikelen, ook bij zoeken met @, en in een winkel op het tabblad Winkels;
-  bij "Niet bij …" in Boodschappen blijft hij staan, daar zie je waar je heen moet.
+  bij "Elders" in Boodschappen blijft hij staan, daar zie je waar je heen moet.
 
 ### 5.6 Synchronisatie (in Instellingen; het wolkje opent Instellingen)
 - Bovenaan de kaart Synchroniseren de toestand: icoon, één woord (Bijgewerkt,
@@ -540,7 +545,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   vanzelf uit; verder blijft het staan tot je het leegmaakt (ook de volgende dag). De voortgang
   telt wat in het mandje ligt als gehaald.
 - Afvinken maakt een aankoop (gedeeld, naam, tijd en winkel, niet wie); terugtikken haalt hem weg. Afvinken
-  onder "Niet bij <winkel>" legt níet vast dat het daar te koop is; de aankoop krijgt wel de
+  onder "Elders" legt níet vast dat het daar te koop is; de aankoop krijgt wel de
   winkel met een vraagteken (in Aankopen "Plus?"; veld `onzeker`).
   Aankopen bewaren: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
   een oudere versie) = geen aankopen.
@@ -550,7 +555,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   Zonder tijdstip (de dag zegt genoeg). Bij een aankoop grijs de winkel eronder (een
   aankoop onthoudt de winkel, optioneel veld `winkel`; oudere aankopen hebben hem niet),
   uit te zetten bij Instellingen → Weergave.
-  De regel Aankopen (onder Boodschappen) en Historie (onder Doen) toont ook "0 artikelen" / "0 acties".
+  De regel Aankopen (onder Boodschappen) en Historie (onder Doen) toont ook "0".
 - Archief (eenmalig, niet op de lijst): standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
   een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Terugzetten uit het archief stuurt het
   hele artikel mee.
@@ -621,7 +626,7 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 - Per telefoon: `KEUZES`. Gedeelde instellingen: `INSTELLINGEN` en `instelling()`.
 - Editors: gedeelde `naamFout`, `linkVanInvoer`, `foutMelding`; de editors zelf blijven apart.
 - Schermbouwstenen: `bevestigPaneel`, `klapbareKop` (elke kop die open en dicht gaat: kopbalken,
-  afdelingen, Niet bij, Winkelmand en de subkoppen; met of zonder knop erin), `sluitMelding`;
+  afdelingen, Elders en Winkelmand; met of zonder knop erin), `sluitMelding`;
   alle iconen in één blok.
 - Deelschermen (artikel- en actie-editor, Aankopen, Historie, Backups, Logboek): `deelOpen(el, balk)`
   en `deelDicht()`. Ze openen in één laag (`#deel`) boven het tabblad waar je bent; dat tabblad blijft

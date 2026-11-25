@@ -2,9 +2,11 @@
   1. Een melding blijft bovenaan in beeld, ook als je ver naar beneden gescrold bent.
   2. De tagkeuze zweeft net boven het notitieveld en boven het zoekvak, zonder de
      randen van het vak te bedekken (ook als de tabbalk tijdens het typen verdwijnt).
-  3. Na het sluiten van een artikel sta je weer op dezelfde plek in de winkel.
+  3. Na het sluiten van een artikel sta je weer op dezelfde plek in de afdeling, en terug uit
+     een afdeling op dezelfde plek in de route.
   4. Een afdeling verslepen met aanraken (touch) verandert de volgorde.
-  5. Tikvlakken in Boodschappen (winkelicoon, leegknop, subkoppen) zijn minstens 44 px.
+  5. Tikvlakken in Boodschappen (winkelicoon, leegknop) zijn minstens 44 px.
+  6. Een lange winkelnaam loopt door op een tweede regel in plaats van afgekapt te worden.
 
   python3 test-opmaak.py            (vanuit de map van de app)
   APP=<map> python3 test-opmaak.py  (een andere versie van de app)
@@ -74,19 +76,28 @@ async def main():
         check('tagkeuze: 9 px boven het zoekvak (paarse en blauwe rand zichtbaar), ook als de tabbalk verdwijnt', not t1[0] and t1[1] == 9 and tb and not t2[0] and t2[1] == 9, (t1, tb, t2))
         await pg.evaluate("() => { volleHoogte.h = innerHeight; document.body.classList.remove('typen'); const v = document.getElementById('invoerTekst'); v.value = ''; v.dispatchEvent(new Event('input')); v.blur(); }")
 
-        # 3. Scrollpositie terug na het sluiten van een artikel uit de winkel
-        await pg.evaluate("() => { toonScherm('winkels'); winkelOpenen('pls'); ws.afdOpen.add('zui'); ws.afdOpen.add('agf'); tekenWinkels(); document.getElementById('midden').scrollTop = 300; }")
+        # 3. Scrollpositie terug: na het sluiten van een artikel in een afdeling, en na terug uit de afdeling naar de route
+        await pg.evaluate("() => { toonScherm('winkels'); winkelOpenen('pls'); document.getElementById('midden').scrollTop = 300; }")
         await pg.wait_for_timeout(100)
+        route = await pg.evaluate("() => document.getElementById('midden').scrollTop")
+        await pg.evaluate("() => { [...document.querySelectorAll('#afdelingen .afdrij')].find((r) => r.querySelector('.nm').textContent === 'Zuivel').click(); }")
+        await pg.wait_for_timeout(100)
+        inafd = await pg.evaluate("() => document.getElementById('midden').scrollTop")
+        await pg.evaluate("() => { document.getElementById('midden').scrollTop = 200; }")
         voor = await pg.evaluate("() => document.getElementById('midden').scrollTop")
         await pg.evaluate("() => { const r = [...document.querySelectorAll('#winkelDetail .item')].find((x) => x.getBoundingClientRect().top > 150); r.querySelector('.tekst').click(); }")
         await pg.wait_for_timeout(100)
         open_ = await pg.evaluate("() => !document.getElementById('artikelScherm').hidden && document.getElementById('midden').scrollTop")
         await pg.click('#artikelDicht'); await pg.wait_for_timeout(100)
         na = await pg.evaluate("() => document.getElementById('midden').scrollTop")
-        check('scrollpositie: editor bovenaan, na sluiten weer op dezelfde plek', voor == 300 and open_ == 0 and na == voor, (voor, open_, na))
+        check('scrollpositie: editor bovenaan, na sluiten weer op dezelfde plek in de afdeling', voor > 100 and open_ == 0 and na == voor, (voor, open_, na))
+        await pg.evaluate("() => document.querySelector('#winkelDetail .terug').click()")
+        await pg.wait_for_timeout(100)
+        terug = await pg.evaluate("() => document.getElementById('midden').scrollTop")
+        check('scrollpositie: afdeling begint bovenaan, terug naar de route op dezelfde plek', route == 300 and inafd == 0 and terug == route, (route, inafd, terug))
 
         # 4. Afdeling verslepen met aanraken
-        await pg.evaluate("() => { ws.afdOpen.clear(); ws.volgorde = true; tekenWinkels(); document.getElementById('midden').scrollTop = 0; }")
+        await pg.evaluate("() => { ws.volgorde = true; tekenWinkels(); document.getElementById('midden').scrollTop = 0; }")
         await pg.wait_for_timeout(100)
         namen = "() => [...document.querySelectorAll('#afdelingen .arij .nm')].slice(0, 3).map((x) => x.textContent).join()"
         n1 = await pg.evaluate(namen)
@@ -101,7 +112,7 @@ async def main():
         n2 = await pg.evaluate(namen)
         check('slepen met aanraken: Brood twee plekken omhoog', n1 == 'Groente,Zuivel,Brood' and n2 == 'Brood,Groente,Zuivel', (n1, n2))
 
-        # 5. Tikvlakken in Boodschappen minstens 44 px (winkelicoon, leegknop, subkoppen)
+        # 5. Tikvlakken in Boodschappen minstens 44 px (winkelicoon, leegknop)
         await pg.evaluate("""() => { const d = datumTekst(new Date());
           winkel.mandje.set('a00', { id: 'a00', naam: 'Artikel 00', winkel: 'pls', op: '', opdoor: '', datum: d });
           winkel.mandje.set('a02', { id: 'a02', naam: 'Artikel 02', winkel: 'ahh', op: '', opdoor: '', datum: d });
@@ -109,8 +120,17 @@ async def main():
           handelen([{ actie: 'zet', soort: 'artikel', id: 'nb1', veld: 'op', oud: '', nieuw: tijdstipTekst(new Date()) }]);
           winkel.id = 'pls'; winkel.mandjeOpen = true; toonScherm('winkel'); }""")
         await pg.wait_for_timeout(150)
-        maten = await pg.evaluate("() => [...document.querySelectorAll('#winkelLijst .winkelkies, #winkelLijst .mandleeg, #winkelLijst .subkop')].map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
-        check('tikvlakken in Boodschappen minstens 44 px', len(maten) >= 4 and all(m[2] >= 44 and (m[1] >= 44) for m in maten), maten)
+        maten = await pg.evaluate("() => [...document.querySelectorAll('#winkelLijst .winkelkies, #winkelLijst .mandleeg')].map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
+        check('tikvlakken in Boodschappen minstens 44 px', len(maten) >= 2 and all(m[2] >= 44 and (m[1] >= 44) for m in maten), maten)
+
+        # 6. Lange winkelnaam: niet afgekapt maar op twee regels, aantal en knoppen blijven rechts
+        await pg.evaluate("() => { handelen([{ actie: 'zet', soort: 'winkel', id: 'pls', veld: 'naam', oud: 'Plus', nieuw: 'Albert Heijn XL Arnhem Centrum' }]); winkel.kaartOpen = true; tekenWinkel(); }")
+        await pg.wait_for_timeout(100)
+        kop = await pg.evaluate("""() => { const k = document.getElementById('winkelKop'), n = document.getElementById('winkelNaam'), r = (e) => e.getBoundingClientRect();
+          return { tekst: n.textContent, hoog: Math.round(r(n).height), vol: n.scrollWidth <= n.clientWidth, kop: Math.round(r(k).height),
+            rechts: Math.round(r(k).right - r(document.getElementById('winkelPijl')).right), tal: document.getElementById('winkelHier').textContent }; }""")
+        await pg.screenshot(path='/tmp/langenaam-echt.png', clip={'x': 0, 'y': 0, 'width': 390, 'height': 300})
+        check('lange winkelnaam op twee regels, niet afgekapt', kop['tekst'] == 'Albert Heijn XL Arnhem Centrum' and kop['vol'] and 40 <= kop['hoog'] <= 56 and kop['kop'] >= 46 and 0 <= kop['rechts'] <= 20 and kop['tal'].isdigit(), kop)
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()
