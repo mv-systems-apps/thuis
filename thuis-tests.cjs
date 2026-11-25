@@ -351,6 +351,12 @@ controle('wekelijks: na het moment gekocht komt niet terug (telefoon die offline
   const m = lees(vb);
   return gelijk(k.wekelijksTerug(m, NU) + '|' + (uit(k, m).artikelen.ban01.op || ''), '0|');
 });
+controle('wekelijks: niet automatisch legt het moment vast maar zet niets op de lijst; zonder veld = automatisch', () => {
+  const k = kern(); const vb = JSON.parse(JSON.stringify(VB)); vb.instellingen.wekelijks.auto = 'nee';
+  const m = lees(vb);
+  const n = k.wekelijksTerug(m, NU);
+  return gelijk(n + '|' + (uit(k, m).artikelen.ban01.op || '') + '|' + uit(k, m).instellingen.wekelijks.teruggezet + '|' + k.instelling(lees(VB), 'wekelijks', 'auto'), '0||2026-11-21T06:00|ja');
+});
 controle('wekelijks: eerste keer legt alleen het moment vast', () => {
   const k = kern(); const m = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00' } }, artikelen: { bro01: { naam: 'Brood', soort: 'wekelijks' } } });
   return gelijk(k.wekelijksTerug(m, NU) + '|' + JSON.stringify(uit(k, m).instellingen.wekelijks), '0|{"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"}');

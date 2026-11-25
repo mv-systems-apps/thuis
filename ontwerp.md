@@ -146,7 +146,7 @@ om met de hand te bewerken.
 
 | deel | velden |
 |---|---|
-| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`; `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
+| `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`, `auto` (ja/nee, standaard ja); `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
 | `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums) |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
@@ -184,6 +184,8 @@ dag is de laatste aankoop of `weg`; zonder datum blijft een artikel staan).
 - **Verwijderen** gebeurt meteen, via de wachtrij. "Ongedaan maken" (6 s, met een aftellend balkje in de knop; zolang
   de melding staat) zet het terug met dezelfde id, inclusief de plekken van de
   artikelen.
+  De melding valt op: paars verloop met witte tekst, een witte knop en een lichte schaduw
+  (dezelfde kleuren als de winkelkop).
 - **Volgorde van afdelingen:** wat de ander intussen toevoegde, komt achteraan;
   wat hij weghaalde, blijft weg.
 - **Wekelijks terugzetten** is geen handeling in de wachtrij. Elke telefoon
@@ -398,8 +400,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 ### 5.5 Instellingen
 - Synchroniseren: aangemeld als, gedeelde map, aanmelden/afmelden (rode rand,
   volle breedte).
-- Wekelijks terug op de lijst: de dag als knoppen (ma–zo), de tijd. Geldt voor
-  beiden (in thuis.json).
+- Wekelijks terug op de lijst: schakelaar "Automatisch" (standaard aan), daaronder de dag
+  als knoppen (ma–zo) en de tijd; uit = dag en tijd weg. Geldt voor beiden (in thuis.json).
+  Uit: het moment wordt wel bijgehouden (aanzetten midden in de week zet dus niet meteen
+  alles terug), maar niets gaat vanzelf op de lijst. Dan staat op Artikelen, filter
+  Wekelijks, in de kop een icoon (vinkjeslijst met +) zolang er een wekelijks artikel niet
+  op de lijst staat: één tik zet ze er allemaal op, met Ongedaan maken.
 - Gegevens › Backups: lijst (laatste 14 dagen, eerste van de maand) met datum
   en grootte. Een tik downloadt die ene backup en toont winkels, artikelen, op
   de lijst en acties, met "Terugzetten" (geen extra bevestiging). Eerst bewaart

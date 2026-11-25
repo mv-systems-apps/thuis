@@ -55,6 +55,8 @@ MUTATIES = [
   ("aanbod: zonder winkels telt mee", "    const p = a.plekken.find((x) => x.winkel === winkel.id);\n    if (!p) continue;", "    const p = a.plekken.find((x) => x.winkel === winkel.id) || { afd: '' };"),
   ("aanbod: verdwenen afdeling kwijt", "    if (p.afd && per.has(p.afd)) per.get(p.afd).push(a); else onbekend.push(a);", "    if (p.afd && per.has(p.afd)) per.get(p.afd).push(a); else if (!p.afd) onbekend.push(a);"),
   ("link: schema wordt zoekopdracht", "  if (/^[a-z][a-z0-9+.-]*:\\/\\//i.test(t)) return veiligeLink(t);", ""),
+  ("wekelijks: automatisch uit genegeerd", "  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;", ""),
+  ("wekelijks: uit vergeet het moment", "  inst.teruggezet = mTekst;\n  if (vorige === '') return 0;", "  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;\n  inst.teruggezet = mTekst;\n  if (vorige === '') return 0;"),
   ("link: elke punt is een adres", "ADRES_EXTENSIE.test(host)", "/\\./.test(host)"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

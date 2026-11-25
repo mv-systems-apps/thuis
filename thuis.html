@@ -164,7 +164,9 @@
   #meldingen{position:sticky;top:0;z-index:4;background:var(--achter);display:flex;flex-direction:column;gap:8px;padding:14px 14px 0;max-width:640px;margin:0 auto}
   #meldingen:empty{display:none}
   .melding{background:var(--oranje-bg);color:var(--oranje);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
-  .melding.info{background:#ECEAF8;color:#2E2A4F;border-left:4px solid var(--paars);padding-left:10px}
+  /* Ongedaan maken en andere info: paars verloop met witte tekst en een witte knop, zodat de melding
+     opvalt tegen de lichte achtergrond (dezelfde kleuren als de winkelkop). */
+  .melding.info{background:linear-gradient(115deg,var(--paars),var(--violet));color:#FFFFFF;box-shadow:0 6px 18px rgba(30,20,80,.3)}
   .melding p{margin:0;font-size:17px;line-height:1.4}
   .melding .knoppen{padding:0}
   /* Knoppen in een melding vullen de breedte: één knop over de hele breedte, twee naast elkaar elk de helft. */
@@ -190,6 +192,8 @@
   @keyframes draai{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion:reduce){.draai{animation:none;border-right-color:currentColor;opacity:.6}}
   .melding .knop.tweede,.knop.grijs{color:var(--grijs);border-color:#CFCBE6}
+  .melding.info .knop{border-color:#FFFFFF}
+  .melding.info .knoppen .knop.vinkknop{background:rgba(255,255,255,.18);border:2px solid #FFFFFF}
   /* Nieuwe versie: bovenaan, in oranje, met een gevulde oranje knop (zoals events). */
   .melding .knop{position:relative;overflow:hidden}
   .aftel{position:absolute;left:0;bottom:0;height:4px;width:100%;background:#9A93C9;transform-origin:left;animation:aftellen linear forwards}
@@ -230,6 +234,10 @@
   .kopbalk .tal{flex-shrink:0;font-size:17px;font-weight:400;color:var(--grijs)}
   .kopbalk svg{flex-shrink:0}
   #lijstPijl{display:flex}
+  #lijstBlok{position:relative}
+  #wekAlles{position:absolute;top:1px;right:42px;z-index:1;width:44px;height:44px;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
+  #wekAlles[hidden]{display:none}
+  #lijstKop.metknop #lijstPijl{margin-left:52px}
   #lijstPijl:empty{display:none}
   button.kopbalk{cursor:pointer}
   .blok{display:flex;flex-direction:column}
@@ -443,6 +451,7 @@
     <div class="filters" id="filters" role="group" aria-label="Welke lijst"></div>
     <div class="blok" id="lijstBlok">
       <button class="kopbalk" type="button" id="lijstKop" aria-expanded="true"><span class="kopnaam" id="lijstTitel">Op de lijst</span><span class="tal" id="lijstAantal"></span><span id="lijstPijl"></span></button>
+      <button class="kopknop" type="button" id="wekAlles" hidden aria-label="Alle wekelijkse op de lijst"></button>
       <div class="lijst" id="lijst"></div>
     </div>
   </section>
@@ -490,8 +499,9 @@
     <div class="blok">
       <div class="kopbalk"><h2>Wekelijks terug op de lijst</h2></div>
       <div class="kaart">
-        <div class="veld"><span class="label2">Dag</span><div class="dagen" id="wekDagen" role="radiogroup" aria-label="Dag"></div></div>
-        <div class="rij"><span class="label" id="wekTijdLabel">Tijd</span><button class="mveld" id="wekTijd" type="button" aria-labelledby="wekTijdLabel wekTijd" aria-haspopup="dialog"><span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+        <div class="rij"><span class="label" id="lblWekAuto">Automatisch</span><button class="schakel" id="swWekAuto" type="button" role="switch" aria-labelledby="lblWekAuto"></button></div>
+        <div class="veld" id="wekDagVeld"><span class="label2">Dag</span><div class="dagen" id="wekDagen" role="radiogroup" aria-label="Dag"></div></div>
+        <div class="rij" id="wekTijdRij"><span class="label" id="wekTijdLabel">Tijd</span><button class="mveld" id="wekTijd" type="button" aria-labelledby="wekTijdLabel wekTijd" aria-haspopup="dialog"><span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
       </div>
     </div>
     <div class="blok">
@@ -533,7 +543,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-013</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-015</div>
   </section>
 </main>
 
@@ -1232,6 +1242,8 @@ const INSTELLINGEN = {
   wekelijks: { velden: {
     dag: { geldig: (v) => Object.prototype.hasOwnProperty.call(WEEKDAG, v), zet: true, standaard: 'za' },
     tijd: { geldig: (v) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v), zet: true, standaard: '06:00' },
+    /* Automatisch terug op de lijst (ja) of alleen met de hand op Artikelen (nee). Voor beiden. */
+    auto: { geldig: (v) => v === 'ja' || v === 'nee', zet: true, standaard: 'ja' },
     teruggezet: { geldig: (v) => TIJDSTIP.test(v) } } },
   aankopen: { velden: { bewaren: { geldig: (v) => AANKOPEN_BEWAREN.test(v), zet: true, standaard: String(AANKOPEN_STANDAARD) } } },
   /* Gedaan (code: historie): regels ouder dan de ingestelde tijd gaan weg. */
@@ -1345,6 +1357,9 @@ function wekelijksTerug(model, nu) {
   if (vorige !== '' && vorige > tijdstipTekst(vierEerder)) return 0;
   inst.teruggezet = mTekst;
   if (vorige === '') return 0; // eerste keer: alleen het moment vastleggen
+  /* Niet automatisch: het moment wel vastleggen (dan zet aanzetten midden in de week niet
+     meteen alles terug), maar niets op de lijst. */
+  if (instelling(model, 'wekelijks', 'auto') === 'nee') return 0;
   let n = 0;
   for (const r of model.artikelen.values()) {
     if (r.soort !== 'wekelijks' || r.op) continue;
@@ -3512,6 +3527,11 @@ function tekenBoodschappen() {
   $('lijstKop').setAttribute('aria-expanded', String(open));
   $('lijstKop').style.borderBottom = open ? '' : '1px solid var(--lijn)';
   $('lijstPijl').innerHTML = zoekend ? '' : KLAPPIJL(open);
+  /* Wekelijks niet automatisch: in de kop van Wekelijks een knop om alles wat er nog niet
+     op staat in één keer op de lijst te zetten. */
+  const wekNiet = !zoekend && scherm.filter === 'W' && instelling(model, 'wekelijks', 'auto') === 'nee' ? artikelen.filter((a) => a.letter === 'W' && !a.op) : [];
+  $('wekAlles').hidden = !wekNiet.length;
+  $('lijstKop').classList.toggle('metknop', wekNiet.length > 0);
   const l = $('lijst');
   l.hidden = !open;
   l.innerHTML = '';
@@ -3618,6 +3638,20 @@ $('lijst').addEventListener('click', lijstKlik);
 /* Het rondje laat het vak niet los, zodat het toetsenbord open blijft. */
 for (const ev of ['pointerdown', 'mousedown']) $('lijst').addEventListener(ev, (e) => { if (document.activeElement === $('invoerTekst') && e.target.closest('.rondje')) e.preventDefault(); });
 $('lijstKop').addEventListener('click', () => { if (normNaam(scherm.zoek)) return; scherm.dicht.lijst = !scherm.dicht.lijst; tekenBoodschappen(); });
+/* Alle wekelijkse die er nog niet op staan op de lijst, met Ongedaan maken. */
+$('wekAlles').innerHTML = svgIcoon('<path d="M3.5 6l1.2 1.2L7 4.8M3.5 12l1.2 1.2L7 10.8"></path><path d="M10 6h10M10 12h6"></path><path d="M17 15v7M13.5 18.5h7"></path>', '#4B3CC0', 24);
+$('wekAlles').addEventListener('click', () => {
+  const t = tijdstipTekst(new Date());
+  const niet = artikelen.filter((a) => a.letter === 'W' && !a.op);
+  if (!niet.length) return;
+  const hs = [], terug = [];
+  for (const a of niet) {
+    hs.push({ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: '', nieuw: t }, { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: a.opdoor, nieuw: ik });
+    terug.push({ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: t, nieuw: '' }, { actie: 'zet', soort: 'artikel', id: a.id, veld: 'opdoor', oud: ik, nieuw: a.opdoor });
+  }
+  handelen(hs);
+  ongedaanMelding([telTekst(niet.length, 'wekelijks artikel', 'wekelijkse artikelen') + ' op de lijst gezet.'], terug);
+});
 $('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald') || e.target.closest('#archief .lijst')) lijstKlik(e); });
 
 function toevoegen() {
@@ -5772,7 +5806,11 @@ $('actieWeg').innerHTML = PRULLENBAK;
 const DAGEN = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
 function tekenInstellingen() {
   if (!model) return;
-  const w = { dag: instelling(model, 'wekelijks', 'dag'), tijd: instelling(model, 'wekelijks', 'tijd') };
+  const w = { dag: instelling(model, 'wekelijks', 'dag'), tijd: instelling(model, 'wekelijks', 'tijd'), auto: instelling(model, 'wekelijks', 'auto') };
+  /* Niet automatisch: dag en tijd doen er niet toe, dus weg. */
+  $('swWekAuto').setAttribute('aria-checked', String(w.auto === 'ja'));
+  $('swWekAuto').disabled = !gekoppeld;
+  $('wekDagVeld').hidden = $('wekTijdRij').hidden = w.auto !== 'ja';
   const doel = $('wekDagen');
   doel.innerHTML = '';
   for (const d of DAGEN) {
@@ -5965,6 +6003,12 @@ function backupSluiten() {
 }
 $('naarBackups').addEventListener('click', backupsOpenen);
 /* Weergave: aan/uit, per telefoon; de lijsten tekenen bij het openen van hun tabblad opnieuw. */
+$('swWekAuto').addEventListener('click', () => {
+  const nu = instelling(model, 'wekelijks', 'auto');
+  handelen([{ actie: 'instelling', naam: 'wekelijks', veld: 'auto', oud: nu, nieuw: nu === 'ja' ? 'nee' : 'ja' }]).then(() => { tekenInstellingen(); tekenBoodschappen(); });
+});
+$('swWekAuto').closest('.rij').classList.add('tikbaar');
+$('swWekAuto').closest('.rij').addEventListener('click', (e) => { if (!e.target.closest('.schakel')) $('swWekAuto').click(); });
 for (const [id, k] of SCHAKELAARS) {
   $(id).addEventListener('click', () => { weergave[k] = !weergave[k]; keuzeBewaren('weergave'); tekenInstellingen(); });
   /* De hele regel is tikbaar (de schakelaar zelf is maar 32 px hoog). */

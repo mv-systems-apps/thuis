@@ -1797,7 +1797,7 @@ const BEGIN = [
     const kop = dD.querySelector('#winkelsOverzicht .kopbalk');
     controle('winkels: kop "Winkels" met alleen het getal (UI 15)', kop && kop.querySelector('.kopnaam').textContent === 'Winkels' && kop.querySelector('.tal').textContent === '3', kop && kop.textContent);
     /* UI 12: infomelding met een paarse streep links. */
-    controle('infomelding: paarse streep links (UI 12)', /border-left:4px solid var\(--paars\)/.test(dD.querySelector('style').textContent.replace(/\s+/g, '')) || /\.melding\.info\{[^}]*border-left:4px solid var\(--paars\)/.test([...dD.querySelectorAll('style')].map((x) => x.textContent).join('')));
+    controle('infomelding (ongedaan maken): paars verloop, witte tekst, schaduw', /\.melding\.info\{background:linear-gradient\(115deg,var\(--paars\),var\(--violet\)\);color:#FFFFFF;box-shadow:/.test([...dD.querySelectorAll('style')].map((x) => x.textContent).join('')));
   }
 
   /* 5z31. Netwerk: naam hooguit eens per week opvragen; aantal backups zonder netwerkvraag. */
@@ -2237,6 +2237,35 @@ const BEGIN = [
     controle('Enter: bestaand artikel uit een andere winkel ligt nu ook hier, geen tweede, geen paneel', items === 'Bonbons' && !dE.getElementById('keuze') &&
       wE.eval("artikelen.filter((a) => a.sleutel === 'bonbons').length === 1 && artikelen.find((a) => a.naam === 'Bonbons').plekken.map((p) => winkelOpId.get(p.winkel).naam).sort().join() === 'AH,Plus'"), items);
     wE.close();
+  }
+
+  /* 5z43. Wekelijks niet automatisch: schakelaar in Instellingen, met de hand op Artikelen. */
+  if (deel('5z43 wekelijks: automatisch uit, met de hand')) {
+    const odA = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\nartikel;Brood;soort=wekelijks\nartikel;Kaas;soort=wekelijks;op=2026-11-20T09:00\n');
+    const wA = await start(odA); await rust(1500); const dA = wA.document;
+    dA.getElementById('tab-instellingen').click(); await slaap(30);
+    const sw = dA.getElementById('swWekAuto');
+    controle('Instellingen: schakelaar Automatisch, standaard aan, dag en tijd zichtbaar', sw.getAttribute('aria-checked') === 'true' && !dA.getElementById('wekDagVeld').hidden && !dA.getElementById('wekTijdRij').hidden);
+    sw.click(); await rust(2500);
+    controle('uit: dag en tijd weg, in het bestand auto=nee (voor beiden)', sw.getAttribute('aria-checked') === 'false' && dA.getElementById('wekDagVeld').hidden && dA.getElementById('wekTijdRij').hidden &&
+      /^instelling;wekelijks;.*auto=nee/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst).split('\n')[0]);
+    /* Melk en Brood van de lijst (de start zette ze er misschien al op). */
+    wA.eval("handelen(artikelen.filter((a) => a.naam !== 'Kaas' && a.op).flatMap((a) => [{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' }]))"); await slaap(30);
+    dA.getElementById('tab-boodschappen').click(); await slaap(30);
+    const knop = dA.getElementById('wekAlles');
+    controle('Artikelen, filter Op de lijst: geen knop', knop.hidden);
+    [...dA.querySelectorAll('#filters .filter')][2].click(); await slaap(30);
+    controle('filter Wekelijks: knop in de kop (2 nog niet op de lijst)', !knop.hidden && knop.getAttribute('aria-label') === 'Alle wekelijkse op de lijst', wA.eval("scherm.filter + '|' + instelling(model, 'wekelijks', 'auto') + '|' + artikelen.map((a) => a.letter + (a.op ? '+' : '')).join()"));
+    knop.click(); await slaap(30);
+    controle('knop: alle wekelijkse op de lijst, melding met Ongedaan maken, knop weg', wA.eval("artikelen.filter((a) => a.letter === 'W' && a.op).length") === 3 && knop.hidden &&
+      [...dA.querySelectorAll('#meldingen .melding')].some((m) => /2 wekelijkse artikelen op de lijst gezet/.test(m.textContent) && /Ongedaan maken/.test(m.textContent)));
+    [...dA.querySelectorAll('#meldingen .melding .knop')].find((k) => /Ongedaan/.test(k.textContent)).click(); await slaap(30);
+    controle('ongedaan: de twee weer eraf, Kaas blijft', wA.eval("artikelen.filter((a) => a.letter === 'W' && a.op).map((a) => a.naam).join()") === 'Kaas' && !knop.hidden);
+    dA.getElementById('tab-instellingen').click(); await slaap(30);
+    dA.getElementById('lblWekAuto').click(); await slaap(50);
+    dA.getElementById('tab-boodschappen').click(); await slaap(30);
+    controle('weer automatisch (tik op de tekst): geen knop', sw.getAttribute('aria-checked') === 'true' && knop.hidden);
+    wA.close();
   }
 
   /* 5z39. Weergave (per telefoon): aantallen bij een winkel, de winkels onder een artikel op Artikelen. */
