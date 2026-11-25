@@ -233,7 +233,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   gekocht zijn dan gewoonlijk (minstens 3 aankopen nodig). Zonder historie
   staat er uitleg.
 - Aantal: tik op het soorticoon (of op "2×") en onder de regel klapt de teller
-  open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam, ook
+  open (Aantal − n +, minimaal 1). Bij meer dan 1 staat "2×" achter de naam (vet paars, 18 px, geen badge), ook
   in Boodschappen. Het aantal blijft staan na het kopen.
 - Link: apart veld onder Notitie ("Link of zoekwoorden"). Een adres zonder https://
   krijgt dat vanzelf; met een schema (http, javascript, data, …), een naam of
@@ -266,7 +266,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 ### 5.1b Winkels (tabblad)
 - Favorieten en Overige, inklapbaar, alfabetisch; favorieten per telefoon.
   Onder een winkel "3 afdelingen, 8 artikelen" (zonder afdelingen alleen de artikelen;
-  alles wat bij die winkel is vastgelegd), uit te zetten bij Instellingen → Weergave.
+  alles wat bij die winkel is vastgelegd), aan te zetten bij Instellingen → Weergave (standaard uit).
   Onderaan "Winkel": typen filtert, + voegt toe (of opent de bestaande).
 - Eén winkel: terug, naam, ster (favoriet), potlood (Winkel bewerken: naam,
   notitie, link (alleen https), prullenbak links van Opslaan). In het overzicht
@@ -323,8 +323,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Staat er niets op de lijst, dan geen winkelkaart: alleen "Geen artikelen"
   (de gekozen winkel blijft bewaard).
   Alleen wat bij een winkel is vastgelegd telt, met het aantal; binnen elke
-  groep alfabetisch (de volgorde van je route hangt niet van de lijst af); bij een of twee artikelen staan ze eronder. Rechts "2
-  artikelen". Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
+  groep alfabetisch (de volgorde van je route hangt niet van de lijst af); bij een of twee artikelen staan ze eronder. Rechts alleen het aantal
+  artikelen ("2"). Winkels met 0 staan er niet in; ingeklapt "Overige winkels"
   (alleen wat er niet al boven staat, rechts "2"). Kruisje rechtsboven; onderaan
   een zoekvak zonder kopje (placeholder "Winkel", + voegt toe). De laatste keuze
   geldt per telefoon. Winkels beheren gebeurt op het tabblad Winkels.
@@ -410,6 +410,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 
 - Weergave (per telefoon, schakelaars met rechte hoeken): "Aantallen bij winkel",
   "Winkels bij artikel" en "Winkel in Historie" (de aankoophistorie in Boodschappen).
+  Standaard uit, uit, aan; een keuze die je zelf maakte blijft staan.
   "Winkels bij artikel" gaat over de grijze regel onder een
   artikel: op Artikelen, ook bij zoeken met @, en in een winkel op het tabblad Winkels;
   bij "Elders" in Boodschappen blijft hij staan, daar zie je waar je heen moet.

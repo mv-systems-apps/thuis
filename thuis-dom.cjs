@@ -114,7 +114,10 @@ async function start(od, vooraf, gedeeld, adres) {
       const t = req.result.transaction('kv', 'readwrite');
       t.objectStore('kv').put({ access: 'a', accessTot: Date.now() + 3600e3, refresh: 'r', aangemeldOp: Date.now(), naam: 'Testspeler Een' }, 'auth');
       t.objectStore('kv').put({ driveId: 'D', itemId: 'MAP', naam: 'thuis' }, 'map');
-      for (const [k, v] of Object.entries(vooraf || {})) t.objectStore('kv').put(v, k);
+      /* De meeste tests gaan uit van alle weergave-schakelaars aan (zoals het vroeger standaard was);
+         een test die de echte standaard wil, geeft { weergave: undefined } mee. */
+      const kv = Object.assign({ weergave: { winkelTal: true, artikelWinkels: true, aankoopWinkel: true } }, vooraf || {});
+      for (const [k, v] of Object.entries(kv)) if (v !== undefined) t.objectStore('kv').put(v, k);
       t.oncomplete = () => { req.result.close(); resolve(); };
       t.onerror = () => reject(t.error);
     };
@@ -299,7 +302,7 @@ const BEGIN = [
   k = d.getElementById('keuze');
   const zicht = [...k.querySelectorAll('.opties > *')].map((o) => o.textContent.replace(/\s+/g, ' ').trim());
   controle('winkelkeuze: gekozen winkel bovenaan onder vaste kop Huidig (streep, geen pijl), AH onder "Nodig" (Bananen alleen daar), niet vet, met paars icoon; geen Overige als er niets over is, kruisje, zoekvak onderaan',
-    JSON.stringify(zicht) === '["Huidig","Lidl centrum","Nodig1","Albert HeijnBananen1 artikel"]' && k.querySelector('.uitklapper.vast') && !k.querySelector('.uitklapper.vast svg') && k.querySelector('.optie').classList.contains('actief') && !k.querySelector('.sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
+    JSON.stringify(zicht) === '["Huidig","Lidl centrum","Nodig1","Albert HeijnBananen1"]' && k.querySelector('.uitklapper.vast') && !k.querySelector('.uitklapper.vast svg') && k.querySelector('.optie').classList.contains('actief') && !k.querySelector('.sterk') && !!k.querySelector('.optie svg') && !!k.querySelector('.kop .kruis') && k.querySelector('.paneel').lastElementChild.classList.contains('zoek'), JSON.stringify(zicht));
   controle('winkelkeuze: elke winkel één keer', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Lidl centrum,Albert Heijn');
   k.querySelector('#keuzeZoek').value = 'alb'; k.querySelector('#keuzeZoek').dispatchEvent(new w.Event('input'));
   controle('keuzelijst: typen filtert (één keer, ook al staat hij in twee secties)', [...k.querySelectorAll('.optie .nm')].map((o) => o.firstChild.textContent).join() === 'Albert Heijn');
@@ -2163,31 +2166,30 @@ const BEGIN = [
     const t = datumTekstT(0) + 'T09:00';
     const odG = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Zuivel|Brood\nwinkel;AH\nwinkel;Gamma\n' +
       'artikel;Melk;ligt=Plus:Zuivel|AH;op=' + t + '\nartikel;Kaas;ligt=Plus:Zuivel\nartikel;Stroop;ligt=AH\n');
-    const wG = await start(odG); await rust(1500); const dG = wG.document;
+    const wG = await start(odG, { weergave: undefined }); await rust(1500); const dG = wG.document;
     dG.getElementById('tab-winkels').click(); await slaap(30);
     const subs = () => [...dG.querySelectorAll('#winkelsOverzicht .winkelrij .nm')].map((x) => x.firstChild.textContent + ':' + (x.querySelector('.sub') ? x.querySelector('.sub').textContent : '')).join('|');
-    controle('winkels: "2 afdelingen, 2 artikelen"; zonder afdelingen alleen artikelen', subs() === 'AH:2 artikelen|Gamma:0 artikelen|Plus:2 afdelingen, 2 artikelen', subs());
-    dG.getElementById('tab-instellingen').click(); await slaap(30);
-    const sw1 = dG.getElementById('swWinkelTal'), sw2 = dG.getElementById('swArtikelWinkels');
-    controle('instellingen: blok Weergave, eerst winkel dan artikel, allebei aan', sw1.getAttribute('aria-checked') === 'true' && sw2.getAttribute('aria-checked') === 'true' && (sw1.compareDocumentPosition(sw2) & 4) && sw1.getAttribute('role') === 'switch');
-    sw1.click(); sw2.click(); await slaap(30);
-    controle('schakelaars uit', sw1.getAttribute('aria-checked') === 'false' && sw2.getAttribute('aria-checked') === 'false');
-    dG.getElementById('tab-winkels').click(); await slaap(30);
-    controle('winkels zonder aantallen', subs() === 'AH:|Gamma:|Plus:', subs());
-    dG.getElementById('tab-boodschappen').click(); await slaap(30);
     const melk = () => [...dG.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
-    controle('Artikelen: geen winkelsregel onder het artikel', !!melk() && !melk().querySelector('.winkels'));
+    controle('standaard: winkels zonder aantallen', subs() === 'AH:|Gamma:|Plus:', subs());
+    dG.getElementById('tab-boodschappen').click(); await slaap(30);
+    controle('standaard: geen winkelsregel onder het artikel', !!melk() && !melk().querySelector('.winkels'));
     dG.getElementById('tab-winkels').click(); await slaap(30);
     [...dG.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Plus')).click(); await slaap(30);
     wG.eval("afdelingOpenen(winkels.find((w) => w.naam === 'Plus').afdelingen[0].id)");
-    const mw = [...dG.querySelectorAll('#winkelDetail .item')].find((r) => naamVanRij(r) === 'Melk');
-    controle('in een winkel ook geen andere winkels onder het artikel', !!mw && !mw.querySelector('.winkels'));
-    controle('per telefoon bewaard', wG.eval("JSON.stringify(KEUZES.weergave.waarde())") === '{"winkelTal":false,"artikelWinkels":false,"aankoopWinkel":true}');
-    dG.querySelector('#winkelDetail .terug').click(); await slaap(20);
+    const mw = () => [...dG.querySelectorAll('#winkelDetail .item')].find((r) => naamVanRij(r) === 'Melk');
+    controle('standaard: in een winkel ook geen andere winkels onder het artikel', !!mw() && !mw().querySelector('.winkels'));
     dG.getElementById('tab-instellingen').click(); await slaap(30);
-    sw2.click(); await slaap(20);
+    const sw1 = dG.getElementById('swWinkelTal'), sw2 = dG.getElementById('swArtikelWinkels'), sw3 = dG.getElementById('swAankoopWinkel');
+    controle('instellingen: eerst winkel dan artikel; standaard uit, uit, aan', sw1.getAttribute('aria-checked') === 'false' && sw2.getAttribute('aria-checked') === 'false' && sw3.getAttribute('aria-checked') === 'true' &&
+      (sw1.compareDocumentPosition(sw2) & 4) && sw1.getAttribute('role') === 'switch');
+    sw1.click(); sw2.click(); await slaap(30);
+    controle('schakelaars aan', sw1.getAttribute('aria-checked') === 'true' && sw2.getAttribute('aria-checked') === 'true');
+    controle('per telefoon bewaard', wG.eval("JSON.stringify(KEUZES.weergave.waarde())") === '{"winkelTal":true,"artikelWinkels":true,"aankoopWinkel":true}');
+    dG.getElementById('tab-winkels').click(); await slaap(30);
+    controle('aan: "2 afdelingen, 2 artikelen"; zonder afdelingen alleen artikelen', subs() === 'AH:2 artikelen|Gamma:0 artikelen|Plus:2 afdelingen, 2 artikelen', subs());
     dG.getElementById('tab-boodschappen').click(); await slaap(30);
-    controle('weer aan: winkelsregel terug', !!melk().querySelector('.winkels') && melk().querySelector('.winkels').textContent === 'AH · Plus', melk().textContent);
+    controle('aan: winkelsregel onder het artikel', !!melk().querySelector('.winkels') && melk().querySelector('.winkels').textContent === 'AH · Plus', melk().textContent);
+    controle('opgeslagen waarde gaat voor de standaard', wG.eval("(KEUZES.weergave.lees({ winkelTal: true }), JSON.stringify(weergave))") === '{"winkelTal":true,"artikelWinkels":false,"aankoopWinkel":true}');
     wG.close();
   }
 

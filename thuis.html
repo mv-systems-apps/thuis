@@ -232,7 +232,7 @@
   .item:last-child{border-bottom:0}
   .item .icoon{width:40px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:0;padding:0;background:transparent}
   /* "2×": als een label in de regel, verticaal gecentreerd op de naam. */
-  .item .aantal,.wrij .aantal{margin-left:8px;color:var(--paars);font-weight:700;white-space:nowrap}
+  .item .aantal,.wrij .aantal{margin-left:8px;font-size:18px;color:var(--paars);font-weight:700;white-space:nowrap}
   .wrij.gedaan .aantal{color:inherit}
   .teller{display:flex;align-items:center;gap:0;padding:6px 14px 8px 58px;background:#F1EFFB;border-bottom:1px solid var(--rij)}
   .teller > span:first-child{flex:1;font-size:17px;color:var(--grijs)}
@@ -525,7 +525,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-009</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-00C</div>
   </section>
 </main>
 
@@ -2267,13 +2267,14 @@ const KEUZES = {
      Backups openen); Instellingen toont het zonder eigen netwerkvraag. */
   backupTal: { lees: (v) => { backupTal.n = typeof v === 'number' ? v : null; }, waarde: () => backupTal.n, leeg: () => { backupTal.n = null; }, perMap: true, hulp: true },
   /* Weergave per telefoon: aantallen bij een winkel, de winkels onder een artikel (Artikelen). */
-  weergave: { lees: (v) => { for (const k of Object.keys(WEERGAVE_STANDAARD)) weergave[k] = !(v && v[k] === false); },
+  weergave: { lees: (v) => { for (const k of Object.keys(WEERGAVE_STANDAARD)) weergave[k] = v && typeof v[k] === 'boolean' ? v[k] : WEERGAVE_STANDAARD[k]; },
     waarde: () => Object.assign({}, weergave), leeg: () => { Object.assign(weergave, WEERGAVE_STANDAARD); } },
   doenStandaard: { lees: (v) => { doen.standaard = DOEN_FILTERS.indexOf(v) !== -1 ? v : 'week'; doen.filter = doen.standaard; }, waarde: () => doen.standaard, leeg: () => { doen.standaard = 'week'; doen.filter = 'week'; } }
 };
 const backupTal = { n: null };
 const SCHAKELAARS = [['swWinkelTal', 'winkelTal'], ['swArtikelWinkels', 'artikelWinkels'], ['swAankoopWinkel', 'aankoopWinkel']];
-const WEERGAVE_STANDAARD = { winkelTal: true, artikelWinkels: true, aankoopWinkel: true };
+/* Standaard: aantallen bij winkel en winkels bij artikel uit, winkel in Historie aan. */
+const WEERGAVE_STANDAARD = { winkelTal: false, artikelWinkels: false, aankoopWinkel: true };
 const weergave = Object.assign({}, WEERGAVE_STANDAARD);
 function backupTalZetten(n) { if (backupTal.n === n) return; backupTal.n = n; keuzeBewaren('backupTal'); if ($('backupAantal')) $('backupAantal').textContent = n; }
 function keuzeBewaren(k) { return bewaar(k, KEUZES[k].waarde()); }
@@ -3754,7 +3755,7 @@ function keuzeOptie(o, kies) {
     }
     b.querySelector('.nm').appendChild(s);
   }
-  if (o.aantal) b.querySelector('.tal').textContent = telTekst(o.aantal, 'artikel', 'artikelen');
+  if (o.aantal) b.querySelector('.tal').textContent = String(o.aantal);
   if (o.actief) b.setAttribute('aria-current', 'true');
   b.addEventListener('click', () => { sluitKeuze(); kies(o.id); });
   return b;
