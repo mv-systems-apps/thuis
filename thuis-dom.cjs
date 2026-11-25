@@ -1962,11 +1962,24 @@ const BEGIN = [
     [...dW.querySelectorAll('#tagLijst .tagoptie')][0].click(); await slaap(30);
     controle('Appels kiezen: ligt nu in Zuivel, vak leeg, lijstje dicht', items() === 'Appels,Kaas,Melk' && vak.value === '' && dW.getElementById('tagLijst').hidden && wW.eval("artikelen.find((a) => a.naam === 'Appels').plekken.map((p) => winkelOpId.get(p.winkel).naam + ':' + p.afd).join()") === 'Plus:' + wW.eval("winkels.find((w) => w.naam === 'Plus').afdelingen[1].id"), items());
     await typ('schroeven');
-    controle('Schroeven (nergens te koop): alleen + Nieuw', keuze() === '+ Nieuw: "schroeven":', keuze());
+    controle('Schroeven (nergens vastgelegd): in het lijstje zonder winkelicoon, geen + Nieuw', keuze() === 'Schroeven:' && !dW.querySelector('#tagLijst svg'), keuze());
     dW.getElementById('winkelsPlus').click(); await slaap(30);
     controle('+ bij een bestaande naam: geen tweede artikel, het bestaande ligt nu hier', items() === 'Appels,Kaas,Melk,Schroeven' && wW.eval("artikelen.filter((a) => normNaam(a.naam) === 'schroeven').length") === 1, items());
+    /* een artikel dat alleen in een andere winkel ligt */
+    wW.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'drp01', velden: { naam: 'Drop' } }, { actie: 'plaats', soort: 'artikel', id: 'drp01', winkel: winkels.find((w) => w.naam === 'Albert Heijn').id, afd: '' }])"); await slaap(20);
+    await typ('dro');
+    controle('andere winkel: in het lijstje met een winkelicoon, zonder regeltje', keuze() === 'Drop:,+ Nieuw: "dro":' && !!dW.querySelector('#tagLijst .tagoptie svg'), keuze());
+    dW.querySelector('#tagLijst .tagoptie').click(); await slaap(20);
+    const waar = () => [...dW.querySelectorAll('#keuze .waarrij')].map((r) => r.querySelector('.wn').textContent + ':' + r.querySelector('.wa').textContent + (r.classList.contains('nieuw') ? '+' : '')).join('|');
+    controle('tik: paneel met waar hij ligt en, paars, waar hij bij komt; Annuleren en Voeg toe', !!dW.getElementById('keuze') && waar() === 'Albert Heijn:Afdeling?|+ Plus:Zuivel+' &&
+      [...dW.querySelectorAll('#keuze .bewerkknoppen .knop')].map((k) => k.textContent).join() === 'Annuleren,Voeg toe', waar());
+    dW.querySelector('#keuze .bewerkknoppen .knop').click(); await slaap(20);
+    controle('Annuleren: niets veranderd', !dW.getElementById('keuze') && wW.eval("artikelen.find((a) => a.naam === 'Drop').plekken.length") === 1);
+    await typ('dro'); dW.querySelector('#tagLijst .tagoptie').click(); await slaap(20);
+    dW.querySelectorAll('#keuze .bewerkknoppen .knop')[1].click(); await slaap(30);
+    controle('Voeg toe: ook hier, de andere winkel blijft', items().split(',').includes('Drop') && wW.eval("artikelen.find((a) => a.naam === 'Drop').plekken.map((p) => winkelOpId.get(p.winkel).naam).sort().join()") === 'Albert Heijn,Plus', items());
     await typ('Yoghurt'); vak.dispatchEvent(new wW.KeyboardEvent('keydown', { key: 'Enter' })); await slaap(30);
-    controle('Enter: nieuw artikel, regelmatig, meteen in deze afdeling', items() === 'Appels,Kaas,Melk,Schroeven,Yoghurt' && wW.eval("(artikelen.find((a) => a.naam === 'Yoghurt') || {}).soort") === 'regelmatig' && !wW.eval("artikelen.find((a) => a.naam === 'Yoghurt').op"), items());
+    controle('Enter: nieuw artikel, regelmatig, meteen in deze afdeling', items() === 'Appels,Drop,Kaas,Melk,Schroeven,Yoghurt' && wW.eval("(artikelen.find((a) => a.naam === 'Yoghurt') || {}).soort") === 'regelmatig' && !wW.eval("artikelen.find((a) => a.naam === 'Yoghurt').op"), items());
     await typ('stroopwafels');
     controle('precieze naam in het lijstje: geen + Nieuw ernaast', keuze() === 'Stroopwafels:Afdeling?', keuze());
     await typ('kaas');
@@ -1976,7 +1989,7 @@ const BEGIN = [
     controle('potlood: "Afdeling bewerken" met de naam', !!dW.getElementById('keuze') && dW.getElementById('keuze').getAttribute('aria-label') === 'Afdeling bewerken' && dW.getElementById('bewerkNaam').value === 'Zuivel');
     dW.querySelector('#keuze .kruis').click(); await slaap(20);
     dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
-    controle('terug: de route, met de nieuwe aantallen', afd() === 'Groente0,Zuivel5,Brood0,Afdeling?1', afd());
+    controle('terug: de route, met de nieuwe aantallen', afd() === 'Groente0,Zuivel6,Brood0,Afdeling?1', afd());
     kop('Afdeling?').click(); await slaap(30);
     controle('Afdeling?: de artikelen zonder afdeling, geen potlood', scherm() === 'Afdeling?/Plus' && items() === 'Stroopwafels' && !dW.querySelector('#winkelDetail .bewerk'), scherm() + ' | ' + items());
     rijA('Stroopwafels').querySelector('.tekst').click(); await slaap(30);
@@ -2001,7 +2014,7 @@ const BEGIN = [
     /* zoeken in de winkel: alleen passende afdelingen */
     const vk = dW.getElementById('winkelsTekst');
     vk.value = 'zui'; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
-    controle('zoeken in de winkel: alleen Zuivel', afd() === 'Zuivel5', afd());
+    controle('zoeken in de winkel: alleen Zuivel', afd() === 'Zuivel6', afd());
     vk.value = 'afd'; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
     controle('zoeken op "afd": de regel "Afdeling?" (zoekt op wat er staat)', afd() === 'Afdeling?1', afd());
     vk.value = 'xyz'; vk.dispatchEvent(new wW.Event('input')); await slaap(20);
@@ -2012,13 +2025,13 @@ const BEGIN = [
     dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
     open('Albert Heijn'); await slaap(30);
     controle('winkel zonder afdelingen: meteen de artikelen onder "Artikelen", geen Volgorde- en alles-knop', dW.querySelector('#winkelDetail .kopbalk h3').textContent === 'Artikelen' &&
-      dW.querySelector('#winkelDetail .kopbalk .tal').textContent === '2' && items() === 'Kaas,Stroopwafels' && !dW.querySelector('#winkelDetail .volgorde') && !dW.querySelector('#winkelDetail .alles'), items());
+      dW.querySelector('#winkelDetail .kopbalk .tal').textContent === '3' && items() === 'Drop,Kaas,Stroopwafels' && !dW.querySelector('#winkelDetail .volgorde') && !dW.querySelector('#winkelDetail .alles'), items());
     dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
     open('Gamma'); await slaap(30);
     controle('winkel zonder artikelen: "Geen artikelen"', /Geen artikelen/.test(dW.getElementById('afdelingen').textContent) && dW.querySelector('#winkelDetail .kopbalk .tal').textContent === '');
     dW.querySelector('#winkelDetail .terug').click(); await slaap(30);
     open('Plus'); await slaap(30);
-    controle('opnieuw geopend: de route, Volgorde uit', afd() === 'Groente0,Zuivel5,Brood0,Afdeling?1' && dW.querySelector('#winkelDetail .volgorde').getAttribute('aria-pressed') === 'false', afd());
+    controle('opnieuw geopend: de route, Volgorde uit', afd() === 'Groente0,Zuivel6,Brood0,Afdeling?1' && dW.querySelector('#winkelDetail .volgorde').getAttribute('aria-pressed') === 'false', afd());
     wW.close();
   }
 

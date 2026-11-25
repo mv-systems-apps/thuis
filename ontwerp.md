@@ -284,9 +284,13 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   niet bij "Afdeling?"). Daaronder "Artikelen" met het aantal: rondje = op de lijst; icoon of "2×"
   opent de teller; tik op de naam opent het artikel (sluiten brengt je terug in de afdeling, op
   dezelfde plek). Onder een artikel alleen de andere winkels.
-- Onderaan "Artikel": typen filtert de artikelen van de afdeling en toont boven de balk de artikelen
-  van deze winkel die in een andere afdeling of onder "Afdeling?" liggen (rechts waar), plus
-  "+ Nieuw: "…"". Andere winkels niet. Een tik verplaatst het artikel hierheen. + of Enter: bestaat
+- Onderaan "Artikel": typen filtert de artikelen van de afdeling en toont boven de balk eerst de
+  artikelen van deze winkel die in een andere afdeling of onder "Afdeling?" liggen (grijs eronder
+  waar; een tik verplaatst het hierheen), dan artikelen uit andere winkels (winkelicoon erachter;
+  een tik opent een paneel met de winkels en afdelingen waar het ligt en als laatste regel, paars,
+  "+ <deze winkel>" met deze afdeling; Annuleren of Voeg toe, de andere winkels blijven), dan
+  "+ Nieuw: "…"" (niet als de precieze naam al in het lijstje staat). Nergens vastgelegd: geen
+  icoon, een tik legt het meteen hier. + of Enter: bestaat
   de naam al (ook in een andere winkel), dan krijgt dat artikel deze winkel en afdeling erbij;
   anders een nieuw artikel, soort regelmatig (niet op de lijst), meteen hier.
 
