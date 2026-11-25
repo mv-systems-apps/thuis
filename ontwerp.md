@@ -334,8 +334,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Terugtikken zet het terug en haalt de aankoopdatum weg.
 - "Niet bij <winkel>": artikelen die hier niet te koop zijn, ingeklapt
   en grijs, wel af te vinken.
-- Het mandje blijft staan tot je het leegmaakt of tot de volgende dag (wat op een eerdere dag is
-  afgevinkt, gaat er vanzelf uit): rechts naast het kopje "Winkelmand" staat een icoonknop
+- Het mandje blijft staan tot je het leegmaakt, ook de volgende dag (boodschappen over twee dagen
+  verdeeld); wat weer op de lijst komt (bv. wekelijks terug) gaat eruit. Rechts naast het kopje "Winkelmand" staat een icoonknop
   (mandje met kruis, "Winkelmand leegmaken"). Het mandje hoort bij de telefoon (niet in
   thuis.json) en blijft bewaard als de app sluit. Leegmaken haalt alleen het
   groepje uit beeld; de aankoopdatums blijven; 6 s Ongedaan maken. Er is geen "Klaar".
@@ -536,9 +536,10 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   andere dag of tijd geldt vanaf de volgende week; een moment meer dan twee dagen na nu telt als vorige
   week. De sync doet eerst wekelijks terug, dan de wachtrij; de telefoon rekent het ook zelf (offline).
   Een "van de lijst" van vóór het moment dat pas daarna binnenkomt, haalt het niet van de nieuwe lijst.
-- Mandje: per telefoon en per winkel. Wat weer op de lijst staat, verwijderd is of op een eerdere dag is
-  afgevinkt, gaat er vanzelf uit. De voortgang telt wat in een van de mandjes ligt als gehaald.
-- Afvinken maakt een aankoop (gedeeld, naam en tijd, niet wie); terugtikken haalt hem weg. Afvinken
+- Mandje: per telefoon, alle winkels samen. Wat weer op de lijst staat of verwijderd is, gaat er
+  vanzelf uit; verder blijft het staan tot je het leegmaakt (ook de volgende dag). De voortgang
+  telt wat in het mandje ligt als gehaald.
+- Afvinken maakt een aankoop (gedeeld, naam, tijd en winkel, niet wie); terugtikken haalt hem weg. Afvinken
   onder "Niet bij <winkel>" legt níet vast dat het daar te koop is; de aankoop krijgt wel de
   winkel met een vraagteken (in Aankopen "Plus?"; veld `onzeker`).
   Aankopen bewaren: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit

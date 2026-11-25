@@ -518,7 +518,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352905-002</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352905-003</div>
   </section>
 </main>
 
@@ -2552,17 +2552,15 @@ function afgeleid() {
   mandjeOpschonen();
 }
 /* Het mandje (per telefoon) loopt mee met de lijst: wat weer op de lijst staat of
-   verwijderd is, gaat eruit. Zo staat niets dubbel en klopt de teller.
-   Wat op een eerdere dag is afgevinkt ook: elke boodschappenronde begint met een
-   leeg mandje; de aankopen blijven. */
+   verwijderd is, gaat eruit. Zo staat niets dubbel en klopt de teller. Het blijft verder
+   staan tot je het leegmaakt, ook de volgende dag (boodschappen over twee dagen verdeeld). */
 function mandjeOpschonen() {
   if (!winkel.mandje.size) return;
   const opId = new Map(artikelen.map((a) => [a.id, a]));
-  const vandaag = datumTekst(new Date());
   let anders = false;
-  for (const [id, m] of Array.from(winkel.mandje)) {
+  for (const id of Array.from(winkel.mandje.keys())) {
     const a = opId.get(id);
-    if (!a || a.op || (m.datum && m.datum < vandaag)) { winkel.mandje.delete(id); anders = true; }
+    if (!a || a.op) { winkel.mandje.delete(id); anders = true; }
   }
   if (anders) mandjeBewaren();
 }

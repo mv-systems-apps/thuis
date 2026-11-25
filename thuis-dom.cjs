@@ -1714,11 +1714,14 @@ const BEGIN = [
     controle('dag: zelfde dag → niets opnieuw (punt 1)', wD.eval('window.__getekend') === 0);
     wD.eval("getekend.sleutel = 'gisteren'; dagNagaan()");
     controle('dag: andere dag → opnieuw uitrekenen en tekenen (punt 1)', wD.eval('window.__getekend') === 1 && wD.eval('getekend.sleutel') === wD.eval('momentSleutel(new Date())'));
-    /* Punt 2: mandje van een eerdere dag gaat er vanzelf uit. */
+    /* Het mandje blijft staan, ook de volgende dag; alleen leegmaken of weer op de lijst haalt iets eruit. */
     wD.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id; const __b = artikelen.find((a) => a.naam === 'Brood'); afvinken(__b);");
     await slaap(30);
     wD.eval("const __m = winkel.mandje.get(artikelen.find((a) => a.naam === 'Brood').id); __m.datum = verschuif(datumTekst(new Date()), -1, 'dag'); mandjeOpschonen();");
-    controle('mandje: afgevinkt op een eerdere dag gaat eruit (punt 2)', wD.eval('winkel.mandje.size') === 0);
+    controle('mandje: afgevinkt op een eerdere dag blijft staan', wD.eval('winkel.mandje.size') === 1);
+    const __bid = wD.eval("artikelen.find((a) => a.naam === 'Brood').id");
+    wD.eval("handelen([{ actie: 'zet', soort: 'artikel', id: '" + __bid + "', veld: 'op', oud: '', nieuw: tijdstipTekst(new Date()) }])"); await slaap(30);
+    controle('mandje: weer op de lijst (bv. wekelijks terug) = uit het mandje', wD.eval('winkel.mandje.size') === 0);
     /* Afvinken onder "Niet bij": niet vastleggen dat het hier te koop is; de aankoop krijgt "Plus?". */
     const kid = wD.eval("artikelen.find((a) => a.naam === 'Kaas').id");
     const pid = wD.eval('winkel.id');
