@@ -253,8 +253,9 @@ async def main():
         await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await pg.wait_for_timeout(200)
         naarDoen = await pg.evaluate("() => !document.getElementById('scherm-doen').hidden")
         panY = await pg.evaluate("() => { const r = document.querySelector('#winkelLijst .wrij'); return r ? getComputedStyle(r).touchAction : 'pan-y'; }")
-        check('vegen (rij: touch-action pan-y, geen wachten bij scrollen): kort = terug, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
-              kort == [mstart, False] and recht == mstart + 1 and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y', [kort, recht, links, schuin, nogWinkel, naarDoen, panY])
+        sel = await pg.evaluate("() => [...document.querySelectorAll('#winkelLijst .wrij .vink')].every((v) => getComputedStyle(v).userSelect === 'none')")
+        check('vegen (rij: touch-action pan-y, geen wachten bij scrollen; geen tekstselectie op elke rij): kort = terug, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
+              kort == [mstart, False] and recht == mstart + 1 and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y' and sel, [kort, recht, links, schuin, nogWinkel, naarDoen, panY, sel])
 
         # 14. Kleur van notities
         kl = await pg.evaluate("""async () => {

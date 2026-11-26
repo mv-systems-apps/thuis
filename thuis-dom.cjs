@@ -847,9 +847,13 @@ const BEGIN = [
     dB.getElementById('artikelOpslaan').click(); await slaap(50);
     const nr = melk().querySelector('.notitie');
     const regels = (el) => [...el.children].map((c) => [...c.childNodes].map((x) => x.textContent).join('+')).join(' / ');
-    controle('link: aangevuld met https://, getoond als "ah.nl" met het extern-icoon op een tweede regel onder de notitie; melding weg', !!nr && regels(nr) === 'halfvol / ah.nl' && !!nr.querySelector('.link') && !dB.getElementById('m-fout'), nr && nr.textContent);
-    nr.querySelector('.link').click(); await slaap(20);
-    controle('link: tikken opent in een nieuw tabblad zonder verwijzer, niet het bewerkscherm', geopend[0] === 'https://www.ah.nl/melk _blank noopener,noreferrer' && dB.getElementById('artikelScherm').hidden, geopend.join());
+    controle('link: nooit in een lijst (alleen de notitie); melding weg', !!nr && regels(nr) === 'halfvol' && !nr.querySelector('.link') && !dB.getElementById('m-fout'), nr && nr.textContent);
+    wB.eval("artikelOpenen(artikelen.find((a) => a.naam === 'Melk').id, true)"); await slaap(30);
+    const lv = dB.querySelector('#artikelScherm > .notitievol');
+    controle('link: in de leesstand van het artikel, aangevuld met https://, getoond als "ah.nl" met het extern-icoon', !!lv && !!lv.querySelector('.link') && lv.querySelector('.link').textContent === 'ah.nl', lv && lv.textContent);
+    lv.querySelector('.link').click(); await slaap(20);
+    controle('link: tikken opent in een nieuw tabblad zonder verwijzer, het scherm blijft de leesstand', geopend[0] === 'https://www.ah.nl/melk _blank noopener,noreferrer' && dB.getElementById('artikelScherm').classList.contains('lezen'), geopend.join());
+    dB.getElementById('artikelDicht').click(); await slaap(20);
     await rust(2500);
     controle('link: in het bestand', /^artikel;Melk;soort=wekelijks;notitie=halfvol;link=https:\/\/www\.ah\.nl\/melk;/m.test(R(odB.bestanden['thuis.json'].tekst)), R(odB.bestanden['thuis.json'].tekst));
     dB.getElementById('tab-winkel').click(); await slaap(50);
@@ -864,8 +868,11 @@ const BEGIN = [
     melk().querySelector('.tekst').click(); await slaap(20);
     dB.getElementById('artikelLink').value = 'melk  halfvol 1l'; dB.getElementById('artikelLink').dispatchEvent(new wB.Event('input'));
     dB.getElementById('artikelOpslaan').click(); await slaap(50);
-    controle('zoekwoorden: getoond tussen aanhalingstekens', melk().querySelector('.notitie .link').textContent === '"melk halfvol 1l"' && !!melk().querySelector('.notitie .link svg'), melk().querySelector('.notitie').textContent);
-    melk().querySelector('.notitie .link').click(); await slaap(20);
+    wB.eval("artikelOpenen(artikelen.find((a) => a.naam === 'Melk').id, true)"); await slaap(30);
+    const zl = dB.querySelector('#artikelScherm > .notitievol .link');
+    controle('zoekwoorden: getoond tussen aanhalingstekens (leesstand)', !!zl && zl.textContent === '"melk halfvol 1l"' && !!zl.querySelector('svg'), zl && zl.textContent);
+    zl.click(); await slaap(20);
+    dB.getElementById('artikelDicht').click(); await slaap(20);
     controle('zoekwoorden: tik opent Google met de zoekopdracht', geopend[2] === 'https://www.google.com/search?q=melk+halfvol+1l _blank noopener,noreferrer', geopend.join());
     melk().querySelector('.tekst').click(); await slaap(20);
     controle('zoekwoorden: in het bewerkveld weer als woorden', dB.getElementById('artikelLink').value === 'melk halfvol 1l');
@@ -2338,21 +2345,21 @@ const BEGIN = [
   rec: () => [...dR.querySelectorAll('#receptBlok .receptrij')].map((r) => r.querySelector('.nm').firstChild.textContent + ':' + r.querySelector('.tal').textContent).join(),
   rijR: (n) => [...dR.querySelectorAll('#ingredienten .item')].find((r) => naamVanRij(r) === n),
   regels: () => [...dR.querySelectorAll('#ingredienten .item')].map((r) => naamVanRij(r) + ((r.querySelector('.aantal') || {}).textContent || '') + (r.querySelector('.rondje').getAttribute('aria-pressed') === 'true' ? '+' : '')).join(),
-  melk: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return a.opAantal + '|' + a.voorTekst; })()"),
+  melk: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return a.opAantal + '|' + (a.voor.length ? (a.eigen ? a.eigen + ' + ' : '') + a.voor.map((v) => (a.voor.length === 1 && a.opvoor && v.aantal === a.opAantal ? '' : v.aantal + '\\u00A0') + v.naam).join(' + ') : ''); })()"),
   keuze: () => dR.getElementById('tagLijst').hidden ? '' : [...dR.querySelectorAll('#tagLijst .tagoptie')].map((b) => b.querySelector('.nm').textContent).join(),
   rijL: (n) => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === n),
   rijW: (n) => [...dR.querySelectorAll('#weggehaald .item')].find((r) => naamVanRij(r) === n),
-  geh: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); return a.opAantal + '|' + a.voorTekst + '|' + a.opvoor; })()"),
+  geh: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); return a.opAantal + '|' + (a.voor.length ? (a.eigen ? a.eigen + ' + ' : '') + a.voor.map((v) => (a.voor.length === 1 && a.opvoor && v.aantal === a.opAantal ? '' : v.aantal + '\\u00A0') + v.naam).join(' + ') : '') + '|' + a.opvoor; })()"),
   wrij: (n) => [...dR.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === n),
   balk: () => dR.getElementById('invoerTekst').value,
   melkRij: () => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk'),
   tel: () => dR.querySelector('#lijst .teller'),
-  mk: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return [a.aantal, a.rec.opaantal || '', a.opAantal, a.voorTekst].join('|'); })()"),
+  mk: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return [a.aantal, a.rec.opaantal || '', a.opAantal, (a.voor.length ? (a.eigen ? a.eigen + ' + ' : '') + a.voor.map((v) => (a.voor.length === 1 && a.opvoor && v.aantal === a.opAantal ? '' : v.aantal + '\\u00A0') + v.naam).join(' + ') : '')].join('|'); })()"),
   wm: () => [...dR.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === 'Melk'),
   lamp: () => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Lampje'),
   sto: () => [...dR.querySelectorAll('#ingredienten .item')].map((r) => naamVanRij(r)).join(),
   prei: () => dR.querySelector('#ingredienten .item'),
-  kaas: (n) => wR.eval("(() => { const a = artikelen.find((x) => x.naam === '" + n + "'); return a ? a.opAantal + '|' + a.voorTekst : ''; })()"),
+  kaas: (n) => wR.eval("(() => { const a = artikelen.find((x) => x.naam === '" + n + "'); return a ? a.opAantal + '|' + (a.voor.length ? (a.eigen ? a.eigen + ' + ' : '') + a.voor.map((v) => (a.voor.length === 1 && a.opvoor && v.aantal === a.opAantal ? '' : v.aantal + '\\u00A0') + v.naam).join(' + ') : '') : ''; })()"),
     vak: dR.getElementById('invoerTekst')
   }; };
   if (deel('5z44a recepten: basis en receptscherm')) {
@@ -2385,7 +2392,7 @@ const BEGIN = [
     vak.value = 'Lasagnebladen'; vak.dispatchEvent(new wR.Event('input')); vak.dispatchEvent(new wR.KeyboardEvent('keydown', { key: 'Enter' })); await slaap(30);
     controle('Eieren erbij (1), Lasagnebladen nieuw: een ingrediënt, geen artikel', regels() === 'Eieren,Gehakt2×+,Lasagnebladen,Melk5×+' && wR.eval("!artikelen.find((a) => a.naam === 'Lasagnebladen')"), regels());
     rijR('Lasagnebladen').querySelector('.rondje').click(); await slaap(30);
-    controle('rondje bij een ingrediënt zonder artikel: maakt een eenmalig artikel en zet het voor Lasagne op de lijst', regels() === 'Eieren,Gehakt2×+,Lasagnebladen+,Melk5×+' && wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Lasagnebladen'); return a.soort + '|' + !!a.op + '|' + a.voorTekst; })()") === 'eenmalig|true|Lasagne', regels());
+    controle('rondje bij een ingrediënt zonder artikel: maakt een eenmalig artikel en zet het voor Lasagne op de lijst', regels() === 'Eieren,Gehakt2×+,Lasagnebladen+,Melk5×+' && wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Lasagnebladen'); return a.soort + '|' + !!a.op + '|' + (a.voor.length ? (a.eigen ? a.eigen + ' + ' : '') + a.voor.map((v) => (a.voor.length === 1 && a.opvoor && v.aantal === a.opAantal ? '' : v.aantal + '\\u00A0') + v.naam).join(' + ') : ''); })()") === 'eenmalig|true|Lasagne', regels());
     rijR('Lasagnebladen').querySelector('.rondje').click(); await slaap(30);
     controle('nog een tik: van de lijst; het artikel blijft (archief), het ingrediënt ook', regels() === 'Eieren,Gehakt2×+,Lasagnebladen,Melk5×+' && wR.eval("!artikelen.find((x) => x.naam === 'Lasagnebladen').op"), regels());
     rijR('Gehakt').querySelector('.icoon').click(); await slaap(20);
@@ -2660,10 +2667,10 @@ const BEGIN = [
     wR.eval("receptDicht(true)"); await slaap(20);
     wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(30);
     const rr = (r) => [...r.querySelectorAll('.notitie > *')].map((c) => c.className + ':' + c.textContent).join(' | ');
-    controle('op de lijst: Gehakt alleen voor Lasagne → één regel met blaadje, receptnaam (zonder aantal) en de notitie (zonder tags)', !!rijL('Gehakt') && rr(rijL('Gehakt')) === 'rregel:Lasagne · Rundergehakt 500 g' && !!rijL('Gehakt').querySelector('.rregel svg'), rijL('Gehakt') && rr(rijL('Gehakt')));
-    controle('op de lijst: Melk eigen notitie, tags eronder, dan de receptregel met aantal', rr(rijL('Melk')) === 'ntekst:Halfvol | ntags:#zuivel | rregel:4\u00A0Lasagne · Volle melk', rr(rijL('Melk')));
+    controle('op de lijst: Gehakt alleen voor Lasagne → regel met pannetje en receptnaam (zonder aantal), regel met blaadje en de notitie (zonder tags)', !!rijL('Gehakt') && rr(rijL('Gehakt')) === 'rregel:Lasagne | rregel:Rundergehakt 500 g' && !!rijL('Gehakt').querySelector('.rregel svg'), rijL('Gehakt') && rr(rijL('Gehakt')));
+    controle('op de lijst: Melk eigen notitie (zonder tags en link), dan de receptregels', rr(rijL('Melk')) === 'ntekst:Halfvol | rregel:4\u00A0Lasagne | rregel:Volle melk', rr(rijL('Melk')));
     wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk' }, { actie: 'nieuw', soort: 'recept', id: 'pan01', velden: { naam: 'Pannenkoeken' } }, { actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ime02', naam: 'Melk', aantal: '1', notitie: 'Halfvol mag ook' }, { actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, recept: 'pan01', naam: 'Pannenkoeken', aantal: '1', ing: 'ime02' }])"); await slaap(30);
-    controle('op de lijst: meer recepten met een notitie → per recept een regel, met de receptnaam', rr(rijL('Melk')) === 'ntekst:Halfvol | ntags:#zuivel | rregel:4\u00A0Lasagne · Volle melk | rregel:1\u00A0Pannenkoeken · Halfvol mag ook', rr(rijL('Melk')));
+    controle('op de lijst: meer recepten met een notitie → per recept een regel, met de receptnaam', rr(rijL('Melk')) === 'ntekst:Halfvol | rregel:4\u00A0Lasagne | rregel:Volle melk | rregel:1\u00A0Pannenkoeken | rregel:Halfvol mag ook', rr(rijL('Melk')));
     wR.eval("handelen([{ actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, recept: 'pan01', aantal: '' }])"); await slaap(30);
     const vak = dR.getElementById('invoerTekst');
     vak.focus(); vak.value = '#slag'; vak.dispatchEvent(new wR.Event('input')); await slaap(20);
@@ -2672,17 +2679,19 @@ const BEGIN = [
     rijL('Melk').querySelector('.tekstknop').click(); await slaap(30);
     { const sch = dR.getElementById('artikelScherm'), vol = sch.querySelector(':scope > .notitievol');
       controle('artikel vanaf Op de lijst: eerst lezen (naam in de kop, potlood, notitie en receptregel; geen onderbalk)', sch.classList.contains('lezen') && sch.querySelector('.wdkop h2').textContent === 'Melk' && !!dR.getElementById('artikelBewerk')
-        && !!vol && /Halfvol/.test(vol.textContent) && /4\u00A0Lasagne · Volle melk/.test(vol.textContent) && dR.getElementById('balk-artikel').hidden, vol && vol.textContent);
+        && !!vol && /Halfvol/.test(vol.textContent) && /4\u00A0LasagneVolle melk/.test(vol.textContent) && vol.querySelectorAll('.nregel').length === 3 && dR.getElementById('balk-artikel').hidden, vol && vol.textContent);
       wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk, 1 liter' }])"); await slaap(30);
       controle('leesstand ververst als er iets verandert (notitie van het ingrediënt)', sch.classList.contains('lezen') && /Volle melk, 1 liter/.test(sch.querySelector(':scope > .notitievol').textContent), sch.querySelector(':scope > .notitievol').textContent);
       wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk' }])"); await slaap(30);
       dR.getElementById('artikelBewerk').click(); await slaap(20);
       controle('potlood: het bewerkscherm (alle velden, onderbalk), leestekst weg', !sch.classList.contains('lezen') && sch.querySelector('.wdkop h2').textContent === 'Artikel' && !dR.getElementById('artikelBewerk') && !sch.querySelector(':scope > .notitievol') && !dR.getElementById('balk-artikel').hidden && !!dR.getElementById('artikelNaam')); }
     const rn = dR.getElementById('artikelRnot');
-    controle('artikel bewerken: receptregel (aantal, recept, notitie) onder het notitieveld, alleen lezen; het notitieveld zelf onveranderd', !!rn && !rn.hidden && rn.textContent === '4\u00A0Lasagne · Volle melk' && !rn.querySelector('textarea,input') && dR.getElementById('artikelNotitie').value === 'Halfvol #zuivel', rn && rn.textContent);
+    controle('artikel bewerken: receptregel (aantal, recept, notitie) onder het notitieveld, alleen lezen; het notitieveld zelf onveranderd', !!rn && !rn.hidden && rn.textContent === '4\u00A0LasagneVolle melk' && rn.querySelectorAll('.rnot').length === 2 && !rn.querySelector('textarea,input') && dR.getElementById('artikelNotitie').value === 'Halfvol #zuivel', rn && rn.textContent);
     dR.getElementById('artikelDicht').click(); await slaap(20);
     wR.eval("scherm.filter = 'W'; tekenBoodschappen()"); await slaap(30);
     [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk').querySelector('.tekstknop').click(); await slaap(30);
+    { const mw = [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+      controle('filter Wekelijks: tags wel, receptregels en link niet', !!mw && !!mw.querySelector('.ntags .tag') && !mw.querySelector('.rregel') && !mw.querySelector('.link')); }
     controle('artikel vanaf een ander filter (Wekelijks): meteen bewerken', !dR.getElementById('artikelScherm').classList.contains('lezen') && !dR.getElementById('artikelBewerk'));
     dR.getElementById('artikelDicht').click(); await slaap(20);
     wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(30);
@@ -2699,8 +2708,8 @@ const BEGIN = [
       controle('lang indrukken: de rij kleurt', v2.classList.contains('druk'));
       pe2('pointerup'); v2.click(); await slaap(20); }
     const p = dR.getElementById('keuze');
-    controle('lang indrukken (½ s) → paneel met de hele notitie (eigen met icoon, recept met blaadje); de tik erna vinkt niet af', !!p && p.querySelector('h3').textContent === 'Melk' && p.querySelectorAll('.notitievol .nregel').length === 2
-      && /Halfvol/.test(p.querySelectorAll('.nregel')[0].textContent) && p.querySelectorAll('.nregel')[1].textContent === '4\u00A0Lasagne · Volle melk' && wR.eval('winkel.mandje.size') === vinkVoor, p && p.textContent + ' mandje ' + wR.eval('winkel.mandje.size') + '/' + vinkVoor);
+    controle('lang indrukken (½ s) → paneel met de hele notitie (eigen met icoon, recept met blaadje); de tik erna vinkt niet af', !!p && p.querySelector('h3').textContent === 'Melk' && p.querySelectorAll('.notitievol .nregel').length === 3
+      && /Halfvol/.test(p.querySelectorAll('.nregel')[0].textContent) && p.querySelectorAll('.nregel')[1].textContent === '4\u00A0Lasagne' && p.querySelectorAll('.nregel')[2].textContent === 'Volle melk' && wR.eval('winkel.mandje.size') === vinkVoor, p && p.textContent + ' mandje ' + wR.eval('winkel.mandje.size') + '/' + vinkVoor);
     p.querySelector('.kruis').click(); await slaap(20);
     controle('paneel dicht met het kruisje', !dR.getElementById('keuze'));
     { const v3 = wrij('Melk').querySelector('.vink'); const e = new wR.MouseEvent('contextmenu', { bubbles: true, cancelable: true }); v3.dispatchEvent(e);
@@ -2715,7 +2724,88 @@ const BEGIN = [
       const open = !!rg && dR.getElementById('artikelScherm').classList.contains('lezen');
       wR.eval("handelen([{ actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Gehakt').id, recept: 'las01', aantal: '' }])"); await slaap(40);
       controle('leesstand: niets meer te lezen (van de lijst, geen notitie) → dicht', open && dR.getElementById('artikelScherm').hidden, open); }
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'actie', id: 'act01', velden: { naam: 'Filter kopen', notitie: 'Maat 30 #klus', link: 'https://www.gamma.nl/' } }]); doen.filter = 'alles'"); dR.getElementById('tab-doen').click(); await slaap(30);
+    { const ar = [...dR.querySelectorAll('#doenLijst .actierij')].find((r) => /Filter kopen/.test(r.textContent));
+      controle('Doen: in de lijst geen link (wel het ↗-teken achter de naam), wel notitie en tags', !!ar && !ar.querySelector('.link') && !!ar.querySelector('.nm .heeftlink') && /Maat 30/.test(ar.textContent) && !!ar.querySelector('.tag'), ar && ar.textContent); }
+    wR.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'link', oud: '', nieuw: 'https://www.ah.nl/melk' }])"); await slaap(20);
+    dR.getElementById('tab-boodschappen').click(); await slaap(30);
+    wR.eval("scherm.filter = 'W'; tekenBoodschappen()"); await slaap(20);
+    { const w1 = [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+      wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
+      const l1 = [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+      dR.getElementById('tab-winkel').click(); await slaap(30);
+      const b1 = wrij('Melk');
+      controle('↗-teken achter de naam: wel in Wekelijks, niet op Op de lijst en niet in Boodschappen; nergens de link zelf', !!w1 && !!w1.querySelector('.naam .heeftlink') && !!l1 && !l1.querySelector('.heeftlink') && !!b1 && !b1.querySelector('.heeftlink') && !w1.querySelector('.link') && !l1.querySelector('.link') && !b1.querySelector('.link'));
+      wR.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'notitie', oud: artikelen.find((a) => a.naam === 'Melk').notitie, nieuw: 'Halfvol #zuivel' }])"); await slaap(20);
+      dR.getElementById('tab-boodschappen').click(); await slaap(30);
+      wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
+      rijL('Melk').querySelector('.rondje').click(); await slaap(40);
+      const wg = [...dR.querySelectorAll('#weggehaald .item')].find((r) => naamVanRij(r) === 'Melk');
+      controle('Van de lijst gehaald: zoals Op de lijst, zonder tags en zonder ↗-teken', !!wg && !wg.querySelector('.tag') && !wg.querySelector('.heeftlink') && /Halfvol/.test(wg.textContent), wg && wg.textContent);
+      wg.querySelector('.rondje').click(); await slaap(40); }
+    dR.getElementById('tab-boodschappen').click(); await slaap(30);
     controle('van de lijst: de receptnotitie is weg, het artikel zelf houdt geen notitie', !rijL('Gehakt') && wR.eval("artikelen.find((a) => a.naam === 'Gehakt').notitie") === '');
+    wR.close();
+  }
+
+  /* 5z44g. Consistentie tags en links: per scherm of de tags en het ↗-teken (of de link zelf) er staan.
+     Regel: tags en ↗-teken bij de bron; niet op Op de lijst (ook Van de lijst gehaald) en niet in Boodschappen.
+     De link zelf alleen in detailschermen (band, leesstand, paneel), nooit in een lijst. */
+  if (deel('5z44g consistentie tags en links per scherm')) {
+    const wR = await receptStart(); const dR = wR.document;
+    const gisteren = datumTekstT(-1);
+    wR.eval(`(() => { const id = (n) => artikelen.find((a) => a.naam === n).id; const w = winkels.find((x) => x.naam === 'Plus').id;
+      handelen([
+        { actie: 'zet', soort: 'artikel', id: id('Melk'), veld: 'notitie', oud: '', nieuw: 'Halfvol #zuivel' },
+        { actie: 'zet', soort: 'artikel', id: id('Melk'), veld: 'link', oud: '', nieuw: 'https://www.ah.nl/melk' },
+        { actie: 'zet', soort: 'artikel', id: id('Gehakt'), veld: 'notitie', oud: '', nieuw: 'Rund #slager' },
+        { actie: 'zet', soort: 'artikel', id: id('Gehakt'), veld: 'link', oud: '', nieuw: 'https://www.ah.nl/gehakt' },
+        { actie: 'zet', soort: 'artikel', id: id('Eieren'), veld: 'notitie', oud: '', nieuw: 'Scharrel #boer' },
+        { actie: 'zet', soort: 'artikel', id: id('Eieren'), veld: 'link', oud: '', nieuw: 'https://www.ah.nl/eieren' },
+        { actie: 'nieuw', soort: 'artikel', id: 'arc01', velden: { naam: 'Kaarsen', soort: 'eenmalig', notitie: 'Wit #kerst', link: 'https://www.ikea.nl/', weg: '` + gisteren + `' } },
+        { actie: 'zet', soort: 'winkel', id: w, veld: 'notitie', oud: '', nieuw: 'Tot 21:00 #dichtbij' },
+        { actie: 'zet', soort: 'winkel', id: w, veld: 'link', oud: '', nieuw: 'https://www.plus.nl/' },
+        { actie: 'zet', soort: 'recept', id: 'las01', veld: 'link', oud: '', nieuw: 'https://www.ah.nl/lasagne' },
+        { actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'igh01', notitie: 'Rundergehakt #slager' },
+        { actie: 'nieuw', soort: 'actie', id: 'act01', velden: { naam: 'Filter kopen', notitie: 'Maat 30 #klus', link: 'https://www.gamma.nl/' } },
+        { actie: 'zet', soort: 'artikel', id: id('Gehakt'), veld: 'op', oud: '', nieuw: '2026-11-26T09:00' }]); })()`); await slaap(40);
+    const st = (el) => el ? (el.querySelector('.tag') ? 'tag' : '-') + '/' + (el.querySelector('.heeftlink') ? '↗' : '-') + '/' + (el.querySelector('.link') ? 'link' : '-') : 'geen';
+    const rij = (sel, n) => [...dR.querySelectorAll(sel)].find((r) => (r.querySelector('.naam > span') || r.querySelector('.nm') || r).textContent.trim().startsWith(n));
+    const uit = {};
+    const tegel = (f) => { wR.eval("scherm.filter = '" + f + "'; scherm.archiefOpen = true; tekenBoodschappen()"); };
+    dR.getElementById('tab-boodschappen').click(); await slaap(30);
+    tegel('L'); await slaap(20); uit['Op de lijst'] = st(rij('#lijst .item', 'Melk'));
+    tegel('W'); await slaap(20); uit['Wekelijks'] = st(rij('#lijst .item', 'Melk'));
+    tegel('E'); await slaap(20); uit['Eenmalig'] = st(rij('#lijst .item', 'Gehakt')); uit['Archief'] = st(rij('#archief .item, .archief', 'Kaarsen'));
+    tegel('R'); await slaap(20); uit['Regelmatig'] = st(rij('#lijst .item', 'Eieren'));
+    { const v = dR.getElementById('invoerTekst'); v.focus(); v.value = 'melk'; v.dispatchEvent(new wR.Event('input')); await slaap(20);
+      uit['Zoeken'] = st(rij('#scherm-boodschappen .item', 'Melk')); v.value = ''; v.dispatchEvent(new wR.Event('input')); v.blur(); await slaap(20); }
+    tegel('L'); await slaap(20);
+    rij('#lijst .item', 'Melk').querySelector('.rondje').click(); await slaap(40);
+    uit['Van de lijst gehaald'] = st(rij('#weggehaald .item', 'Melk'));
+    rij('#weggehaald .item', 'Melk').querySelector('.rondje').click(); await slaap(40);
+    tegel('K'); await slaap(20); uit['Recepten (overzicht)'] = st(rij('#receptBlok .receptrij', 'Lasagne'));
+    wR.eval("receptOpenen('las01')"); await slaap(30);
+    uit['Recept: band'] = st(dR.querySelector('#receptBlok .kopnotitie')); uit['Recept: ingrediënt'] = st(rij('#ingredienten .item', 'Gehakt'));
+    wR.eval("receptDicht(true)"); tegel('L'); await slaap(20);
+    wR.eval("artikelOpenen(artikelen.find((a) => a.naam === 'Melk').id, true)"); await slaap(30);
+    uit['Artikel: leesstand'] = st(dR.querySelector('#artikelScherm > .notitievol')); dR.getElementById('artikelDicht').click(); await slaap(20);
+    dR.getElementById('tab-winkel').click(); await slaap(40);
+    uit['Boodschappen'] = st(rij('#winkelLijst .wrij', 'Melk'));
+    rij('#winkelLijst .wrij', 'Melk').querySelector('.vink').dispatchEvent(new wR.MouseEvent('contextmenu', { bubbles: true, cancelable: true })); await slaap(20);
+    uit['Boodschappen: paneel'] = st(dR.querySelector('#keuze .notitievol')); dR.querySelector('#keuze .kruis').click(); await slaap(20);
+    dR.getElementById('tab-winkels').click(); await slaap(30);
+    uit['Winkels (overzicht)'] = st(rij('#winkelsOverzicht .winkelrij', 'Plus'));
+    wR.eval("winkelOpenen(winkels.find((w) => w.naam === 'Plus').id)"); await slaap(30);
+    uit['Winkel: band'] = st(dR.querySelector('#winkelDetail .kopnotitie')); uit['Winkel: artikelen'] = st(rij('#winkelDetail .item', 'Melk'));
+    wR.eval("doen.filter = 'alles'"); dR.getElementById('tab-doen').click(); await slaap(30);
+    uit['Doen'] = st(rij('#doenLijst .actierij', 'Filter kopen'));
+    const verwacht = { 'Op de lijst': '-/-/-', 'Van de lijst gehaald': '-/-/-', 'Boodschappen': '-/-/-',
+      'Wekelijks': 'tag/↗/-', 'Eenmalig': 'tag/↗/-', 'Archief': 'tag/↗/-', 'Regelmatig': 'tag/↗/-', 'Zoeken': 'tag/↗/-', 'Winkel: artikelen': 'tag/↗/-',
+      'Winkels (overzicht)': 'tag/↗/-', 'Recepten (overzicht)': 'tag/↗/-', 'Doen': 'tag/↗/-', 'Recept: ingrediënt': 'tag/-/-',
+      'Recept: band': 'tag/-/link', 'Winkel: band': 'tag/-/link', 'Artikel: leesstand': 'tag/-/link', 'Boodschappen: paneel': 'tag/-/link' };
+    for (const [k, v] of Object.entries(verwacht)) controle('consistentie ' + k + ': ' + v, uit[k] === v, uit[k]);
+    if (process.env.TABEL) console.log(JSON.stringify(uit, null, 1));
     wR.close();
   }
 

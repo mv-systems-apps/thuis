@@ -324,7 +324,7 @@
   .winkelrij{width:100%;min-height:60px;border:0;background:#FFFFFF;display:flex;align-items:center;gap:19px;padding:6px 12px 6px 14px;text-align:left;color:var(--tekst)}
   /* Winkels en recepten: de rij is tikbaar, de naam is de knop (tags en link staan ernaast, niet erin). */
   div.lijstrij{cursor:pointer}
-  .lijstrij .heeftlink{display:inline-block;margin-left:8px;color:var(--paars);vertical-align:-1px}
+  .heeftlink{display:inline-block;margin-left:8px;color:var(--paars);vertical-align:-1px}
   .lijstrij .tal{flex-shrink:0;font-size:17px;color:var(--grijs);margin-right:-9px}
   .winkelrij .naamknop{display:block;width:100%;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;text-align:left;overflow-wrap:anywhere}
   .winkelrij .nm{flex:1;min-width:0;font-size:20px;line-height:1.3;overflow-wrap:anywhere}
@@ -438,7 +438,7 @@
   #keuze h3.delen b{font-weight:700}
   #keuze .kruis{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
   #keuze .opties{flex:1;min-height:120px;overflow-y:auto}
-  /* Hele notitie (tik op de notitie in Boodschappen): eigen notitie en die uit recepten, elk met een icoon ervoor. */
+  /* Hele notitie (paneel in Boodschappen, leesstand van een artikel): eigen notitie en die uit recepten, elk met een icoon ervoor. */
   .notitievol{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
   .notitievol .nregel{display:flex;gap:8px;align-items:flex-start;font-size:20px;line-height:1.35;overflow-wrap:anywhere}
   .notitievol .nregel svg{flex-shrink:0;margin-top:4px}
@@ -458,7 +458,8 @@
   .wrij.vegen>.vonder.vink-r{background:#4B3CC0;justify-content:flex-start}
   .wrij.vegen>.vonder.not-l{background:#E9E6F8;justify-content:flex-end}
   .wrij.terug>*{transition:transform .15s ease-out}
-  .wrij .vink.langdruk{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  /* Geen tekstselectie of menu bij lang indrukken of vegen, ook op een rij zonder notitie (iOS). */
+  .wrij .vink{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   #keuze .optie{width:100%;min-height:56px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:20px;color:var(--tekst);text-align:left}
   #keuze .optie .nm{flex:1;min-width:0;line-height:1.3;overflow-wrap:anywhere}
   #keuze .optie .sub{display:block;font-size:17px;color:var(--grijs)}
@@ -612,7 +613,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352906-003</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352906-004</div>
   </section>
 </main>
 
@@ -1778,9 +1779,8 @@ function artikelLijst(model) {
     id: r.id, naam: r.naam, sleutel: normNaam(r.naam), zoek: zoekVorm(r.naam), soort: r.soort, letter: SOORT_LETTER[r.soort], aantal: +r.aantal || 1, notitie: r.notitie, link: veiligeLink(r.link) || '',
     plekken: Array.from(r.ligt, ([winkel, afd]) => ({ winkel, afd })),
     op: r.op, opdoor: r.opdoor, weg: r.weg, gekocht: r.gekocht.slice(), laatst: laatsteDag(r),
-    /* Recepten: voor = [{ recept, naam, aantal }] (op naam); opAantal = wat er op de lijst staat
-       (het eigen aantal, tenzij alleen voor recepten, plus de recepten); voorTekst = het
-       regeltje ("3 + 4 Lasagne", of alleen "Lasagne"). */
+    /* Recepten: voor = [{ recept, naam, aantal, ing, notitie }] (op naam; notitie = die van het ingrediënt);
+       opAantal = wat er op de lijst staat (het eigen aantal, tenzij alleen voor recepten, plus de recepten). */
     ...voorVan(r, model),
     /* Het record zelf: de sleutel voor het geheugen van de lijstregels (recordSleutel) wordt
        pas uitgerekend als de regel getekend wordt, niet voor alle artikelen bij elke tik. */
@@ -1805,15 +1805,7 @@ function voorVan(r, model) {
      recepten): normaal = wat het zonder die afwijking zou zijn (vast + recepten); in beeld
      doorgestreept voor het aantal ("~~7×~~ 6×"). 0 = geen afwijking. */
   const normaal = r.op && r.soort === 'wekelijks' && eigen !== vast ? opAantal - eigen + vast : 0;
-  let voorTekst = '';
-  if (voor.length) {
-    /* Aantal en recept blijven bij elkaar op één regel (vaste spatie). */
-    const delen = voor.map((x) => (voor.length === 1 && r.opvoor && x.aantal === opAantal ? '' : x.aantal + '\u00A0') + x.naam);
-    voorTekst = (eigen ? eigen + ' + ' : '') + delen.join(' + ');
-  }
-  /* Receptnotities (van de ingrediënten) voor de lijst en het artikelscherm; ook voor zoeken op tag. */
-  const rnot = voor.filter((x) => x.notitie).map((x) => ({ naam: x.naam, notitie: x.notitie }));
-  return { voor, opvoor: !!r.opvoor, opAantal, eigen, voorTekst, normaal, rnot };
+  return { voor, opvoor: !!r.opvoor, opAantal, eigen, normaal };
 }
 /* Recepten op naam, met hun artikelen (artikel-id → aantal) en een zoekvorm. */
 function receptLijst(model) {
@@ -1921,7 +1913,8 @@ function zoekArtikelen(artikelen, tekst, winkels) {
   const wz = winkelZoek(tekst, winkels || []);
   if (wz) return wz.winkel ? artikelen.filter((a) => a.plekken.some((p) => p.winkel === wz.winkel.id && afdelingPast(wz, p.afd))) : [];
   /* Met # ook de tags uit de notitie van een ingrediënt, zolang het artikel daarvoor op de lijst staat. */
-  return artikelen.filter((a) => zoekPast(a.naam, a.rnot && a.rnot.length ? [a.notitie].concat(a.rnot.map((x) => x.notitie)).join('\n') : a.notitie, tekst));
+  const notities = (a) => (a.voor || []).reduce((n, x) => (x.notitie ? n + '\n' + x.notitie : n), a.notitie);
+  return artikelen.filter((a) => zoekPast(a.naam, notities(a), tekst));
 }
 /* Zoeken op winkel: "@Plus" of "@Plus zuiv" (de rest na de winkelnaam = begin van een
    afdeling; "onbekend" vindt wat nog geen afdeling heeft). Spaties, hoofdletters en
@@ -3684,8 +3677,9 @@ function rijUitGeheugen(a, opties) {
   /* Alle velden van het artikel (uit het schema, ook velden die later bijkomen); daarnaast wat het scherm erbij toont. */
   /* De winkelsregel één keer uitrekenen: voor de sleutel en voor de regel zelf. */
   const wr = opties.geenWinkels ? '' : winkelsRegel(a, opties.zonderWinkel);
-  /* voorTekst: de receptnamen komen uit de recepten zelf (hernoemen verandert het artikel niet). */
-  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a), a.voorTekst, a.normaal, JSON.stringify(a.rnot),
+  /* voor: de receptnamen en notities komen uit de recepten zelf (hernoemen of een notitie wijzigen
+     verandert het artikel niet). */
+  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a), JSON.stringify(a.voor), a.normaal,
     opties.sug ? suggestieTekst(opties.sug) : '', !!opties.archief, !!opties.weg, opties.hint || '', !!opties.lijst].join('\u0001');
   const g = rijGeheugen.get(a.id);
   if (g && g.sleutel === sleutel) return g.rij;
@@ -3712,9 +3706,14 @@ function artikelRij(a, opties, wr) {
   rij.dataset.id = a.id;
   if (lijst) rij.dataset.lijst = '1';
   const nieuw = isNieuw(a);
-  /* Op de lijst per recept een regel (aantal, recept, notitie van het ingrediënt) in plaats van "3 + 4 Lasagne". */
+  /* Op de lijst per recept een regel (aantal, recept, notitie van het ingrediënt) in plaats van "3 + 4 Lasagne".
+     Een link staat nooit in een lijst (wel in het artikel); tags niet op Op de lijst (wel in de andere filters). */
   const rec = lijst && a.voor.length;
-  const metNotitie = !!(a.notitie || a.link || rec);
+  /* Op het scherm Op de lijst (ook Van de lijst gehaald) geen tags en geen ↗-teken: die staan bij de bron
+     (de filters Eenmalig, Wekelijks, Regelmatig en het artikel zelf). */
+  const lijstScherm = lijst || !!opties.weg;
+  const notitieEl = a.notitie || rec ? (lijstScherm ? notitieMetRecepten(a, true) : notitieRegel({ notitie: a.notitie })) : null;
+  const metNotitie = !!(notitieEl && notitieEl.childNodes.length);
   rij.innerHTML =
     '<button class="icoon" type="button" aria-expanded="' + tellerOpen + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 28) + '</button>' +
     '<div class="tekst"><button class="tekstknop" type="button"><span class="naam"><span></span>' +
@@ -3728,10 +3727,12 @@ function artikelRij(a, opties, wr) {
     '<button class="rondje" type="button" aria-pressed="' + aan + '">' + (aan ? RONDJE.aan : RONDJE.plus) + '</button>';
   rij.querySelector('.icoon').setAttribute('aria-label', SOORTNAAM[a.letter] + ', aantal ' + n + '; aantal wijzigen');
   rij.querySelector('.naam > span').textContent = a.naam;
+  /* Teken voor een link achter de naam (de link zelf staat in het artikel); niet op Op de lijst en in Boodschappen. */
+  if (a.link && !lijstScherm) rij.querySelector('.naam > span').after(heeftLink());
   if (normaal) normaalVullen(rij.querySelector('.normaal'), normaal);
   if (n > 1 || normaal) rij.querySelector('.aantal').textContent = n + '×';
   if (wr) rij.querySelector('.winkels').textContent = wr;
-  if (metNotitie) rij.querySelector('.notitie').replaceWith(rec ? notitieMetRecepten(a) : notitieRegel(a));
+  if (metNotitie) rij.querySelector('.notitie').replaceWith(notitieEl);
   if (opties.sug) rij.querySelector('.hint').textContent = suggestieTekst(opties.sug);
   else if (opties.hint) rij.querySelector('.hint').textContent = opties.hint;
   rij.querySelector('.rondje').setAttribute('aria-label', a.op ? a.naam + ' staat op de lijst; van de lijst halen'
@@ -3769,12 +3770,12 @@ function normaalVullen(el, n) {
 }
 /* Het regeltje "3 + 4 Lasagne". */
 const BLAD_KLEIN = () => svgIcoon(PADEN.I, KLEUR.K, 17);
+const PAN_KLEIN = () => svgIcoon(PADEN.K, KLEUR.K, 17);
 /* Notitie: een blaadje papier met regels (in het paneel met de hele notitie, naast het blaadje van een recept). */
 const NOTITIE_ICOON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"></path><path d="M9 10h6M9 14h6M9 18h4"></path></svg>';
 /* Boodschappen: lang indrukken (½ s, of de rechtermuisknop) op een rij met een notitie toont de hele
    notitie. Bewegen (scrollen) breekt af; de tik die volgt vinkt niet af (el.lang). */
 function langDrukken(el, doe) {
-  el.classList.add('langdruk');
   let timer = 0, kleur = 0, klaar = false, x = 0, y = 0;
   const stop = () => { clearTimeout(timer); clearTimeout(kleur); klaar = false; el.classList.remove('druk'); };
   el.addEventListener('pointerdown', (e) => {
@@ -3841,7 +3842,8 @@ $('winkelLijst').addEventListener('pointermove', (e) => {
 $('winkelLijst').addEventListener('pointerup', (e) => { if (e.pointerId === rijVeeg.id) rijVeegKlaar(true); }, { passive: true });
 $('winkelLijst').addEventListener('pointercancel', (e) => { if (e.pointerId === rijVeeg.id) rijVeegKlaar(false); }, { passive: true });
 /* De hele notitie om te lezen: de eigen notitie (tags, link) met het notitie-icoon, en per recept waarvoor het op
-   de lijst staat een regel met het blaadje: aantal, receptnaam en de notitie van het ingrediënt. Voor het paneel
+   de lijst staat een regel met het pannetje (aantal, receptnaam) en eventueel een met het blaadje (notitie van
+   het ingrediënt). Voor het paneel
    in Boodschappen en de leesstand van het artikel. */
 function notitieVol(a) {
   const vol = document.createElement('div');
@@ -3850,15 +3852,18 @@ function notitieVol(a) {
     const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = NOTITIE_ICOON;
     r.appendChild(notitieRegel(a)); vol.appendChild(r);
   }
-  for (const x of a.op ? a.voor : []) {
-    const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = svgIcoon(PADEN.I, KLEUR.K, 20);
-    const t = document.createElement('span'); t.className = 'rtekst'; t.textContent = x.aantal + '\u00A0' + x.naam;
-    if (x.notitie) t.appendChild(document.createTextNode(' · ' + x.notitie));
+  const regel = (icoon, tekst) => {
+    const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = icoon;
+    const t = document.createElement('span'); t.className = 'rtekst'; t.textContent = tekst;
     r.appendChild(t); vol.appendChild(r);
+  };
+  for (const x of a.op ? a.voor : []) {
+    regel(svgIcoon(PADEN.K, KLEUR.K, 20), x.aantal + '\u00A0' + x.naam);
+    if (x.notitie) regel(svgIcoon(PADEN.I, KLEUR.K, 20), x.notitie);
   }
   return vol;
 }
-const heeftLeesbaars = (a) => !!(a.notitie || a.link || (a.op && a.voor.length));
+const heeftTeLezen = (a) => !!(a.notitie || a.link || (a.op && a.voor.length));
 /* De hele notitie in een paneel (Boodschappen: lang indrukken of naar links vegen). */
 function notitiePaneel(a) {
   sluitKeuze();
@@ -3875,21 +3880,23 @@ function notitiePaneel(a) {
   keuzeTonen(k);
 }
 /* Notitie in een lijst (Op de lijst, Boodschappen): de eigen notitie (en tags), daaronder per recept waarvoor
-   het op de lijst staat een regel met het blaadje: aantal en receptnaam, en de notitie van het ingrediënt.
-   Het aantal vervalt als het er alleen voor dat ene recept staat (het staat al bij de naam).
+   het op de lijst staat een regel met het pannetje (aantal en receptnaam) en, als het ingrediënt een notitie
+   heeft, een regel met het blaadje. Vast patroon, elke regel één regel. Het aantal vervalt als het er alleen
+   voor dat ene recept staat (het staat al bij de naam).
    zonderTags: Boodschappen. */
 function notitieMetRecepten(a, zonderTags) {
   const s = notitieRegel(zonderTags ? { notitie: notitieZonderTags(a.notitie || '') } : a);
   const voor = a.op ? a.voor : [];
-  for (const x of voor) {
+  const regel = (icoon, tekst) => {
     const r = document.createElement('span');
     r.className = 'rregel';
-    r.innerHTML = BLAD_KLEIN();
-    const kop = document.createElement('span');
-    kop.textContent = (voor.length === 1 && a.opvoor && x.aantal === a.opAantal ? '' : x.aantal + '\u00A0') + x.naam;
-    r.appendChild(kop);
-    if (x.notitie) r.appendChild(document.createTextNode(' · ' + notitieZonderTags(x.notitie).replace(/\n+/g, ' ')));
+    r.innerHTML = icoon;
+    r.appendChild(document.createTextNode(tekst));
     s.appendChild(r);
+  };
+  for (const x of voor) {
+    regel(PAN_KLEIN(), (voor.length === 1 && a.opvoor && x.aantal === a.opAantal ? '' : x.aantal + '\u00A0') + x.naam);
+    if (x.notitie) regel(BLAD_KLEIN(), notitieZonderTags(x.notitie).replace(/\n+/g, ' '));
   }
   return s;
 }
@@ -4294,13 +4301,19 @@ $('midden').addEventListener('click', (e) => { if (e.target.closest('#weggehaald
    knop, zodat de tags en de link in de notitie er niet in zitten (knop in knop). */
 /* Met een link alleen het icoontje achter de naam (rustiger); de link zelf staat in het scherm
    van de winkel of het recept. tal: het aantal rechts, vóór het pijltje (zoals bij een afdeling). */
+/* Een link staat nooit in een lijst; wel dit teken achter de naam (geen knop): de link open je vanuit het item. */
+function heeftLink() {
+  const l = document.createElement('span'); l.className = 'heeftlink'; l.innerHTML = EXTERN;
+  l.setAttribute('role', 'img'); l.setAttribute('aria-label', 'met link');
+  return l;
+}
 function lijstRij(klasse, icoon, naam, open, x, tal) {
   const rij = document.createElement('div');
   rij.className = 'winkelrij lijstrij' + (klasse ? ' ' + klasse : '');
   rij.innerHTML = icoon + '<span class="nm"><button class="naamknop" type="button"></button></span>' +
     (tal !== undefined ? '<span class="tal"></span>' : '') + PIJL_IN;
   rij.querySelector('.naamknop').textContent = naam;
-  if (x && x.link) { const l = document.createElement('span'); l.className = 'heeftlink'; l.innerHTML = EXTERN; l.setAttribute('role', 'img'); l.setAttribute('aria-label', 'met link'); rij.querySelector('.naamknop').appendChild(l); }
+  if (x && x.link) { const l = heeftLink(); rij.querySelector('.naamknop').appendChild(l); }
   if (tal !== undefined) rij.querySelector('.tal').textContent = String(tal);
 
   rij.addEventListener('click', open);
@@ -5043,7 +5056,7 @@ function afvinken(a) {
   const nietBij = !!(winkel.id && winkelOpId.has(winkel.id) && !teKoopIn(a, winkel.id));
   winkel.mandje.set(a.id, { id: a.id, naam: a.naam, winkel: winkel.id, op: a.op, opdoor: a.opdoor, datum, alGekocht: al, aankoop, nietBij,
     /* Recepten: om ze bij terugzetten weer op de lijst te krijgen, en voor de 1,5 s dat het nog staat. */
-    voor: voorBewaren(a), opvoor: a.opvoor, opaantal: a.rec.opaantal || '', opAantal: a.opAantal, voorTekst: a.voorTekst, normaal: a.normaal });
+    voor: voorBewaren(a), opvoor: a.opvoor, opaantal: a.rec.opaantal || '', opAantal: a.opAantal, normaal: a.normaal });
   mandjeBewaren();
   const hs = (aankoop ? [Object.assign({ actie: 'aankoop', soort: 'aankoop', id: aankoop, naam: a.naam, tijd: nu }, winkelOpId.has(winkel.id) ? { winkel: winkel.id } : {}, nietBij ? { onzeker: '1' } : {})] : []).concat([
     { actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' },
@@ -5129,7 +5142,7 @@ function winkelRij(a, soort) {
     const n = notitieMetRecepten(a, true);
     if (n.childNodes.length) b.querySelector('.nm').appendChild(n);
     /* Lang indrukken en naar links vegen alleen als er een notitie is (eigen of uit een recept). */
-    if (a.notitie || a.link || (a.op && a.rnot.length)) { langDrukken(b, () => notitiePaneel(a)); rij.notitie = () => notitiePaneel(a); }
+    if (a.notitie || a.link || (a.op && a.voor.some((x) => x.notitie))) { langDrukken(b, () => notitiePaneel(a)); rij.notitie = () => notitiePaneel(a); }
   }
   return rij;
 }
@@ -5200,7 +5213,7 @@ function tekenWinkel() {
   /* Net afgevinkt (1,5 s): nog op zijn plek, als gedaan. */
   const zicht = artikelen.map((a) => {
     const m = winkel.vertraagd.has(a.id) && winkel.mandje.get(a.id);
-    return m ? Object.assign({}, a, { op: m.op || 'x', opdoor: m.opdoor, opAantal: m.opAantal || a.aantal, voorTekst: m.voorTekst || '', normaal: m.normaal || 0 }) : a;
+    return m ? Object.assign({}, a, { op: m.op || 'x', opdoor: m.opdoor, opAantal: m.opAantal || a.aantal, normaal: m.normaal || 0 }) : a;
   });
   const ind = winkelIndeling(zicht, w);
   const soortVan = (a) => winkel.vertraagd.has(a.id) ? 'gedaan' : null;
@@ -6014,12 +6027,13 @@ function artikelOpenen(id, lezen) {
   if (a.op && a.voor.length) {
     const rn = $('artikelRnot');
     rn.hidden = false;
+    const regel = (icoon, tekst) => {
+      const r = document.createElement('div'); r.className = 'rnot'; r.innerHTML = icoon;
+      const t = document.createElement('span'); t.textContent = tekst; r.appendChild(t); rn.appendChild(r);
+    };
     for (const x of a.voor) {
-      const r = document.createElement('div'); r.className = 'rnot';
-      r.innerHTML = BLAD_KLEIN();
-      const t = document.createElement('span'); t.textContent = x.aantal + '\u00A0' + x.naam;
-      if (x.notitie) t.appendChild(document.createTextNode(' · ' + x.notitie));
-      r.appendChild(t); rn.appendChild(r);
+      regel(PAN_KLEIN(), x.aantal + '\u00A0' + x.naam);
+      if (x.notitie) regel(BLAD_KLEIN(), x.notitie);
     }
   }
   const vakken = [[$('artikelNaam'), 'naam'], [$('artikelNotitie'), 'notitie']];
@@ -6040,7 +6054,7 @@ function artikelOpenen(id, lezen) {
   hoogte();
   /* Leesstand (alleen vanaf Op de lijst, en alleen als er iets te lezen is): de naam in de kop, de notitie en de
      recepten; geen onderbalk. Het potlood maakt er het bewerkscherm van (zelfde scherm, alle velden). */
-  if (lezen && heeftLeesbaars(a)) {
+  if (lezen && heeftTeLezen(a)) {
     doel.classList.add('lezen');
     const kop = doel.querySelector('.wdkop');
     kop.querySelector('h2').textContent = a.naam;
@@ -6116,7 +6130,7 @@ function artikelBijwerken() {
   /* Leesstand: opnieuw tekenen met wat er nu is (de ander paste iets aan); niets meer te lezen = dicht. */
   const sch = $('artikelScherm');
   if (sch.classList.contains('lezen')) {
-    if (!heeftLeesbaars(a)) { artikelDicht(); return; }
+    if (!heeftTeLezen(a)) { artikelDicht(); return; }
     sch.querySelector('.wdkop h2').textContent = a.naam;
     const oud = sch.querySelector(':scope > .notitievol');
     if (oud) oud.replaceWith(notitieVol(a));
@@ -6296,6 +6310,7 @@ function actieRij(a, vandaag, groep) {
   r.innerHTML = klaar ? RONDJE.gedaan : RONDJE.leeg;
   r.setAttribute('aria-label', klaar ? a.naam + ' heropenen' : a.naam + ' afronden');
   rij.querySelector('.nm').textContent = a.naam;
+  if (a.link) rij.querySelector('.nm').appendChild(heeftLink());
   const tekst = rij.querySelector('.tekst');
   const knop = rij.querySelector('.tekstknop');
   if (!a.open) {
@@ -6308,7 +6323,8 @@ function actieRij(a, vandaag, groep) {
     if (a.herhaal) { w.appendChild(document.createTextNode(' · ')); const h = document.createElement('span'); h.innerHTML = HERHAAL_IC; w.appendChild(h); w.appendChild(document.createTextNode(HERHAAL_TEKST[a.herhaal])); }
     knop.appendChild(w);
   }
-  if (a.notitie || a.link) tekst.appendChild(notitieRegel(a));
+  /* Geen link in de lijst (wel in de actie zelf). */
+  if (a.notitie) tekst.appendChild(notitieRegel({ notitie: a.notitie }));
   return rij;
 }
 /* Actieregels hergebruiken: alleen een regel waarvan iets veranderde, wordt opnieuw gemaakt. */
@@ -6630,7 +6646,7 @@ function alleNotities() {
   return uit;
 }
 /* Bij artikelen ook de tags uit de notities van ingrediënten waarvoor ze op de lijst staan (daarop zoeken kan). */
-const artikelNotities = () => { const uit = []; for (const a of artikelen) { uit.push(a.notitie); for (const x of a.rnot) uit.push(x.notitie); } return uit; };
+const artikelNotities = () => { const uit = []; for (const a of artikelen) { uit.push(a.notitie); for (const x of a.voor) if (x.notitie) uit.push(x.notitie); } return uit; };
 tagKeuze('invoerTekst', () => (receptModus() && !rs.open ? recepten.map((r) => r.notitie) : artikelNotities()), false, () => !!rs.open && !/^\s*#/.test($('invoerTekst').value));
 /* Winkelkeuze in het zoekvak van Artikelen: "@" toont de winkels boven de balk (met hoeveel
    artikelen er te koop zijn), net als de tags bij "#". Kiezen zet "@Winkel " in het vak;

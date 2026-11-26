@@ -274,7 +274,8 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   recepten, zodat de namen gelijk blijven) en "+ Nieuw" (alleen een ingrediënt, geen artikel).
 - Aantallen met recepten: één regel, opgeteld. Melk staat 3× (wekelijks) op de lijst, Lasagne
   heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", en onder de notitie per recept een regel met het
-  blaadje: "4 Lasagne · Volle melk…" en "2 Pannenkoeken" (receptkleur). Het eigen deel (3) staat er niet apart; het artikelscherm en de teller tonen het.
+  pannetje ("4 Lasagne", "2 Pannenkoeken") en, als het ingrediënt een notitie heeft, daaronder een regel
+  met het blaadje ("Volle melk…"). Vast patroon, elke regel één regel (receptkleur). Het eigen deel (3) staat er niet apart; het artikelscherm en de teller tonen het.
   Staat het er alleen voor één recept: alleen "Lasagne" (het aantal staat al bij de naam). Het aantal in een recept aanpassen telt mee op de lijst. Van de
   lijst (rondje op Artikelen) of afgevinkt: de recepten gaan eraf, het eigen aantal blijft (melk
   weer 3×); terugtikken in de winkelmand of onder "Van de lijst gehaald" zet ze terug. Zie ook het lijstaantal hieronder.
@@ -317,15 +318,23 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Notitie: in het bewerkscherm onder Naam, één tekst, mag meer regels hebben (Enter = nieuwe
   regel; bij Naam sluit Enter af). Bij opslaan: elke regel opgeschoond, lege regels aan begin en
   eind weg, hooguit één lege regel achter elkaar. In alle lijsten één regel per notitie (de eerste
-  regel, daarna …): paars onder de winkels (zelfde letter), daaronder de tags met de link erachter
-  (niets vet; de link onderstreept met ↗), daaronder de receptregels. Getal en eenheid blijven bij
-  elkaar ("500 g", vaste spatie, alleen in beeld). In Boodschappen zonder tags en link (ruimte).
+  regel, daarna …): paars onder de winkels (zelfde letter), daaronder de tags (niets vet), daaronder
+  de receptregels. Getal en eenheid blijven bij elkaar ("500 g", vaste spatie, alleen in beeld).
+  Een link staat nooit in een lijst (ook niet in Doen): wel in de leesstand en het bewerkscherm, in
+  het notitiepaneel en in de band onder de titel van een winkel of recept. In de lijsten alleen een
+  ↗-teken achter de naam (geen knop; de link open je vanuit het item): Winkels, Recepten, Doen en de
+  artikelfilters Eenmalig, Wekelijks, Regelmatig (ook Archief), zoeken en de afdelingen van een winkel;
+  niet op het scherm Op de lijst (ook niet onder Van de lijst gehaald) en niet in Boodschappen: daar
+  staan geen tags en geen ↗-teken, die staan bij de bron. Tags niet op Op de lijst (ook Van de lijst gehaald) en in Boodschappen
+  (daar telt ruimte), wel in de filters Eenmalig, Wekelijks, Regelmatig, bij zoeken, in Winkels,
+  Recepten, Doen en onder de ingrediënten.
   Alles staat in de band onder de titel van een recept of winkel, in de editors, in de leesstand
   van een artikel en in het notitiepaneel. Blijft staan.
 - Kleur van notities: paars = gewone notitie (artikel, winkel, actie); bruinrood (receptkleur) = alles uit
   een recept: de notitie van een recept (band, overzicht Recepten, ook tags en link), van een ingrediënt en
-  de receptregels. Overal recht. Een icoon (blaadje) alleen waar de notitie niet al naast zijn eigen
-  icoon staat: op de receptregel, in het artikel en in het notitiepaneel.
+  de receptregels. Overal recht. Iconen waar de notitie niet al naast zijn eigen icoon staat (op de lijst,
+  in Boodschappen, in het artikel en in het notitiepaneel): pannetje = recept, blaadje = notitie van het
+  ingrediënt, elk op een eigen regel.
 - Notitie bij een ingrediënt (recept): Naam en Notitie in het bewerkpaneel van het ingrediënt (tik
   op de naam; geen link), met tags. In het recept paars onder het ingrediënt. Staat een artikel
   voor dat recept op de lijst, dan staat de notitie op zijn receptregel (niet bij het artikel

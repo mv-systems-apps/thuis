@@ -89,7 +89,7 @@ MUTATIES = [
   ("ingrediënt: notitie niet bewaard", "notitie: notitie === undefined ? nu.notitie : notitie });", "notitie: nu.notitie });"),
   ("ingrediënt: notitie niet in het bestand", "x.notitie ? { notitie: x.notitie } : {}); return o; },", "{}); return o; },"),
   ("receptnotitie niet bij het artikel", "notitie: (ing && ing.notitie) || '' };", "notitie: '' };"),
-  ("zoeken op tag negeert receptnotities", "a.rnot && a.rnot.length ? [a.notitie].concat(a.rnot.map((x) => x.notitie)).join('\\n') : a.notitie", "a.notitie"),
+  ("zoeken op tag negeert receptnotities", "zoekPast(a.naam, notities(a), tekst)", "zoekPast(a.naam, a.notitie, tekst)"),
   ("dubbel ingrediënt verliest notitie", "      if (!e.notitie && x.notitie) e.notitie = x.notitie;\n", ""),
   ("notitie: regels samengevoegd", "split('\\n').map(schoonTekst);", "split('\\u0000').map(schoonTekst);"),
 ]
