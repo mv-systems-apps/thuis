@@ -119,7 +119,7 @@ function kern() {
   /* De klok staat vast op 26 nov 2026 (jaartal alleen als het niet dit jaar is), zodat de tests ook volgend jaar kloppen. */
   class VasteDatum extends Date { constructor(...a) { super(...(a.length ? a : [2026, 10, 26, 12, 0])); } static now() { return new VasteDatum().getTime(); } }
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date: VasteDatum, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, schoonNotitie, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, linkVanInvoer, linkTekst, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling, receptLijst, voorVan };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, schoonNotitie, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, linkVanInvoer, linkTekst, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, herhaalTekst, actieLijst, tagsVan, zoekPast, tagTelling, receptLijst, voorVan };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -1108,6 +1108,14 @@ controle('jaartal alleen als het niet dit jaar is: lijst, leesstand/kiezer en "l
   K.periodeTekst('2026-12', '2026-11-26', true), K.periodeTekst('2027-01', '2026-11-26', true), K.periodeTekst('2027-K1', '2026-11-26', true),
   K.gekochtTekst(['2025-12-20']), K.gekochtTekst(['2026-01-03'])].join('|'),
   'do 5 mrt|do 5 maart|vr 5 maart 2027|december|januari 2027|K1 2027|Laatst gekocht 20 dec 2025|Laatst gekocht 3 jan'));
+controle('herhaaltekst: hoe een herhaling uitpakt', () => gelijk([
+  K.herhaalTekst('2026-11-29', 'week'), K.herhaalTekst('2026-12-05', 'maand'), K.herhaalTekst('2027-02-28', 'maand'), K.herhaalTekst('2026-12-31', 'maand'), K.herhaalTekst('2027-02-28', 'maand', 31),
+  K.herhaalTekst('2026-12-05', 'kwartaal'), K.herhaalTekst('2026-12-31', 'kwartaal'), K.herhaalTekst('2026-12-05', 'jaar'), K.herhaalTekst('2028-02-29', 'jaar'),
+  K.herhaalTekst('2026-12', 'maand'), K.herhaalTekst('2026-12', 'kwartaal'), K.herhaalTekst('2026-12', 'jaar'), K.herhaalTekst('2026-K4', 'kwartaal'), K.herhaalTekst('2026-K4', 'jaar'),
+  K.herhaalTekst('2027', 'jaar'), K.herhaalTekst('2026-12', 'week'), K.herhaalTekst('', 'week'), K.herhaalTekst('2026-12-05', '')].join('|'),
+  'Elke zondag|Elke maand op de 5e|Elke maand op de 28e|Elke maand op de 31e, in een kortere maand de laatste dag van de maand|Elke maand op de 31e, in een kortere maand de laatste dag van de maand|' +
+  'Elk kwartaal: 5 mrt, 5 jun, 5 sep en 5 dec|Elk kwartaal: 31 mrt, 30 jun, 30 sep en 31 dec|Elk jaar op 5 december|Elk jaar op 29 februari, anders 28 februari|' +
+  'Elke maand|Elk kwartaal: maart, juni, september en december|Elk jaar in december|Elk kwartaal|Elk jaar in K4|Elk jaar|||'));
 controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () =>
   gelijk(K.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null && K.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true));
 controle('gekocht: één regel; "meestal" pas vanaf drie aankopen', () => gelijk([

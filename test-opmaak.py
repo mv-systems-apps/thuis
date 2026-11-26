@@ -179,7 +179,7 @@ async def main():
         breed = await pg.evaluate("() => [...document.querySelectorAll('#doenStandaard button')].map((b) => b.textContent).join(' ')")
         lucht = await pg.evaluate("() => [...document.querySelectorAll('#doenStandaard button')].every((b) => { const r = document.createRange(); r.selectNodeContents(b); return r.getBoundingClientRect().width <= b.clientWidth - 12; })")
         await pg.set_viewport_size({'width': 360, 'height': 700}); await pg.wait_for_timeout(400)
-        check('Standaard tonen: op 360 px Wk/Mnd/Jr, op 600 px voluit, overal lucht', smal == 'Wk Mnd Kw. Jr Alles' and breed == 'Week Maand Kw. Jaar Alles' and lucht, [smal, breed, lucht])
+        check('Standaard tonen: op 360 px Wk/Mnd/Jr, op 600 px voluit, overal lucht', smal == 'Alles Wk Mnd Kw. Jr' and breed == 'Alles Week Maand Kw. Jaar' and lucht, [smal, breed, lucht])
 
         # 9. Geen knijpzoom: touchpad (wiel + Ctrl) tegengehouden, viewport met maximum-scale=1, touch-action op html
         kz = await pg.evaluate("""() => { const e = new WheelEvent('wheel', { ctrlKey: true, deltaY: -10, cancelable: true, bubbles: true }); document.getElementById('midden').dispatchEvent(e);

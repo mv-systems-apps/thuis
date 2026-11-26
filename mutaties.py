@@ -92,6 +92,8 @@ MUTATIES = [
   ("zoeken op tag negeert receptnotities", "zoekPast(a.naam, notities(a), tekst)", "zoekPast(a.naam, a.notitie, tekst)"),
   ("dubbel ingrediënt verliest notitie", "      if (!e.notitie && x.notitie) e.notitie = x.notitie;\n", ""),
   ("notitie: regels samengevoegd", "split('\\n').map(schoonTekst);", "split('\\u0000').map(schoonTekst);"),
+  ("herhaaltekst: korte-maand-zin ook bij de 28e", "(dag > 28 ? ', in een kortere maand", "(dag > 27 ? ', in een kortere maand"),
+  ("herhaaltekst: onthouden dag genegeerd", "const x = dagVan(d), dag = maanddag || x.getDate();", "const x = dagVan(d), dag = x.getDate();"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))
 t = open(os.path.join(hier, 'thuis.html'), encoding='utf-8').read()

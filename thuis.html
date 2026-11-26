@@ -143,6 +143,7 @@
   /* Met #actieScherm erbij: anders wint de algemene invoerregel van de editor (min-height 54 px). */
   /* Terug naar nu: Vandaag, Deze maand, …; grijs als je er al staat (blijft staan, zodat niets verspringt). */
   #wanneerNu{display:flex;justify-content:flex-end;margin-top:-4px}
+  #herhaalUitleg{color:#6B7482;font-size:15px;line-height:1.3;margin-top:8px}
   #wanneerNu button{border:0;background:transparent;color:var(--paars);font:inherit;font-size:17px;text-decoration:underline;text-decoration-color:#CFCBE6;text-underline-offset:4px;padding:12px 6px;min-height:44px;cursor:pointer}
   #wanneerNu button:disabled{color:var(--grijs);text-decoration:none;cursor:default}
   #actieScherm .blader label input{position:absolute;inset:0;width:100%;height:100%;min-height:0;box-sizing:border-box;opacity:0;border:0;padding:0;margin:0}
@@ -615,7 +616,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352906-005</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352906-006</div>
   </section>
 </main>
 
@@ -1928,7 +1929,6 @@ function zoekArtikelen(artikelen, tekst, winkels) {
    blijft het kiezen, tenzij er al een spatie achter de naam staat (gekozen). */
 /* Wat hier te koop is zonder afdeling: overal dezelfde naam. */
 const AFD_ONBEKEND = 'Afdeling?';
-const AFD_ONBEKEND_SLEUTEL = '~';
 function zoekSleutel(s) { return zoekVorm(s).replace(/\s+/g, ''); }
 function winkelZoek(tekst, winkels) {
   const t = String(tekst || '').replace(/^\s+/, '');
@@ -2113,9 +2113,33 @@ function actieGroep(d, vandaag) {
   /* Deze week: wat uiterlijk zondag af moet. Een maand, kwartaal of jaar pas in de week waarin die eindigt. */
   return g.eind <= zondag ? 'week' : 'later';
 }
+/* Hoe een herhaling uitpakt, voluit: "Elke zondag", "Elke maand op de 31e, in een kortere maand de laatste dag
+   van de maand", "Elk kwartaal: 5 mrt, 5 jun, 5 sep en 5 dec", "Elk jaar in december". maanddag: de onthouden dag. */
+const WEEKDAGEN_LANG = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
+function herhaalTekst(d, herhaal, maanddag) {
+  const s = periodeSoort(d);
+  if (!s || HERHAAL_BIJ[s].indexOf(herhaal) === -1) return '';
+  const en = (xs) => xs.slice(0, -1).join(', ') + ' en ' + xs[xs.length - 1];
+  const elk = herhaal === 'week' ? 'Elke week' : herhaal === 'maand' ? 'Elke maand' : herhaal === 'kwartaal' ? 'Elk kwartaal' : 'Elk jaar';
+  if (s === herhaal) return elk;
+  if (s === 'dag') {
+    const x = dagVan(d), dag = maanddag || x.getDate();
+    if (herhaal === 'week') return 'Elke ' + WEEKDAGEN_LANG[x.getDay()];
+    if (herhaal === 'maand') return 'Elke maand op de ' + dag + 'e' + (dag > 28 ? ', in een kortere maand de laatste dag van de maand' : '');
+    if (herhaal === 'jaar') { const t = dag + ' ' + MAANDEN_LANG[x.getMonth()]; return 'Elk jaar op ' + t + (t === '29 februari' ? ', anders 28 februari' : ''); }
+    const keer = [0, 1, 2, 3].map((n) => dagVan(verschuif(d, n, 'kwartaal', maanddag))).sort((a, b) => a.getMonth() - b.getMonth());
+    return 'Elk kwartaal: ' + en(keer.map((k) => k.getDate() + ' ' + MAANDEN[k.getMonth()]));
+  }
+  if (s === 'maand' && herhaal === 'kwartaal') {
+    const m = +d.slice(5, 7) - 1;
+    return 'Elk kwartaal: ' + en([0, 1, 2, 3].map((n) => (m + 3 * n) % 12).sort((a, b) => a - b).map((k) => MAANDEN_LANG[k]));
+  }
+  if (s === 'maand') return 'Elk jaar in ' + MAANDEN_LANG[+d.slice(5, 7) - 1];
+  return 'Elk jaar in K' + d.slice(6);
+}
 /* Filters bij Doen: wat binnen de termijn af moet (te laat telt altijd mee); Alles
    ook wat geen periode heeft. */
-const DOEN_FILTERS = ['week', 'maand', 'kwartaal', 'jaar', 'alles'];
+const DOEN_FILTERS = ['alles', 'week', 'maand', 'kwartaal', 'jaar'];
 function horizonEind(filter, vandaag) {
   const v = dagVan(vandaag), j = v.getFullYear(), m = v.getMonth();
   if (filter === 'week') return datumTekst(new Date(j, m, v.getDate() + (7 - v.getDay()) % 7));
@@ -4444,7 +4468,7 @@ function ingredientRij(r, x) {
   return frag;
 }
 /* Boven de balk: namen om toe te voegen (artikelen en ingrediënten uit andere recepten, zodat de namen
-   gelijk blijven) die nog niet in dit recept staan, en "+ Nieuw". */
+   gelijk blijven) die nog niet in dit recept staan, en '+ Ingrediënt: "…"'. */
 function receptKeuze(r) {
   const vak = $('invoerTekst');
   const v = schoonTekst(vak.value);
@@ -4469,7 +4493,7 @@ function receptKeuze(r) {
     tagLijst.appendChild(b);
   };
   for (const k of kandidaten) optie(k.naam, () => { invoerLeeg(); ingredientErbij(r, k.naam); }, false, k.a);
-  if (!erin.has(nn) && !namen.has(nn)) optie('+ Nieuw: "' + v + '"', () => ingredientToevoegen(), true);
+  if (!erin.has(nn) && !namen.has(nn)) optie('+ Ingrediënt: "' + v + '"', () => ingredientToevoegen(), true);
   if (!tagLijst.firstChild) { tagLijst.hidden = true; return; }
   tagLijstTonen(vak, false);
 }
@@ -5044,8 +5068,7 @@ function bijWinkel(a) {
 }
 
 /* Waar ligt dit, in déze winkel? Kiezen legt vast: te koop hier, en in die afdeling. */
-function waarLigtDit(a) {
-  const w = huidigeWinkel();
+function waarLigtDit(a, w = huidigeWinkel()) {
   if (!w) { winkelKiezen(); return; }
   keuzeLijst({
     titel: ['Waar ligt ', { vet: a.naam }, ' bij ', { vet: w.naam }, '?'],
@@ -5533,10 +5556,11 @@ function tekenWinkels() {
   $('winkelsOverzicht').hidden = !!w;
   $('winkelDetail').hidden = !w;
   /* Een afdeling die intussen weg is (ook door de ander): terug naar de winkel. */
-  if (w && ws.afd && ws.afd !== AFD_ONBEKEND_SLEUTEL && !w.afdelingen.some((a) => a.id === ws.afd)) afdelingDicht(false);
-  const inAfd = !!(w && ws.afd);
-  $('winkelsTekst').placeholder = inAfd ? 'Artikel' : w ? 'Afdeling' : 'Winkel';
-  $('winkelsTekst').setAttribute('aria-label', inAfd ? 'Artikel zoeken of toevoegen' : w ? 'Afdeling zoeken of toevoegen' : 'Winkel zoeken of toevoegen');
+  if (w && ws.afd && !w.afdelingen.some((a) => a.id === ws.afd)) afdelingDicht(false);
+  const inAfd = !!(w && ws.afd), los = losseWinkel(w);
+  const wat = inAfd ? 'Artikel' : los ? 'Artikel of afdeling' : w ? 'Afdeling' : 'Winkel';
+  $('winkelsTekst').placeholder = wat;
+  $('winkelsTekst').setAttribute('aria-label', wat + ' zoeken of toevoegen');
   if (inAfd) tekenAfdelingScherm(w); else if (w) tekenWinkelDetail(w); else tekenWinkelsOverzicht();
 }
 
@@ -5615,6 +5639,25 @@ function tekenWinkelDetail(w) {
   doel.querySelector('.kopbalk h3').textContent = 'Route';
   doel.querySelector('.kopbalk .tal').textContent = String(w.afdelingen.length);
   const z = zoekVorm($('winkelsTekst').value);
+  /* Bovenaan, zoals in Boodschappen: wat hier te koop is zonder afdeling, met de speld om er een te kiezen. */
+  if (aanbod.onbekend.length && !ws.volgorde && (!z || zoekVorm(AFD_ONBEKEND).indexOf(z) !== -1)) {
+    const blok = document.createElement('div'); blok.className = 'blok'; blok.id = 'zonderAfd';
+    blok.innerHTML = '<div class="kopbalk"><h3></h3><span class="tal"></span></div><div class="wkaart"></div>';
+    blok.querySelector('h3').textContent = AFD_ONBEKEND;
+    blok.querySelector('.tal').textContent = String(aanbod.onbekend.length);
+    for (const a of aanbod.onbekend) {
+      const el = artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id, geenWinkels: !weergave.artikelWinkels });
+      const rij = el.nodeType === 11 ? el.firstChild : el;
+      const sp = document.createElement('button');
+      sp.type = 'button'; sp.className = 'icoonknop waar';
+      sp.setAttribute('aria-label', 'Waar ligt ' + a.naam + '? Afdeling kiezen');
+      sp.innerHTML = SPELD;
+      sp.addEventListener('click', () => waarLigtDit(a, w));
+      rij.insertBefore(sp, rij.querySelector('.rondje'));
+      blok.querySelector('.wkaart').appendChild(el);
+    }
+    doel.querySelector('.blok').before(blok);
+  }
   const zicht = w.afdelingen.filter((a) => !z || zoekVorm(a.naam).indexOf(z) !== -1);
   kopKnoppen(doel);
   if (ws.volgorde) tekenVolgorde(lijstEl, w, zicht, !!z);
@@ -5626,12 +5669,18 @@ function tekenWinkelDetail(w) {
   }
 }
 
-/* Winkel zonder afdelingen: meteen de artikelen. */
+/* Winkel zonder afdelingen: meteen de artikelen. Typen ("Artikel of afdeling") filtert ze en toont
+   boven de balk artikelen uit andere winkels, '+ Artikel: "…"' en '+ Afdeling: "…"'. */
+const losseWinkel = (w) => !!(w && !ws.afd && !w.afdelingen.length);
+const ZONDER_AFD = { id: '', naam: AFD_ONBEKEND };
 function tekenAanbod(doel, lijstEl, w, items) {
+  const z = zoekVorm($('winkelsTekst').value);
+  const zicht = z ? items.filter((a) => a.zoek.indexOf(z) !== -1) : items;
   doel.querySelector('.kopbalk h3').textContent = 'Artikelen';
-  doel.querySelector('.kopbalk .tal').textContent = items.length ? String(items.length) : '';
-  for (const a of items) lijstEl.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id, geenWinkels: !weergave.artikelWinkels }));
-  if (!items.length) lijstEl.appendChild(leegRegel('Geen artikelen'));
+  doel.querySelector('.kopbalk .tal').textContent = zicht.length ? String(zicht.length) : '';
+  for (const a of zicht) lijstEl.appendChild(artikelRij(a, { zonderWinkel: w.id, teller: ws.teller === a.id, geenWinkels: !weergave.artikelWinkels }));
+  if (!zicht.length) lijstEl.appendChild(leegRegel(z ? 'Niets gevonden' : 'Geen artikelen'));
+  afdKeuze(w, ZONDER_AFD);
 }
 function leegRegel(tekst) { const p = document.createElement('div'); p.className = 'leegregel'; p.textContent = tekst; return p; }
 
@@ -5665,7 +5714,6 @@ function tekenVolgorde(lijstEl, w, zicht, zoekend) {
 function tekenAfdelingen(lijstEl, w, zicht, aanbod, z) {
   const groepen = zicht.map((a) => [a.id, a.naam, aanbod.per.get(a.id)]);
   /* Zoeken op wat er staat ("Afdeling?"), niet op de interne naam. */
-  if (aanbod.onbekend.length && (!z || zoekVorm(AFD_ONBEKEND).indexOf(z) !== -1)) groepen.push([AFD_ONBEKEND_SLEUTEL, AFD_ONBEKEND, aanbod.onbekend]);
   for (const [id, naam, items] of groepen) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'afdrij'; b.dataset.id = id;
@@ -5679,7 +5727,7 @@ function tekenAfdelingen(lijstEl, w, zicht, aanbod, z) {
 
 /* Eén afdeling: de artikelen die er liggen; typen in "Artikel" filtert die en toont
    boven de balk de artikelen van deze winkel die elders (of onder "Afdeling?") liggen,
-   plus "+ Nieuw". Kiezen legt het artikel hier. */
+   plus '+ Artikel: "…"'. Kiezen legt het artikel hier. */
 function afdelingOpenen(id) {
   ws.afdScroll = $('midden').scrollTop;
   ws.afd = id; ws.teller = '';
@@ -5698,29 +5746,26 @@ function afdelingDicht(tekenen) {
   $('midden').scrollTop = ws.afdScroll;
 }
 function afdHier(w) {
-  const onbekend = ws.afd === AFD_ONBEKEND_SLEUTEL;
-  return { onbekend, id: onbekend ? '' : ws.afd, naam: onbekend ? AFD_ONBEKEND : (w.afdelingen.find((a) => a.id === ws.afd) || {}).naam || '' };
+  return { id: ws.afd, naam: (w.afdelingen.find((a) => a.id === ws.afd) || {}).naam || '' };
 }
 function tekenAfdelingScherm(w) {
   const doel = $('winkelDetail');
   const h = afdHier(w);
   doel.innerHTML = '<div class="wdkop"><button class="terug" type="button"></button><h2><span class="nm"></span><span class="sub"></span></h2>' +
-    (h.onbekend ? '' : '<button class="icoonknop bewerk" type="button" aria-label="Afdeling bewerken">' + POTLOOD() + '</button>') + '</div>' +
+    '<button class="icoonknop bewerk" type="button" aria-label="Afdeling bewerken">' + POTLOOD() + '</button></div>' +
     '<div class="blok"><div class="kopbalk"><h3>Artikelen</h3><span class="tal"></span></div><div class="wkaart" id="afdArtikelen"></div></div>';
   doel.querySelector('.terug').innerHTML = PIJL_TERUG;
   doel.querySelector('.terug').setAttribute('aria-label', 'Terug naar ' + w.naam);
   doel.querySelector('h2 .nm').textContent = h.naam;
   doel.querySelector('h2 .sub').textContent = w.naam;
   doel.querySelector('.terug').addEventListener('click', () => afdelingDicht(true));
-  if (!h.onbekend) doel.querySelector('.bewerk').addEventListener('click', () => {
+  doel.querySelector('.bewerk').addEventListener('click', () => {
     const afd = w.afdelingen.find((a) => a.id === h.id);
     if (afd) afdelingBewerken(w, afd);
   });
   const vak = $('winkelsTekst');
   const z = zoekVorm(vak.value);
-  /* Zoals de route telt: een verdwenen afdeling telt als "Afdeling?". */
-  const aanbod = winkelAanbod(artikelen, w);
-  const items = (h.onbekend ? aanbod.onbekend : aanbod.per.get(h.id)) || [];
+  const items = winkelAanbod(artikelen, w).per.get(h.id) || [];
   const zicht = z ? items.filter((a) => a.zoek.indexOf(z) !== -1) : items;
   /* Tijdens typen: wat je ziet (zoals op Artikelen). */
   doel.querySelector('.kopbalk .tal').textContent = String(zicht.length);
@@ -5731,7 +5776,7 @@ function tekenAfdelingScherm(w) {
 }
 /* De lijst boven de balk: eerst artikelen van deze winkel die (nog) niet hier liggen (grijs
    eronder de afdeling; een tik verplaatst), dan artikelen uit andere winkels (winkelicoon; een
-   tik toont waar ze liggen, met "Voeg toe"), dan "+ Nieuw". */
+   tik toont waar ze liggen, met "Voeg toe"), dan '+ Artikel: "…"' (en zonder afdelingen '+ Afdeling: "…"'). */
 function afdKeuze(w, h) {
   const vak = $('winkelsTekst');
   const v = schoonTekst(vak.value);
@@ -5769,8 +5814,10 @@ function afdKeuze(w, h) {
   for (const [a, waar] of hier) optie(a.naam, waar, () => leg(a));
   /* Nergens vastgelegd (overal te koop): meteen hier, er is niets te laten zien. */
   for (const a of anders) optie(a.naam, '', () => { if (!a.plekken.length) { leg(a); return; } vak.blur(); tagLijst.hidden = true; waarLigtHij(a, w, h, () => leg(a)); }, { elders: a.plekken.length > 0 });
-  /* Staat de precieze naam al in het lijstje, dan geen "+ Nieuw": dat deed hetzelfde. */
-  if (!al && !hier.some(([a]) => a.sleutel === nn) && !anders.some((a) => a.sleutel === nn)) optie('+ Nieuw: "' + v + '"', '', () => artikelHier(), { nieuw: true });
+  /* Staat de precieze naam al in het lijstje, dan geen "+ Artikel": dat deed hetzelfde. */
+  if (!al && !hier.some(([a]) => a.sleutel === nn) && !anders.some((a) => a.sleutel === nn)) optie('+ Artikel: "' + v + '"', '', () => artikelHier(), { nieuw: true });
+  /* Winkel zonder afdelingen: ook de eerste afdeling. */
+  if (losseWinkel(w)) optie('+ Afdeling: "' + v + '"', '', () => { vakLeeg(vak); tagLijst.hidden = true; afdelingErbij(w, v); }, { nieuw: true });
   if (!tagLijst.firstChild) { tagLijst.hidden = true; return; }
   tagLijstTonen(vak, false);
 }
@@ -5800,10 +5847,10 @@ function artikelHier() {
   const w = winkelOpId.get(ws.open);
   const vak = $('winkelsTekst');
   const v = schoonTekst(vak.value);
-  if (!w || !ws.afd) return;
+  if (!w || (!ws.afd && !losseWinkel(w))) return;
   if (!v) { vak.focus(); return; }
   if (v[0] === '#') { vak.blur(); return; }
-  const h = afdHier(w);
+  const h = ws.afd ? afdHier(w) : ZONDER_AFD;
   vakLeeg(vak);
   tagLijst.hidden = true;
   const nn = normNaam(v); // één keer, niet per element
@@ -5971,20 +6018,17 @@ function afdelingBewerken(w, afd) {
   });
 }
 
+/* + in de balk: in een afdeling of een winkel zonder afdelingen een artikel, in de route een afdeling,
+   in het overzicht een winkel. */
 function winkelsToevoegen() {
-  if (ws.open && ws.afd) { artikelHier(); return; }
-  const inp = $('winkelsTekst');
   const w = winkelOpId.get(ws.open);
+  if (w && (ws.afd || losseWinkel(w))) { artikelHier(); return; }
+  const inp = $('winkelsTekst');
   const v = schoonTekst(inp.value);
   if (!v) { inp.focus(); return; }
   if (v[0] === '#') { inp.blur(); return; }
   vakLeeg(inp);
-  if (w) {
-    const nn = normNaam(v); // één keer, niet per element
-    if (!w.afdelingen.some((x) => normNaam(x.naam) === nn)) handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: nieuweId(), naam: v } }]);
-    else tekenWinkels();
-    return;
-  }
+  if (w) { afdelingErbij(w, v); return; }
   inp.blur();
   const nn = normNaam(v); // één keer, niet per element
   const bestaand = winkels.find((x) => normNaam(x.naam) === nn);
@@ -5992,8 +6036,13 @@ function winkelsToevoegen() {
   if (!bestaand) handelen([{ actie: 'nieuw', soort: 'winkel', id, velden: { naam: v } }]);
   winkelOpenen(id);
 }
+function afdelingErbij(w, v) {
+  const nn = normNaam(v); // één keer, niet per element
+  if (!w.afdelingen.some((x) => normNaam(x.naam) === nn)) handelen([{ actie: 'afdErbij', soort: 'winkel', id: w.id, afd: { id: nieuweId(), naam: v } }]);
+  else tekenWinkels();
+}
 $('winkelsTekst').addEventListener('input', () => { naarBoven(); tekenWinkels(); });
-$('winkelsTekst').addEventListener('focus', () => { const w = winkelOpId.get(ws.open); if (w && ws.afd) afdKeuze(w, afdHier(w)); });
+$('winkelsTekst').addEventListener('focus', () => { const w = winkelOpId.get(ws.open); if (w && ws.afd) afdKeuze(w, afdHier(w)); else if (losseWinkel(w)) afdKeuze(w, ZONDER_AFD); });
 $('winkelsTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); winkelsToevoegen(); } });
 $('winkelsPlus').addEventListener('click', winkelsToevoegen);
 /* Afdelingen achter elkaar invoeren: het toetsenbord blijft open na +.
@@ -6673,7 +6722,7 @@ tagKeuze('invoerTekst', () => (receptModus() && !rs.open ? recepten.map((r) => r
   vak.addEventListener('input', teken);
   vak.addEventListener('focus', teken);
 })();
-tagKeuze('winkelsTekst', () => (ws.open ? [] : winkels.map((w) => w.notitie)), false, () => !!(ws.open && ws.afd));
+tagKeuze('winkelsTekst', () => (ws.open ? [] : winkels.map((w) => w.notitie)), false, () => !!(ws.open && (ws.afd || losseWinkel(winkelOpId.get(ws.open)))));
 tagKeuze('doenTekst', () => acties.map((a) => a.notitie));
 linksKnop('winkelsLinks', 'winkelsTekst', () => tekenWinkels());
 $('doenTekst').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); actieToevoegen(); } });
@@ -6704,7 +6753,7 @@ function actieOpenen(id, lezen) {
     '<div class="veld"><label for="actieNotitie">Notitie</label><textarea id="actieNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter"></textarea></div>' +
     '<div class="veld"><label for="actieLink">Link</label><input id="actieLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
     '<div class="veld"><span class="label2" id="wanneerLabel" style="font-weight:600;color:var(--paars)">Wanneer</span><div class="segment" id="wanneerSoort" role="radiogroup" aria-labelledby="wanneerLabel"></div><div id="wanneerBlader"></div><div id="wanneerNu"></div></div>' +
-    '<div class="veld" id="herhaalVeld"><span class="label2" id="herhaalLabel" style="font-weight:600;color:var(--paars)">Herhalen</span><div class="segment" id="herhaalSoort" role="radiogroup" aria-labelledby="herhaalLabel"></div></div>';
+    '<div class="veld" id="herhaalVeld"><span class="label2" id="herhaalLabel" style="font-weight:600;color:var(--paars)">Herhalen</span><div class="segment" id="herhaalSoort" role="radiogroup" aria-labelledby="herhaalLabel"></div><div id="herhaalUitleg" aria-live="polite"></div></div>';
   tagKeuze('actieNotitie', alleNotities, true);
   const vakken = [[$('actieNaam'), 'naam'], [$('actieNotitie'), 'notitie']];
   const hoogte = () => { for (const [v] of vakken) { v.style.height = 'auto'; v.style.height = v.scrollHeight + 4 + 'px'; } };
@@ -6759,9 +6808,8 @@ function leesstandVerversen(sch, soort, b, nieuw, naam, vol) {
   const oud = sch.querySelector(':scope > .notitievol');
   if (oud) oud.replaceWith(vol);
 }
-/* Een actie om te lezen: de notitie (met link en tags), dan grijs wanneer (of "afgerond …") en, als hij herhaalt, "elke maand". */
+/* Een actie om te lezen: de notitie (met link en tags), dan grijs wanneer (of "afgerond …") en, als hij herhaalt, hoe ("Elke zondag"). */
 const KALENDER = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7482" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>';
-const HERHAAL_ELK = { week: 'elke week', maand: 'elke maand', kwartaal: 'elk kwartaal', jaar: 'elk jaar' };
 function actieVol(a) {
   const vol = document.createElement('div');
   vol.className = 'notitievol';
@@ -6769,7 +6817,7 @@ function actieVol(a) {
   const vandaag = datumTekst(new Date());
   if (!a.open) nregel(vol, KALENDER, 'afgerond ' + periodeTekst(a.klaar.slice(0, 10), vandaag, true), 'grijs');
   else if (a.datum) nregel(vol, KALENDER, periodeTekst(a.datum, vandaag, true), 'grijs');
-  if (a.herhaal) nregel(vol, '<span class="hic">' + HERHAAL_IC + '</span>', HERHAAL_ELK[a.herhaal], 'grijs');
+  if (a.herhaal) nregel(vol, '<span class="hic">' + HERHAAL_IC + '</span>', herhaalTekst(a.datum, a.herhaal, a.maanddag), 'grijs');
   return vol;
 }
 /* Knoppen in een rij blijven even breed. Past een tekst niet (gemeten), dan de korte
@@ -6850,6 +6898,10 @@ function tekenWanneer() {
   }
   $('herhaalVeld').hidden = !soort;
   if (soort) segment($('herhaalSoort'), [['', 'Nee']].concat(HERHAAL_BIJ[soort].map((h) => [h, h === 'kwartaal' ? 'Kw.' : h[0].toUpperCase() + h.slice(1)])), bd.herhaal, (h) => { bd.herhaal = h; tekenWanneer(); });
+  /* De onthouden dag geldt alleen zolang de datum niet zelf veranderd is (zoals bij opslaan). */
+  const uitleg = $('herhaalUitleg');
+  uitleg.textContent = herhaalTekst(bd.datum, bd.herhaal, bd.oud && bd.datum === bd.oud.datum ? bd.oud.maanddag : 0);
+  uitleg.hidden = !uitleg.textContent;
 }
 function actieBijwerken() {
   const nu = acties.find((a) => a.id === bd.id);
@@ -6954,7 +7006,7 @@ function tekenInstellingen() {
   }
   $('wekTijd').querySelector('span').textContent = w.tijd;
   $('aankopenBewaren').querySelector('span').textContent = String(aankopenBewaren(model));
-  /* Doen: standaard filter, per telefoon. */
+  /* Doen: standaard filter, per telefoon; Alles vooraan, zoals in de filterbalk. */
   for (const [id, k] of SCHAKELAARS) $(id).setAttribute('aria-checked', String(weergave[k]));
   const ds = $('doenStandaard');
   ds.innerHTML = '';

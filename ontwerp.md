@@ -273,7 +273,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   onthoudt de regel op de lijst welk ingrediënt het was (`voor.ing`), zodat rondje, teller en prullenbak
   hem terugvinden, ook als het artikel intussen hernoemd is. Pas een volgende keer aanvinken zoekt weer op naam. Onderaan "Ingrediënt": typen filtert
   en toont boven de balk namen die nog niet in het recept staan (artikelen en ingrediënten uit andere
-  recepten, zodat de namen gelijk blijven) en "+ Nieuw" (alleen een ingrediënt, geen artikel).
+  recepten, zodat de namen gelijk blijven) en '+ Ingrediënt: "…"' (alleen een ingrediënt, geen artikel).
 - Aantallen met recepten: één regel, opgeteld. Melk staat 3× (wekelijks) op de lijst, Lasagne
   heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", en onder de notitie per recept een regel met het
   pannetje ("Lasagne 4×", "Pannenkoeken 2×"; het aantal altijd erbij en niet vet: "4 Lasagne" las als
@@ -391,16 +391,20 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   (rustiger; de link zelf in de winkel); in de winkel zelf in
   dezelfde meescrollende band onder de kop als bij een recept. Afdelingen horen bij deze winkel alleen
   (de route, op volgorde). Gewoon: per afdeling een rij (zwart, niet vet) met het aantal artikelen en
-  een pijltje ›. Onderaan "Afdeling?" (zelfde uiterlijk) als er hier artikelen zonder afdeling liggen.
+  een pijltje ›. Boven de route, zoals in Boodschappen, het blok "Afdeling?" (met het aantal) als er hier
+  artikelen zonder afdeling liggen: de artikelen zelf, met de speld (Waar ligt dit? in déze winkel)
+  vóór het rondje; niet tijdens Volgorde en niet tijdens zoeken (tenzij op "afd…").
   De kop heet "Route", rechts het aantal afdelingen (alleen het getal) en "Volgorde" (pijltjes):
   dan een greep vooraan om te verslepen en een potlood (ook tik op de naam) voor Afdeling bewerken;
   aan = gevuld paars met een vinkje, nog een tik zet het terug. Een winkel zonder afdelingen toont
-  meteen de artikelen onder "Artikelen". Een andere winkel openen: Volgorde uit. Onderaan "Afdeling".
+  meteen de artikelen onder "Artikelen"; onderaan "Artikel of afdeling": typen filtert ze en toont boven
+  de balk artikelen uit andere winkels, '+ Artikel: "…"' en '+ Afdeling: "…"'; + of Enter = artikel
+  (zonder afdeling). Na de eerste afdeling de route. Een andere winkel openen: Volgorde uit. Onderaan
+  (met afdelingen) "Afdeling".
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
   winkel zonder afdeling. Verwijderen meteen, 6 s Ongedaan maken.
 - Eén afdeling (tik op een rij): eigen scherm met terug (naar de route, op dezelfde plek; ook de
-  terugknop), de naam met de winkel eronder, en een potlood (Afdeling bewerken: naam, verwijderen;
-  niet bij "Afdeling?"). Daaronder "Artikelen" met het aantal: rondje = op de lijst; icoon of "2×"
+  terugknop), de naam met de winkel eronder, en een potlood (Afdeling bewerken: naam, verwijderen). Daaronder "Artikelen" met het aantal: rondje = op de lijst; icoon of "2×"
   opent de teller; tik op de naam opent het artikel (sluiten brengt je terug in de afdeling, op
   dezelfde plek). Onder een artikel alleen de andere winkels.
 - Onderaan "Artikel": typen filtert de artikelen van de afdeling en toont boven de balk eerst de
@@ -408,7 +412,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   waar; een tik verplaatst het hierheen), dan artikelen uit andere winkels (grijs winkelicoon erachter;
   een tik opent een paneel met de winkels en afdelingen waar het ligt en als laatste regel, paars,
   "+ <deze winkel>" met deze afdeling; Annuleren of Voeg toe, de andere winkels blijven), dan
-  "+ Nieuw: "…"" (niet als de precieze naam al in het lijstje staat). Nergens vastgelegd: geen
+  '+ Artikel: "…"' (niet als de precieze naam al in het lijstje staat; nergens "+ Nieuw": de regel zegt
+  wat er bijkomt, in een recept '+ Ingrediënt: "…"'). Nergens vastgelegd: geen
   icoon, een tik legt het meteen hier. + of Enter: bestaat
   de naam al (ook in een andere winkel), dan krijgt dat artikel deze winkel en afdeling erbij;
   anders een nieuw artikel, soort regelmatig (niet op de lijst), meteen hier.
@@ -479,7 +484,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   terugpijl die het vak leegmaakt. Tik op de loep = invoeren.
 - Invoervak "Actie" onderaan: typen filtert, + voegt toe (een afgeronde actie
   met dezelfde naam wordt heropend). Een nieuwe actie heeft geen periode.
-- Filters bovenaan: Week · Maand · Kw. · Jaar · Alles, naam met het aantal
+- Filters bovenaan: Alles · Week · Maand · Kw. · Jaar, naam met het aantal
   eronder. Een filter toont Te laat en wat binnen de termijn af moet ("Deze week",
   "Deze maand", …); een maand-, kwartaal- of jaaractie dus pas in de week/maand
   waarin die eindigt. Alles toont Te laat, Deze week, Later, Zonder periode en
@@ -511,6 +516,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   Wanneer (n.v.t., Dag, Maand, Kwartaal, Jaar, met ‹ › bladeren; een andere soort
   houdt de plek), Herhalen (alleen met een periode; Nee en niet fijner dan de
   periode: bij Dag week/maand/kwartaal/jaar, bij Maand maand/kwartaal/jaar, …).
+  Daaronder grijs hoe de herhaling uitpakt ("Elke zondag", "Elke maand op de 31e, in een
+  kortere maand de laatste dag van de maand", "Elk kwartaal: 5 mrt, 5 jun, 5 sep en 5 dec",
+  "Elk jaar in december"); dezelfde tekst in de leesstand.
 
 ### 5.5 Instellingen
 - Synchroniseren: aangemeld als, gedeelde map, aanmelden/afmelden (rode rand,
@@ -534,7 +542,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   eerste poging.
 - Volgorde van de blokken: Synchroniseren, Wekelijks terug op de lijst,
   Weergave, Doen, Bewaren, Gegevens, App.
-- Doen: alleen "Standaard tonen" (standaard Alles).
+- Doen: alleen "Standaard tonen": Alles · Week · Maand · Kw. · Jaar (Alles vooraan, standaard).
 - Bewaren (alles over hoe lang iets blijft; geldt voor beiden, in thuis.json):
   "Aankopen" (aantal), "Archief: verwijderen als niet gekocht in" (eenmalige
   artikelen in het archief) 1 week, 1 mnd, 3 mnd, 1 jaar (standaard), en

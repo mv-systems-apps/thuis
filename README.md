@@ -8,14 +8,15 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (26 november 2026, versie 1352906-005): in gebruik. Werkt: aanmelden
+Stand (26 november 2026, versie 1352906-006): in gebruik. Werkt: aanmelden
 bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
 (lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
 tabbladen met vegen rondom:
 - **Winkels**: favorieten en overige, notitie en link per winkel; per winkel de
   route (afdelingen op volgorde, verslepen) en per afdeling een eigen scherm met
   de artikelen, waar je artikelen uit deze of andere winkels hierheen haalt of
-  nieuw maakt.
+  nieuw maakt; "Afdeling?" bovenaan met de speld; een winkel zonder afdelingen
+  krijgt artikelen en de eerste afdeling via "Artikel of afdeling".
 - **Artikelen**: toevoegen, zoeken (ook op #tags en @winkel), filters (ook allemaal
   uit), op en van de lijst, aantal, notitie (ook meer regels; in lijsten één regel per notitie) en link (of zoekwoorden), leesstand vanaf Op de lijst, bewerkscherm,
   archief voor eenmalige artikelen, suggesties onder Op de lijst, lijstaantal (deze keer, met
@@ -25,7 +26,7 @@ tabbladen met vegen rondom:
 - **Boodschappen**: winkelkeuze (Huidig, Nodig, Alternatief), per afdeling
   afvinken (tik of naar rechts vegen), hele notitie (lang indrukken of naar links vegen), Elders,
   één winkelmand voor alle winkels (per telefoon), gedeelde Aankopen (per dag, met zoeken).
-- **Doen**: acties met periode en herhalen, filters Week/Maand/Kw./Jaar/Alles (standaard Alles),
+- **Doen**: acties met periode en herhalen, filters Alles/Week/Maand/Kw./Jaar (standaard Alles),
   inklapbare groepen, Gedaan (afgeronde acties); met notitie of link eerst een leesstand (potlood = bewerken).
 - **Instellingen**: synchroniseren, wekelijks terug op de lijst (standaard met de hand),
   weergave, Doen, Bewaren (aankopen, archief, afgeronde acties), backups, logboek.
