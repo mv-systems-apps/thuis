@@ -274,8 +274,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   recepten, zodat de namen gelijk blijven) en "+ Nieuw" (alleen een ingrediënt, geen artikel).
 - Aantallen met recepten: één regel, opgeteld. Melk staat 3× (wekelijks) op de lijst, Lasagne
   heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", en onder de notitie per recept een regel met het
-  blaadje: "4 Lasagne · Volle melk…" en "2 Pannenkoeken" (receptkleur; de notitie van het
-  ingrediënt cursief). Het eigen deel (3) staat er niet apart; het artikelscherm en de teller tonen het.
+  blaadje: "4 Lasagne · Volle melk…" en "2 Pannenkoeken" (receptkleur). Het eigen deel (3) staat er niet apart; het artikelscherm en de teller tonen het.
   Staat het er alleen voor één recept: alleen "Lasagne" (het aantal staat al bij de naam). Het aantal in een recept aanpassen telt mee op de lijst. Van de
   lijst (rondje op Artikelen) of afgevinkt: de recepten gaan eraf, het eigen aantal blijft (melk
   weer 3×); terugtikken in de winkelmand of onder "Van de lijst gehaald" zet ze terug. Zie ook het lijstaantal hieronder.
@@ -323,6 +322,10 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   elkaar ("500 g", vaste spatie, alleen in beeld). In Boodschappen zonder tags en link (ruimte).
   Alles staat in de band onder de titel van een recept of winkel, in de editors, in de leesstand
   van een artikel en in het notitiepaneel. Blijft staan.
+- Kleur van notities: paars = gewone notitie (artikel, winkel, actie); bruinrood (receptkleur) = alles uit
+  een recept: de notitie van een recept (band, overzicht Recepten, ook tags en link), van een ingrediënt en
+  de receptregels. Overal recht. Een icoon (blaadje) alleen waar de notitie niet al naast zijn eigen
+  icoon staat: op de receptregel, in het artikel en in het notitiepaneel.
 - Notitie bij een ingrediënt (recept): Naam en Notitie in het bewerkpaneel van het ingrediënt (tik
   op de naam; geen link), met tags. In het recept paars onder het ingrediënt. Staat een artikel
   voor dat recept op de lijst, dan staat de notitie op zijn receptregel (niet bij het artikel

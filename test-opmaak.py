@@ -10,6 +10,7 @@
      soorticoon, schakelaarregels) zijn minstens 44 px; tik op de tekst zet een schakelaar om.
   6. Een lange winkelnaam loopt door op een tweede regel in plaats van afgekapt te worden.
   7–10. Niet vet, gemeten knoppenrij, geen knijpzoom, tabbalk op een laptop.
+  14. Kleur: gewone notitie paars, alles uit een recept (receptnotitie, ingrediëntnotitie, receptregel) bruinrood, recht.
   13. Vegen in Boodschappen: rechts = afvinken, links = notitie, schuin = scrollen; tabwissel alleen via de tabbalk.
   12. Laptop: ruimte voor de scrollbalk blijft vrij (beeld verspringt niet); Wanneer: knop terug naar nu.
   11. Een notitie met meer regels: in een lijst één regel (met …), in de band onder de titel alles.
@@ -254,6 +255,22 @@ async def main():
         panY = await pg.evaluate("() => { const r = document.querySelector('#winkelLijst .wrij'); return r ? getComputedStyle(r).touchAction : 'pan-y'; }")
         check('vegen (rij: touch-action pan-y, geen wachten bij scrollen): kort = terug, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
               kort == [mstart, False] and recht == mstart + 1 and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y', [kort, recht, links, schuin, nogWinkel, naarDoen, panY])
+
+        # 14. Kleur van notities
+        kl = await pg.evaluate("""async () => {
+          handelen([{ actie: 'nieuw', soort: 'recept', id: 'rc1', velden: { naam: 'Lasagne', notitie: 'Voor 4 #pasta' } },
+            { actie: 'ingredient', soort: 'recept', id: 'rc1', ingredient: 'a00', naam: 'Artikel 00', aantal: '2', notitie: 'Halfvol #melk' },
+            { actie: 'voor', soort: 'artikel', id: 'a00', recept: 'rc1', naam: 'Lasagne', aantal: '2', ing: 'a00' },
+            { actie: 'zet', soort: 'artikel', id: 'a00', veld: 'notitie', oud: '#zuivel', nieuw: 'Eigen #zuivel' }]);
+          toonScherm('boodschappen'); receptOpenen('rc1'); await new Promise((r) => setTimeout(r, 100));
+          const c = (e) => e ? getComputedStyle(e).color + '/' + getComputedStyle(e).fontStyle : 'geen';
+          const uit = [c(document.querySelector('#receptBlok .kopnotitie .ntekst')), c(document.querySelector('#ingredienten .notitie .ntekst')), c(document.querySelector('#ingredienten .notitie .tag'))];
+          receptDicht(true); scherm.filter = 'L'; tekenBoodschappen(); await new Promise((r) => setTimeout(r, 100));
+          const rij = document.querySelector('#lijst .item[data-id="a00"]');
+          uit.push(c(rij && rij.querySelector('.rregel')), c(rij && rij.querySelector('.ntekst')));
+          return uit; }""")
+        br, pa = 'rgb(142, 58, 34)/normal', 'rgb(75, 60, 192)/normal'
+        check('kleur: receptnotitie, ingrediëntnotitie (en tags) en receptregel bruinrood en recht; eigen notitie paars', kl == [br, br, br, br, pa], kl)
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()

@@ -287,12 +287,11 @@
   .notitie .ntekst{white-space:pre-line}
   .item .notitie .ntekst,.wrij .notitie .ntekst,.actierij .notitie .ntekst,.winkelrij .notitie .ntekst,.notitie .rregel{display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .notitie .ntags{display:flex;flex-wrap:wrap;column-gap:12px}
-  /* Notitie uit een recept (van het ingrediënt): een eigen regel onder de eigen notitie en de tags, met
-     blaadje, cursief in de receptkleur. */
+  /* Paars = gewone notitie (artikel, winkel, actie); bruinrood (receptkleur) = alles uit een recept: de notitie
+     van een recept, van een ingrediënt en de receptregels. Een icoon alleen waar de notitie niet al naast zijn
+     eigen icoon staat (het blaadje op de receptregel, in het artikel en in het paneel). */
   .notitie .rregel svg{vertical-align:-2px;margin-right:6px}
-  .notitie .rregel{color:#8E3A22;font-style:italic}
-  .rnotities .rnot{color:#8E3A22}
-  .notitie .rregel .rnaam{font-style:normal}
+  .notitie .rregel,.rnotities .rnot,#ingredienten .notitie,#receptBlok .kopnotitie .notitie,#receptBlok .receptrij .notitie,#receptBlok .receptrij .heeftlink{color:#8E3A22}
   .rnotities{display:flex;flex-direction:column;gap:4px;margin-top:8px}
   .rnotities .rnot{display:flex;gap:6px;align-items:flex-start;font-size:17px;line-height:1.3;white-space:pre-line;overflow-wrap:anywhere}
   .rnotities .rnot svg{margin-top:2px}
@@ -445,7 +444,6 @@
   .notitievol .nregel svg{flex-shrink:0;margin-top:4px}
   .notitievol .notitie{display:block;color:var(--paars);font-size:20px;line-height:1.35}
   .notitievol .rtekst{white-space:pre-line;color:#8E3A22}
-  .notitievol .rtekst i{white-space:pre-line}
   /* Artikel vanaf Op de lijst: eerst lezen (naam in de kop, notitie, recepten); het potlood toont de rest. */
   #artikelScherm.lezen>:not(.wdkop):not(.notitievol){display:none}
   #artikelScherm .wdkop .icoonknop+.icoonknop{margin-left:8px}
@@ -614,7 +612,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352906-002</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352906-003</div>
   </section>
 </main>
 
@@ -3855,7 +3853,7 @@ function notitieVol(a) {
   for (const x of a.op ? a.voor : []) {
     const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = svgIcoon(PADEN.I, KLEUR.K, 20);
     const t = document.createElement('span'); t.className = 'rtekst'; t.textContent = x.aantal + '\u00A0' + x.naam;
-    if (x.notitie) { const n = document.createElement('i'); n.textContent = ' · ' + x.notitie; t.appendChild(n); }
+    if (x.notitie) t.appendChild(document.createTextNode(' · ' + x.notitie));
     r.appendChild(t); vol.appendChild(r);
   }
   return vol;
@@ -3888,7 +3886,6 @@ function notitieMetRecepten(a, zonderTags) {
     r.className = 'rregel';
     r.innerHTML = BLAD_KLEIN();
     const kop = document.createElement('span');
-    kop.className = 'rnaam';
     kop.textContent = (voor.length === 1 && a.opvoor && x.aantal === a.opAantal ? '' : x.aantal + '\u00A0') + x.naam;
     r.appendChild(kop);
     if (x.notitie) r.appendChild(document.createTextNode(' · ' + notitieZonderTags(x.notitie).replace(/\n+/g, ' ')));
@@ -6021,7 +6018,7 @@ function artikelOpenen(id, lezen) {
       const r = document.createElement('div'); r.className = 'rnot';
       r.innerHTML = BLAD_KLEIN();
       const t = document.createElement('span'); t.textContent = x.aantal + '\u00A0' + x.naam;
-      if (x.notitie) { const n = document.createElement('i'); n.textContent = ' · ' + x.notitie; t.appendChild(n); }
+      if (x.notitie) t.appendChild(document.createTextNode(' · ' + x.notitie));
       r.appendChild(t); rn.appendChild(r);
     }
   }
