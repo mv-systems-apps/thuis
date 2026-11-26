@@ -282,10 +282,20 @@
   .item .normaal,.wrij .normaal{margin-left:8px;font-size:17px;font-weight:400;color:#A84A0A;text-decoration:line-through;white-space:nowrap}
   .notitie .tag.tik{cursor:pointer;padding:6px 0;margin:-6px 0}
   .notitie .ntekst,.notitie .ntags{display:block}
-  /* Een notitie kan meer regels hebben; in lijsten hooguit 2 (met …), in de band onder de titel alles. */
+  /* Een notitie kan meer regels hebben; in lijsten één regel per notitie (de eerste, met …), in de band
+     onder de titel en in de detailschermen alles. */
   .notitie .ntekst{white-space:pre-line}
-  .item .notitie .ntekst,.wrij .notitie .ntekst,.actierij .notitie .ntekst,.winkelrij .notitie .ntekst{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .item .notitie .ntekst,.wrij .notitie .ntekst,.actierij .notitie .ntekst,.winkelrij .notitie .ntekst,.notitie .rregel{display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .notitie .ntags{display:flex;flex-wrap:wrap;column-gap:12px}
+  /* Notitie uit een recept (van het ingrediënt): een eigen regel onder de eigen notitie en de tags, met
+     blaadje, cursief in de receptkleur. */
+  .notitie .rregel svg{vertical-align:-2px;margin-right:6px}
+  .notitie .rregel{color:#8E3A22;font-style:italic}
+  .rnotities .rnot{color:#8E3A22}
+  .notitie .rregel .rnaam{font-style:normal}
+  .rnotities{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+  .rnotities .rnot{display:flex;gap:6px;align-items:flex-start;font-size:17px;line-height:1.3;white-space:pre-line;overflow-wrap:anywhere}
+  .rnotities .rnot svg{margin-top:2px}
   .notitie .link{cursor:pointer;white-space:nowrap}
   .notitie .link .lt{text-decoration:underline;white-space:normal}
   .notitie .link svg{margin-left:4px;vertical-align:-1px}
@@ -294,7 +304,6 @@
   /* In de winkelmand: de winkel niet doorgestreept (inline-block houdt de doorhaling van de naam tegen). */
   .wrij.gedaan .winkels{display:inline-block;width:100%;text-decoration:none}
   /* Waarom dit aantal op de lijst staat ("3 + 4 Lasagne"): grijs onder de naam. */
-  .item .voorregel,.wrij .voorregel{display:block;font-size:17px;font-weight:400;color:var(--grijs);line-height:1.3}
   /* Notitie, tags en link onder de kop van een recept of winkel: scrollt mee, de kop blijft klein. */
   .kopnotitie{margin:0 -14px 14px;padding:8px 16px 12px 32px;background:#FFFFFF;border-bottom:1px solid var(--lijn)}
   #winkelDetail .kopnotitie{margin-top:-12px;margin-bottom:2px}
@@ -430,6 +439,28 @@
   #keuze h3.delen b{font-weight:700}
   #keuze .kruis{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
   #keuze .opties{flex:1;min-height:120px;overflow-y:auto}
+  /* Hele notitie (tik op de notitie in Boodschappen): eigen notitie en die uit recepten, elk met een icoon ervoor. */
+  .notitievol{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
+  .notitievol .nregel{display:flex;gap:8px;align-items:flex-start;font-size:20px;line-height:1.35;overflow-wrap:anywhere}
+  .notitievol .nregel svg{flex-shrink:0;margin-top:4px}
+  .notitievol .notitie{display:block;color:var(--paars);font-size:20px;line-height:1.35}
+  .notitievol .rtekst{white-space:pre-line;color:#8E3A22}
+  .notitievol .rtekst i{white-space:pre-line}
+  /* Artikel vanaf Op de lijst: eerst lezen (naam in de kop, notitie, recepten); het potlood toont de rest. */
+  #artikelScherm.lezen>:not(.wdkop):not(.notitievol){display:none}
+  #artikelScherm .wdkop .icoonknop+.icoonknop{margin-left:8px}
+  /* Lang indrukken (rij met een notitie): de rij kleurt licht na een korte tel, geen tekstselectie of menu. */
+  .wrij .vink.druk{background:#E9E6F8}
+  /* Vegen: de rij schuift mee (--dx); eronder rechts-vegen paars met een vinkje, links-vegen lichtpaars met het notitie-icoon. */
+  .wrij{touch-action:pan-y}
+  .wrij.vegen{position:relative;overflow:hidden}
+  .wrij.vegen>*{position:relative;z-index:2;transform:translateX(var(--dx,0))}
+  .wrij.vegen>.vlaag{position:absolute;inset:0;z-index:1;background:#FFFFFF}
+  .wrij.vegen>.vonder{position:absolute;inset:0;z-index:0;transform:none;display:flex;align-items:center;padding:0 22px}
+  .wrij.vegen>.vonder.vink-r{background:#4B3CC0;justify-content:flex-start}
+  .wrij.vegen>.vonder.not-l{background:#E9E6F8;justify-content:flex-end}
+  .wrij.terug>*{transition:transform .15s ease-out}
+  .wrij .vink.langdruk{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   #keuze .optie{width:100%;min-height:56px;border:0;border-top:1px solid var(--rij);background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:20px;color:var(--tekst);text-align:left}
   #keuze .optie .nm{flex:1;min-width:0;line-height:1.3;overflow-wrap:anywhere}
   #keuze .optie .sub{display:block;font-size:17px;color:var(--grijs)}
@@ -583,7 +614,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352906-001</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352906-002</div>
   </section>
 </main>
 
@@ -702,7 +733,7 @@ const $ = (id) => document.getElementById(id);
 /* ---------- kern: formaat en velden (SCHEMA) ---------- */
 /* Formaat: datum en tijd van de laatste formaatwijziging in hex, zoals het
    versiestempel van de app: 1352905-7DA = 20261125, 20:10 (recepten). */
-const FORMAAT = '1352906-203';
+const FORMAAT = '1352906-59D';
 const SOORTEN = ['eenmalig', 'wekelijks', 'regelmatig'];
 const MAX_GEKOCHT = 6;
 const SORTEER = new Intl.Collator('nl', { sensitivity: 'base', numeric: true });
@@ -911,20 +942,21 @@ const VELDTYPEN = {
     schrijf: (m) => { if (!m.size) return undefined; const o = {}; for (const [id, x] of m) o[id] = Object.assign({ naam: x.naam, aantal: x.aantal }, x.ing ? { ing: x.ing } : {}); return o; },
     sleutel: (m) => Array.from(m, ([id, x]) => id + ':' + x.naam + ':' + x.aantal + ':' + (x.ing || '')).join(',')
   },
-  /* ingrediënten van een recept: id → { naam, aantal ("1"–"99") }. */
+  /* ingrediënten van een recept: id → { naam, aantal ("1"–"99"), notitie (mag ontbreken) }. */
   ingredienten: {
     lees: (v, k, fout) => {
       if (v !== undefined && !isObject(v)) fout('ingredienten is geen object');
       const m = new Map();
       for (const id of Object.keys(v || {})) {
         const x = v[id];
-        if (!ID_PATROON.test(id) || !isObject(x) || !isTekst(x.naam) || !schoonTekst(x.naam) || !isTekst(x.aantal) || !RECEPT_AANTAL.test(x.aantal)) fout('ongeldig ingrediënt in recept');
-        m.set(id, { naam: x.naam, aantal: x.aantal });
+        if (!ID_PATROON.test(id) || !isObject(x) || !isTekst(x.naam) || !schoonTekst(x.naam) || !isTekst(x.aantal) || !RECEPT_AANTAL.test(x.aantal)
+          || (x.notitie !== undefined && !isTekst(x.notitie))) fout('ongeldig ingrediënt in recept');
+        m.set(id, { naam: x.naam, aantal: x.aantal, notitie: x.notitie || '' });
       }
       return m;
     },
-    schrijf: (m) => { if (!m.size) return undefined; const o = {}; for (const [id, x] of m) o[id] = { naam: x.naam, aantal: x.aantal }; return o; },
-    sleutel: (m) => Array.from(m, ([id, x]) => id + ':' + x.naam + ':' + x.aantal).join(',')
+    schrijf: (m) => { if (!m.size) return undefined; const o = {}; for (const [id, x] of m) o[id] = Object.assign({ naam: x.naam, aantal: x.aantal }, x.notitie ? { notitie: x.notitie } : {}); return o; },
+    sleutel: (m) => Array.from(m, ([id, x]) => id + ':' + x.naam + ':' + x.aantal + ':' + x.notitie).join(',')
   },
   afdelingen: {
     lees: (v, k, fout) => {
@@ -999,7 +1031,9 @@ function receptenNaarIngredienten(data) {
     if (Object.keys(ing).length) r.ingredienten = ing;
   }
 }
-const MIGRATIES = [{ van: '1352902-459', naar: '1352905-7DA', doe: () => {} }, { van: '1352905-7DA', naar: '1352906-203', doe: receptenNaarIngredienten }];
+/* 203 → 59D: een ingrediënt kan een notitie hebben (niets om te zetten; een oudere app zou hem kwijtraken). */
+const MIGRATIES = [{ van: '1352902-459', naar: '1352905-7DA', doe: () => {} }, { van: '1352905-7DA', naar: '1352906-203', doe: receptenNaarIngredienten },
+  { van: '1352906-203', naar: '1352906-59D', doe: () => {} }];
 /* Zet data om naar FORMAAT; true als dat lukt. tabel alleen voor de tests. */
 function migreren(data, tabel) {
   const lijst = tabel || MIGRATIES;
@@ -1087,6 +1121,7 @@ function rechtzetten(model) {
       if (!eerst) { per.set(k, id); continue; }
       const e = rec.ingredienten.get(eerst);
       if (+x.aantal > +e.aantal) e.aantal = x.aantal;
+      if (!e.notitie && x.notitie) e.notitie = x.notitie;
       rec.ingredienten.delete(id); model.rechtgezet++;
     }
   }
@@ -1400,25 +1435,26 @@ function handelAfdWeg(model, h, verz, r) {
   return { status: 'ok' };
 }
 
-/* Een ingrediënt in een recept: erbij (naam en aantal), naam of aantal wijzigen, of eruit (weg). */
+/* Een ingrediënt in een recept: erbij (naam en aantal), naam, aantal of notitie wijzigen, of eruit (weg). */
 function handelIngredient(model, h, verz, r) {
   if (!isTekst(h.ingredient) || !ID_PATROON.test(h.ingredient)) return { status: 'vervallen', reden: 'ongeldig' };
   const nu = r.ingredienten.get(h.ingredient);
   if (h.weg) { if (!nu) return { status: 'al' }; r.ingredienten.delete(h.ingredient); return { status: 'ok' }; }
   const naam = h.naam === undefined ? undefined : (isTekst(h.naam) ? schoonTekst(h.naam) : '');
   const aantal = h.aantal;
-  if (naam === '' || (aantal !== undefined && (!isTekst(aantal) || !RECEPT_AANTAL.test(aantal)))) return { status: 'vervallen', reden: 'ongeldig' };
+  const notitie = h.notitie === undefined ? undefined : (isTekst(h.notitie) ? schoonNotitie(h.notitie) : null);
+  if (naam === '' || notitie === null || (aantal !== undefined && (!isTekst(aantal) || !RECEPT_AANTAL.test(aantal)))) return { status: 'vervallen', reden: 'ongeldig' };
   if (!nu) {
     /* Wijziging aan een ingrediënt dat er niet meer is (de ander haalde het weg): vervalt. */
     if (naam === undefined || aantal === undefined) return VERVALLEN;
     /* Staat er al een met die naam (tegelijk toegevoegd): samenvoegen; latere handelingen volgen die id. */
     const nn = normNaam(naam);
     for (const [id, x] of r.ingredienten) if (normNaam(x.naam) === nn) return { status: 'samengevoegd', id };
-    r.ingredienten.set(h.ingredient, { naam, aantal });
+    r.ingredienten.set(h.ingredient, { naam, aantal, notitie: notitie || '' });
     return { status: 'ok' };
   }
-  if ((naam === undefined || naam === nu.naam) && (aantal === undefined || aantal === nu.aantal)) return { status: 'al' };
-  r.ingredienten.set(h.ingredient, { naam: naam === undefined ? nu.naam : naam, aantal: aantal === undefined ? nu.aantal : aantal });
+  if ((naam === undefined || naam === nu.naam) && (aantal === undefined || aantal === nu.aantal) && (notitie === undefined || notitie === nu.notitie)) return { status: 'al' };
+  r.ingredienten.set(h.ingredient, { naam: naam === undefined ? nu.naam : naam, aantal: aantal === undefined ? nu.aantal : aantal, notitie: notitie === undefined ? nu.notitie : notitie });
   return { status: 'ok' };
 }
 
@@ -1754,8 +1790,14 @@ function artikelLijst(model) {
   }));
 }
 /* De naam is die van het recept zelf (ook na hernoemen); bestaat het niet meer, dan de onthouden naam. */
+/* notitie: die van het ingrediënt in het recept (via ing, anders op naam); niet bij het artikel bewaard. */
 function voorVan(r, model) {
-  const voor = Array.from(r.voor, ([recept, x]) => ({ recept, naam: ((model && model.recepten.get(recept)) || x).naam, aantal: +x.aantal, ing: x.ing || '' })).sort((a, b) => SORTEER.compare(a.naam, b.naam));
+  const voor = Array.from(r.voor, ([recept, x]) => {
+    const rec = model && model.recepten.get(recept);
+    let ing = rec && x.ing ? rec.ingredienten.get(x.ing) : null;
+    if (rec && !ing && !x.ing) { const nn = normNaam(r.naam); for (const y of rec.ingredienten.values()) if (normNaam(y.naam) === nn) { ing = y; break; } }
+    return { recept, naam: (rec || x).naam, aantal: +x.aantal, ing: x.ing || '', notitie: (ing && ing.notitie) || '' };
+  }).sort((a, b) => SORTEER.compare(a.naam, b.naam));
   const vast = +r.aantal || 1;
   /* Eigen deel: 0 als het alleen voor recepten op de lijst staat, anders het lijstaantal of het vaste aantal. */
   /* Eenmalig heeft geen lijstaantal: het aantal is daar altijd "deze keer". */
@@ -1771,12 +1813,14 @@ function voorVan(r, model) {
     const delen = voor.map((x) => (voor.length === 1 && r.opvoor && x.aantal === opAantal ? '' : x.aantal + '\u00A0') + x.naam);
     voorTekst = (eigen ? eigen + ' + ' : '') + delen.join(' + ');
   }
-  return { voor, opvoor: !!r.opvoor, opAantal, eigen, voorTekst, normaal };
+  /* Receptnotities (van de ingrediënten) voor de lijst en het artikelscherm; ook voor zoeken op tag. */
+  const rnot = voor.filter((x) => x.notitie).map((x) => ({ naam: x.naam, notitie: x.notitie }));
+  return { voor, opvoor: !!r.opvoor, opAantal, eigen, voorTekst, normaal, rnot };
 }
 /* Recepten op naam, met hun artikelen (artikel-id → aantal) en een zoekvorm. */
 function receptLijst(model) {
   return opNaam(model.recepten).map((r) => ({ id: r.id, naam: r.naam, zoek: zoekVorm(r.naam), notitie: r.notitie || '', link: veiligeLink(r.link) || '',
-    ingredienten: Array.from(r.ingredienten, ([id, x]) => ({ id, naam: x.naam, aantal: +x.aantal, sleutel: normNaam(x.naam), zoek: zoekVorm(x.naam) }))
+    ingredienten: Array.from(r.ingredienten, ([id, x]) => ({ id, naam: x.naam, aantal: +x.aantal, notitie: x.notitie || '', sleutel: normNaam(x.naam), zoek: zoekVorm(x.naam) }))
       .sort((a, b) => SORTEER.compare(a.naam, b.naam)) }));
 }
 function winkelLijst(model) {
@@ -1878,7 +1922,8 @@ function zoekArtikelen(artikelen, tekst, winkels) {
   /* Met @ vooraan: wat in die winkel te koop is (en eventueel in de afdelingen die zo beginnen). */
   const wz = winkelZoek(tekst, winkels || []);
   if (wz) return wz.winkel ? artikelen.filter((a) => a.plekken.some((p) => p.winkel === wz.winkel.id && afdelingPast(wz, p.afd))) : [];
-  return artikelen.filter((a) => zoekPast(a.naam, a.notitie, tekst));
+  /* Met # ook de tags uit de notitie van een ingrediënt, zolang het artikel daarvoor op de lijst staat. */
+  return artikelen.filter((a) => zoekPast(a.naam, a.rnot && a.rnot.length ? [a.notitie].concat(a.rnot.map((x) => x.notitie)).join('\n') : a.notitie, tekst));
 }
 /* Zoeken op winkel: "@Plus" of "@Plus zuiv" (de rest na de winkelnaam = begin van een
    afdeling; "onbekend" vindt wat nog geen afdeling heeft). Spaties, hoofdletters en
@@ -3642,7 +3687,7 @@ function rijUitGeheugen(a, opties) {
   /* De winkelsregel één keer uitrekenen: voor de sleutel en voor de regel zelf. */
   const wr = opties.geenWinkels ? '' : winkelsRegel(a, opties.zonderWinkel);
   /* voorTekst: de receptnamen komen uit de recepten zelf (hernoemen verandert het artikel niet). */
-  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a), a.voorTekst, a.normaal,
+  const sleutel = [recordSleutel('artikel', a.rec), wr, isNieuw(a), a.voorTekst, a.normaal, JSON.stringify(a.rnot),
     opties.sug ? suggestieTekst(opties.sug) : '', !!opties.archief, !!opties.weg, opties.hint || '', !!opties.lijst].join('\u0001');
   const g = rijGeheugen.get(a.id);
   if (g && g.sleutel === sleutel) return g.rij;
@@ -3663,20 +3708,21 @@ function artikelRij(a, opties, wr) {
      zoeken, afdelingen): het vaste aantal, zonder regeltje. In een recept: het aantal van het recept. */
   const lijst = !!opties.lijst && !!a.op;
   const n = lijst ? a.opAantal : a.aantal;
-  const voorTekst = lijst ? a.voorTekst : '';
   const normaal = lijst ? a.normaal : 0;
   const rij = document.createElement('div');
   rij.className = 'item' + (opties.archief ? ' archief' : '');
   rij.dataset.id = a.id;
+  if (lijst) rij.dataset.lijst = '1';
   const nieuw = isNieuw(a);
-  const metNotitie = !!(a.notitie || a.link);
+  /* Op de lijst per recept een regel (aantal, recept, notitie van het ingrediënt) in plaats van "3 + 4 Lasagne". */
+  const rec = lijst && a.voor.length;
+  const metNotitie = !!(a.notitie || a.link || rec);
   rij.innerHTML =
     '<button class="icoon" type="button" aria-expanded="' + tellerOpen + '">' + svgIcoon(PADEN[a.letter], KLEUR[a.letter], 28) + '</button>' +
     '<div class="tekst"><button class="tekstknop" type="button"><span class="naam"><span></span>' +
     (normaal ? '<s class="normaal"></s>' : '') +
     (n > 1 || normaal ? '<span class="aantal"></span>' : '') +
     (nieuw ? '<span class="nieuw">nieuw</span>' : '') + '</span>' +
-    (voorTekst ? '<span class="voorregel"></span>' : '') +
     (wr ? '<span class="winkels"></span>' : '') + '</button>' +
     /* Notitie (tags, link) buiten de knop: geen knop in knop. Een tik erop opent het artikel nog steeds. */
     (metNotitie ? '<span class="notitie"></span>' : '') +
@@ -3686,9 +3732,8 @@ function artikelRij(a, opties, wr) {
   rij.querySelector('.naam > span').textContent = a.naam;
   if (normaal) normaalVullen(rij.querySelector('.normaal'), normaal);
   if (n > 1 || normaal) rij.querySelector('.aantal').textContent = n + '×';
-  if (voorTekst) voorRegelVullen(rij.querySelector('.voorregel'), a);
   if (wr) rij.querySelector('.winkels').textContent = wr;
-  if (metNotitie) rij.querySelector('.notitie').replaceWith(notitieRegel(a));
+  if (metNotitie) rij.querySelector('.notitie').replaceWith(rec ? notitieMetRecepten(a) : notitieRegel(a));
   if (opties.sug) rij.querySelector('.hint').textContent = suggestieTekst(opties.sug);
   else if (opties.hint) rij.querySelector('.hint').textContent = opties.hint;
   rij.querySelector('.rondje').setAttribute('aria-label', a.op ? a.naam + ' staat op de lijst; van de lijst halen'
@@ -3725,7 +3770,146 @@ function normaalVullen(el, n) {
   el.append(v, document.createTextNode(n + '×'));
 }
 /* Het regeltje "3 + 4 Lasagne". */
-function voorRegelVullen(el, a) { el.textContent = a.voorTekst; }
+const BLAD_KLEIN = () => svgIcoon(PADEN.I, KLEUR.K, 17);
+/* Notitie: een blaadje papier met regels (in het paneel met de hele notitie, naast het blaadje van een recept). */
+const NOTITIE_ICOON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"></path><path d="M9 10h6M9 14h6M9 18h4"></path></svg>';
+/* Boodschappen: lang indrukken (½ s, of de rechtermuisknop) op een rij met een notitie toont de hele
+   notitie. Bewegen (scrollen) breekt af; de tik die volgt vinkt niet af (el.lang). */
+function langDrukken(el, doe) {
+  el.classList.add('langdruk');
+  let timer = 0, kleur = 0, klaar = false, x = 0, y = 0;
+  const stop = () => { clearTimeout(timer); clearTimeout(kleur); klaar = false; el.classList.remove('druk'); };
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    stop(); x = e.clientX; y = e.clientY; el.lang = false;
+    kleur = setTimeout(() => el.classList.add('druk'), 150);
+    /* Na ½ s: een tikje trillen (Android); bij loslaten opent het paneel. */
+    timer = setTimeout(() => { klaar = true; if (navigator.vibrate) navigator.vibrate(10); }, 500);
+  });
+  el.addEventListener('pointermove', (e) => { if (Math.abs(e.clientX - x) > 10 || Math.abs(e.clientY - y) > 10) stop(); });
+  el.addEventListener('pointerup', () => { const ja = klaar; stop(); if (ja) { el.lang = true; doe(); } });
+  for (const ev of ['pointercancel', 'pointerleave']) el.addEventListener(ev, stop);
+  /* Rechtermuisknop, en Android meldt lang indrukken ook zo: geen menu maar de notitie (één keer: stop wist klaar). */
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); stop(); el.lang = true; doe(); });
+}
+/* Boodschappen: een rij vegen (aanraken). Naar rechts = het rondje (afvinken of terugzetten), naar links = de hele
+   notitie (alleen als er een is). Een rij heeft touch-action: pan-y: verticaal scrollt de telefoon zelf (dan
+   komt pointercancel), opzij komt bij de app. Zo hoeft scrollen nooit op de app te wachten (alles passief).
+   Loslaten na een derde van de breedte voert het uit, anders schuift de rij terug. */
+const VEEG_VINK = '<svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><path d="M6 14.5l5 5 11-11" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+const rijVeeg = { rij: null, id: 0, x: 0, y: 0, dx: 0, bezig: false, uit: false };
+function rijVeegKlaar(doe) {
+  const v = rijVeeg, r = v.rij;
+  v.rij = null;
+  if (!r || !v.bezig) return;
+  /* De klik die na het loslaten nog komt, vinkt niet af. */
+  r.veegTot = Date.now() + 400;
+  const breed = r.getBoundingClientRect().width || 1;
+  const actie = Math.abs(v.dx) >= breed / 3 ? (v.dx > 0 ? r.vink : r.notitie) : null;
+  r.classList.add('terug');
+  r.style.setProperty('--dx', '0px');
+  setTimeout(() => { r.classList.remove('vegen', 'terug'); for (const x of r.querySelectorAll(':scope > .vlaag, :scope > .vonder')) x.remove(); }, 160);
+  if (doe && actie) actie();
+}
+$('winkelLijst').addEventListener('pointerdown', (e) => {
+  /* Alleen met een vinger (of pen); met de muis klik je. */
+  if (e.pointerType === 'mouse' || !e.isPrimary) return;
+  const r = e.target.closest('.wrij');
+  rijVeeg.rij = r && r.vink ? r : null;
+  if (!rijVeeg.rij) return;
+  Object.assign(rijVeeg, { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, bezig: false, uit: false });
+}, { passive: true });
+$('winkelLijst').addEventListener('pointermove', (e) => {
+  const v = rijVeeg, r = v.rij;
+  if (!r || v.uit || e.pointerId !== v.id) return;
+  const dx = e.clientX - v.x, dy = e.clientY - v.y;
+  if (!v.bezig) {
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    /* Meer omhoog/omlaag dan opzij: de telefoon scrollt. Naar links zonder notitie: niets. */
+    if (Math.abs(dx) < 1.5 * Math.abs(dy) || (dx < 0 && !r.notitie)) { v.uit = true; return; }
+    v.bezig = true;
+    try { r.setPointerCapture(v.id); } catch (x) { /* al losgelaten */ }
+    r.classList.add('vegen');
+    const laag = document.createElement('div'); laag.className = 'vlaag';
+    const onder = document.createElement('div'); onder.className = 'vonder';
+    r.prepend(laag); r.prepend(onder);
+  }
+  v.dx = r.notitie ? dx : Math.max(0, dx);
+  const onder = r.querySelector(':scope > .vonder');
+  const kant = v.dx >= 0 ? 'vonder vink-r' : 'vonder not-l';
+  if (onder.className !== kant) { onder.className = kant; onder.innerHTML = v.dx >= 0 ? VEEG_VINK : NOTITIE_ICOON.replace('width="20" height="20"', 'width="28" height="28"'); }
+  r.style.setProperty('--dx', v.dx + 'px');
+}, { passive: true });
+$('winkelLijst').addEventListener('pointerup', (e) => { if (e.pointerId === rijVeeg.id) rijVeegKlaar(true); }, { passive: true });
+$('winkelLijst').addEventListener('pointercancel', (e) => { if (e.pointerId === rijVeeg.id) rijVeegKlaar(false); }, { passive: true });
+/* De hele notitie om te lezen: de eigen notitie (tags, link) met het notitie-icoon, en per recept waarvoor het op
+   de lijst staat een regel met het blaadje: aantal, receptnaam en de notitie van het ingrediënt. Voor het paneel
+   in Boodschappen en de leesstand van het artikel. */
+function notitieVol(a) {
+  const vol = document.createElement('div');
+  vol.className = 'notitievol';
+  if (a.notitie || a.link) {
+    const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = NOTITIE_ICOON;
+    r.appendChild(notitieRegel(a)); vol.appendChild(r);
+  }
+  for (const x of a.op ? a.voor : []) {
+    const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = svgIcoon(PADEN.I, KLEUR.K, 20);
+    const t = document.createElement('span'); t.className = 'rtekst'; t.textContent = x.aantal + '\u00A0' + x.naam;
+    if (x.notitie) { const n = document.createElement('i'); n.textContent = ' · ' + x.notitie; t.appendChild(n); }
+    r.appendChild(t); vol.appendChild(r);
+  }
+  return vol;
+}
+const heeftLeesbaars = (a) => !!(a.notitie || a.link || (a.op && a.voor.length));
+/* De hele notitie in een paneel (Boodschappen: lang indrukken of naar links vegen). */
+function notitiePaneel(a) {
+  sluitKeuze();
+  const k = document.createElement('div');
+  k.id = 'keuze';
+  k.setAttribute('role', 'dialog');
+  k.setAttribute('aria-modal', 'true');
+  k.setAttribute('aria-label', 'Notitie bij ' + a.naam);
+  k.innerHTML = '<div class="paneel"><div class="kop"><h3></h3><button class="kruis" type="button" aria-label="Sluiten">' + KRUIS + '</button></div></div>';
+  k.querySelector('h3').textContent = a.naam;
+  k.querySelector('.paneel').appendChild(notitieVol(a));
+  k.querySelector('.kruis').addEventListener('click', sluitKeuze);
+  k.addEventListener('click', (e) => { if (e.target === k) sluitKeuze(); });
+  keuzeTonen(k);
+}
+/* Notitie in een lijst (Op de lijst, Boodschappen): de eigen notitie (en tags), daaronder per recept waarvoor
+   het op de lijst staat een regel met het blaadje: aantal en receptnaam, en de notitie van het ingrediënt.
+   Het aantal vervalt als het er alleen voor dat ene recept staat (het staat al bij de naam).
+   zonderTags: Boodschappen. */
+function notitieMetRecepten(a, zonderTags) {
+  const s = notitieRegel(zonderTags ? { notitie: notitieZonderTags(a.notitie || '') } : a);
+  const voor = a.op ? a.voor : [];
+  for (const x of voor) {
+    const r = document.createElement('span');
+    r.className = 'rregel';
+    r.innerHTML = BLAD_KLEIN();
+    const kop = document.createElement('span');
+    kop.className = 'rnaam';
+    kop.textContent = (voor.length === 1 && a.opvoor && x.aantal === a.opAantal ? '' : x.aantal + '\u00A0') + x.naam;
+    r.appendChild(kop);
+    if (x.notitie) r.appendChild(document.createTextNode(' · ' + notitieZonderTags(x.notitie).replace(/\n+/g, ' ')));
+    s.appendChild(r);
+  }
+  return s;
+}
+/* De tekst van een notitie zonder de tags, om te tonen; wat er leeg omheen bleef staan ("()", '""') gaat ook weg.
+   Meer regels blijven regels (getoond met white-space:pre-line); spaties per regel opgeschoond. */
+function notitieZonderTags(n) {
+  let tekst = n;
+  TAG.lastIndex = 0;
+  if (TAG.test(n)) {
+    tekst = n.replace(TAG, '$1');
+    /* Herhalen tot er niets meer verandert: "[ "" ]" wordt eerst "[ ]" en dan leeg. */
+    for (let vorige = ''; vorige !== tekst;) { vorige = tekst; tekst = tekst.replace(/\(\s*\)|\[\s*\]|\{\s*\}|"\s*"|'\s*'/g, ''); }
+  }
+  TAG.lastIndex = 0;
+  /* Getal en eenheid blijven bij elkaar op een regel ("500 g", "2 kg", "10 %"): een vaste spatie (alleen in beeld). */
+  return schoonNotitie(tekst).replace(/(\d) (?=[\p{L}%])/gu, '$1\u00A0');
+}
 function notitieRegel(a, tikSoort) {
   const s = document.createElement('span');
   s.className = 'notitie';
@@ -3735,15 +3919,7 @@ function notitieRegel(a, tikSoort) {
   TAG.lastIndex = 0;
   let m;
   while ((m = TAG.exec(n))) tags.push(m[2]);
-  /* Zonder de tags; wat er leeg omheen bleef staan ("()", '""') gaat ook weg. */
-  let tekst = n;
-  if (tags.length) {
-    tekst = n.replace(TAG, '$1');
-    /* Herhalen tot er niets meer verandert: "[ "" ]" wordt eerst "[ ]" en dan leeg. */
-    for (let vorige = ''; vorige !== tekst;) { vorige = tekst; tekst = tekst.replace(/\(\s*\)|\[\s*\]|\{\s*\}|"\s*"|'\s*'/g, ''); }
-  }
-  /* Meer regels blijven regels (getoond met white-space:pre-line); spaties per regel opgeschoond. */
-  tekst = schoonNotitie(tekst);
+  const tekst = notitieZonderTags(n);
   if (tekst) { const r = document.createElement('span'); r.className = 'ntekst'; r.textContent = tekst; s.appendChild(r); }
   if (!tags.length && !a.link) return s;
   const r2 = document.createElement('span');
@@ -4051,7 +4227,8 @@ function tellerKlik(e, stand, teken, doel) {
 function lijstKlik(e) {
   if (tellerKlik(e, scherm, tekenBoodschappen, $('scherm-boodschappen'))) return;
   const naam = e.target.closest('.tekst');
-  if (naam) { artikelOpenen(naam.closest('.item').dataset.id); return; }
+  /* Vanaf Op de lijst eerst lezen; elders meteen bewerken. */
+  if (naam) { const it = naam.closest('.item'); artikelOpenen(it.dataset.id, it.dataset.lijst === '1'); return; }
   const knop = e.target.closest('.rondje');
   if (!knop) return;
   const a = artikelen.find((x) => x.id === knop.closest('.item').dataset.id);
@@ -4225,6 +4402,7 @@ function ingredientRij(r, x) {
     '<button class="rondje" type="button" aria-pressed="' + aan + '">' + (aan ? RONDJE.aan : RONDJE.plus) + '</button>';
   rij.querySelector('.naam > span').textContent = x.naam;
   if (x.aantal > 1) rij.querySelector('.aantal').textContent = x.aantal + '×';
+  if (x.notitie) rij.querySelector('.tekst').appendChild(notitieRegel({ notitie: x.notitie }));
   rij.querySelector('.icoon').setAttribute('aria-label', 'Ingrediënt, aantal ' + x.aantal + '; aantal wijzigen');
   rij.querySelector('.rondje').setAttribute('aria-label', aan ? x.naam + ' staat voor ' + r.naam + ' op de lijst; eraf halen' : x.naam + ' voor ' + r.naam + ' op de lijst zetten');
   if (!tellerOpen) return rij;
@@ -4375,13 +4553,14 @@ function ingredientUit(r, x) {
    de lijst, dan verhuist dat naar het artikel met de nieuwe naam. */
 function ingredientBewerken(r, x) {
   bewerkPaneel({
-    titel: 'Ingrediënt', naam: x.naam, wegLabel: 'Uit het recept halen',
-    opslaan: (nieuw) => {
+    titel: 'Ingrediënt', naam: x.naam, wegLabel: 'Uit het recept halen', metNotitie: true, geenLink: true, notitie: x.notitie,
+    opslaan: (nieuw, extra) => {
       const nn = normNaam(nieuw); // één keer, niet per element
       const nf = naamFout(nieuw, x.naam, r.ingredienten.some((y) => y.id !== x.id && y.sleutel === nn), 'een ingrediënt');
       if (nf) return nf;
-      if (nieuw === x.naam) return;
-      const hs = [{ actie: 'ingredient', soort: 'recept', id: r.id, ingredient: x.id, naam: nieuw, wat: x.naam }];
+      const notitie = extra.notitie !== x.notitie ? { notitie: extra.notitie } : {};
+      if (nieuw === x.naam && !('notitie' in notitie)) return;
+      const hs = [Object.assign({ actie: 'ingredient', soort: 'recept', id: r.id, ingredient: x.id, wat: x.naam }, nieuw !== x.naam ? { naam: nieuw } : {}, notitie)];
       const a = voorAan(r, x);
       if (a && normNaam(nieuw) !== x.sleutel) {
         const op = a.voor.find((v) => v.recept === r.id);
@@ -4925,14 +5104,15 @@ function winkelRij(a, soort) {
   const normaal = a.op ? a.normaal : 0;
   if (normaal) { const s = document.createElement('s'); s.className = 'normaal'; normaalVullen(s, normaal); b.querySelector('.nm').appendChild(s); }
   if (tal > 1 || normaal) { const n = document.createElement('span'); n.className = 'aantal'; n.textContent = tal + '×'; b.querySelector('.nm').appendChild(n); }
-  if (!gedaan && a.op && a.voorTekst) { const v = document.createElement('span'); v.className = 'voorregel'; voorRegelVullen(v, a); b.querySelector('.nm').appendChild(v); }
   b.querySelector('.vinkrond').setAttribute('aria-label', (tal > 1 ? tal + '× ' : '') + (gedaan ? a.naam + ', in de winkelmand; terugzetten' : a.naam + ' afvinken'));
   if (!gedaan && isNieuw(a)) {
     const n = document.createElement('span'); n.className = 'nieuw'; n.textContent = 'nieuw';
     n.style.cssText = 'padding:1px 7px;background:#DDF1F2;color:#0A6570;font-size:17px;font-weight:600;flex-shrink:0';
     b.appendChild(n);
   }
-  b.addEventListener('click', () => gedaan ? terugOpLijst(a.id) : afvinken(a));
+  /* Vinken (ook voor vegen naar rechts). */
+  rij.vink = () => { if (gedaan) terugOpLijst(a.id); else afvinken(a); };
+  b.addEventListener('click', () => { if (b.lang) { b.lang = false; return; } if (rij.veegTot && Date.now() < rij.veegTot) return; rij.vink(); });
   rij.appendChild(b);
   if (soort === 'onbekend' || soort === 'zonder') {
     const w = document.createElement('button');
@@ -4947,7 +5127,13 @@ function winkelRij(a, soort) {
     s.textContent = winkelsRegel(a);
     b.querySelector('.nm').appendChild(s);
   }
-  if ((a.notitie || a.link) && !gedaan) b.querySelector('.nm').appendChild(notitieRegel(a));
+  if (!gedaan && (a.notitie || a.link || (a.op && a.voor.length))) {
+    /* Zonder tags en link (ruimte); per recept een regel; de hele notitie met lang indrukken of vegen. */
+    const n = notitieMetRecepten(a, true);
+    if (n.childNodes.length) b.querySelector('.nm').appendChild(n);
+    /* Lang indrukken en naar links vegen alleen als er een notitie is (eigen of uit een recept). */
+    if (a.notitie || a.link || (a.op && a.rnot.length)) { langDrukken(b, () => notitiePaneel(a)); rij.notitie = () => notitiePaneel(a); }
+  }
   return rij;
 }
 
@@ -5249,7 +5435,7 @@ function bewerkPaneel(opt) {
     '<div class="paneelmeldingen"></div>' +
     '<div class="naamveld"><label for="bewerkNaam">Naam</label><input id="bewerkNaam" type="text" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></div>' +
     (opt.metNotitie ? '<div class="naamveld"><label for="bewerkNotitie">Notitie</label><textarea id="bewerkNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter"></textarea></div>' +
-      '<div class="naamveld"><label for="bewerkLink">Link</label><input id="bewerkLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' : '') +
+      (opt.geenLink ? '' : '<div class="naamveld"><label for="bewerkLink">Link</label><input id="bewerkLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>') : '') +
     '<div class="bewerkknoppen"><button class="prul" type="button">' + PRULLENBAK + '</button><button class="knop" type="button">Opslaan</button></div></div>';
   k.querySelector('h3').textContent = opt.titel;
   k.querySelector('.prul').setAttribute('aria-label', opt.wegLabel);
@@ -5257,7 +5443,7 @@ function bewerkPaneel(opt) {
   inp.value = opt.naam;
   if (opt.metNotitie) {
     const nt = k.querySelector('#bewerkNotitie');
-    nt.value = opt.notitie || ''; k.querySelector('#bewerkLink').value = linkTekst(opt.link); tagKeuze(nt, alleNotities, true);
+    nt.value = opt.notitie || ''; if (!opt.geenLink) k.querySelector('#bewerkLink').value = linkTekst(opt.link); tagKeuze(nt, alleNotities, true);
     /* Groeit mee over meerdere regels; Enter = een nieuwe regel (een notitie mag meer regels hebben). */
     const hoog = () => { nt.style.height = 'auto'; nt.style.height = nt.scrollHeight + 4 + 'px'; };
     nt.addEventListener('input', hoog);
@@ -5265,7 +5451,7 @@ function bewerkPaneel(opt) {
   }
   /* Een fout (dubbele naam, onveilige link): als melding bovenin het paneel; het paneel blijft open. */
   const fout = (tekst) => foutMelding(tekst, k);
-  const stand = () => [inp.value, opt.metNotitie ? k.querySelector('#bewerkNotitie').value : '', opt.metNotitie ? k.querySelector('#bewerkLink').value : ''].join('\u0001');
+  const stand = () => [inp.value, opt.metNotitie ? k.querySelector('#bewerkNotitie').value : '', opt.metNotitie && !opt.geenLink ? k.querySelector('#bewerkLink').value : ''].join('\u0001');
   const begin = stand();
   const opslaan = () => {
     const v = schoonTekst(inp.value);
@@ -5274,9 +5460,10 @@ function bewerkPaneel(opt) {
     if (nf) { fout(nf); return; }
     let extra;
     if (opt.metNotitie) {
-      const link = linkVanInvoer(k.querySelector('#bewerkLink').value);
+      const link = opt.geenLink ? '' : linkVanInvoer(k.querySelector('#bewerkLink').value);
       if (link === null) { fout(LINK_FOUT); return; }
-      extra = { notitie: schoonNotitie(k.querySelector('#bewerkNotitie').value), link };
+      extra = { notitie: schoonNotitie(k.querySelector('#bewerkNotitie').value) };
+      if (!opt.geenLink) extra.link = link;
     } else if (v === opt.naam) { sluitKeuze(); return; }
     const probleem = opt.opslaan(v, extra);
     if (probleem) { fout(probleem); return; }
@@ -5803,7 +5990,7 @@ function bwGewijzigd() {
 }
 
 /* Opent als deelscherm, vanaf Artikelen of vanuit een winkel; sluiten brengt je terug. */
-function artikelOpenen(id) {
+function artikelOpenen(id, lezen) {
   const a = artikelen.find((x) => x.id === id);
   if (!a) return;
   Object.assign(bw, { id, oud: a, naam: a.naam, notitie: a.notitie, link: linkTekst(a.link), soort: a.letter, plekken: new Map(a.plekken.map((p) => [p.winkel, p.afd])) });
@@ -5814,16 +6001,30 @@ function artikelOpenen(id) {
     bw.laag = null; artikelDicht(); return true;
   });
   const doel = $('artikelScherm');
+  doel.classList.remove('lezen');
   deelOpen(doel, 'balk-artikel');
   doel.innerHTML = '<div class="wdkop"><h2>Artikel</h2><button class="icoonknop" id="artikelDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
     '<div class="veld"><label for="artikelNaam">Naam</label><textarea id="artikelNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
-    '<div class="veld"><label for="artikelNotitie">Notitie</label><textarea id="artikelNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter"></textarea></div>' +
+    '<div class="veld"><label for="artikelNotitie">Notitie</label><textarea id="artikelNotitie" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter"></textarea><div class="rnotities" id="artikelRnot" hidden></div></div>' +
     '<div class="veld"><label for="artikelLink">Link</label><input id="artikelLink" type="text" placeholder="Link of zoekwoorden" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
     '<div class="veld"><span class="label2" id="soortLabel" style="font-weight:600;color:var(--paars)">Soort</span><div class="soorten" role="radiogroup" aria-labelledby="soortLabel"></div></div>' +
     '<div class="blok"><div class="kopbalk"><h3>Te koop bij</h3><span class="tal" id="plekTal"></span></div><div class="wkaart" id="plekken"></div></div>' +
     '<div class="blok"><div class="kopbalk"><h3>Gekocht</h3></div><div class="wkaart"><div class="gekochtregel" id="gekochtRegel"></div></div></div>';
   /* Naam: één regel tekst die doorloopt, Enter sluit het toetsenbord. Notitie: meer regels, Enter = nieuwe regel. */
   tagKeuze('artikelNotitie', alleNotities, true);
+  /* Op de lijst voor recepten: per recept een regel (aantal, recept, notitie van het ingrediënt), zoals in de
+     leesstand; alleen te lezen (bewerken in het recept). */
+  if (a.op && a.voor.length) {
+    const rn = $('artikelRnot');
+    rn.hidden = false;
+    for (const x of a.voor) {
+      const r = document.createElement('div'); r.className = 'rnot';
+      r.innerHTML = BLAD_KLEIN();
+      const t = document.createElement('span'); t.textContent = x.aantal + '\u00A0' + x.naam;
+      if (x.notitie) { const n = document.createElement('i'); n.textContent = ' · ' + x.notitie; t.appendChild(n); }
+      r.appendChild(t); rn.appendChild(r);
+    }
+  }
   const vakken = [[$('artikelNaam'), 'naam'], [$('artikelNotitie'), 'notitie']];
   const hoogte = () => { for (const [v] of vakken) { v.style.height = 'auto'; v.style.height = v.scrollHeight + 4 + 'px'; } };
   for (const [v, veld] of vakken) {
@@ -5840,6 +6041,27 @@ function artikelOpenen(id) {
   artikelBijwerken();
   naarBoven();
   hoogte();
+  /* Leesstand (alleen vanaf Op de lijst, en alleen als er iets te lezen is): de naam in de kop, de notitie en de
+     recepten; geen onderbalk. Het potlood maakt er het bewerkscherm van (zelfde scherm, alle velden). */
+  if (lezen && heeftLeesbaars(a)) {
+    doel.classList.add('lezen');
+    const kop = doel.querySelector('.wdkop');
+    kop.querySelector('h2').textContent = a.naam;
+    const pot = document.createElement('button');
+    pot.className = 'icoonknop'; pot.type = 'button'; pot.id = 'artikelBewerk';
+    pot.setAttribute('aria-label', 'Bewerken'); pot.innerHTML = POTLOOD();
+    kop.insertBefore(pot, $('artikelDicht'));
+    doel.appendChild(notitieVol(a));
+    $('balk-artikel').hidden = true;
+    pot.addEventListener('click', () => {
+      doel.classList.remove('lezen');
+      kop.querySelector('h2').textContent = 'Artikel';
+      pot.remove();
+      const v = doel.querySelector(':scope > .notitievol'); if (v) v.remove();
+      $('balk-artikel').hidden = false;
+      hoogte();
+    });
+  }
 }
 
 function tekenSoorten() {
@@ -5893,6 +6115,14 @@ function artikelBijwerken() {
     artikelDicht();
     weerTerugMelding(o.id, 'artikel', record);
     return;
+  }
+  /* Leesstand: opnieuw tekenen met wat er nu is (de ander paste iets aan); niets meer te lezen = dicht. */
+  const sch = $('artikelScherm');
+  if (sch.classList.contains('lezen')) {
+    if (!heeftLeesbaars(a)) { artikelDicht(); return; }
+    sch.querySelector('.wdkop h2').textContent = a.naam;
+    const oud = sch.querySelector(':scope > .notitievol');
+    if (oud) oud.replaceWith(notitieVol(a));
   }
   for (const w of Array.from(bw.plekken.keys())) if (!winkelOpId.has(w)) bw.plekken.delete(w);
   const doel = $('plekken');
@@ -6398,9 +6628,13 @@ document.addEventListener('scroll', (e) => {
 }, true);
 /* Alle notities samen, zodat dezelfde tag overal gelijk gespeld wordt. */
 function alleNotities() {
-  return artikelen.map((a) => a.notitie).concat(winkels.map((w) => w.notitie), acties.map((a) => a.notitie));
+  const uit = artikelen.map((a) => a.notitie).concat(winkels.map((w) => w.notitie), acties.map((a) => a.notitie));
+  for (const r of recepten) for (const x of r.ingredienten) if (x.notitie) uit.push(x.notitie);
+  return uit;
 }
-tagKeuze('invoerTekst', () => (receptModus() && !rs.open ? recepten.map((r) => r.notitie) : artikelen.map((a) => a.notitie)), false, () => !!rs.open && !/^\s*#/.test($('invoerTekst').value));
+/* Bij artikelen ook de tags uit de notities van ingrediënten waarvoor ze op de lijst staan (daarop zoeken kan). */
+const artikelNotities = () => { const uit = []; for (const a of artikelen) { uit.push(a.notitie); for (const x of a.rnot) uit.push(x.notitie); } return uit; };
+tagKeuze('invoerTekst', () => (receptModus() && !rs.open ? recepten.map((r) => r.notitie) : artikelNotities()), false, () => !!rs.open && !/^\s*#/.test($('invoerTekst').value));
 /* Winkelkeuze in het zoekvak van Artikelen: "@" toont de winkels boven de balk (met hoeveel
    artikelen er te koop zijn), net als de tags bij "#". Kiezen zet "@Winkel " in het vak;
    verder typen zoekt in de afdelingen. Het toetsenbord blijft open. */
@@ -7026,21 +7260,28 @@ document.addEventListener('click', (e) => {
    horizontale beweging. */
 const TABS = ['winkels', 'boodschappen', 'winkel', 'doen', 'instellingen'];
 const veeg = { x: 0, y: 0, actief: false };
-$('midden').addEventListener('touchstart', (e) => {
+/* In Boodschappen is vegen voor de rijen (afvinken, notitie): daar wissel je via de tabbalk (tikken of vegen). */
+function veegStart(e, opBalk) {
   const t = e.touches[0];
   veeg.actief = e.touches.length === 1 && !(e.target.closest && e.target.closest('.greep')) && t.clientX > 24 && t.clientX < window.innerWidth - 24 &&
-    !$('keuze') && !document.body.classList.contains('typen');
+    !$('keuze') && !document.body.classList.contains('typen') && (opBalk || $('scherm-winkel').hidden);
   veeg.x = t.clientX; veeg.y = t.clientY;
-}, { passive: true });
-$('midden').addEventListener('touchend', (e) => {
+}
+$('midden').addEventListener('touchstart', (e) => veegStart(e, false), { passive: true });
+document.querySelector('nav').addEventListener('touchstart', (e) => veegStart(e, true), { passive: true });
+function veegEind(e) {
   if (!veeg.actief) return;
   veeg.actief = false;
   const t = e.changedTouches[0];
   const dx = t.clientX - veeg.x, dy = t.clientY - veeg.y;
   if (Math.abs(dx) < 70 || Math.abs(dx) < 2 * Math.abs(dy)) return;
   const nu = TABS.findIndex((n) => !$('scherm-' + n).hidden);
+  /* Een veeg op de tabbalk is geen tik op een tab. */
+  if (e.currentTarget && e.currentTarget.tagName === 'NAV') e.preventDefault();
   toonScherm(TABS[(nu + (dx < 0 ? 1 : -1) + TABS.length) % TABS.length]);
-}, { passive: true });
+}
+$('midden').addEventListener('touchend', veegEind, { passive: true });
+document.querySelector('nav').addEventListener('touchend', veegEind);
 
 /* De browser mag opslag bij ruimtegebrek wissen; vastzetten voorkomt dat, zodat
    een wachtrij die nog niet in OneDrive staat niet verloren gaat. Lukt het niet,

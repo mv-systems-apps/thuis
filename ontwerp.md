@@ -94,7 +94,8 @@ om met de hand te bewerken.
   wordt bij het lezen genegeerd en nooit geschreven (RFC 8259); hij verdwijnt
   bij de volgende wijziging, net als in de andere apps.
 - `versie`: datum en tijd van de laatste formaatwijziging in hex, zoals het
-  versiestempel (`1352906-203` = 26-11-2026 05:15, lijstaantal erbij en recepten met eigen
+  versiestempel (`1352906-59D` = 26-11-2026 14:37, een ingrediënt kan een notitie hebben, niets om te
+  zetten; daarvoor `1352906-203` = 26-11-2026 05:15, lijstaantal erbij en recepten met eigen
   ingrediënten: de omzetting maakt van "artikel-id → aantal" een ingrediënt met dezelfde id, de naam van
   het artikel en het aantal; daarvoor `1352905-7DA`, recepten, en `1352902-459`). Nieuwer dan de app kent:
   niets schrijven, melding om bij te werken. Ontbrekend: niet lezen. Ouder: stap
@@ -127,7 +128,7 @@ om met de hand te bewerken.
 
 ```json
 {
-"versie": "1352906-203",
+"versie": "1352906-59D",
 "instellingen": {
  "wekelijks": {"dag":"za","tijd":"06:00","teruggezet":"2026-11-21T06:00"},
  "archief": {"bewaren":"1m"}
@@ -150,7 +151,7 @@ om met de hand te bewerken.
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`, `auto` (ja/nee, standaard nee: handmatig, met het knopje bij Wekelijks); `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
-| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, mag meer regels hebben (\n), blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums); `voor` (recept-id → { `naam`, `aantal` }: waarvoor het extra op de lijst staat; het regeltje toont de huidige naam van het recept; de naam wordt onthouden (bij verwijderen de laatste), zodat het regeltje klopt als het recept weg is; van de lijst of afgevinkt = leeg); `opvoor` ("1" = staat alleen voor recepten op de lijst, het eigen aantal telt dan niet); `opaantal` (lijstaantal "1" t/m "99", alleen deze keer; leeg = het vaste aantal; van de lijst = leeg) |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, mag meer regels hebben (\n), blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums); `voor` (recept-id → { `naam`, `aantal` }: waarvoor het extra op de lijst staat; de receptregel toont de huidige naam van het recept; de naam wordt onthouden (bij verwijderen de laatste), zodat de receptregel klopt als het recept weg is; van de lijst of afgevinkt = leeg); `opvoor` ("1" = staat alleen voor recepten op de lijst, het eigen aantal telt dan niet); `opaantal` (lijstaantal "1" t/m "99", alleen deze keer; leeg = het vaste aantal; van de lijst = leeg) |
 | `recepten` | `naam`, `notitie` (met #tags), `link`, `ingredienten` (id → { `naam`, `aantal` "1" t/m "99" }): eigen ingrediënten, los van de artikelen (een kladblok); aanvinken zet het artikel met dezelfde naam op de lijst |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
 | `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id) en `onzeker` ("1": afgevinkt onder Elders); niet wie |
@@ -215,7 +216,8 @@ Layout volgens de conventies: vaste kop, scrollend midden, vaste tabbalk. De
 kop heeft een kleurverloop van kobalt naar paars, met rechts het sync-wolkje.
 Tabbalk met alleen iconen, vijf tabbladen: **Winkels** (winkelpui),
 **Artikelen** (klembord), **Boodschappen** (winkelwagen), **Doen** (vinkvak) en
-**Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom; niet vanaf
+**Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom (in Boodschappen alleen op de
+tabbalk: daar is vegen over een rij afvinken of de notitie); niet vanaf
 de rand van het scherm (terug-gebaar van Android), niet tijdens typen en niet in
 een menu of keuzelijst. De terugknop: zie §7a (Bewerken, terugknop en meldingen).
 Kleur en vorm per soort, hoe vaker hoe meer hoeken: eenmalig orchidee #8E33A6 (rondje met 1),
@@ -271,9 +273,10 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   en toont boven de balk namen die nog niet in het recept staan (artikelen en ingrediënten uit andere
   recepten, zodat de namen gelijk blijven) en "+ Nieuw" (alleen een ingrediënt, geen artikel).
 - Aantallen met recepten: één regel, opgeteld. Melk staat 3× (wekelijks) op de lijst, Lasagne
-  heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", grijs eronder "3 + 4 Lasagne + 2
-  Pannenkoeken". Stond het er alleen voor recepten op: "4 Lasagne + 2 Pannenkoeken" (één
-  recept: alleen "Lasagne"). Het aantal in een recept aanpassen telt mee op de lijst. Van de
+  heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", en onder de notitie per recept een regel met het
+  blaadje: "4 Lasagne · Volle melk…" en "2 Pannenkoeken" (receptkleur; de notitie van het
+  ingrediënt cursief). Het eigen deel (3) staat er niet apart; het artikelscherm en de teller tonen het.
+  Staat het er alleen voor één recept: alleen "Lasagne" (het aantal staat al bij de naam). Het aantal in een recept aanpassen telt mee op de lijst. Van de
   lijst (rondje op Artikelen) of afgevinkt: de recepten gaan eraf, het eigen aantal blijft (melk
   weer 3×); terugtikken in de winkelmand of onder "Van de lijst gehaald" zet ze terug. Zie ook het lijstaantal hieronder.
 - Eenmalig heeft geen lijstaantal: het aantal ís daar "deze keer"; de teller wijzigt het overal zelf
@@ -282,7 +285,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Lijstaantal (wekelijks en regelmatig) (deze keer) en vast aantal: op Op de lijst (en Boodschappen) zie je wat je deze keer
   koopt; de teller op Op de lijst wijzigt alleen het lijstaantal (gelijk aan het vaste = leeg). Elders
   (Eenmalig, Wekelijks, Regelmatig, zoeken, afdelingen in Winkels, artikelscherm) het vaste aantal, zonder
-  regeltje; de teller daar wijzigt het vaste aantal. Van de lijst (afvinken, eraf halen) wist het
+  receptregels; de teller daar wijzigt het vaste aantal. Van de lijst (afvinken, eraf halen) wist het
   lijstaantal; terugtikken (winkelmand, Van de lijst gehaald) zet het terug. Wekelijks terug: een wekelijks
   artikel begint de nieuwe week met het vaste aantal, ook als het nog op de lijst stond (lijstaantal weg,
   "alleen voor recepten" weg); nog niet gekochte recepten blijven. Komt een afvinken van vorige week pas
@@ -292,11 +295,11 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   Met recepten gaat − tot 0; zonder recepten is 1 het minimum; + vanaf 0 = ook zelf nodig (het vaste
   aantal telt weer mee).
 - Wekelijks en het eigen deel wijkt af van het vaste: achter de naam doorgestreept (oranje, "let op")
-  wat het normaal zou zijn (vast + recepten), dan het aantal: "~~3×~~ 2×", met recept "~~7×~~ 6×" en het
-  regeltje "2 + 4 Lasagne", alleen voor het recept "~~7×~~ 4×" en "Lasagne". Zo werkt het ook zonder
-  kleur; het regeltje legt alleen de recepten uit. Eenmalig en regelmatig: niets doorgestreept. Gaat het laatste recept eraf terwijl
+  wat het normaal zou zijn (vast + recepten), dan het aantal: "~~3×~~ 2×", met recept "~~7×~~ 6×" en de
+  receptregel "4 Lasagne", alleen voor het recept "~~7×~~ 4×" en "Lasagne". Zo werkt het ook zonder
+  kleur; de receptregels leggen alleen de recepten uit. Eenmalig en regelmatig: niets doorgestreept. Gaat het laatste recept eraf terwijl
   het er alleen daarvoor op stond, dan gaat het van de lijst. Wekelijks terug telt het eigen
-  aantal weer mee. Het regeltje staat waar je ziet wat je deze keer koopt: Op de lijst en
+  aantal weer mee. De receptregels staan waar je ziet wat je deze keer koopt: Op de lijst en
   Boodschappen; niet in de andere filters, zoeken, de tab Winkels, het recept zelf, de Winkelmand,
   Aankopen, Van de lijst gehaald en het Archief. Een recept verwijderen laat de lijst ongemoeid; een artikel
   verwijderen raakt geen recept.
@@ -314,10 +317,28 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   tabblad (noopener, noreferrer). Ook bij het tonen opnieuw gecontroleerd.
 - Notitie: in het bewerkscherm onder Naam, één tekst, mag meer regels hebben (Enter = nieuwe
   regel; bij Naam sluit Enter af). Bij opslaan: elke regel opgeschoond, lege regels aan begin en
-  eind weg, hooguit één lege regel achter elkaar. In de lijsten paars onder
-  de winkels (zelfde letter), in Boodschappen onder de naam: eerst de tekst (hooguit 2 regels,
-  daarna …), daaronder de tags met de link erachter (niets vet; de link onderstreept met ↗).
-  In de band onder de titel van een recept of winkel en in de editors alle regels. Blijft staan.
+  eind weg, hooguit één lege regel achter elkaar. In alle lijsten één regel per notitie (de eerste
+  regel, daarna …): paars onder de winkels (zelfde letter), daaronder de tags met de link erachter
+  (niets vet; de link onderstreept met ↗), daaronder de receptregels. Getal en eenheid blijven bij
+  elkaar ("500 g", vaste spatie, alleen in beeld). In Boodschappen zonder tags en link (ruimte).
+  Alles staat in de band onder de titel van een recept of winkel, in de editors, in de leesstand
+  van een artikel en in het notitiepaneel. Blijft staan.
+- Notitie bij een ingrediënt (recept): Naam en Notitie in het bewerkpaneel van het ingrediënt (tik
+  op de naam; geen link), met tags. In het recept paars onder het ingrediënt. Staat een artikel
+  voor dat recept op de lijst, dan staat de notitie op zijn receptregel (niet bij het artikel
+  bewaard: van de lijst = weg). Zoeken op een tag uit zo'n notitie vindt het artikel zolang het
+  daarvoor op de lijst staat; de tag staat ook in de tagkeuze.
+- Artikel vanaf Op de lijst: eerst lezen (naam in de kop, potlood en kruisje; de hele notitie met
+  het notitie-icoon, per recept een regel; geen onderbalk). Het potlood maakt er het bewerkscherm
+  van. Verandert er intussen iets (ophalen: elke 3 min, in Boodschappen elke 30 s, bij terugkomen
+  meteen), dan ververst de leesstand; is er niets meer te lezen, dan sluit hij. Niets te lezen (geen notitie, link of recept), of vanaf een ander filter, zoeken of een
+  winkel: meteen bewerken.
+- Boodschappen: tik op de regel = afvinken (ook op de notitie). Lang indrukken (½ s; laptop:
+  rechtermuisknop) of naar links vegen = het notitiepaneel (alleen als er een notitie is); naar
+  rechts vegen = afvinken (zoals het rondje). Vegen telt pas bij een duidelijk horizontale beweging
+  en na een derde van de breedte; anders schuift de rij terug. Een rij heeft touch-action: pan-y:
+  verticaal scrollt de telefoon zelf, zonder op de app te wachten (alle luisteraars passief). De rij schuift mee met eronder
+  paars + vinkje of lichtpaars + notitie-icoon.
 - Tagkeuze: zwevend boven het vak waarin je typt (notitie: 6 px, het toetsenbord zit
   eronder; zoekvak: 9 px, zodat ook de focusrand zichtbaar blijft), even breed, met een
   paarse rand en een lichte schaduw; schuift mee als het scherm verschuift.

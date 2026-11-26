@@ -62,7 +62,7 @@ MUTATIES = [
   ("recepten: laatste recept eraf, toch op de lijst", "    if (!r.voor.size && r.opvoor) {\n      r.op = '';", "    if (false) {\n      r.op = '';"),
   ("recepten: eigen aantal telt altijd mee", "  const eigen = r.opvoor ? 0 : ((r.soort !== 'eenmalig' && +r.opaantal) || vast);", "  const eigen = (r.soort !== 'eenmalig' && +r.opaantal) || vast;"),
   ("recepten: aantal 0 toegestaan", "const RECEPT_AANTAL = /^([1-9]|[1-9]\\d)$/;", "const RECEPT_AANTAL = /^(\\d|[1-9]\\d)$/;"),
-  ("recepten: regeltje houdt de oude naam", "naam: ((model && model.recepten.get(recept)) || x).naam", "naam: x.naam"),
+  ("recepten: regeltje houdt de oude naam", "return { recept, naam: (rec || x).naam,", "return { recept, naam: x.naam,"),
   ("recepten: verwijderd na hernoemen, oude naam", "if (x) x.naam = weg.naam;", "if (x) x.naam = x.naam;"),
   ("recepten: zelf erbij in dezelfde minuut telt niet", "nieuw !== '' && r.opvoor) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }", "nieuw !== '' && false) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }"),
   ("recepten: opvoor zonder recept toegestaan", "h.nieuw === '1' && (!r.op || !r.voor.size)) return { status: 'al' };", "h.nieuw === '1' && false) return { status: 'al' };"),
@@ -86,6 +86,11 @@ MUTATIES = [
   ("link: elke punt is een adres", "ADRES_EXTENSIE.test(host)", "/\\./.test(host)"),
   ("notitie: meer lege regels achter elkaar", "if (r || (uit.length && uit[uit.length - 1])) uit.push(r);", "if (r || uit.length) uit.push(r);"),
   ("notitie: lege regels aan het eind blijven", "  while (uit.length && !uit[uit.length - 1]) uit.pop();\n", ""),
+  ("ingrediënt: notitie niet bewaard", "notitie: notitie === undefined ? nu.notitie : notitie });", "notitie: nu.notitie });"),
+  ("ingrediënt: notitie niet in het bestand", "x.notitie ? { notitie: x.notitie } : {}); return o; },", "{}); return o; },"),
+  ("receptnotitie niet bij het artikel", "notitie: (ing && ing.notitie) || '' };", "notitie: '' };"),
+  ("zoeken op tag negeert receptnotities", "a.rnot && a.rnot.length ? [a.notitie].concat(a.rnot.map((x) => x.notitie)).join('\\n') : a.notitie", "a.notitie"),
+  ("dubbel ingrediënt verliest notitie", "      if (!e.notitie && x.notitie) e.notitie = x.notitie;\n", ""),
   ("notitie: regels samengevoegd", "split('\\n').map(schoonTekst);", "split('\\u0000').map(schoonTekst);"),
 ]
 hier = os.path.dirname(os.path.abspath(__file__))

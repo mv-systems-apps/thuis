@@ -14,6 +14,8 @@ const html = fs.readFileSync(APP, 'utf8');
 const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]).join('\n');
 
 let goed = 0, fout = 0;
+/* Ingrediënten als tekst; een lege notitie weggelaten (zoals in het bestand). */
+const ingJ = (m) => JSON.stringify(Array.from(m, ([id, x]) => [id, x.notitie ? x : { naam: x.naam, aantal: x.aantal }]));
 function controle(naam, fn) {
   try {
     const r = fn();
@@ -569,7 +571,7 @@ controle('recepten: ingrediënt erbij, aantal en naam wijzigen, eruit; een artik
   k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ei001', naam: 'Eieren', aantal: '3' }));
   k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ei001', aantal: '4' }));
   k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'mel01', naam: 'Halfvolle melk' }));
-  const a = JSON.stringify(Array.from(m.recepten.get('pan01').ingredienten));
+  const a = ingJ(m.recepten.get('pan01').ingredienten);
   k.pasToe(m, H({ actie: 'weg', soort: 'artikel', id: 'geh01' }));
   const b = m.recepten.get('las01').ingredienten.has('geh01');
   k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ei001', weg: true }));
@@ -579,7 +581,7 @@ controle('recepten: ingrediënt erbij, aantal en naam wijzigen, eruit; een artik
 });
 controle('recepten: twee keer dezelfde naam in één recept (tegelijk toegevoegd) → bij lezen samengevoegd, grootste aantal', () => {
   const m = lees({ recepten: { las01: { naam: 'Lasagne', ingredienten: { b2222: { naam: 'Eieren', aantal: '2' }, a1111: { naam: 'eieren', aantal: '1' }, c3333: { naam: 'Melk', aantal: '1' } } } } });
-  return gelijk(JSON.stringify(Array.from(m.recepten.get('las01').ingredienten)), '[["a1111",{"naam":"eieren","aantal":"2"}],["c3333",{"naam":"Melk","aantal":"1"}]]');
+  return gelijk(ingJ(m.recepten.get('las01').ingredienten), '[["a1111",{"naam":"eieren","aantal":"2"}],["c3333",{"naam":"Melk","aantal":"1"}]]');
 });
 controle('recepten: verwijderen en Ongedaan maken (terug) zet het recept met zijn ingrediënten terug', () => {
   const k = kern(); const m = lees(RB);
@@ -588,6 +590,46 @@ controle('recepten: verwijderen en Ongedaan maken (terug) zet het recept met zij
   const weg = m.recepten.has('las01');
   k.pasToe(m, H({ actie: 'terug', soort: 'recept', id: 'las01', record }));
   return gelijk(weg + '|' + Array.from(m.recepten.get('las01').ingredienten.values()).map((x) => x.naam + x.aantal).join(), 'false|Melk4,Gehakt2,Lasagnebladen1');
+});
+controle('ingrediënt: notitie zetten (opgeschoond, meer regels), gelijk = al, in het bestand alleen als er iets staat; geen tekst = ongeldig', () => {
+  const k = kern(); const m = lees(RB);
+  const st = [k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'geh01', notitie: '  Rundergehakt,  500 g\n\n\n#slager ' })).status,
+    k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'geh01', notitie: 'Rundergehakt, 500 g\n\n#slager' })).status,
+    k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'geh01', notitie: 5 })).status].join();
+  const j = uit(k, m).recepten.las01.ingredienten;
+  const m2 = lees(uit(k, m));
+  return gelijk(st + '|' + JSON.stringify(j.geh01) + '|' + ('notitie' in j.mel01) + '|' + JSON.stringify(m2.recepten.get('las01').ingredienten.get('geh01').notitie),
+    'ok,al,vervallen|{"naam":"Gehakt","aantal":"2","notitie":"Rundergehakt, 500 g\\n\\n#slager"}|false|"Rundergehakt, 500 g\\n\\n#slager"');
+});
+controle('ingrediënt: notitie die geen tekst is → bestand ongeldig; naam wijzigen houdt de notitie', () => {
+  const r = K.leesBestand(JSON.stringify({ versie: K.FORMAAT, recepten: { las01: { naam: 'Lasagne', ingredienten: { geh01: { naam: 'Gehakt', aantal: '1', notitie: 3 } } } } }));
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'geh01', notitie: 'van de slager' }));
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'geh01', naam: 'Rundergehakt' }));
+  const x = m.recepten.get('las01').ingredienten.get('geh01');
+  return gelijk(r.ok + '|' + x.naam + '|' + x.notitie, 'false|Rundergehakt|van de slager');
+});
+controle('ingrediënt: dubbel bij lezen samengevoegd houdt een notitie', () => {
+  const m = lees({ recepten: { las01: { naam: 'Lasagne', ingredienten: { a1111: { naam: 'Ei', aantal: '1' }, b2222: { naam: 'ei', aantal: '1', notitie: 'scharrel' } } } } });
+  return gelijk(ingJ(m.recepten.get('las01').ingredienten), '[["a1111",{"naam":"Ei","aantal":"1","notitie":"scharrel"}]]');
+});
+controle('receptnotitie: op de lijst voor een recept → rnot met receptnaam en notitie van het ingrediënt (via ing, anders op naam); # zoekt erin; van de lijst → weg', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'geh01', notitie: 'Rundergehakt #slager' }));
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'mel01', notitie: 'Halfvol mag ook' }));
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', naam: 'Lasagne', aantal: '2', ing: 'geh01' }));
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'pan01', naam: 'Pannenkoeken', aantal: '2' }));
+  const A = k.artikelLijst(m);
+  const rn = (n) => JSON.stringify(A.find((a) => a.naam === n).rnot);
+  const z = k.zoekArtikelen(A, '#slag').map((a) => a.naam).join();
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', aantal: '', t: '2026-11-22T10:00' }));
+  const na = k.artikelLijst(m).find((a) => a.naam === 'Gehakt');
+  return gelijk(rn('Gehakt') + '|' + rn('Melk') + '|' + z + '|' + JSON.stringify(na.rnot) + '|' + k.zoekArtikelen(k.artikelLijst(m), '#slag').length + '|' + m.artikelen.get('geh01').notitie,
+    '[{"naam":"Lasagne","notitie":"Rundergehakt #slager"}]|[{"naam":"Pannenkoeken","notitie":"Halfvol mag ook"}]|Gehakt|[]|0|');
+});
+controle('migratie: 1352906-203 → huidig formaat zonder iets te veranderen', () => {
+  const r = K.leesBestand(JSON.stringify({ versie: '1352906-203', recepten: { las01: { naam: 'Lasagne', ingredienten: { geh01: { naam: 'Gehakt', aantal: '1' } } } } }));
+  return gelijk(r.ok + '|' + K.FORMAAT + '|' + ingJ(r.model.recepten.get('las01').ingredienten), 'true|1352906-59D|[["geh01",{"naam":"Gehakt","aantal":"1"}]]');
 });
 controle('recepten: voor onthoudt het ingrediënt (ing), ook na schrijven en lezen; zonder ing blijft het leeg', () => {
   const k = kern(); const m = lees(RB);
@@ -654,7 +696,7 @@ controle('wekelijks: laat binnenkomend afvinken van vorige week → blijft op de
 controle('recepten: oud formaat (artikel-id → aantal) wordt bij lezen omgezet naar ingrediënten met de artikelnaam; verdwenen artikel vervalt', () => {
   const oud = JSON.stringify({ versie: '1352905-7DA', artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks' } }, recepten: { las01: { naam: 'Lasagne', artikelen: { mel01: '4', wegxx: '1' } } } });
   const r = K.leesBestand(oud);
-  return gelijk(r.ok + '|' + JSON.stringify(Array.from(r.model.recepten.get('las01').ingredienten)) + '|' + (JSON.parse(K.schrijfBestand(r.model)).recepten.las01.artikelen === undefined),
+  return gelijk(r.ok + '|' + ingJ(r.model.recepten.get('las01').ingredienten) + '|' + (JSON.parse(K.schrijfBestand(r.model)).recepten.las01.artikelen === undefined),
     'true|[["mel01",{"naam":"Melk","aantal":"4"}]]|true');
 });
 controle('recepten: recepten-lijst op naam met zoekvorm', () => gelijk(K.receptLijst(lees(RB)).map((r) => r.naam + ':' + r.ingredienten.map((x) => x.naam + x.aantal).join('/')).join(), 'Lasagne:Gehakt2/Lasagnebladen1/Melk4,Pannenkoeken:Melk2'));

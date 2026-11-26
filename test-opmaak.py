@@ -10,8 +10,9 @@
      soorticoon, schakelaarregels) zijn minstens 44 px; tik op de tekst zet een schakelaar om.
   6. Een lange winkelnaam loopt door op een tweede regel in plaats van afgekapt te worden.
   7–10. Niet vet, gemeten knoppenrij, geen knijpzoom, tabbalk op een laptop.
+  13. Vegen in Boodschappen: rechts = afvinken, links = notitie, schuin = scrollen; tabwissel alleen via de tabbalk.
   12. Laptop: ruimte voor de scrollbalk blijft vrij (beeld verspringt niet); Wanneer: knop terug naar nu.
-  11. Een notitie met meer regels: in een lijst hooguit 2 regels (met …), in de band onder de titel alles.
+  11. Een notitie met meer regels: in een lijst één regel (met …), in de band onder de titel alles.
 
   python3 test-opmaak.py            (vanuit de map van de app)
   APP=<map> python3 test-opmaak.py  (een andere versie van de app)
@@ -198,7 +199,7 @@ async def main():
             const n = d.querySelector('.ntekst'); uit.push([Math.round(n.getBoundingClientRect().height), n.scrollHeight > n.clientHeight + 1, !!d.querySelector('.ntags .tag'), !!d.querySelector('.link')]); d.remove(); }
           return uit; }""")
         een = nr[0][0]
-        check('notitie met meer regels: lijst 2 regels (rest afgekapt), band alles; tags en link eronder', een > 10 and abs(nr[1][0] - 2 * een) <= 2 and nr[1][1] and abs(nr[2][0] - 4 * een) <= 4 and not nr[2][1] and all(x[2] and x[3] for x in nr), nr)
+        check('notitie met meer regels: lijst 1 regel (rest afgekapt), band alles; tags en link eronder', een > 10 and abs(nr[1][0] - een) <= 2 and nr[1][1] and abs(nr[2][0] - 4 * een) <= 4 and not nr[2][1] and all(x[2] and x[3] for x in nr), nr)
 
         # 12. Scrollbalk verspringt niet; label Weergave; knop terug naar nu onder de datum
         sg = await pg.evaluate("() => [getComputedStyle(document.querySelector('main')).scrollbarGutter, document.getElementById('lblWinkelTal').textContent]")
@@ -206,6 +207,53 @@ async def main():
         nu = await pg.evaluate("() => { const k = document.querySelector('#wanneerNu button'), b = document.getElementById('wanneerBlader').getBoundingClientRect(), r = k.getBoundingClientRect(); return [k.textContent, Math.round(b.right - r.right) <= 12, r.top >= b.bottom - 6, r.height >= 44]; }")
         await pg.evaluate("() => actieDicht()")
         check('scrollbalk: ruimte blijft vrij; label "Aantal afdelingen en artikelen bij winkel"; Vandaag rechts onder de datum, 44 px', sg == ['stable', 'Aantal afdelingen en artikelen bij winkel'] and nu == ['Vandaag', True, True, True], [sg, nu])
+
+        # 13. Vegen over een rij in Boodschappen
+        await pg.set_viewport_size({'width': 360, 'height': 700}); await pg.wait_for_timeout(200)
+        await pg.evaluate("() => { for (const m of document.querySelectorAll('.melding')) m.remove(); winkel.id = 'pls'; winkel.kaartOpen = true; toonScherm('winkel'); }"); await pg.wait_for_timeout(300)
+        cdp2 = await ctx.new_cdp_session(pg)
+        async def veeg(sel, dx, dy=0):
+            x, y = await pg.evaluate("(s) => { const r = document.querySelector(s).getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }", sel)
+            await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]})
+            for i in range(1, 13):
+                await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x + dx * i / 12, 'y': y + dy * i / 12}]})
+                await pg.wait_for_timeout(16)
+            await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+            await pg.wait_for_timeout(250)
+        rij0 = "() => [...document.querySelectorAll('#winkelLijst .wrij')].filter((r) => !r.classList.contains('gedaan')).map((r) => r.querySelector('.nm').firstChild.textContent)"
+        voor = await pg.evaluate(rij0)
+        mstart = await pg.evaluate("() => winkel.mandje.size")
+        eerste = voor[0]
+        await pg.evaluate("(n) => { const r = [...document.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === n); r.id = 'veegrij'; }", eerste)
+        await veeg('#veegrij', 60)
+        kort = [await pg.evaluate("() => winkel.mandje.size"), await pg.evaluate("() => !!document.querySelector('#winkelLijst .wrij.vegen')")]
+        await veeg('#veegrij', 200)
+        recht = await pg.evaluate("() => winkel.mandje.size")
+        await pg.wait_for_timeout(1700)
+        # links: een rij met een notitie (a00 heeft #zuivel)
+        await pg.evaluate("() => { handelen([{ actie: 'zet', soort: 'artikel', id: 'a01', veld: 'notitie', oud: '', nieuw: 'Halfvol' }]); tekenWinkel(); const r = [...document.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === 'Artikel 01'); r.id = 'veegnot'; }")
+        await pg.wait_for_timeout(100)
+        await veeg('#veegnot', -200)
+        links = await pg.evaluate("() => { const k = document.getElementById('keuze'); const v = !!k && /Halfvol/.test(k.textContent); if (k) k.querySelector('.kruis').click(); return v; }")
+        await pg.wait_for_timeout(100)
+        m0 = await pg.evaluate("() => winkel.mandje.size")
+        await veeg('#veegnot', 80, 200)
+        schuin = [await pg.evaluate("() => winkel.mandje.size") == m0, await pg.evaluate("() => !document.getElementById('keuze')")]
+        # tabwissel: niet in de lijst van Boodschappen, wel op de tabbalk
+        await pg.evaluate("() => { const r = document.querySelector('#winkelLijst .wrij:not(.gedaan)'); r.id = 'tabveeg'; }")
+        x0, y0 = await pg.evaluate("() => { const r = document.querySelector('.afdkop, #winkelLijst .naaraankopen').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }")
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x0, 'y': y0}]})
+        for i in range(1, 9): await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x0 - 15 * i, 'y': y0}]})
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await pg.wait_for_timeout(200)
+        nogWinkel = await pg.evaluate("() => !document.getElementById('scherm-winkel').hidden")
+        xn, yn = await pg.evaluate("() => { const r = document.querySelector('nav').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }")
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': xn, 'y': yn}]})
+        for i in range(1, 9): await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': xn - 15 * i, 'y': yn}]})
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await pg.wait_for_timeout(200)
+        naarDoen = await pg.evaluate("() => !document.getElementById('scherm-doen').hidden")
+        panY = await pg.evaluate("() => { const r = document.querySelector('#winkelLijst .wrij'); return r ? getComputedStyle(r).touchAction : 'pan-y'; }")
+        check('vegen (rij: touch-action pan-y, geen wachten bij scrollen): kort = terug, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
+              kort == [mstart, False] and recht == mstart + 1 and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y', [kort, recht, links, schuin, nogWinkel, naarDoen, panY])
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()
