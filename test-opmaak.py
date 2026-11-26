@@ -9,6 +9,9 @@
   5. Tikvlakken in Boodschappen (winkelicoon, leegknop) en elders (Volgorde, ster, potlood,
      soorticoon, schakelaarregels) zijn minstens 44 px; tik op de tekst zet een schakelaar om.
   6. Een lange winkelnaam loopt door op een tweede regel in plaats van afgekapt te worden.
+  7–10. Niet vet, gemeten knoppenrij, geen knijpzoom, tabbalk op een laptop.
+  12. Laptop: ruimte voor de scrollbalk blijft vrij (beeld verspringt niet); Wanneer: knop terug naar nu.
+  11. Een notitie met meer regels: in een lijst hooguit 2 regels (met …), in de band onder de titel alles.
 
   python3 test-opmaak.py            (vanuit de map van de app)
   APP=<map> python3 test-opmaak.py  (een andere versie van de app)
@@ -165,6 +168,44 @@ async def main():
           document.getElementById('scherm-winkels').appendChild(d); const w = (e) => e ? getComputedStyle(e).fontWeight : 'geen';
           const r = [w(d.querySelector('.tag')), w(d.querySelector('.link')), w(document.querySelector('#scherm-winkels .winkelrij .nm'))]; d.remove(); return r; }""")
         check('tags, link en winkelnaam niet vet', gew == ['400', '400', '400'], gew)
+
+        # 8. Knoppenrij gemeten: smal kort (Wk, Mnd), breed voluit; bij een ander formaat opnieuw
+        await pg.evaluate("() => toonScherm('instellingen')"); await pg.wait_for_timeout(150)
+        smal = await pg.evaluate("() => [...document.querySelectorAll('#doenStandaard button')].map((b) => b.textContent).join(' ')")
+        await pg.set_viewport_size({'width': 600, 'height': 700}); await pg.wait_for_timeout(400)
+        breed = await pg.evaluate("() => [...document.querySelectorAll('#doenStandaard button')].map((b) => b.textContent).join(' ')")
+        lucht = await pg.evaluate("() => [...document.querySelectorAll('#doenStandaard button')].every((b) => { const r = document.createRange(); r.selectNodeContents(b); return r.getBoundingClientRect().width <= b.clientWidth - 12; })")
+        await pg.set_viewport_size({'width': 360, 'height': 700}); await pg.wait_for_timeout(400)
+        check('Standaard tonen: op 360 px Wk/Mnd/Jr, op 600 px voluit, overal lucht', smal == 'Wk Mnd Kw. Jr Alles' and breed == 'Week Maand Kw. Jaar Alles' and lucht, [smal, breed, lucht])
+
+        # 9. Geen knijpzoom: touchpad (wiel + Ctrl) tegengehouden, viewport met maximum-scale=1, touch-action op html
+        kz = await pg.evaluate("""() => { const e = new WheelEvent('wheel', { ctrlKey: true, deltaY: -10, cancelable: true, bubbles: true }); document.getElementById('midden').dispatchEvent(e);
+          const g = new WheelEvent('wheel', { deltaY: 10, cancelable: true, bubbles: true }); document.getElementById('midden').dispatchEvent(g);
+          return [e.defaultPrevented, g.defaultPrevented, /maximum-scale=1/.test(document.querySelector('meta[name=viewport]').content), getComputedStyle(document.documentElement).touchAction]; }""")
+        check('knijpzoom uit: Ctrl+wiel tegengehouden, gewoon scrollen niet; maximum-scale=1; touch-action pan', kz[0] and not kz[1] and kz[2] and kz[3] == 'pan-x pan-y', kz)
+
+        # 10. Laptop: tabknoppen even breed als de inhoud; telefoon: over de hele breedte
+        await pg.set_viewport_size({'width': 1280, 'height': 700}); await pg.wait_for_timeout(300)
+        tb = await pg.evaluate("() => { const b = [...document.querySelectorAll('nav button')]; const v = document.querySelector('.onderbalk .invoerbalk') || document.querySelector('.invoerbalk'); return [Math.round(b[0].getBoundingClientRect().left), Math.round(b[4].getBoundingClientRect().right), innerWidth]; }")
+        await pg.set_viewport_size({'width': 360, 'height': 700}); await pg.wait_for_timeout(300)
+        tm = await pg.evaluate("() => { const b = [...document.querySelectorAll('nav button')]; return [Math.round(b[0].getBoundingClientRect().left), Math.round(b[4].getBoundingClientRect().right)]; }")
+        check('tabknoppen: op 1280 px binnen 612 px in het midden, op 360 px de hele breedte', tb[0] == (1280 - 612) // 2 and tb[1] == (1280 + 612) // 2 and tm == [0, 360], [tb, tm])
+
+        # 11. Notitie met meer regels: in een lijst 2 regels, in de band onder de titel alles
+        nr = await pg.evaluate("""() => { toonScherm('boodschappen'); const s = document.getElementById('scherm-boodschappen'); const uit = [];
+          for (const [kl, tekst] of [['item', 'Eén'], ['item', 'Een\\nTwee\\nDrie\\nVier'], ['kopnotitie', 'Een\\nTwee\\nDrie\\nVier']]) {
+            const d = document.createElement('div'); d.className = kl; d.appendChild(notitieRegel({ notitie: tekst + ' #tag', link: 'https://www.plus.nl' })); s.appendChild(d);
+            const n = d.querySelector('.ntekst'); uit.push([Math.round(n.getBoundingClientRect().height), n.scrollHeight > n.clientHeight + 1, !!d.querySelector('.ntags .tag'), !!d.querySelector('.link')]); d.remove(); }
+          return uit; }""")
+        een = nr[0][0]
+        check('notitie met meer regels: lijst 2 regels (rest afgekapt), band alles; tags en link eronder', een > 10 and abs(nr[1][0] - 2 * een) <= 2 and nr[1][1] and abs(nr[2][0] - 4 * een) <= 4 and not nr[2][1] and all(x[2] and x[3] for x in nr), nr)
+
+        # 12. Scrollbalk verspringt niet; label Weergave; knop terug naar nu onder de datum
+        sg = await pg.evaluate("() => [getComputedStyle(document.querySelector('main')).scrollbarGutter, document.getElementById('lblWinkelTal').textContent]")
+        await pg.evaluate("() => { toonScherm('doen'); actieOpenen('ac1'); bd.datum = verschuif(datumTekst(new Date()), 3, 'dag'); tekenWanneer(); }"); await pg.wait_for_timeout(100)
+        nu = await pg.evaluate("() => { const k = document.querySelector('#wanneerNu button'), b = document.getElementById('wanneerBlader').getBoundingClientRect(), r = k.getBoundingClientRect(); return [k.textContent, Math.round(b.right - r.right) <= 12, r.top >= b.bottom - 6, r.height >= 44]; }")
+        await pg.evaluate("() => actieDicht()")
+        check('scrollbalk: ruimte blijft vrij; label "Aantal afdelingen en artikelen bij winkel"; Vandaag rechts onder de datum, 44 px', sg == ['stable', 'Aantal afdelingen en artikelen bij winkel'] and nu == ['Vandaag', True, True, True], [sg, nu])
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()

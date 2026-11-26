@@ -158,7 +158,7 @@ async function plus(w) { w.document.getElementById('invoerPlus').click(); }
 
 const { regelsNaarJson: J, jsonNaarRegels: R, FORMAAT } = require('./test-hulp.cjs');
 const BEGIN = [
-  'instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2000-01-01T06:00',
+  'instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2000-01-01T06:00',
   'artikel;Bananen;soort=wekelijks;gekocht=2000-01-01',
   'artikel;Koffie;soort=regelmatig',
   'artikel;Melk;soort=wekelijks;op=2026-11-14T06:00'
@@ -560,7 +560,7 @@ const BEGIN = [
   [...d.querySelectorAll('#keuze .minuten button')].find((b) => b.textContent === ':30').click();
   controle('tijd kiezen: paneel met uren en minuten, sluit na de minuten', !d.getElementById('keuze'));
   await rust(2500);
-  controle('instellingen: dag en tijd in OneDrive', /^instelling;wekelijks;dag=vr;tijd=18:30;/m.test(R(od.bestanden['thuis.json'].tekst)), R(od.bestanden['thuis.json'].tekst).split('\n')[0]);
+  controle('instellingen: dag en tijd in OneDrive', /^instelling;wekelijks;auto=ja;dag=vr;tijd=18:30;/m.test(R(od.bestanden['thuis.json'].tekst)), R(od.bestanden['thuis.json'].tekst).split('\n')[0]);
   const voorTerug = od.bestanden['thuis.json'].tekst;
   d.getElementById('naarBackups').click();
   await slaap(300);
@@ -597,7 +597,7 @@ const BEGIN = [
   /* 5f. Artikel bewerken: tik op de naam, kladversie, Opslaan, vraag bij sluiten. */
   if (deel('5f Artikel bewerken: tik op de naam, kladversie, Opslaan, vraag bij sluiten.')) {
     const od5 = onedrive([
-      'instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00',
+      'instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00',
       'winkel;Albert Heijn;route=Zuivel|Brood',
       'winkel;Plus;route=Koeling',
       'artikel;Melk;soort=wekelijks;ligt=Albert Heijn:Zuivel|Plus;op=2026-11-14T06:00;gekocht=2026-10-25|2026-11-01|2026-11-08|2026-11-15',
@@ -696,7 +696,7 @@ const BEGIN = [
 
   /* 5g. "nieuw": door de ander op de lijst gezet, weg zodra je het gezien hebt (per telefoon). */
   if (deel('5g "nieuw": door de ander op de lijst gezet, weg zodra je het gezien hebt (per tele')) {
-    const od6 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Thee;op=2026-11-01T10:00;opdoor=Natasja\nartikel;Kaas;op=2026-11-01T10:00;opdoor=Testspeler\n');
+    const od6 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Thee;op=2026-11-01T10:00;opdoor=Natasja\nartikel;Kaas;op=2026-11-01T10:00;opdoor=Testspeler\n');
     let w6 = await start(od6);
     await rust(800);
     const label = (w, n) => { const r = [...w.document.querySelectorAll('#lijst .item')].find((x) => naamVanRij(x) === n); return !!(r && r.querySelector('.nieuw')); };
@@ -711,7 +711,7 @@ const BEGIN = [
 
   /* 5h. Archief: eenmalig gekocht of van de lijst → archief; instelling bewaren. */
   if (deel('5h Archief: eenmalig gekocht of van de lijst → archief; instelling bewaren.')) {
-    const od7 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Pesto;op=2026-11-20T10:00\nartikel;Hummus;gekocht=2026-11-19\nartikel;Zonnebrand;weg=2026-11-10\nartikel;Melk;soort=wekelijks\n');
+    const od7 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Pesto;op=2026-11-20T10:00\nartikel;Hummus;gekocht=2026-11-19\nartikel;Zonnebrand;weg=2026-11-10\nartikel;Melk;soort=wekelijks\n');
     const w7 = await start(od7);
     await rust(800);
     const d7 = w7.document;
@@ -743,11 +743,13 @@ const BEGIN = [
 
   /* 5i. Aantal: tik op het icoon opent de teller; "2×" achter de naam; blijft staan na kopen. */
   if (deel('5i Aantal: tik op het icoon opent de teller; "2×" achter de naam; blijft staan na k')) {
-    const od8 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\n');
+    const od8 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\n');
     const w8 = await start(od8);
     await rust(800);
     const d8 = w8.document;
     const melk = () => [...d8.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk');
+    /* Het vaste aantal: in het filter Wekelijks (op Op de lijst is de teller voor deze keer, zie 5z44). */
+    w8.eval("scherm.filter = 'W'; tekenBoodschappen()"); await slaap(20);
     controle('aantal: bij 1 geen "×" en geen teller', !melk().querySelector('.aantal') && !d8.querySelector('.teller'));
     melk().querySelector('.icoon').click(); await slaap(20);
     controle('aantal: tik op het icoon opent de teller, minder kan niet onder 1', !!d8.querySelector('.teller') && d8.querySelector('.teller .n').textContent === '1' && d8.querySelector('.teller .min').disabled);
@@ -776,7 +778,7 @@ const BEGIN = [
 
   /* 5j. Notitie: in het bewerkscherm, paars onder de winkels, blijft staan; HTML blijft tekst. */
   if (deel('5j Notitie: in het bewerkscherm, paars onder de winkels, blijft staan; HTML blijft ')) {
-    const od9 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\n');
+    const od9 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\n');
     const w9 = await start(od9);
     await rust(800);
     const d9 = w9.document;
@@ -799,7 +801,7 @@ const BEGIN = [
 
   /* 5k. Toestand bovenaan Instellingen en het logboek. */
   if (deel('5k Toestand bovenaan Instellingen en het logboek.')) {
-    const odA = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
+    const odA = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
     const wA = await start(odA);
     await slaap(900);
     const dA = wA.document;
@@ -824,7 +826,7 @@ const BEGIN = [
 
   /* 5l. Link: apart veld; zonder https:// wordt het aangevuld; onveilig geweigerd; tikken opent apart. */
   if (deel('5l Link: apart veld; zonder https:// wordt het aangevuld; onveilig geweigerd; tikke')) {
-    const odB = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;notitie=halfvol;ligt=Plus;op=2026-11-20T10:00\n');
+    const odB = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;notitie=halfvol;ligt=Plus;op=2026-11-20T10:00\n');
     const wB = await start(odB);
     await rust(800);
     const dB = wB.document;
@@ -868,7 +870,7 @@ const BEGIN = [
 
   /* 5m. Doen: toevoegen, groepen, afronden (herhalend schuift door), bewerken met periode en herhalen. */
   if (deel('5m Doen: toevoegen, groepen, afronden (herhalend schuift door), bewerken met period')) {
-    const odC = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const odC = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const wC = await start(odC);
     await rust(800);
     const dC = wC.document;
@@ -929,7 +931,7 @@ const BEGIN = [
 
   /* 5n. Tags: # in een zoekvak toont de tags; kiezen zoekt op de tag; # voegt niets toe. Winkel met notitie en link. */
   if (deel('5n Tags: # in een zoekvak toont de tags; kiezen zoekt op de tag; # voegt niets toe.')) {
-    const odD = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Plus\nartikel;Kaarsen;notitie=voor #kerst;op=2026-11-20T10:00\nartikel;Lampjes #kerst;notitie=#buiten;op=2026-11-20T10:00\nartikel;Melk;op=2026-11-20T10:00\n');
+    const odD = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Plus\nartikel;Kaarsen;notitie=voor #kerst;op=2026-11-20T10:00\nartikel;Lampjes #kerst;notitie=#buiten;op=2026-11-20T10:00\nartikel;Melk;op=2026-11-20T10:00\n');
     const wD = await start(odD);
     await rust(800);
     const dD = wD.document;
@@ -956,6 +958,8 @@ const BEGIN = [
     controle('winkel bewerken: Naam, Notitie en Link', !!k.querySelector('#bewerkNotitie') && k.querySelector('#bewerkLink').placeholder === 'Link of zoekwoorden');
     k.querySelector('#bewerkLink').value = 'http://gamma.nl'; k.querySelector('.knop').click(); await slaap(20);
     controle('winkel bewerken: onveilige link geweigerd, paneel blijft', !!dD.getElementById('keuze') && !!dD.querySelector('#keuze .paneelmeldingen .melding') && /https:\/\//.test(dD.querySelector('#keuze .paneelmeldingen').textContent));
+    { const e = new wD.KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true }); k.querySelector('#bewerkNotitie').dispatchEvent(e);
+      controle('winkel bewerken: Enter in Notitie = nieuwe regel, paneel blijft', !e.defaultPrevented && !!dD.getElementById('keuze') && k.querySelector('#bewerkNotitie').getAttribute('enterkeyhint') === 'enter'); }
     k.querySelector('#bewerkNotitie').value = 'za tot 17:00 #klussen'; k.querySelector('#bewerkLink').value = 'gamma.nl/openingstijden'; k.querySelector('.knop').click(); await slaap(30);
     dD.querySelector('#winkelDetail .terug').click(); await slaap(30);
     const gr = [...dD.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Gamma'));
@@ -978,12 +982,25 @@ const BEGIN = [
     controle('notitie: kiezen maakt het woord af met een spatie, cursor erachter, vak blijft actief', nt.value === 'halfvol #kerst en vers' && nt.selectionStart === 15 && dD.activeElement === nt && dD.getElementById('tagLijst').hidden, JSON.stringify(nt.value) + nt.selectionStart);
     nt.value = 'halfvol'; nt.setSelectionRange(7, 7); nt.dispatchEvent(new wD.Event('input')); await slaap(20);
     controle('notitie: zonder # geen lijst', dD.getElementById('tagLijst').hidden);
+    /* Meer regels: Enter = nieuwe regel (geen opslaan/blur), regels blijven, lege regels opgeschoond. */
+    const enter = new wD.KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true }); nt.dispatchEvent(enter);
+    controle('notitie: Enter maakt een nieuwe regel (vak blijft open en actief)', !enter.defaultPrevented && dD.activeElement === nt && !dD.getElementById('artikelScherm').hidden && nt.getAttribute('enterkeyhint') === 'enter');
+    nt.value = '\nhalfvol\n\n\nniet de grote\nwel vers\n'; nt.dispatchEvent(new wD.Event('input')); await slaap(20);
+    controle('notitie: regels blijven staan in het vak', nt.value === '\nhalfvol\n\n\nniet de grote\nwel vers\n', JSON.stringify(nt.value));
     nt.blur(); dD.getElementById('artikelOpslaan').click(); await slaap(30);
+    controle('notitie: opgeslagen met regels, lege regels aan begin/eind weg, hooguit één lege', wD.eval("artikelen.find((x) => x.naam === 'Melk').notitie") === 'halfvol\n\nniet de grote\nwel vers', wD.eval("JSON.stringify(artikelen.find((x) => x.naam === 'Melk').notitie)"));
+    const mr = [...dD.querySelectorAll('#lijst .item')].find((r) => r.textContent.startsWith('Melk'));
+    controle('notitie in de lijst: met de regels (afkappen op 2 regels doet de opmaak)', !!mr && mr.querySelector('.notitie .ntekst').textContent === 'halfvol\n\nniet de grote\nwel vers', mr && JSON.stringify(mr.querySelector('.notitie').textContent));
+    mr.querySelector('.tekst').click(); await slaap(30);
+    const enter2 = new wD.KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true }); dD.getElementById('artikelNaam').dispatchEvent(enter2);
+    controle('naam: blijft één regel, Enter sluit af', enter2.defaultPrevented);
+    dD.getElementById('artikelNotitie').value = 'halfvol'; dD.getElementById('artikelNotitie').dispatchEvent(new wD.Event('input'));
+    dD.getElementById('artikelOpslaan').click(); await slaap(30);
   }
 
   /* 5z. H1: een kopie van een ouder formaat gaat weg, de wachtrij niet. */
   if (deel('5z H1: een kopie van een ouder formaat gaat weg, de wachtrij niet.')) {
-    const odF = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odF = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     const wF = await start(odF, {
       kopie: { formaat: '1352901-000', tekst: '{}', eTag: '"oud"', fileId: 'id-thuis.json' },
       wachtrij: [{ actie: 'nieuw', soort: 'artikel', id: 'pnd01', velden: { naam: 'Pindakaas', soort: 'eenmalig', op: '2026-11-23T09:00', opdoor: 'Testspeler' }, t: '2026-11-23T09:00', wie: 'Testspeler' },
@@ -996,7 +1013,7 @@ const BEGIN = [
 
   /* 5z2. M1: klok verdacht volgens de servertijd → wel schrijven, geen dagbackup (die ruimt op met de datum van de telefoon). */
   if (deel('5z2 M1: klok verdacht volgens de servertijd → wel schrijven, geen dagbackup (die rui')) {
-    const odK = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odK = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     odK.serverNu = new Date(Date.now() - 90 * 864e5).toISOString();
     odK.zet('thuis.json', odK.bestanden['thuis.json'].tekst);
     odK.zet('thuis_backup_20200101.json', '{}');
@@ -1011,7 +1028,7 @@ const BEGIN = [
 
   /* 5z3. M3: twee vensters (PWA en browsertab) op dezelfde opslag: het venster dat in beeld komt, leest de wachtrij opnieuw. */
   if (deel('5z3 M3: twee vensters (PWA en browsertab) op dezelfde opslag: het venster dat in bee')) {
-    const odV = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odV = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     const echt = odV.fetch; let offline = false;
     odV.fetch = async (u, i) => { if (offline) throw new TypeError('Failed to fetch'); return echt(u, i); };
     const idbV = new (require('fake-indexeddb').IDBFactory)();
@@ -1034,7 +1051,7 @@ const BEGIN = [
 
   /* 5z4. M6: geen toegang meer tot de map is iets anders dan een verdwenen bestand. */
   if (deel('5z4 M6: geen toegang meer tot de map is iets anders dan een verdwenen bestand.')) {
-    const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odT = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     const wT = await start(odT); await rust(800);
     odT.geenToegang = true;
     wT.eval('planSync(0)'); await rust(800);
@@ -1049,7 +1066,7 @@ const BEGIN = [
 
   /* 5z5. M7: "nieuw" blijft staan als je op een ander tabblad was. */
   if (deel('5z5 M7: "nieuw" blijft staan als je op een ander tabblad was.')) {
-    const odN = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks;op=2026-11-14T06:00\n');
+    const odN = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks;op=2026-11-14T06:00\n');
     const wN = await start(odN); await rust(800);
     const dN = wN.document;
     dN.getElementById('tab-doen').click();
@@ -1068,7 +1085,7 @@ const BEGIN = [
 
   /* 5z6. M8: bewerkschermen na samenvoegen of verwijderen door de ander. */
   if (deel('5z6 M8: bewerkschermen na samenvoegen of verwijderen door de ander.')) {
-    const odM = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Koeling\nartikel;Kaas;soort=eenmalig\n');
+    const odM = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Koeling\nartikel;Kaas;soort=eenmalig\n');
     const echt = odM.fetch; let offline = false;
     odM.fetch = async (u, i) => { if (offline) throw new TypeError('Failed to fetch'); return echt(u, i); };
     const wM = await start(odM); await rust(800); const dM = wM.document;
@@ -1101,7 +1118,7 @@ const BEGIN = [
   /* 5z7. L3: archief korter bewaren vraagt eerst, met het aantal. */
   if (deel('5z7 L3: archief korter bewaren vraagt eerst, met het aantal.')) {
     const oud = datumTekstT(-20);
-    const odA2 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Lampje;soort=eenmalig;gekocht=' + oud + '\nartikel;Kaars;soort=eenmalig;gekocht=' + datumTekstT(-2) + '\n');
+    const odA2 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Lampje;soort=eenmalig;gekocht=' + oud + '\nartikel;Kaars;soort=eenmalig;gekocht=' + datumTekstT(-2) + '\n');
     const wA2 = await start(odA2); await rust(800); const dA2 = wA2.document;
     dA2.getElementById('tab-instellingen').click(); await slaap(50);
     [...dA2.querySelectorAll('#archiefBewaren button')].find((b) => b.textContent === '1 week').click(); await slaap(50);
@@ -1114,7 +1131,7 @@ const BEGIN = [
 
   /* 5z8. L4: ?error= alleen bij een eigen aanmeldpoging met de juiste state. */
   if (deel('5z8 L4: ?error= alleen bij een eigen aanmeldpoging met de juiste state.')) {
-    const odE2 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const odE2 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const wE2 = await start(odE2, { pkce: { verifier: 'v', state: 'echt1', t: Date.now() } }, null, 'https://mv-systems-apps.github.io/thuis/thuis.html?error=Bel+0612345678&state=nep');
     await slaap(300);
     controle('aanmeldfout zonder juiste state: stil genegeerd (L4)', !wE2.document.getElementById('m-aanmelden'));
@@ -1128,7 +1145,7 @@ const BEGIN = [
 
   /* 5z9. L5: Leeg beginnen wist ook de wachtrij en toont meteen de lege lijst. */
   if (deel('5z9 L5: Leeg beginnen wist ook de wachtrij en toont meteen de lege lijst.')) {
-    const odL5 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\n');
+    const odL5 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\n');
     const wL5 = await start(odL5); await rust(800); const dL5 = wL5.document;
     delete odL5.bestanden['thuis.json'];
     wL5.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'kaa01', velden: { naam: 'Kaas', soort: 'eenmalig' } }])");
@@ -1145,7 +1162,7 @@ const BEGIN = [
 
   /* 5z10. L8: een ronde zonder verandering rekent niets uit. */
   if (deel('5z10 L8: een ronde zonder verandering rekent niets uit.')) {
-    const odR = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odR = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     const wR = await start(odR); await rust(800);
     wR.eval('planSync(0)'); await slaap(400);
     wR.eval('window.__rondes = 0; const echteSync = synchroniseer; synchroniseer = function () { window.__rondes++; return echteSync.apply(this, arguments); };');
@@ -1160,7 +1177,7 @@ const BEGIN = [
 
   /* 5z11. Historie: afronden komt in de gedeelde historie; een regel weggooien vraagt eerst. */
   if (deel('5z11 Historie: afronden komt in de gedeelde historie; een regel weggooien vraagt eers')) {
-    const odH = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Afval;datum=2026-11-28;herhaal=week\nactie;Bellen\n');
+    const odH = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Afval;datum=2026-11-28;herhaal=week\nactie;Bellen\n');
     const wH2 = await start(odH); await rust(800); const dH2 = wH2.document;
     dH2.getElementById('tab-doen').click(); await slaap(30);
     wH2.eval("doen.filter = 'alles'; tekenDoen()");
@@ -1186,20 +1203,20 @@ const BEGIN = [
 
   /* 5z12. L12: afmelden wist alles van deze telefoon. */
   if (deel('5z12 L12: afmelden wist alles van deze telefoon.')) {
-    const odU = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;op=2026-11-20T10:00\n');
+    const odU = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;op=2026-11-20T10:00\n');
     const wU = await start(odU, { mandje: [{ id: 'x1234', naam: 'Kaas' }], favorieten: ['abc12'], doenStandaard: 'maand', logboek: ['2026-11-23 10:00 · test'] });
     await rust(800);
     wU.eval('sync.bezig = true; afmelden()'); await slaap(50);
     controle('afmelden tijdens een sync: eerst even geduld, niets gewist (L2 ronde 4)', /Even geduld/.test((wU.document.getElementById('m-afmelden') || {}).textContent || '') && !!(await wU.eval("kvLees('auth')")));
     wU.eval('sync.bezig = false; afmelden()'); await slaap(300);
     const over = await wU.eval("(async () => { const uit = []; for (const k of ALLE_SLEUTELS) if (await kvLees(k) !== null) uit.push(k); return uit.join(); })()");
-    controle('afmelden: alle sleutels weg, ook mandje, favorieten en logboek (L12)', over === '' && wU.eval('winkel.mandje.size') === 0 && wU.eval('doen.standaard') === 'week', over);
+    controle('afmelden: alle sleutels weg, ook mandje, favorieten en logboek (L12)', over === '' && wU.eval('winkel.mandje.size') === 0 && wU.eval('doen.standaard') === 'alles', over);
     wU.close();
   }
 
   /* 5z13. H1 ronde 4: terugzetten met een verdachte klok weigert; backups blijven. */
   if (deel('5z13 H1 ronde 4: terugzetten met een verdachte klok weigert; backups blijven.')) {
-    const odZ = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
+    const odZ = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
     odZ.zet('thuis_backup_20261101.json', odZ.bestanden['thuis.json'].tekst);
     /* De klok van de telefoon loopt ruim een jaar voor: de server geeft steeds een tijd van 400 dagen eerder. */
     odZ.serverNu = new Date(Date.now() - 400 * 864e5).toISOString();
@@ -1214,12 +1231,15 @@ const BEGIN = [
   /* 5z14. M1 ronde 4: actie- en winkeleditor draaien een wijziging van de ander niet terug. */
   if (deel('5z14 M1 ronde 4: actie- en winkeleditor draaien een wijziging van de ander niet terug')) {
     const d = (n) => datumTekstT(n);
-    const odP = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nactie;Filter;datum=' + d(-1) + ';herhaal=week\n');
+    const odP = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nactie;Filter;datum=' + d(-1) + ';herhaal=week\n');
     const wP = await start(odP); await rust(800); const dP = wP.document;
     const aid = wP.eval("acties.find((a) => a.naam === 'Filter').id");
     dP.getElementById('tab-doen').click(); await slaap(50);
     wP.eval("actieOpenen('" + aid + "')");
-    const nt = dP.getElementById('actieNotitie'); nt.value = 'grote maat'; nt.dispatchEvent(new wP.Event('input'));
+    const nt = dP.getElementById('actieNotitie');
+    { const e = new wP.KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true }); nt.dispatchEvent(e);
+      controle('actie-editor: Enter in Notitie = nieuwe regel, scherm blijft', !e.defaultPrevented && !dP.getElementById('actieScherm').hidden && nt.getAttribute('enterkeyhint') === 'enter'); }
+    nt.value = 'grote maat'; nt.dispatchEvent(new wP.Event('input'));
     const j = JSON.parse(odP.bestanden['thuis.json'].tekst); j.acties[aid].datum = d(6); j.acties[aid].klaar = d(0) + 'T09:00'; odP.zet('thuis.json', JSON.stringify(j));
     wP.eval('planSync(0)'); await slaap(1200);
     dP.getElementById('actieOpslaan').click(); await rust(2500);
@@ -1240,7 +1260,7 @@ const BEGIN = [
 
   /* 5z15. M2 ronde 4: bestand opnieuw aangemaakt met een nieuwe id → gewoon verder, geen "weg". */
   if (deel('5z15 M2 ronde 4: bestand opnieuw aangemaakt met een nieuwe id → gewoon verder, geen "')) {
-    const odI = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
+    const odI = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk\n');
     const wI = await start(odI); await rust(800);
     const tekstI = odI.bestanden['thuis.json'].tekst;
     odI.nieuweIds = true; delete odI.bestanden['thuis.json']; odI.zet('thuis.json', tekstI.replace('"Melk"', '"Melk"').replace('"artikelen": {', '"artikelen": {\n "brd01": {"naam":"Brood","soort":"eenmalig"},'));
@@ -1253,7 +1273,7 @@ const BEGIN = [
 
   /* 5z16. M3 ronde 4: na lang niet gebruiken één keer peilen; daarna gewoon (geen melding, wekelijks terug). */
   if (deel('5z16 M3 ronde 4: na lang niet gebruiken één keer peilen; daarna gewoon (geen melding,')) {
-    const odV2 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=' + datumTekstT(-40) + 'T06:00\nartikel;Melk;soort=wekelijks;gekocht=' + datumTekstT(-40) + '\n');
+    const odV2 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=' + datumTekstT(-40) + 'T06:00\nartikel;Melk;soort=wekelijks;gekocht=' + datumTekstT(-40) + '\n');
     odV2.serverNu = new Date(Date.now() - 40 * 864e5).toISOString();
     odV2.zet('thuis.json', odV2.bestanden['thuis.json'].tekst);
     odV2.serverNu = undefined;
@@ -1264,7 +1284,7 @@ const BEGIN = [
 
   /* 5z17. Welke winkel? zonder iets nodig: toch een kop boven de overige winkels. */
   if (deel('5z17 Waar ga je heen? zonder iets nodig: toch een kop boven de overige winkels.')) {
-    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;Lidl\nartikel;Hhh;op=2026-11-20T10:00\n');
+    const odW = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;Lidl\nartikel;Hhh;op=2026-11-20T10:00\n');
     const wW = await start(odW); await rust(800);
     wW.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id");
     wW.document.getElementById('tab-winkel').click(); await slaap(30);
@@ -1275,7 +1295,7 @@ const BEGIN = [
     controle('titel "Welke winkel?"; ook overige winkels met het winkelsymbool', /Welke winkel\?/.test(kz.querySelector('.kop').textContent) && [...kz.querySelectorAll('.optie')].every((o) => !!o.querySelector('svg')), kz.innerHTML.slice(0, 200));
     wW.close();
     /* Veel artikelen alleen hier: een telling in plaats van namen. */
-    const odV = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\n' +
+    const odV = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\n' +
       ['Aa', 'Bb', 'Cc'].map((n) => 'artikel;' + n + ';ligt=Plus;op=2026-11-20T10:00\n').join('') + 'artikel;Dd;ligt=Plus|AH;op=2026-11-20T10:00\nartikel;Ee;ligt=AH;op=2026-11-20T10:00\n');
     const wV = await start(odV); await rust(800);
     wV.eval("winkel.id = ''"); wV.eval('winkelKiezen()');
@@ -1286,7 +1306,7 @@ const BEGIN = [
 
   /* 5z18. M5 ronde 4: herhalen uitzetten bij een eerder afgeronde actie → blijft open. */
   if (deel('5z18 M5 ronde 4: herhalen uitzetten bij een eerder afgeronde actie → blijft open.')) {
-    const odH5 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Filter;datum=' + datumTekstT(7) + ';herhaal=week;klaar=' + datumTekstT(-1) + 'T09:00\n');
+    const odH5 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Filter;datum=' + datumTekstT(7) + ';herhaal=week;klaar=' + datumTekstT(-1) + 'T09:00\n');
     const wH5 = await start(odH5); await rust(800);
     const aid = wH5.eval("acties[0].id");
     wH5.document.getElementById('tab-doen').click(); await slaap(30);
@@ -1299,7 +1319,7 @@ const BEGIN = [
 
   /* 5z19. L3 ronde 4: venster op de achtergrond overschrijft de wachtrij van het andere niet. */
   if (deel('5z19 L3 ronde 4: venster op de achtergrond overschrijft de wachtrij van het andere ni')) {
-    const odL3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odL3 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     const idbL3 = new (require('fake-indexeddb').IDBFactory)();
     const voeg = (w, n) => { const i = w.document.getElementById('invoerTekst'); i.value = n; i.dispatchEvent(new w.Event('input')); w.document.getElementById('invoerPlus').click(); };
     const A = await start(odL3, null, idbL3); const Bw = await start(odL3, null, idbL3); await slaap(1500);
@@ -1328,8 +1348,8 @@ const BEGIN = [
 
   /* 5z21. M3 data: beschadigd bestand met een wachtende wijziging → Backups-knop, terugzetten mag, wijziging komt mee. */
   if (deel('5z21 M3 data: beschadigd bestand met een wachtende wijziging → Backups-knop, terugzet')) {
-    const odB3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Koffie;soort=regelmatig\n');
-    odB3.zet('thuis_backup_20261122.json', J('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Koffie;soort=regelmatig\nartikel;Thee;soort=regelmatig\n'));
+    const odB3 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Koffie;soort=regelmatig\n');
+    odB3.zet('thuis_backup_20261122.json', J('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Koffie;soort=regelmatig\nartikel;Thee;soort=regelmatig\n'));
     const wB3 = await start(odB3); await slaap(1500);
     odB3.zet('thuis.json', '{"versie": "kapot');
     wB3.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'brd01', velden: { naam: 'Brood', soort: 'eenmalig', op: '2026-11-23T10:00' } }])"); await rust(2500);
@@ -1344,7 +1364,7 @@ const BEGIN = [
 
   /* 5z22. L3 data: naar de achtergrond met iets in de wachtrij → meteen versturen. */
   if (deel('5z22 L3 data: naar de achtergrond met iets in de wachtrij → meteen versturen.')) {
-    const odA3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const odA3 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const wA3 = await start(odA3); await rust(800);
     wA3.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'kaa01', velden: { naam: 'Kaas', soort: 'eenmalig' } }])");
     Object.defineProperty(wA3.document, 'hidden', { configurable: true, get: () => true }); wA3.document.dispatchEvent(new wA3.Event('visibilitychange'));
@@ -1355,7 +1375,7 @@ const BEGIN = [
 
   /* 5z23. H3 performance: na een eigen tik zonder iets van buiten niet opnieuw inlezen en tekenen. */
   if (deel('5z23 H3 performance: na een eigen tik zonder iets van buiten niet opnieuw inlezen en ')) {
-    const odP3 = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
+    const odP3 = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;soort=wekelijks\n');
     const wP3 = await start(odP3); await slaap(1500);
     wP3.eval('window.__bouw = 0; const echtBouw = bouwModel; bouwModel = function () { window.__bouw++; return echtBouw.apply(this, arguments); };');
     wP3.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen[0].id, veld: 'notitie', oud: '', nieuw: 'halfvol' }])"); await rust(2500);
@@ -1368,7 +1388,7 @@ const BEGIN = [
 
   /* 5o0. Openen met een lege lijst en een gekozen winkel: de winkelkop staat niet los onderaan. */
   if (deel('5o0 Openen met een lege lijst en een gekozen winkel: de winkelkop staat niet los ond')) {
-    const odL = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus\n');
+    const odL = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus\n');
     const wL = await start(odL);
     await rust(800);
     wL.eval("winkel.id = winkels[0].id");
@@ -1378,7 +1398,7 @@ const BEGIN = [
 
   /* 5o. Lege lijsten: overal dezelfde melding; bij Boodschappen dan geen winkel. */
   if (deel('5o Lege lijsten: overal dezelfde melding; bij Boodschappen dan geen winkel.')) {
-    const odE = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
+    const odE = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
     const wE = await start(odE);
     await rust(800);
     const dE = wE.document;
@@ -1410,7 +1430,7 @@ const BEGIN = [
 
   /* 5p. 020: leeg bestand wint niet (B1); bij een fout niet blijven ophalen (B2); vervallen altijd melden (B3). */
   if (deel('5p 020: leeg bestand wint niet (B1); bij een fout niet blijven ophalen (B2); verval')) {
-    const odL = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\n');
+    const odL = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\n');
     const wL = await start(odL);
     await rust(800);
     const dL = wL.document;
@@ -1429,7 +1449,7 @@ const BEGIN = [
 
   /* 5q. 021: mandje loopt mee met de lijst (B6); gedeelde aankopen met zoeken; instelling bewaren. */
   if (deel('5q 021: mandje loopt mee met de lijst (B6); gedeelde aankopen met zoeken; instellin')) {
-    const odA = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\nartikel;Brood;ligt=Plus;op=2026-11-20T10:00\n');
+    const odA = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nartikel;Melk;soort=wekelijks;ligt=Plus;op=2026-11-20T10:00\nartikel;Brood;ligt=Plus;op=2026-11-20T10:00\n');
     const wA = await start(odA);
     await rust(800);
     const dA = wA.document;
@@ -1472,7 +1492,7 @@ const BEGIN = [
 
   /* 5r. 022: terugknop sluit altijd het bovenste; Winkel bewerken vraagt eerst; keuzelijst met Huidig, Favorieten, loep. */
   if (deel('5r 022: terugknop sluit altijd het bovenste; Winkel bewerken vraagt eerst; keuzelij')) {
-    const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Jumbo\nwinkel;Plus\nartikel;Kaars;op=2026-11-20T10:00\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
+    const odT = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Jumbo\nwinkel;Plus\nartikel;Kaars;op=2026-11-20T10:00\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\n');
     const wT = await start(odT);
     await rust(800);
     const dT = wT.document;
@@ -1539,7 +1559,7 @@ const BEGIN = [
 
   /* 5s. 023: editor van iets dat intussen weg is (K12); bestaand toevoegen licht op (K15); maand onthoudt de dag (K5); archief terug ook na opruimen. */
   if (deel('5s 023: editor van iets dat intussen weg is (K12); bestaand toevoegen licht op (K15')) {
-    const odK = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Kaars;op=2026-11-20T10:00\nartikel;Lampje;weg=2026-11-01\nactie;Huur;datum=2026-01-31;herhaal=maand\n');
+    const odK = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Kaars;op=2026-11-20T10:00\nartikel;Lampje;weg=2026-11-01\nactie;Huur;datum=2026-01-31;herhaal=maand\n');
     const wK = await start(odK);
     await rust(800);
     const dK = wK.document;
@@ -1574,21 +1594,21 @@ const BEGIN = [
     const nu = new Date(), dt = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const gister = new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() - 1), vandaagD = dt(nu);
     const maand = vandaagD.slice(0, 7), jaar = vandaagD.slice(0, 4);
-    const odF = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Te laat;datum=' + dt(gister) + '\nactie;Vandaag;datum=' + vandaagD + '\nactie;Volgend jaar;datum=' + (+jaar + 1) + '\nactie;Zomaar\nactie;Deze maand;datum=' + maand + '\n');
+    const odF = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Te laat;datum=' + dt(gister) + '\nactie;Vandaag;datum=' + vandaagD + '\nactie;Volgend jaar;datum=' + (+jaar + 1) + '\nactie;Zomaar\nactie;Deze maand;datum=' + maand + '\n');
     const wF = await start(odF);
     await rust(800);
     const dF = wF.document;
     dF.getElementById('tab-doen').click(); await slaap(50);
     const knoppen = () => [...dF.querySelectorAll('#doenFilters .filter')].map((b) => b.firstChild.textContent + ':' + b.lastChild.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(',');
     const koppen = () => [...dF.querySelectorAll('#doenLijst .kopbalk')].map((k) => k.firstChild.textContent).join(',');
-    controle('doen-filters: standaard Week; naam en aantal (te laat telt mee)', /^Week:\d\*,Maand:\d,Kw\.:\d,Jaar:\d,Alles:5$/.test(knoppen()) && /^Te laat(,Deze week)?$/.test(koppen()), knoppen() + ' ' + koppen());
+    controle('doen-filters: standaard Alles; naam en aantal (te laat telt mee)', /^Week:\d,Maand:\d,Kw\.:\d,Jaar:\d,Alles:5\*$/.test(knoppen()) && /Zonder periode/.test(koppen()), knoppen() + ' ' + koppen());
     [...dF.querySelectorAll('#doenFilters .filter')][1].click(); await slaap(20);
     controle('doen-filters: Maand toont Te laat en Deze maand (met de maandactie)', koppen() === 'Te laat,Deze maand' && /Deze maand/.test(dF.getElementById('doenLijst').textContent.replace('Deze maand', '')), koppen());
     [...dF.querySelectorAll('#doenFilters .filter')][4].click(); await slaap(20);
     controle('doen-filters: Alles toont ook Zonder periode', /Zonder periode/.test(koppen()), koppen());
     dF.getElementById('tab-instellingen').click(); await slaap(30);
     const st = [...dF.querySelectorAll('#doenStandaard button')];
-    controle('instelling: Doen standaard, Week gekozen', st.map((b) => b.textContent).join() === 'Week,Maand,Kw.,Jaar,Alles' && st[0].getAttribute('aria-checked') === 'true');
+    controle('instelling: Doen standaard, Alles gekozen', st.map((b) => b.textContent).join() === 'Week,Maand,Kw.,Jaar,Alles' && st[4].getAttribute('aria-checked') === 'true');
     st[1].click(); await slaap(30);
     dF.getElementById('tab-doen').click(); await slaap(30);
     controle('instelling: Doen opent op Maand; bewaard per telefoon (niet in het bestand)', /Maand:\d\*/.test(knoppen()) && !/doenStandaard|standaard/.test(R(odF.bestanden['thuis.json'].tekst)) && wF.eval('doen.standaard') === 'maand', knoppen());
@@ -1596,16 +1616,16 @@ const BEGIN = [
 
   /* 5u. 024: wekelijks terug ook offline, uit de kopie op de telefoon (K10). */
   if (deel('5u 024: wekelijks terug ook offline, uit de kopie op de telefoon (K10).')) {
-    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const odW = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const wW = await start(odW);
     await rust(800);
-    const r = wW.eval("(() => { const vorige = tijdstipTekst(laatsteMoment(new Date(Date.now() - 8 * 86400000), 'za', '06:00')); kopie = { tekst: JSON.stringify({ versie: FORMAAT, instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: vorige } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: [vorige.slice(0, 10)] } } }) }; wachtrij = []; bouwModel(); return !!artikelen.find((a) => a.naam === 'Melk').op; })()");
+    const r = wW.eval("(() => { const vorige = tijdstipTekst(laatsteMoment(new Date(Date.now() - 8 * 86400000), 'za', '06:00')); kopie = { tekst: JSON.stringify({ versie: FORMAAT, instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: vorige } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: [vorige.slice(0, 10)] } } }) }; wachtrij = []; bouwModel(); return !!artikelen.find((a) => a.naam === 'Melk').op; })()");
     controle('wekelijks: ook zonder sync terug op de lijst, uit de kopie (K10)', r === true);
   }
 
   /* 5v. 024: twee verzoeken tegelijk met een verlopen token = één vernieuwing (B8). */
   if (deel('5v 024: twee verzoeken tegelijk met een verlopen token = één vernieuwing (B8).')) {
-    const odV = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const odV = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const wV = await start(odV);
     await rust(800);
     await wV.eval("(async () => { const a = await kvGet('auth'); a.accessTot = 0; await kvSet('auth', a); })()");
@@ -1616,7 +1636,7 @@ const BEGIN = [
 
   /* 5w. 024: hernoemen naar een naam met # vooraan wordt geweigerd (net als toevoegen). */
   if (deel('5w 024: hernoemen naar een naam met # vooraan wordt geweigerd (net als toevoegen).')) {
-    const odH = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Kaars;op=2026-11-20T10:00\n');
+    const odH = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Kaars;op=2026-11-20T10:00\n');
     const wH = await start(odH);
     await rust(800);
     const dH = wH.document;
@@ -1628,7 +1648,7 @@ const BEGIN = [
 
   /* 5x. 005: bestand weg = terugzetten vanaf deze telefoon (B2); aankopen bewaren verlagen vraagt eerst (K9). */
   if (deel('5x 005: bestand weg = terugzetten vanaf deze telefoon (B2); aankopen bewaren verlag')) {
-    const odB = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\nartikel;Brood\n');
+    const odB = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Melk;op=2026-11-20T10:00\nartikel;Brood\n');
     const wB = await start(odB);
     await rust(800);
     const dB = wB.document;
@@ -1663,7 +1683,7 @@ const BEGIN = [
 
   /* 5y. 006/007: zichtbaar na toevoegen (B4, B5); Aankopen ververst (B7); tab wisselen sluit winkel (K1); editor + verwijderde winkel (K4); aankopen 0 (K11). */
   if (deel('5y 006/007: zichtbaar na toevoegen (B4, B5); Aankopen ververst (B7); tab wisselen s')) {
-    const odZ = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Plus\nartikel;Kaars;ligt=Gamma|Plus;op=2026-11-20T10:00\nartikel;Lampje\n');
+    const odZ = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Gamma\nwinkel;Plus\nartikel;Kaars;ligt=Gamma|Plus;op=2026-11-20T10:00\nartikel;Lampje\n');
     const wZ = await start(odZ);
     await rust(800);
     const dZ = wZ.document;
@@ -1672,12 +1692,12 @@ const BEGIN = [
     dZ.getElementById('invoerTekst').value = 'Lampje'; dZ.getElementById('invoerTekst').dispatchEvent(new wZ.Event('input'));
     dZ.getElementById('invoerPlus').click(); await slaap(30);
     controle('filter Recepten: + maakt een recept (geen artikel) en opent het', wZ.eval("recepten.some((r) => r.naam === 'Lampje') && artikelen.filter((a) => a.naam === 'Lampje').length === 1") &&
-      dZ.querySelector('#receptBlok h2').firstChild.textContent === 'Lampje' && dZ.getElementById('filters').hidden && dZ.getElementById('invoerTekst').placeholder === 'Artikel',
+      dZ.querySelector('#receptBlok h2').firstChild.textContent === 'Lampje' && dZ.getElementById('filters').hidden && dZ.getElementById('invoerTekst').placeholder === 'Ingrediënt',
       wZ.eval("JSON.stringify({ f: scherm.filter, rs: rs.open, rec: recepten.map((r) => r.naam), art: artikelen.map((a) => a.naam) })") + ' ' + (dZ.querySelector('#receptBlok h2') || {}).textContent);
     dZ.querySelector('#receptBlok .terug').click(); await slaap(20);
     /* B4 */
     dZ.getElementById('tab-doen').click(); await slaap(30);
-    controle('doen: standaard Week', wZ.eval('doen.filter') === 'week');
+    controle('doen: standaard Alles', wZ.eval('doen.filter') === 'alles');
     dZ.getElementById('doenTekst').value = 'Lamp vervangen'; dZ.getElementById('doenPlus').click(); await slaap(30);
     controle('doen: nieuwe actie zonder periode → Alles, zichtbaar en oplichtend (B4)', wZ.eval('doen.filter') === 'alles' && !!dZ.querySelector('#doenLijst .actierij.oplicht'));
     /* K1 */
@@ -1697,7 +1717,6 @@ const BEGIN = [
     wZ.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id");
     dZ.getElementById('tab-winkel').click(); await slaap(30);
     dZ.querySelector('.naaraankopen button') && dZ.querySelector('.naaraankopen button').click();
-    if (!dZ.querySelector('.naaraankopen button')) wZ.eval('aankopenOpenen()');
     await slaap(20);
     wZ.eval("handelen([{ actie: 'aankoop', soort: 'aankoop', id: 'kzz12', naam: 'Nieuw', tijd: tijdstipTekst(new Date()) }])"); await slaap(30);
     controle('aankopen: open scherm ververst bij een nieuwe aankoop (B7)', [...dZ.querySelectorAll('.aankooprij .nm')].some((n) => n.textContent === 'Nieuw'));
@@ -1712,7 +1731,7 @@ const BEGIN = [
 
   /* 5z30. Review dagelijks gebruik (punt 1–12) en UI 11–15. */
   if (deel('5z30 Review dagelijks gebruik (punt 1–12) en UI 11–15.')) {
-    const odD = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\nwinkel;Jumbo\nartikel;Kaas;ligt=AH;op=2026-11-20T10:00\nartikel;Brood;ligt=Plus;op=2026-11-20T10:00\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\nactie;Tandarts;datum=2026-03-10;klaar=2026-03-10T09:00\nactie;Bellen;datum=' + datumTekstT(3) + '\n');
+    const odD = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\nwinkel;Jumbo\nartikel;Kaas;ligt=AH;op=2026-11-20T10:00\nartikel;Brood;ligt=Plus;op=2026-11-20T10:00\nartikel;Melk;ligt=Plus;op=2026-11-20T10:00\nactie;Tandarts;datum=2026-03-10;klaar=2026-03-10T09:00\nactie;Bellen;datum=' + datumTekstT(3) + '\n');
     const wD = await start(odD);
     await rust(800);
     const dD = wD.document;
@@ -1791,6 +1810,25 @@ const BEGIN = [
     controle('editor: label Naam en een datumvak bij een dag (UI 11, punt 7)', dD.querySelector('label[for="actieNaam"]').textContent === 'Naam' && !!datumVak);
     datumVak.value = datumTekstT(21); datumVak.dispatchEvent(new wD.Event('change')); await slaap(10);
     controle('editor: datum kiezen in de kalender zet de dag (punt 7)', wD.eval('bd.datum') === datumTekstT(21) && dD.querySelector('.blader label').textContent === wD.eval("periodeTekst('" + datumTekstT(21) + "', '', true)"));
+    /* Terug naar nu: Vandaag / Deze maand …, grijs als je er al staat. */
+    const nuK = () => dD.querySelector('#wanneerNu button');
+    controle('editor: knop Vandaag onder de datum, aan als het een andere dag is', !!nuK() && nuK().textContent === 'Vandaag' && !nuK().disabled);
+    nuK().click(); await slaap(10);
+    controle('editor: Vandaag zet de dag op vandaag; de knop wordt grijs', wD.eval('bd.datum') === datumTekstT(0) && nuK().disabled);
+    [...dD.querySelectorAll('#wanneerSoort button')].find((b) => b.textContent === 'Maand').click(); await slaap(10);
+    controle('editor: bij Maand heet de knop Deze maand (grijs: staat er al)', nuK().textContent === 'Deze maand' && nuK().disabled);
+    dD.querySelectorAll('.blader button')[1].click(); await slaap(10);
+    controle('editor: een maand later → Deze maand aan, tik = terug', !nuK().disabled && (nuK().click(), wD.eval('bd.datum') === datumTekstT(0).slice(0, 7)));
+    for (const [s, w] of [['Kw.', 'Dit kwartaal'], ['Jaar', 'Dit jaar'], ['n.v.t.', '']]) {
+      [...dD.querySelectorAll('#wanneerSoort button')].find((b) => b.textContent === s).click(); await slaap(10);
+      controle('editor: knop bij ' + s + ': ' + (w || 'geen'), w ? nuK() && nuK().textContent === w : !nuK());
+    }
+    /* Met de muis: een klik op de datum opent de kalender zelf; met een vinger doet de telefoon dat. */
+    [...dD.querySelectorAll('#wanneerSoort button')].find((b) => b.textContent === 'Dag').click(); await slaap(10);
+    const dv = dD.querySelector('.blader label input[type="date"]'); let open = 0; dv.showPicker = () => { open++; };
+    const muis = new wD.MouseEvent('click', { bubbles: true, cancelable: true }); Object.defineProperty(muis, 'pointerType', { value: 'mouse' }); dv.dispatchEvent(muis);
+    const vinger = new wD.MouseEvent('click', { bubbles: true, cancelable: true }); Object.defineProperty(vinger, 'pointerType', { value: 'touch' }); dv.dispatchEvent(vinger);
+    controle('editor: klik met de muis op de datum opent de kalender, een tik met de vinger laat het aan de telefoon', open === 1 && muis.defaultPrevented && !vinger.defaultPrevented, open);
     dD.getElementById('actieDicht').click(); await slaap(20);
     const vraag = dD.getElementById('keuze');
     if (vraag) { const w = [...vraag.querySelectorAll('.knop')].find((b) => /weggooien|Niet opslaan/i.test(b.textContent)); if (w) w.click(); await slaap(20); }
@@ -1804,7 +1842,7 @@ const BEGIN = [
 
   /* 5z31. Netwerk: naam hooguit eens per week opvragen; aantal backups zonder netwerkvraag. */
   if (deel('5z31 netwerk: naam eens per week, aantal backups onthouden')) {
-    const odN = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
+    const odN = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n');
     const gedeeld = new (require('fake-indexeddb').IDBFactory)();
     const wN = await start(odN, null, gedeeld);
     await rust(1500);
@@ -1833,7 +1871,7 @@ const BEGIN = [
 
   /* 5z32. Vangnet: geeft de server bij $select geen downloadlink, dan één keer zonder selectie. */
   if (deel('5z32 netwerk: vangnet als de selectie geen downloadlink geeft')) {
-    const odS = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Thee;op=2026-11-20T10:00\n');
+    const odS = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nartikel;Thee;op=2026-11-20T10:00\n');
     odS.zonderLinkBijSelectie = true;
     const wS = await start(odS);
     await rust(1500);
@@ -1843,7 +1881,7 @@ const BEGIN = [
 
   /* 5z33. Zoeken op winkel met @: winkels boven de balk, kiezen, per afdeling (route), verder typen, + voegt niets toe. */
   if (deel('5z33 zoeken op winkel met @ (artikelen)')) {
-    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\nwinkel;Albert Heijn\n' +
+    const odW = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\nwinkel;Albert Heijn\n' +
       'artikel;Appels;ligt=Plus:Groente\nartikel;Melk;ligt=Plus:Zuivel\nartikel;Kaas;ligt=Plus:Zuivel|Albert Heijn\nartikel;Stroopwafels;ligt=Plus\nartikel;Schroeven\n');
     const wW = await start(odW);
     await rust(1500);
@@ -1889,7 +1927,7 @@ const BEGIN = [
 
   /* 5z34. Winkel: afdelingen als rijen; een afdeling opent een eigen scherm met de artikelen en "Artikel" om artikelen hierheen te halen of nieuw te maken. */
   if (deel('5z34 winkel: artikelen per afdeling')) {
-    const odW = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel|Brood\nwinkel;Albert Heijn\nwinkel;Gamma\n' +
+    const odW = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel|Brood\nwinkel;Albert Heijn\nwinkel;Gamma\n' +
       'artikel;Appels;ligt=Plus:Groente\nartikel;Melk;ligt=Plus:Zuivel\nartikel;Kaas;ligt=Plus:Zuivel|Albert Heijn\nartikel;Stroopwafels;ligt=Plus|Albert Heijn\nartikel;Schroeven\n');
     const wW = await start(odW);
     await rust(1500);
@@ -2040,7 +2078,7 @@ const BEGIN = [
   /* 5z35. Deelschermen: het tabblad eronder tekent niet zolang er iets open is, wel bij sluiten; zelfde scrollpositie en balk. */
   if (deel('5z35 deelschermen: tabblad eronder en scrollpositie')) {
     const nu = new Date(); const tijd = datumTekstT(0) + 'T09:00';
-    const odS = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Afval;herhaal=week;datum=' + datumTekstT(3) + '\nactie;Bellen\n' +
+    const odS = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nactie;Afval;herhaal=week;datum=' + datumTekstT(3) + '\nactie;Bellen\n' +
       'historie;Bellen;tijd=' + tijd + '\naankoop;Melk;tijd=' + tijd + '\nartikel;Melk;op=' + tijd + '\n');
     const wS = await start(odS); await rust(1500); const dS = wS.document;
     const midden = dS.getElementById('midden');
@@ -2087,7 +2125,7 @@ const BEGIN = [
   /* 5z36. Aantallen: per afdeling in Boodschappen; Aankopen en Historie ook bij 0. */
   if (deel('5z36 aantallen bij afdelingen, Aankopen en Historie')) {
     const t = datumTekstT(0) + 'T09:00';
-    const odT = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\n' +
+    const odT = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\n' +
       'artikel;Appels;ligt=Plus:Groente;op=' + t + '\nartikel;Melk;ligt=Plus:Zuivel;op=' + t + '\nartikel;Kaas;ligt=Plus:Zuivel;op=' + t + '\nartikel;Stroop;notitie=za tot 17:00 (#klussen) [#pas "#op"];ligt=Plus;op=' + t + '\n');
     const wT = await start(odT); await rust(1500); const dT = wT.document;
     wT.eval("winkel.id = winkels.find((w) => w.naam === 'Plus').id");
@@ -2112,7 +2150,7 @@ const BEGIN = [
   /* 5z37. Filters op Artikelen uitzetten: nog een tik op het gekozen vakje = alle artikelen. */
   if (deel('5z37 filter uit: alle artikelen')) {
     const t = datumTekstT(0) + 'T09:00';
-    const odF = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n' +
+    const odF = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\n' +
       'artikel;Appels;soort=wekelijks;op=' + t + '\nartikel;Bananen;soort=wekelijks\nartikel;Kaas;soort=regelmatig\nartikel;Lamp;op=' + t + '\nartikel;Schroeven;gekocht=' + datumTekstT(-2) + '\n');
     const wF = await start(odF); await rust(1500); const dF = wF.document;
     const knop = (i) => [...dF.querySelectorAll('#filters .filter')][i];
@@ -2135,7 +2173,7 @@ const BEGIN = [
   /* 5z38. Boodschappen: "Elders" en "Winkelmand" dicht bij een andere winkel; open blijft open in dezelfde winkel. */
   if (deel('5z38 niet bij en winkelmand: dicht per winkel')) {
     const t = datumTekstT(0) + 'T09:00';
-    const odM = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\n' +
+    const odM = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\nwinkel;AH\n' +
       'artikel;Melk;ligt=Plus;op=' + t + '\nartikel;Brood;ligt=Plus;op=' + t + '\nartikel;Kaas;ligt=AH;op=' + t + '\n');
     const wM = await start(odM); await rust(1500); const dM = wM.document;
     const plus = wM.eval("winkels.find((w) => w.naam === 'Plus').id"), ah = wM.eval("winkels.find((w) => w.naam === 'AH').id");
@@ -2183,7 +2221,7 @@ const BEGIN = [
 
   /* 5z40. Afdelingscherm: de afdeling of de hele winkel verdwijnt (ook door de ander). */
   if (deel('5z40 afdelingscherm: afdeling of winkel weg')) {
-    const odX = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\nwinkel;AH\n' +
+    const odX = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente|Zuivel\nwinkel;AH\n' +
       'artikel;Melk;ligt=Plus:Zuivel\nartikel;Kaas;ligt=Plus:Zuivel|AH\n');
     const wX = await start(odX); await rust(1500); const dX = wX.document;
     dX.getElementById('tab-winkels').click(); await slaap(30);
@@ -2207,7 +2245,7 @@ const BEGIN = [
 
   /* 5z41. Twee telefoons maken offline dezelfde afdeling: na samenvoegen blijf je erin staan. */
   if (deel('5z41 afdelingscherm: samengevoegde afdeling')) {
-    const odK = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente\nartikel;Melk;ligt=Plus:Groente\n');
+    const odK = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Groente\nartikel;Melk;ligt=Plus:Groente\n');
     const A = await start(odK); const B = await start(odK); await rust(1500);
     let uitB = false;
     B.fetch = async (u, i) => { if (uitB) throw new TypeError('Failed to fetch'); return odK.fetch(u, i); };
@@ -2228,7 +2266,7 @@ const BEGIN = [
 
   /* 5z42. Enter in een afdeling op een naam die alleen in een andere winkel ligt: zonder paneel erbij. */
   if (deel('5z42 afdelingscherm: Enter op een naam uit een andere winkel')) {
-    const odE = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Zuivel\nwinkel;AH\nartikel;Bonbons;ligt=AH\n');
+    const odE = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Zuivel\nwinkel;AH\nartikel;Bonbons;ligt=AH\n');
     const wE = await start(odE); await rust(1500); const dE = wE.document;
     dE.getElementById('tab-winkels').click(); await slaap(30);
     [...dE.querySelectorAll('#winkelsOverzicht .winkelrij')].find((r) => r.textContent.startsWith('Plus')).click(); await slaap(30);
@@ -2247,10 +2285,13 @@ const BEGIN = [
     const wA = await start(odA); await rust(1500); const dA = wA.document;
     dA.getElementById('tab-instellingen').click(); await slaap(30);
     const sw = dA.getElementById('swWekAuto');
-    controle('Instellingen: schakelaar Automatisch, standaard aan, dag en tijd zichtbaar', sw.getAttribute('aria-checked') === 'true' && !dA.getElementById('wekDagVeld').hidden && !dA.getElementById('wekTijdRij').hidden);
+    controle('Instellingen: schakelaar Automatisch, standaard uit, dag en tijd weg; niets vanzelf op de lijst', sw.getAttribute('aria-checked') === 'false' && dA.getElementById('wekDagVeld').hidden && dA.getElementById('wekTijdRij').hidden &&
+      wA.eval("artikelen.filter((a) => a.letter === 'W' && a.op).map((a) => a.naam).join()") === 'Kaas');
     sw.click(); await rust(2500);
-    controle('uit: dag en tijd weg, in het bestand auto=nee (voor beiden)', sw.getAttribute('aria-checked') === 'false' && dA.getElementById('wekDagVeld').hidden && dA.getElementById('wekTijdRij').hidden &&
-      /^instelling;wekelijks;.*auto=nee/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst).split('\n')[0]);
+    controle('aan: dag en tijd zichtbaar, in het bestand auto=ja (voor beiden)', sw.getAttribute('aria-checked') === 'true' && !dA.getElementById('wekDagVeld').hidden && !dA.getElementById('wekTijdRij').hidden &&
+      /^instelling;wekelijks;.*auto=ja/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst).split('\n')[0]);
+    sw.click(); await rust(2500);
+    controle('weer uit: in het bestand auto=nee', sw.getAttribute('aria-checked') === 'false' && /^instelling;wekelijks;.*auto=nee/m.test(R(odA.bestanden['thuis.json'].tekst)), R(odA.bestanden['thuis.json'].tekst).split('\n')[0]);
     /* Melk en Brood van de lijst (de start zette ze er misschien al op). */
     wA.eval("handelen(artikelen.filter((a) => a.naam !== 'Kaas' && a.op).flatMap((a) => [{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' }]))"); await slaap(30);
     dA.getElementById('tab-boodschappen').click(); await slaap(30);
@@ -2270,48 +2311,75 @@ const BEGIN = [
     wA.close();
   }
 
-  /* 5z44. Recepten: Suggesties onder Op de lijst, filter Recepten, receptscherm, aantallen en het regeltje. */
-  if (deel('5z44 recepten')) {
+  /* 5z44. Recepten, in losse delen met elk een eigen beginsituatie (via receptStart). */
+  const receptStart = async (lasagne = true) => {
     const dg = (n) => datumTekstT(-n);
-    const odR = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\n' +
+    const od = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus\n' +
       'artikel;Melk;soort=wekelijks;aantal=3;ligt=Plus;op=' + dg(1) + 'T09:00\nartikel;Gehakt;ligt=Plus\nartikel;Eieren;soort=regelmatig\n' +
       'artikel;Koffie;soort=regelmatig;gekocht=' + [dg(40), dg(30), dg(20), dg(10)].join('|') + '\n');
-    const wR = await start(odR); await rust(1500); const dR = wR.document;
-    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'las01', velden: { naam: 'Lasagne', notitie: '#pasta' } }, { actie: 'receptArtikel', soort: 'recept', id: 'las01', artikel: artikelen.find((a) => a.naam === 'Melk').id, aantal: '4' }, { actie: 'receptArtikel', soort: 'recept', id: 'las01', artikel: artikelen.find((a) => a.naam === 'Gehakt').id, aantal: '2' }])"); await rust(2500);
-    dR.getElementById('tab-boodschappen').click(); await slaap(30);
-    const filters = () => [...dR.querySelectorAll('#filters .filter')].map((f) => f.getAttribute('aria-label').split(',')[0]).join();
-    const sug = () => dR.getElementById('suggesties');
+    const w = await start(od); await rust(1500);
+    if (lasagne) w.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'las01', velden: { naam: 'Lasagne', notitie: '#pasta' } }, { actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', naam: 'Melk', aantal: '4' }, { actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'igh01', naam: 'Gehakt', aantal: '2' }])");
+    await slaap(50);
+    w.document.getElementById('tab-boodschappen').click(); await slaap(30);
+    return w;
+  };
+  /* Hulpjes om te lezen wat er staat (per venster). */
+  const receptHulp = (wR) => { const dR = wR.document; return {
+  filters: () => [...dR.querySelectorAll('#filters .filter')].map((f) => f.getAttribute('aria-label').split(',')[0]).join(),
+  sug: () => dR.getElementById('suggesties'),
+  rec: () => [...dR.querySelectorAll('#receptBlok .receptrij')].map((r) => r.querySelector('.nm').firstChild.textContent + ':' + r.querySelector('.tal').textContent).join(),
+  rijR: (n) => [...dR.querySelectorAll('#ingredienten .item')].find((r) => naamVanRij(r) === n),
+  regels: () => [...dR.querySelectorAll('#ingredienten .item')].map((r) => naamVanRij(r) + ((r.querySelector('.aantal') || {}).textContent || '') + (r.querySelector('.rondje').getAttribute('aria-pressed') === 'true' ? '+' : '')).join(),
+  melk: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return a.opAantal + '|' + a.voorTekst; })()"),
+  keuze: () => dR.getElementById('tagLijst').hidden ? '' : [...dR.querySelectorAll('#tagLijst .tagoptie')].map((b) => b.querySelector('.nm').textContent).join(),
+  rijL: (n) => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === n),
+  rijW: (n) => [...dR.querySelectorAll('#weggehaald .item')].find((r) => naamVanRij(r) === n),
+  geh: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); return a.opAantal + '|' + a.voorTekst + '|' + a.opvoor; })()"),
+  wrij: (n) => [...dR.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === n),
+  balk: () => dR.getElementById('invoerTekst').value,
+  melkRij: () => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk'),
+  tel: () => dR.querySelector('#lijst .teller'),
+  mk: () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return [a.aantal, a.rec.opaantal || '', a.opAantal, a.voorTekst].join('|'); })()"),
+  wm: () => [...dR.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === 'Melk'),
+  lamp: () => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Lampje'),
+  sto: () => [...dR.querySelectorAll('#ingredienten .item')].map((r) => naamVanRij(r)).join(),
+  prei: () => dR.querySelector('#ingredienten .item'),
+  kaas: (n) => wR.eval("(() => { const a = artikelen.find((x) => x.naam === '" + n + "'); return a ? a.opAantal + '|' + a.voorTekst : ''; })()"),
+    vak: dR.getElementById('invoerTekst')
+  }; };
+  if (deel('5z44a recepten: basis en receptscherm')) {
+    const wR = await receptStart(); const dR = wR.document;
+    const { filters, sug, rec, vak, rijR, regels, melk, keuze, rijL, rijW, geh, wrij, balk, melkRij, tel, mk, wm, lamp, sto, prei, kaas } = receptHulp(wR);
+    /* Filters, Suggesties, receptenlijst, receptscherm, rondjes, teller, keuzelijst, prullenbak, favoriet */
     controle('filters: Op de lijst, Eenmalig, Wekelijks, Regelmatig, Recepten (geen Suggesties meer)', filters() === 'Op de lijst,Eenmalig,Wekelijks,Regelmatig,Recepten', filters());
     controle('Suggesties: kop onder Op de lijst, standaard dicht', !!sug() && sug().previousElementSibling.id === 'lijstBlok' && sug().querySelector('.kopbalk').getAttribute('aria-expanded') === 'false' && !sug().querySelector('.item'));
     sug().querySelector('.kopbalk').click(); await slaap(20);
     controle('Suggesties open: Koffie met de suggestie, rondje zet op de lijst', !!sug().querySelector('.item') && naamVanRij(sug().querySelector('.item')) === 'Koffie' && !!sug().querySelector('.item .hint'));
     [...dR.querySelectorAll('#filters .filter')][4].click(); await slaap(20);
-    const rec = () => [...dR.querySelectorAll('#receptBlok .receptrij')].map((r) => r.querySelector('.nm').firstChild.textContent + ':' + r.querySelector('.tal').textContent).join();
     controle('Recepten: één groep "Recepten", invoer "Recept"', rec() === 'Lasagne:2' && dR.querySelector('#receptBlok .kop .kopnaam').textContent === 'Recepten' && dR.getElementById('invoerTekst').placeholder === 'Recept', rec());
-    const vak = dR.getElementById('invoerTekst');
     vak.focus(); vak.value = '#pas'; vak.dispatchEvent(new wR.Event('input')); await slaap(20);
     controle('Recepten: zoeken op #tag', rec() === 'Lasagne:2', rec());
     vak.value = ''; vak.dispatchEvent(new wR.Event('input')); vak.blur(); await slaap(20);
     dR.querySelector('#receptBlok .receptrij').click(); await slaap(30);
-    const rijR = (n) => [...dR.querySelectorAll('#receptArtikelen .item')].find((r) => naamVanRij(r) === n);
-    const regels = () => [...dR.querySelectorAll('#receptArtikelen .item')].map((r) => naamVanRij(r) + ((r.querySelector('.aantal') || {}).textContent || '') + (r.querySelector('.rondje').getAttribute('aria-pressed') === 'true' ? '+' : '')).join();
     controle('recept open: naam, artikelen alfabetisch met het aantal van het recept, nog niets voor dit recept op de lijst', dR.querySelector('#receptBlok h2').firstChild.textContent === 'Lasagne' && regels() === 'Gehakt2×,Melk4×' && dR.getElementById('filters').hidden, regels());
     const kn = dR.querySelector('#receptBlok .kopnotitie');
     controle('recept open: notitie en tags in de band onder de kop, niet in de kop zelf', !!kn && kn.previousElementSibling.classList.contains('wdkop') && /#pasta/.test(kn.textContent) && !dR.querySelector('#receptBlok .wdkop .notitie'), kn && kn.textContent);
     rijR('Melk').querySelector('.rondje').click(); await slaap(20);
     rijR('Gehakt').querySelector('.rondje').click(); await slaap(20);
-    const melk = () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return a.opAantal + '|' + a.voorTekst; })()");
-    controle('rondjes: Melk 3 + 4 = 7, Gehakt alleen voor Lasagne; in het recept staan ze aan, met het regeltje', regels() === 'Gehakt2×+,Melk4×+' && melk() === '7|3 + 4\u00A0Lasagne' &&
-      rijR('Melk').querySelector('.voorregel').textContent === '3 + 4\u00A0Lasagne' && rijR('Gehakt').querySelector('.voorregel').textContent === 'Lasagne', regels() + ' ' + melk());
+    controle('rondjes: Melk 3 + 4 = 7, Gehakt alleen voor Lasagne; in het recept staan ze aan, zonder regeltje (op de lijst wel)', regels() === 'Gehakt2×+,Melk4×+' && melk() === '7|3 + 4\u00A0Lasagne' &&
+      !rijR('Melk').querySelector('.voorregel') && !rijR('Gehakt').querySelector('.voorregel') && melk() === '7|3 + 4\u00A0Lasagne', regels() + ' ' + melk());
     rijR('Melk').querySelector('.icoon').click(); await slaap(20);
     dR.querySelector('#receptBlok .teller .meer').click(); await slaap(20);
     controle('teller in het recept: 5, en de lijst telt mee (8)', regels() === 'Gehakt2×+,Melk5×+' && melk() === '8|3 + 5\u00A0Lasagne', regels() + ' ' + melk());
     vak.focus(); vak.value = 'eie'; vak.dispatchEvent(new wR.Event('input')); await slaap(20);
-    const keuze = () => dR.getElementById('tagLijst').hidden ? '' : [...dR.querySelectorAll('#tagLijst .tagoptie')].map((b) => b.querySelector('.nm').textContent).join();
     controle('typen: artikelen die nog niet in het recept staan, en + Nieuw', keuze() === 'Eieren,+ Nieuw: "eie"', keuze());
     dR.querySelector('#tagLijst .tagoptie').click(); await slaap(20);
     vak.value = 'Lasagnebladen'; vak.dispatchEvent(new wR.Event('input')); vak.dispatchEvent(new wR.KeyboardEvent('keydown', { key: 'Enter' })); await slaap(30);
-    controle('Eieren erbij (1), Lasagnebladen nieuw en eenmalig', regels() === 'Eieren,Gehakt2×+,Lasagnebladen,Melk5×+' && wR.eval("artikelen.find((a) => a.naam === 'Lasagnebladen').soort") === 'eenmalig', regels());
+    controle('Eieren erbij (1), Lasagnebladen nieuw: een ingrediënt, geen artikel', regels() === 'Eieren,Gehakt2×+,Lasagnebladen,Melk5×+' && wR.eval("!artikelen.find((a) => a.naam === 'Lasagnebladen')"), regels());
+    rijR('Lasagnebladen').querySelector('.rondje').click(); await slaap(30);
+    controle('rondje bij een ingrediënt zonder artikel: maakt een eenmalig artikel en zet het voor Lasagne op de lijst', regels() === 'Eieren,Gehakt2×+,Lasagnebladen+,Melk5×+' && wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Lasagnebladen'); return a.soort + '|' + !!a.op + '|' + a.voorTekst; })()") === 'eenmalig|true|Lasagne', regels());
+    rijR('Lasagnebladen').querySelector('.rondje').click(); await slaap(30);
+    controle('nog een tik: van de lijst; het artikel blijft (archief), het ingrediënt ook', regels() === 'Eieren,Gehakt2×+,Lasagnebladen,Melk5×+' && wR.eval("!artikelen.find((x) => x.naam === 'Lasagnebladen').op"), regels());
     rijR('Gehakt').querySelector('.icoon').click(); await slaap(20);
     dR.querySelector('#receptBlok .teller .uit').click(); await slaap(30);
     controle('prullenbak: Gehakt uit het recept en van de lijst (stond er alleen voor Lasagne), met Ongedaan maken', regels() === 'Eieren,Lasagnebladen,Melk5×+' && wR.eval("!artikelen.find((a) => a.naam === 'Gehakt').op") &&
@@ -2321,18 +2389,24 @@ const BEGIN = [
     dR.querySelector('#receptBlok .ster').click(); await slaap(20);
     dR.querySelector('#receptBlok .terug').click(); await slaap(30);
     controle('ster: favoriet (per telefoon), terug: groep Favorieten', dR.querySelector('#receptBlok .kop .kopnaam').textContent === 'Favorieten' && wR.eval("JSON.stringify(KEUZES.receptFav.waarde())") === '["las01"]');
-    [...dR.querySelectorAll('#filters .filter')][0].click(); await slaap(20);
-    const rijL = (n) => [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === n);
+    wR.close();
+  }
+
+  if (deel('5z44b recepten: op de lijst, van de lijst, winkelmand, verwijderen')) {
+    const wR = await receptStart(); const dR = wR.document;
+    const { filters, sug, rec, vak, rijR, regels, melk, keuze, rijL, rijW, geh, wrij, balk, melkRij, tel, mk, wm, lamp, sto, prei, kaas } = receptHulp(wR);
+    /* Recepten op de lijst */
+    /* Beginsituatie: Melk 3 + 5 Lasagne, Gehakt alleen voor Lasagne (2). */
+    wR.eval("(() => { const m = artikelen.find((a) => a.naam === 'Melk'), g = artikelen.find((a) => a.naam === 'Gehakt'); handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', aantal: '5' }, { actie: 'voor', soort: 'artikel', id: m.id, recept: 'las01', naam: 'Lasagne', aantal: '5', ing: 'ime01', wie: ik }, { actie: 'voor', soort: 'artikel', id: g.id, recept: 'las01', naam: 'Lasagne', aantal: '2', ing: 'igh01', wie: ik }]); })()"); await slaap(30);
+    wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
     controle('Op de lijst: Melk 8× met "3 + 5 Lasagne", Gehakt 2× met "Lasagne"', rijL('Melk').querySelector('.aantal').textContent === '8×' && rijL('Melk').querySelector('.voorregel').textContent === '3 + 5\u00A0Lasagne' &&
       rijL('Gehakt').querySelector('.aantal').textContent === '2×' && rijL('Gehakt').querySelector('.voorregel').textContent === 'Lasagne');
     /* Van de lijst en terugtikken onder "Van de lijst gehaald": de recepten komen terug */
     rijL('Melk').querySelector('.rondje').click(); await slaap(20);
     rijL('Gehakt').querySelector('.rondje').click(); await slaap(20);
-    const rijW = (n) => [...dR.querySelectorAll('#weggehaald .item')].find((r) => naamVanRij(r) === n);
     controle('van de lijst: Melk en Gehakt onder "Van de lijst gehaald", recepten eraf', !!rijW('Melk') && !!rijW('Gehakt') && wR.eval("artikelen.find((a) => a.naam === 'Melk').voor.length") === 0);
     rijW('Melk').querySelector('.rondje').click(); await slaap(20);
     rijW('Gehakt').querySelector('.rondje').click(); await slaap(20);
-    const geh = () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); return a.opAantal + '|' + a.voorTekst + '|' + a.opvoor; })()");
     controle('terugtikken: Melk weer 8× met "3 + 5 Lasagne", Gehakt weer alleen voor Lasagne (2×)', melk() === '8|3 + 5\u00A0Lasagne' && geh() === '2|Lasagne|true', melk() + ' / ' + geh());
     /* Alleen voor een recept op de lijst: + in de teller = ook zelf nodig (1 + 2 Lasagne = 3×); − doet niets */
     rijL('Gehakt').querySelector('.icoon').click(); await slaap(20);
@@ -2342,7 +2416,6 @@ const BEGIN = [
     wR.eval("scherm.teller = ''; tekenBoodschappen()"); await slaap(20);
     /* Boodschappen: het regeltje ook daar; afvinken en terugtikken houdt de recepten */
     dR.getElementById('tab-winkel').click(); await slaap(30);
-    const wrij = (n) => [...dR.querySelectorAll('#winkelLijst .wrij')].find((r) => r.querySelector('.nm').firstChild.textContent === n);
     controle('Boodschappen: Melk 8× met het regeltje', !!wrij('Melk') && wrij('Melk').querySelector('.aantal').textContent === '8×' && wrij('Melk').querySelector('.voorregel').textContent === '3 + 5\u00A0Lasagne');
     wrij('Melk').querySelector('.vink').click(); await slaap(30);
     controle('afgevinkt: recepten eraf', wR.eval("artikelen.find((a) => a.naam === 'Melk').voor.length") === 0);
@@ -2356,6 +2429,21 @@ const BEGIN = [
     dR.querySelector('#receptBlok .bewerk').click(); await slaap(20);
     dR.querySelector('#keuze .prul').click(); await slaap(30);
     controle('recept verwijderd: lijst ongemoeid, regeltje houdt de naam', wR.eval('recepten.length') === 0 && melk() === '8|3 + 5\u00A0Lasagne' && !wR.eval('rs.open'), melk());
+    /* Hernoemen van een recept: het regeltje op de lijst volgt (ook met de rij uit het geheugen) */
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'pas01', velden: { naam: 'Pasta pesto' } }])"); await slaap(20);
+    wR.eval("handelen([{ actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, recept: 'pas01', naam: 'Pasta pesto', aantal: '1' }])"); await slaap(20);
+    dR.getElementById('tab-boodschappen').click(); wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
+    wR.eval("handelen([{ actie: 'zet', soort: 'recept', id: 'pas01', veld: 'naam', oud: 'Pasta pesto', nieuw: 'Pasta verde' }])"); await slaap(30);
+    controle('recept hernoemd: het regeltje op de lijst noemt meteen de nieuwe naam', /Pasta verde/.test(rijL('Melk').querySelector('.voorregel').textContent), rijL('Melk').querySelector('.voorregel').textContent);
+    wR.close();
+  }
+
+  if (deel('5z44c recepten: tags, band onder de titel, terug na tag')) {
+    const wR = await receptStart(false); const dR = wR.document;
+    const { filters, sug, rec, vak, rijR, regels, melk, keuze, rijL, rijW, geh, wrij, balk, melkRij, tel, mk, wm, lamp, sto, prei, kaas } = receptHulp(wR);
+    /* Band onder de titel en tags */
+    /* Beginsituatie: Plus, Melk (#zuivel) op de lijst, recept Pasta verde (#pasta), een actie met #klusje. */
+    wR.eval("handelen([{ actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'notitie', oud: '', nieuw: '#zuivel' }, { actie: 'nieuw', soort: 'actie', id: 'act01', velden: { naam: 'Lamp ophangen', notitie: '#klusje' } }, { actie: 'nieuw', soort: 'recept', id: 'pas01', velden: { naam: 'Pasta verde', notitie: '#pasta' } }])"); await slaap(30);
     wR.eval("handelen([{ actie: 'zet', soort: 'winkel', id: winkels.find((w) => w.naam === 'Plus').id, veld: 'notitie', oud: '', nieuw: 'Tot 21:00 #dichtbij' }])"); await slaap(20);
     dR.getElementById('tab-winkels').click(); await slaap(20);
     wR.eval("winkelOpenen(winkels.find((w) => w.naam === 'Plus').id)"); await slaap(30);
@@ -2363,14 +2451,14 @@ const BEGIN = [
     controle('winkel open: notitie en tags in de band onder de kop', !!kw && kw.previousElementSibling.classList.contains('wdkop') && /Tot 21:00/.test(kw.textContent) && /#dichtbij/.test(kw.textContent), kw && kw.textContent);
     wR.eval("handelen([{ actie: 'zet', soort: 'winkel', id: winkels.find((w) => w.naam === 'Plus').id, veld: 'notitie', oud: 'Tot 21:00 #dichtbij', nieuw: '' }])"); await slaap(30);
     controle('winkel zonder notitie of link: geen band', !dR.querySelector('#winkelDetail .kopnotitie'));
-    /* Tikbare tags: zoeken op die tag, waar dat soort staat */
-    const balk = () => dR.getElementById('invoerTekst').value;
-    wR.eval("handelen([{ actie: 'zet', soort: 'winkel', id: winkels.find((w) => w.naam === 'Plus').id, veld: 'notitie', oud: '', nieuw: '#dichtbij' }, { actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'notitie', oud: '', nieuw: '#zuivel' }, { actie: 'nieuw', soort: 'actie', id: 'act01', velden: { naam: 'Lamp ophangen', notitie: '#klusje' } }, { actie: 'nieuw', soort: 'recept', id: 'pas01', velden: { naam: 'Pasta pesto', notitie: '#pasta' } }])"); await slaap(30);
-    /* Hernoemen van een recept: het regeltje op de lijst volgt (ook met de rij uit het geheugen) */
-    wR.eval("handelen([{ actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, recept: 'pas01', naam: 'Pasta pesto', aantal: '1' }])"); await slaap(20);
+    /* Zoeken, tijdens het zoeken de tegel Recepten, dan het pijltje in de zoekbalk: je blijft op Recepten (zoals met het kruisje) */
     dR.getElementById('tab-boodschappen').click(); wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
-    wR.eval("handelen([{ actie: 'zet', soort: 'recept', id: 'pas01', veld: 'naam', oud: 'Pasta pesto', nieuw: 'Pasta verde' }])"); await slaap(30);
-    controle('recept hernoemd: het regeltje op de lijst noemt meteen de nieuwe naam', /Pasta verde/.test(rijL('Melk').querySelector('.voorregel').textContent), rijL('Melk').querySelector('.voorregel').textContent);
+    { const iv = dR.getElementById('invoerTekst'); iv.focus(); iv.value = 'pas'; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
+    [...dR.querySelectorAll('#filters .filter')][4].click(); await slaap(20);
+    dR.getElementById('invoerTerug').click(); await slaap(20);
+    controle('pijltje in de zoekbalk na de tegel Recepten tijdens zoeken: blijft op Recepten', wR.eval('scherm.filter') === 'K' && !dR.getElementById('receptBlok').hidden && dR.getElementById('invoerTekst').value === '', wR.eval('scherm.filter'));
+    /* Tikbare tags: zoeken op die tag, waar dat soort staat */
+    wR.eval("handelen([{ actie: 'zet', soort: 'winkel', id: winkels.find((w) => w.naam === 'Plus').id, veld: 'notitie', oud: '', nieuw: '#dichtbij' }, { actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'notitie', oud: '', nieuw: '#zuivel' }, { actie: 'nieuw', soort: 'actie', id: 'act01', velden: { naam: 'Lamp ophangen', notitie: '#klusje' } }, { actie: 'nieuw', soort: 'recept', id: 'pas01', velden: { naam: 'Pasta pesto', notitie: '#pasta' } }])"); await slaap(30);
     dR.getElementById('tab-winkels').click(); await slaap(20);
     wR.eval("winkelOpenen(winkels.find((w) => w.naam === 'Plus').id)"); await slaap(30);
     dR.querySelector('#winkelDetail .kopnotitie .tag').click(); await slaap(30);
@@ -2387,24 +2475,163 @@ const BEGIN = [
     dR.getElementById('tab-winkel').click(); await slaap(30);
     const melkTag = [...dR.querySelectorAll('#scherm-winkel .notitie .tag')].find((t) => t.textContent === '#zuivel');
     controle('Boodschappen: tag buiten de afvinkknop, een tik op de regel vinkt nog steeds af (knop = het rondje)', !!melkTag && !melkTag.closest('button') && !!melkTag.closest('.vink') && !!melkTag.closest('.vink').querySelector('button.vinkrond[aria-label]'));
-    melkTag.click(); await slaap(30);
-    controle('tag bij een artikel in de winkel: naar Artikelen, zoekt op #zuivel in alle artikelen (artikel niet geopend)', !dR.getElementById('scherm-boodschappen').hidden && balk() === '#zuivel' && !wR.eval('receptModus()') && !wR.eval('bw.id') && namenInLijst(wR).join() === 'Melk', balk() + ' ' + namenInLijst(wR).join());
-    { const iv = dR.getElementById('invoerTekst'); iv.value = ''; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
+    controle('tag in een lijst (Boodschappen) is gewone tekst, niet tikbaar', !melkTag.classList.contains('tik') && !melkTag.hasAttribute('role') && !melkTag.hasAttribute('tabindex'));
+    dR.getElementById('tab-boodschappen').click(); await slaap(20);
     wR.eval("receptOpenen('pas01')"); await slaap(30);
     dR.querySelector('#receptBlok .kopnotitie .tag').click(); await slaap(30);
     controle('tag in de receptkop: recept dicht, Recepten zoekt op #pasta (Lasagne is verwijderd: alleen Pasta verde)', !wR.eval('rs.open') && wR.eval('receptModus()') && balk() === '#pasta' && rec() === 'Pasta verde:0', balk() + ' ' + rec());
     { const iv = dR.getElementById('invoerTekst'); iv.value = ''; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
     wR.eval("doen.filter = 'alles'"); dR.getElementById('tab-doen').click(); await slaap(30);
-    dR.querySelector('#scherm-doen .notitie .tag').click(); await slaap(30);
-    controle('tag bij een actie: Doen zoekt op #klusje', dR.getElementById('doenTekst').value === '#klusje' && !wR.eval('bd.id'), dR.getElementById('doenTekst').value);
+    controle('tag bij een actie is gewone tekst', !!dR.querySelector('#scherm-doen .notitie .tag') && !dR.querySelector('#scherm-doen .tag.tik'));
     controle('Doen: tag buiten de knop van de actie', !!dR.querySelector('#scherm-doen .actierij .tag') && !dR.querySelector('#scherm-doen button .tag'));
+    /* Terug na een tag: het pijltje in de zoekbalk en de terugknop gaan naar waar je was */
+    dR.getElementById('tab-boodschappen').click(); await slaap(20);
+    wR.eval("receptOpenen('pas01')"); await slaap(30);
+    wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'pas01', ingredient: 'ime02', naam: 'Melk', aantal: '1' }])"); await slaap(30);
+    controle('in een recept geen notitie of tags van artikelen; in de band onder de titel tikbaar', !dR.querySelector('#ingredienten .tag') && !!dR.querySelector('#receptBlok .kopnotitie .tag.tik'));
+    dR.querySelector('#receptBlok .kopnotitie .tag').click(); await slaap(30);
+    controle('tag in de receptkop: zoekt in Recepten', wR.eval('scherm.filter') === 'K' && !wR.eval('rs.open') && dR.getElementById('invoerTekst').value === '#pasta');
+    dR.getElementById('invoerTerug').click(); await slaap(30);
+    controle('pijltje in de zoekbalk: terug in het recept', wR.eval('rs.open') === 'pas01' && dR.getElementById('invoerTekst').value === '' && !dR.getElementById('receptBlok').hidden, wR.eval('rs.open'));
+    dR.querySelector('#receptBlok .kopnotitie .tag').click(); await slaap(30);
+    wR.history.back(); await slaap(60);
+    controle('terugknop na de tag: ook terug in het recept', wR.eval('rs.open') === 'pas01' && dR.getElementById('invoerTekst').value === '', wR.eval('rs.open'));
+    dR.getElementById('tab-winkels').click(); await slaap(20);
+    wR.eval("winkelOpenen(winkels.find((w) => w.naam === 'Plus').id)"); await slaap(30);
+    dR.querySelector('#winkelDetail .kopnotitie .tag').click(); await slaap(30);
+    dR.getElementById('winkelsLinks').click(); await slaap(30);
+    controle('tag in de winkelkop, dan het pijltje: terug in die winkel', wR.eval('ws.open') === wR.eval("winkels.find((w) => w.naam === 'Plus').id") && dR.getElementById('winkelsTekst').value === '');
+    /* Vanuit de tagresultaten iets anders openen: het pijltje en terug werken daarna gewoon */
+    wR.eval("winkelSluiten()"); dR.getElementById('tab-boodschappen').click(); await slaap(20);
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'spa01', velden: { naam: 'Spaghetti', notitie: '#pasta' } }])"); await slaap(20);
+    wR.eval("receptOpenen('spa01')"); await slaap(30);
+    dR.querySelector('#receptBlok .kopnotitie .tag').click(); await slaap(30);
+    [...dR.querySelectorAll('#receptBlok .receptrij')].find((r) => r.dataset.id === 'pas01').click(); await slaap(30);
+    { const iv = dR.getElementById('invoerTekst'); iv.focus(); iv.value = 'xyz'; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
+    dR.getElementById('invoerTerug').click(); await slaap(30);
+    controle('tag, dan een ander recept geopend, typen en het pijltje: blijft in dat recept', wR.eval('rs.open') === 'pas01' && dR.getElementById('invoerTekst').value === '', wR.eval('rs.open'));
+    wR.history.back(); await slaap(60);
+    controle('daarna sluit terug dat recept (geen hangende terugstap)', !wR.eval('rs.open') && wR.eval('receptModus()'), wR.eval('rs.open'));
+    wR.eval("receptOpenen('spa01')"); await slaap(30);
+    dR.querySelector('#receptBlok .kopnotitie .tag').click(); await slaap(30);
+    { const iv = dR.getElementById('invoerTekst'); iv.value = '#pas'; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
+    dR.getElementById('invoerTerug').click(); await slaap(30);
+    controle('tag, dan zelf de zoektekst veranderd en het pijltje: geen sprong terug naar het recept', !wR.eval('rs.open'), wR.eval('rs.open'));
+    wR.close();
+  }
+
+  if (deel('5z44d recepten: teller en lijstaantal')) {
+    const wR = await receptStart(false); const dR = wR.document;
+    const { filters, sug, rec, vak, rijR, regels, melk, keuze, rijL, rijW, geh, wrij, balk, melkRij, tel, mk, wm, lamp, sto, prei, kaas } = receptHulp(wR);
+    /* Teller, lijstaantal, eenmalig */
+    /* Beginsituatie: recept Pasta verde. */
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'pas01', velden: { naam: 'Pasta verde' } }])"); await slaap(30);
+    wR.eval('winkelSluiten()'); dR.getElementById('tab-boodschappen').click(); await slaap(20);
+    /* Teller bij een wekelijks artikel alleen voor een recept: 0, "normaal 3×", rood vast aantal; − tot 0 met recepten */
+    dR.getElementById('tab-boodschappen').click(); wR.eval("scherm.filter = 'L'; scherm.teller = ''; tekenBoodschappen()"); await slaap(20);
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' }]); handelen([{ actie: 'voor', soort: 'artikel', id: a.id, recept: 'pas01', naam: 'Pasta verde', aantal: '1', wie: ik }]); })()"); await slaap(30);
+    melkRij().querySelector('.icoon').click(); await slaap(20);
+    controle('alleen voor een recept (wekelijks 3): teller "Aantal" 0, − uit, regeltje "Pasta verde", normaal 4× doorgestreept voor 1×', tel().firstElementChild.textContent === 'Aantal' && tel().querySelector('.n').textContent === '0' && tel().querySelector('.min').disabled && melkRij().querySelector('.normaal').textContent === 'normaal 4×' && melkRij().querySelector('.aantal').textContent === '1×' && melkRij().querySelector('.voorregel').textContent === 'Pasta verde', melkRij().querySelector('.voorregel').textContent);
+    tel().querySelector('.meer').click(); await slaap(30);
+    controle('+ vanaf 0: het vaste aantal telt mee (4×), teller "Aantal" 3, niets doorgestreept', tel().firstElementChild.textContent === 'Aantal' && tel().querySelector('.n').textContent === '3' && !melkRij().querySelector('.normaal') && wR.eval("artikelen.find((x) => x.naam === 'Melk').opAantal") === 4);
+    tel().querySelector('.min').click(); await slaap(30); tel().querySelector('.min').click(); await slaap(30);
+    controle('op 1 met een recept: − kan nog', !tel().querySelector('.min').disabled && tel().querySelector('.n').textContent === '1');
+    tel().querySelector('.min').click(); await slaap(30);
+    controle('− naar 0: alleen voor het recept (1×), teller 0, − uit', wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); return a.opAantal + '|' + a.opvoor; })()") === '1|true' && tel().querySelector('.n').textContent === '0' && tel().querySelector('.min').disabled);
+    wR.eval("scherm.teller = ''; tekenBoodschappen()"); await slaap(20);
+    /* Lijstaantal: op Op de lijst alleen deze keer; elders het vaste aantal */
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' }]); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'aantal', oud: a.aantal > 1 ? String(a.aantal) : '', nieuw: '3' }]); })()"); await slaap(20);
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); handelen(opDeLijst(a, tijdstipTekst(new Date()))); })()"); await slaap(30);
+    melkRij().querySelector('.icoon').click(); await slaap(20);
+    tel().querySelector('.min').click(); await slaap(30);
+    controle('Op de lijst: − maakt 2× deze keer, vast aantal blijft 3, 3× doorgestreept voor 2×, geen regeltje', mk() === '3|2|2|' && melkRij().querySelector('.aantal').textContent === '2×' && melkRij().querySelector('.normaal').textContent === 'normaal 3×' && !melkRij().querySelector('.voorregel') && tel().querySelector('.n').textContent === '2', mk());
+    tel().querySelector('.meer').click(); await slaap(30);
+    controle('terug op het vaste aantal: lijstaantal weer leeg, niets doorgestreept', mk() === '3||3|' && !melkRij().querySelector('.normaal'), mk());
+    tel().querySelector('.min').click(); await slaap(30);
+    wR.eval("scherm.teller = ''; scherm.filter = 'W'; tekenBoodschappen()"); await slaap(20);
+    controle('Wekelijks: het vaste aantal (3×), niets doorgestreept', melkRij().querySelector('.aantal').textContent === '3×' && !melkRij().querySelector('.normaal'));
+    melkRij().querySelector('.icoon').click(); await slaap(20);
+    tel().querySelector('.meer').click(); await slaap(30);
+    controle('teller bij Wekelijks wijzigt het vaste aantal (4), het lijstaantal blijft 2', mk() === '4|2|2|', mk());
+    wR.eval("scherm.teller = ''; scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
+    dR.getElementById('tab-winkel').click(); await slaap(30);
+    controle('Boodschappen: 4× doorgestreept, 2×', wm().querySelector('.aantal').textContent === '2×' && wm().querySelector('.normaal').textContent === 'normaal 4×');
+    wm().querySelector('.vink').click(); await slaap(30);
+    controle('afgevinkt: lijstaantal weg', mk() === '4||4|', mk());
+    await slaap(1600);
+    wR.eval("terugOpLijst(artikelen.find((a) => a.naam === 'Melk').id)"); await slaap(30);
+    controle('terugtikken in de winkelmand: weer 2× deze keer', mk() === '4|2|2|', mk());
+    dR.getElementById('tab-boodschappen').click(); await slaap(20);
+    melkRij().querySelector('.rondje').click(); await slaap(20);
+    [...dR.querySelectorAll('#weggehaald .item')].find((r) => naamVanRij(r) === 'Melk').querySelector('.rondje').click(); await slaap(30);
+    controle('van de lijst en terugtikken: weer 2× deze keer', mk() === '4|2|2|', mk());
+    /* Eenmalig: geen apart lijstaantal; de teller op Op de lijst wijzigt het aantal zelf, overal hetzelfde */
+    dR.getElementById('tab-boodschappen').click(); wR.eval("scherm.filter = 'L'; scherm.teller = ''; handelen([{ actie: 'nieuw', soort: 'artikel', id: 'lam01', velden: { naam: 'Lampje', soort: 'eenmalig', op: tijdstipTekst(new Date()), opdoor: ik } }]); tekenBoodschappen()"); await slaap(30);
+    lamp().querySelector('.icoon').click(); await slaap(20);
+    dR.querySelector('#lijst .teller .meer').click(); await slaap(30);
+    controle('eenmalig op Op de lijst: + wijzigt het aantal zelf (2), geen lijstaantal, niets doorgestreept', wR.eval("(() => { const a = artikelen.find((x) => x.id === 'lam01'); return a.aantal + '|' + (a.rec.opaantal || '') + '|' + a.opAantal; })()") === '2||2' && !lamp().querySelector('.normaal'));
+    wR.eval("scherm.teller = ''; scherm.filter = 'E'; tekenBoodschappen()"); await slaap(20);
+    controle('filter Eenmalig: hetzelfde aantal (2×)', lamp().querySelector('.aantal').textContent === '2×');
+    wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
+    /* Recepten staan los van artikelen: artikel verwijderen raakt het recept niet; naam wijzigen door op de naam te tikken */
+    wR.close();
+  }
+
+  if (deel('5z44e recepten: kladblok met eigen ingrediënten')) {
+    const wR = await receptStart(false); const dR = wR.document;
+    const { filters, sug, rec, vak, rijR, regels, melk, keuze, rijL, rijW, geh, wrij, balk, melkRij, tel, mk, wm, lamp, sto, prei, kaas } = receptHulp(wR);
+    /* Recepten los van artikelen */
+    dR.getElementById('tab-boodschappen').click(); await slaap(20);
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'sto01', velden: { naam: 'Stoofpot' } }, { actie: 'ingredient', soort: 'recept', id: 'sto01', ingredient: 'ui001', naam: 'Uien', aantal: '2' }, { actie: 'nieuw', soort: 'artikel', id: 'uie01', velden: { naam: 'Uien', soort: 'eenmalig' } }])"); await slaap(30);
+    wR.eval("artikelOpenen('uie01')"); await slaap(30);
+    dR.getElementById('artikelWeg').click(); await slaap(30);
+    wR.eval("receptOpenen('sto01')"); await slaap(30);
+    controle('recept als kladblok: kop "Ingrediënten", invoer "Ingrediënt", blad-icoon, geen notitie of winkels van het artikel', dR.querySelector('#receptBlok .kopbalk h3').textContent === 'Ingrediënten' && dR.getElementById('invoerTekst').placeholder === 'Ingrediënt' &&
+      dR.querySelector('#ingredienten .item .icoon').getAttribute('aria-label').startsWith('Ingrediënt') && !dR.querySelector('#ingredienten .notitie, #ingredienten .winkels'));
+    wR.eval("receptDicht(true)"); await slaap(20);
+    controle('artikel Uien verwijderd: het ingrediënt Uien in Stoofpot blijft', wR.eval("!artikelen.find((a) => a.naam === 'Uien') && recepten.find((r) => r.id === 'sto01').ingredienten.map((x) => x.naam).join()") === 'Uien');
+    wR.eval("receptOpenen('sto01')"); await slaap(30);
+    dR.querySelector('#ingredienten .item .tekst').click(); await slaap(30);
+    { const nm = dR.querySelector('#keuze input'); nm.value = 'Rode uien'; nm.dispatchEvent(new wR.Event('input')); dR.querySelector('#keuze .knop:not(.tweede)').click(); await slaap(30); }
+    controle('tik op de naam: ingrediënt hernoemen (Rode uien)', sto() === 'Rode uien', sto());
+    { const iv = dR.getElementById('invoerTekst'); iv.focus(); iv.value = 'pann'; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
+    controle('typen in een recept stelt ook bestaande artikelnamen voor', [...dR.querySelectorAll('#tagLijst .tagoptie .nm')].map((b) => b.textContent).join().indexOf('+ Nieuw') !== -1);
+    { const iv = dR.getElementById('invoerTekst'); iv.value = ''; iv.dispatchEvent(new wR.Event('input')); iv.blur(); await slaap(20); }
+    wR.eval("receptDicht(true)"); await slaap(20);
+    /* Artikel hernoemd terwijl het voor een recept op de lijst staat: het recept vindt het terug (geen dubbel artikel) */
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'sou01', velden: { naam: 'Soep' } }, { actie: 'ingredient', soort: 'recept', id: 'sou01', ingredient: 'pre01', naam: 'Prei', aantal: '1' }])"); await slaap(30);
+    wR.eval("receptOpenen('sou01')"); await slaap(30);
+    dR.querySelector('#ingredienten .item .rondje').click(); await slaap(30);
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Prei'); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'naam', oud: 'Prei', nieuw: 'Winterprei' }]); })()"); await slaap(30);
+    controle('artikel hernoemd (Winterprei): in het recept staat Prei nog aan', prei().querySelector('.rondje').getAttribute('aria-pressed') === 'true' && naamVanRij(prei()) === 'Prei');
+    prei().querySelector('.icoon').click(); await slaap(20);
+    dR.querySelector('#receptBlok .teller .meer').click(); await slaap(30);
+    controle('teller in het recept past de regel op de lijst aan (Winterprei 2×), geen tweede artikel', wR.eval("artikelen.filter((a) => /prei/i.test(a.naam)).map((a) => a.naam + ':' + a.opAantal).join()") === 'Winterprei:2');
+    dR.querySelector('#receptBlok .teller .uit').click(); await slaap(30);
+    controle('prullenbak: Winterprei van de lijst (stond er alleen voor Soep)', wR.eval("!artikelen.find((a) => a.naam === 'Winterprei').op"));
+    wR.eval("receptDicht(true)"); await slaap(20);
+    /* Ingrediënt hernoemen terwijl het op de lijst staat: de regel verhuist naar het artikel met de nieuwe naam */
+    wR.eval("handelen([{ actie: 'nieuw', soort: 'recept', id: 'tos01', velden: { naam: 'Tosti' } }, { actie: 'ingredient', soort: 'recept', id: 'tos01', ingredient: 'kaz01', naam: 'kaas', aantal: '2' }, { actie: 'nieuw', soort: 'artikel', id: 'kas01', velden: { naam: 'Kaas', soort: 'regelmatig', op: tijdstipTekst(new Date()), opdoor: ik } }])"); await slaap(30);
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Kaas'); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'opaantal', oud: '', nieuw: '3', keer: a.op }]); })()"); await slaap(20);
+    wR.eval("receptOpenen('tos01')"); await slaap(30);
+    dR.querySelector('#ingredienten .item .rondje').click(); await slaap(30);
+    controle('rondje bij "kaas" (andere hoofdletters) gebruikt Kaas, met lijstaantal 3: 3 + 2 Tosti', kaas('Kaas') === '5|3 + 2\u00A0Tosti', kaas('Kaas'));
+    dR.querySelector('#ingredienten .item .tekst').click(); await slaap(30);
+    { const nm = dR.querySelector('#keuze input'); nm.value = 'Geitenkaas'; nm.dispatchEvent(new wR.Event('input')); dR.querySelector('#keuze .knop:not(.tweede)').click(); await slaap(30); }
+    controle('ingrediënt hernoemd (Geitenkaas): Kaas weer alleen zelf (3), Geitenkaas nieuw eenmalig voor Tosti (2), rondje aan', kaas('Kaas') === '3|' && kaas('Geitenkaas') === '2|Tosti' &&
+      dR.querySelector('#ingredienten .item .rondje').getAttribute('aria-pressed') === 'true', kaas('Kaas') + ' / ' + kaas('Geitenkaas'));
+    { const iv = dR.getElementById('invoerTekst'); iv.focus(); iv.value = 'rode'; iv.dispatchEvent(new wR.Event('input')); await slaap(20); }
+    controle('typen in een recept stelt ook ingrediënten uit andere recepten voor (Rode uien uit Stoofpot)', [...dR.querySelectorAll('#tagLijst .tagoptie .nm')].some((b) => b.textContent === 'Rode uien'), [...dR.querySelectorAll('#tagLijst .tagoptie .nm')].map((b) => b.textContent).join() + ' ' + dR.getElementById('tagLijst').hidden + ' ' + wR.eval("recepten.map((r) => r.naam + ':' + r.ingredienten.map((x) => x.naam).join('/')).join()"));
+    { const iv = dR.getElementById('invoerTekst'); iv.value = ''; iv.dispatchEvent(new wR.Event('input')); iv.blur(); await slaap(20); }
+    wR.eval("receptDicht(true)"); await slaap(20);
+    wR.close();
     wR.close();
   }
 
   /* 5z39. Weergave (per telefoon): aantallen bij een winkel, de winkels onder een artikel op Artikelen. */
   if (deel('5z39 weergave: aantallen bij winkel, winkels bij artikel')) {
     const t = datumTekstT(0) + 'T09:00';
-    const odG = onedrive('instelling;wekelijks;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Zuivel|Brood\nwinkel;AH\nwinkel;Gamma\n' +
+    const odG = onedrive('instelling;wekelijks;auto=ja;dag=za;tijd=06:00;teruggezet=2999-01-01T06:00\nwinkel;Plus;route=Zuivel|Brood\nwinkel;AH\nwinkel;Gamma\n' +
       'artikel;Melk;ligt=Plus:Zuivel|AH;op=' + t + '\nartikel;Kaas;ligt=Plus:Zuivel\nartikel;Stroop;ligt=AH\n');
     const wG = await start(odG, { weergave: undefined }); await rust(1500); const dG = wG.document;
     dG.getElementById('tab-winkels').click(); await slaap(30);
@@ -2458,7 +2685,7 @@ const BEGIN = [
   od = onedrive(null);
   w = await start(od);
   await rust(800);
-  controle('nieuwe map: thuis.json aangemaakt', !!od.bestanden['thuis.json'] && /instelling;wekelijks;dag=za;tijd=06:00/.test(R(od.bestanden['thuis.json'].tekst)),
+  controle('nieuwe map: thuis.json aangemaakt', !!od.bestanden['thuis.json'] && /instelling;wekelijks;dag=za;tijd=06:00/.test(R(od.bestanden['thuis.json'].tekst)) && !/auto=ja/.test(R(od.bestanden['thuis.json'].tekst)),
     JSON.stringify(Object.keys(od.bestanden)));
 
   }

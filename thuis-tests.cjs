@@ -111,7 +111,7 @@ function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
   const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
-  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, linkVanInvoer, linkTekst, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling, receptLijst, voorVan };', ctx);
+  vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, schoonNotitie, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, linkVanInvoer, linkTekst, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling, receptLijst, voorVan };', ctx);
   return ctx.__k;
 }
 const K = kern();
@@ -122,7 +122,7 @@ const lees = (delen) => { const r = kern().leesBestand(typeof delen === 'string'
 const uit = (k, m) => JSON.parse(k.schrijfBestand(m));
 const H = (x) => Object.assign({ t: '2026-11-21T10:00' }, x);
 const VB = {
-  instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
+  instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
   winkels: {
     ah001: { naam: 'Albert Heijn', afdelingen: [{ id: 'agf01', naam: 'Groente & fruit' }, { id: 'zui01', naam: 'Zuivel' }] },
     plu01: { naam: 'Plus', afdelingen: [{ id: 'koe02', naam: 'Koeling' }] },
@@ -199,6 +199,13 @@ controle('id: vijf tekens zonder 0 o 1 l i, uniek binnen het model', () => {
   const id = K.maakId(m, () => reeks[i++]);
   return gelijk(id + '|' + /^[a-hj-km-np-z2-9]{5}$/.test(id), 'bcdef|true');
 });
+controle('id: ook uniek tegenover ingrediënten van recepten', () => {
+  const m = lees({ recepten: { r2222: { naam: 'Soep', ingredienten: { aaaaa: { naam: 'Prei', aantal: '1' } } } } });
+  let i = 0; const reeks = [[0, 0, 0, 0, 0], [1, 2, 3, 4, 5]];
+  return gelijk(K.maakId(m, () => reeks[i++]), 'bcdef');
+});
+controle('notitie: meer regels blijven; per regel opgeschoond, geen lege regels aan begin/eind, hooguit één lege regel', () =>
+  gelijk(JSON.stringify(K.schoonNotitie('\n\n  Halfvol  \r\nNiet  de grote\n\n\n\nVraag <b>Natasja</b>\n\n')), JSON.stringify('Halfvol\nNiet de grote\n\nVraag Natasja')));
 controle('invoer: stuurtekens en spaties opgeschoond', () => gelijk(K.schoonTekst('  Melk;\nhalfvol | 1 L  '), 'Melk; halfvol | 1 L'));
 controle('naam vergelijken: hoofdletters, spaties en NFC', () => gelijk(K.normNaam('  Crème   Fraîche ') === K.normNaam('crème fraîche'), true));
 
@@ -351,11 +358,11 @@ controle('wekelijks: na het moment gekocht komt niet terug (telefoon die offline
   const m = lees(vb);
   return gelijk(k.wekelijksTerug(m, NU) + '|' + (uit(k, m).artikelen.ban01.op || ''), '0|');
 });
-controle('wekelijks: niet automatisch legt het moment vast maar zet niets op de lijst; zonder veld = automatisch', () => {
+controle('wekelijks: niet automatisch legt het moment vast maar zet niets op de lijst; zonder veld = niet automatisch (standaard uit)', () => {
   const k = kern(); const vb = JSON.parse(JSON.stringify(VB)); vb.instellingen.wekelijks.auto = 'nee';
   const m = lees(vb);
   const n = k.wekelijksTerug(m, NU);
-  return gelijk(n + '|' + (uit(k, m).artikelen.ban01.op || '') + '|' + uit(k, m).instellingen.wekelijks.teruggezet + '|' + k.instelling(lees(VB), 'wekelijks', 'auto'), '0||2026-11-21T06:00|ja');
+  return gelijk(n + '|' + (uit(k, m).artikelen.ban01.op || '') + '|' + uit(k, m).instellingen.wekelijks.teruggezet + '|' + k.instelling(lees(B({})), 'wekelijks', 'auto'), '0||2026-11-21T06:00|nee');
 });
 controle('wekelijks: eerste keer legt alleen het moment vast', () => {
   const k = kern(); const m = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00' } }, artikelen: { bro01: { naam: 'Brood', soort: 'wekelijks' } } });
@@ -406,11 +413,12 @@ controle('link: een onveilige link in een handeling of het bestand wordt niet aa
 
 /* ---------- recepten ---------- */
 const RB = { artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', aantal: '3' }, geh01: { naam: 'Gehakt', soort: 'eenmalig' }, bla01: { naam: 'Lasagnebladen', soort: 'eenmalig', weg: '2026-10-01' } },
-  recepten: { las01: { naam: 'Lasagne', notitie: '#pasta', artikelen: { mel01: '4', geh01: '2', bla01: '1' } }, pan01: { naam: 'Pannenkoeken', artikelen: { mel01: '2' } } } };
+  recepten: { las01: { naam: 'Lasagne', notitie: '#pasta', ingredienten: { mel01: { naam: 'Melk', aantal: '4' }, geh01: { naam: 'Gehakt', aantal: '2' }, bla01: { naam: 'Lasagnebladen', aantal: '1' } } },
+    pan01: { naam: 'Pannenkoeken', ingredienten: { mel01: { naam: 'Melk', aantal: '2' } } } } };
 const V = (m, id) => K.voorVan(m.artikelen.get(id));
 controle('recepten: lezen en schrijven verliest niets; ongeldig aantal of artikel is onjuiste opbouw', () => {
   const o = uit(K, lees(RB));
-  const fout1 = K.leesBestand(B({ recepten: { las01: { naam: 'Lasagne', artikelen: { mel01: '0' } } } })).reden;
+  const fout1 = K.leesBestand(B({ recepten: { las01: { naam: 'Lasagne', ingredienten: { mel01: { naam: 'Melk', aantal: '0' } } } } })).reden;
   const fout2 = K.leesBestand(B({ artikelen: { mel01: { naam: 'Melk', op: '2026-11-21T10:00', voor: { las01: { naam: '', aantal: '4' } } } } })).reden;
   return gelijk(JSON.stringify(o.recepten) + '|' + fout1 + '|' + fout2, JSON.stringify(RB.recepten) + '|onjuiste-opbouw|onjuiste-opbouw');
 });
@@ -441,6 +449,87 @@ controle('recepten: hernoemd → het regeltje noemt de nieuwe naam (en na verwij
   const b = k.voorVan(m.artikelen.get('mel01'), m).voorTekst;
   return gelijk(a + '|' + b, 'Lasagne veggie|Lasagne veggie');
 });
+controle('recepten: eenmalig alleen voor een recept → geen normaal; wekelijks wel (vast + recepten = 7)', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', naam: 'Lasagne', aantal: '2' }));
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
+  const g = k.voorVan(m.artikelen.get('geh01'), m), me = k.voorVan(m.artikelen.get('mel01'), m);
+  return gelijk([g.opAantal, g.voorTekst, g.normaal, me.opAantal, me.voorTekst, me.normaal].join('|'), '2|Lasagne|0|4|Lasagne|7');
+});
+controle('lijstaantal: alleen deze keer; normaal 3 (doorgestreept), met recept normaal 7 en "2 + 4 Lasagne"; van de lijst = weg; vast aantal blijft', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '2' }));
+  const a = k.voorVan(m.artikelen.get('mel01'), m);
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
+  const b = k.voorVan(m.artikelen.get('mel01'), m);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-21T09:00', nieuw: '' }));
+  const r = m.artikelen.get('mel01');
+  return gelijk([a.opAantal, a.normaal, a.voorTekst, b.opAantal, b.normaal, b.voorTekst, r.opaantal, r.aantal].join('|'), '2|3||6|7|2 + 4\u00A0Lasagne||3');
+});
+controle('lijstaantal: niet op de lijst kan niet; eenmalig heeft geen lijstaantal; schrijven en lezen bewaart het; oud formaat wordt gelezen', () => {
+  const k = kern(); const m = lees(RB);
+  const niet = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '3' }));
+  const na = m.artikelen.get('mel01').opaantal;
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '5' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'geh01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'geh01', veld: 'opaantal', oud: '', nieuw: '3' }));
+  const g = k.voorVan(m.artikelen.get('geh01'), m);
+  const o = uit(k, m);
+  const oud = k.leesBestand(JSON.stringify(Object.assign({}, o, { versie: '1352905-7DA' })));
+  return gelijk([na, m.artikelen.get('geh01').opaantal, g.opAantal, g.normaal, o.artikelen.mel01.opaantal, oud.ok].join('|'), '||1|0|5|true');
+});
+controle('lijstaantal: ongeldig in het bestand (0, 150, tekst) wordt bij lezen rechtgezet naar leeg', () => {
+  const m = lees({ artikelen: { a1111: { naam: 'Melk', soort: 'wekelijks', aantal: '3', op: '2026-11-21T09:00', opaantal: '150' }, a2222: { naam: 'Kaas', op: '2026-11-21T09:00', opaantal: '0' }, a3333: { naam: 'Brood', op: '2026-11-21T09:00', opaantal: 'x', opvoor: 'ja' } } });
+  return gelijk(['a1111', 'a2222', 'a3333'].map((id) => m.artikelen.get(id).opaantal + '/' + m.artikelen.get(id).opvoor).join(',') + '|' + K.voorVan(m.artikelen.get('a1111'), m).opAantal, '/,/,/|3');
+});
+controle('lijstaantal: gelijktijdig gewijzigd → de laatste wint, zonder botsingsmelding', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '4' }));
+  const r = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '5' }));
+  return gelijk((r.status || r) + '|' + m.artikelen.get('mel01').opaantal, 'ok|5');
+});
+controle('alleen voor recepten en lijstaantal tegelijk: opvoor wist het lijstaantal, een later lijstaantal telt niet, + geeft het vaste aantal', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '5' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opvoor', oud: '', nieuw: '1' }));
+  const na1 = m.artikelen.get('mel01').opaantal;
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '6' }));
+  const na2 = m.artikelen.get('mel01').opaantal;
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-21T09:00', nieuw: '2026-11-21T09:05' }));
+  const b = k.voorVan(m.artikelen.get('mel01'), m);
+  const leesBeide = lees({ artikelen: { a1111: { naam: 'Melk', op: '2026-11-21T09:00', opvoor: '1', opaantal: '5', voor: { b2222: { naam: 'X', aantal: '2' } } } } }).artikelen.get('a1111').opaantal;
+  return gelijk([na1, na2, b.opAantal, leesBeide].join('|'), '||7|');
+});
+controle('lijstaantal voor een eerdere keer (offline, intussen afgevinkt en opnieuw op de lijst) telt niet; voor deze keer wel', () => {
+  const na = B({ artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', aantal: '2', op: '2026-11-25T09:00' } } });
+  const r = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '3', keer: '2026-11-23T08:00' })], NU);
+  const r2 = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '3', keer: '2026-11-25T09:00' })], NU);
+  return gelijk((JSON.parse(r.tekst).artikelen.mel01.opaantal || '') + '|' + JSON.parse(r2.tekst).artikelen.mel01.opaantal, '|3');
+});
+controle('lijstaantal/alleen voor recepten van vóór het wekelijkse terugzetten, pas daarna binnen → vervalt (automatisch aan)', () => {
+  const na = B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+    artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', aantal: '3', op: '2026-11-18T09:00', voor: { las01: { naam: 'Lasagne', aantal: '4' } } } } });
+  const r = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '1', t: '2026-11-20T17:00' }),
+    H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opvoor', oud: '', nieuw: '1', t: '2026-11-20T17:05' })], NU);
+  const m = JSON.parse(r.tekst).artikelen.mel01;
+  const later = JSON.parse(K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '2', t: '2026-11-21T09:00' })], NU).tekst).artikelen.mel01;
+  return gelijk((m.opaantal || '') + '|' + (m.opvoor || '') + '|' + later.opaantal, '||2');
+});
+controle('recepten: zelf niet meer nodig (opvoor zetten) kan alleen als het voor een recept op de lijst staat', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  const zonder = k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opvoor', oud: '', nieuw: '1' }));
+  const na1 = m.artikelen.get('mel01').opvoor;
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opvoor', oud: '', nieuw: '1' }));
+  const a = k.voorVan(m.artikelen.get('mel01'), m);
+  return gelijk(na1 + '|' + a.opAantal + '|' + a.opvoor, '|4|true');
+});
 controle('recepten: alleen voor een recept op de lijst, zelf erbij in dezelfde minuut → eigen aantal telt mee', () => {
   const k = kern(); const m = lees(RB);
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4', t: '2026-11-21T09:00' }));
@@ -449,7 +538,7 @@ controle('recepten: alleen voor een recept op de lijst, zelf erbij in dezelfde m
   const a = k.voorVan(m.artikelen.get('mel01'), m);
   return gelijk(a.opAantal + '|' + a.voorTekst + '|' + a.opvoor, '7|3 + 4\u00A0Lasagne|false');
 });
-controle('recepten: alleen voor twee recepten → 6×, "4 Lasagne + 2 Pannenkoeken"; één eraf → alleen dat recept', () => {
+controle('recepten: wekelijks alleen voor twee recepten → 6×, "4 Lasagne + 2 Pannenkoeken", normaal 9 (doorgestreept); één eraf → alleen dat recept', () => {
   const k = kern(); const m = lees(RB);
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'pan01', naam: 'Pannenkoeken', aantal: '2' }));
@@ -475,17 +564,60 @@ controle('recepten: van de lijst of afgevinkt → recepten eraf; zelf op de lijs
   const a = m.artikelen.get('mel01');
   return gelijk(zelf.opAantal + '|' + zelf.voorTekst + '|' + a.voor.size + '|' + a.opvoor + '|' + a.op, '7|3 + 4\u00A0Lasagne|0||');
 });
-controle('recepten: artikel in een recept zetten, aantal wijzigen, eruit; artikel verwijderen haalt het uit alle recepten, terug zet het terug', () => {
+controle('recepten: ingrediënt erbij, aantal en naam wijzigen, eruit; een artikel verwijderen raakt het recept niet', () => {
   const k = kern(); const m = lees(RB);
-  k.pasToe(m, H({ actie: 'receptArtikel', soort: 'recept', id: 'pan01', artikel: 'geh01', aantal: '1' }));
-  k.pasToe(m, H({ actie: 'receptArtikel', soort: 'recept', id: 'pan01', artikel: 'geh01', aantal: '3' }));
-  const a = JSON.stringify(Array.from(m.recepten.get('pan01').artikelen));
-  k.pasToe(m, H({ actie: 'weg', soort: 'artikel', id: 'mel01' }));
-  const b = m.recepten.get('las01').artikelen.has('mel01') || m.recepten.get('pan01').artikelen.has('mel01');
-  k.pasToe(m, H({ actie: 'terug', soort: 'artikel', id: 'mel01', record: RB.artikelen.mel01, recepten: { las01: '4', pan01: '2' } }));
-  const c = m.recepten.get('las01').artikelen.get('mel01') + m.recepten.get('pan01').artikelen.get('mel01');
-  const ongeldig = k.pasToe(m, H({ actie: 'receptArtikel', soort: 'recept', id: 'pan01', artikel: 'geh01', aantal: '0' })).status;
-  return gelijk(a + '|' + b + '|' + c + '|' + ongeldig, '[["mel01","2"],["geh01","3"]]|false|42|vervallen');
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ei001', naam: 'Eieren', aantal: '3' }));
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ei001', aantal: '4' }));
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'mel01', naam: 'Halfvolle melk' }));
+  const a = JSON.stringify(Array.from(m.recepten.get('pan01').ingredienten));
+  k.pasToe(m, H({ actie: 'weg', soort: 'artikel', id: 'geh01' }));
+  const b = m.recepten.get('las01').ingredienten.has('geh01');
+  k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ei001', weg: true }));
+  const ongeldig = [k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'mel01', aantal: '0' })).status, k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'nieuw', aantal: '2' })).status].join();
+  return gelijk(a + '|' + b + '|' + m.recepten.get('pan01').ingredienten.size + '|' + ongeldig,
+    '[["mel01",{"naam":"Halfvolle melk","aantal":"2"}],["ei001",{"naam":"Eieren","aantal":"4"}]]|true|1|vervallen,vervallen');
+});
+controle('recepten: twee keer dezelfde naam in één recept (tegelijk toegevoegd) → bij lezen samengevoegd, grootste aantal', () => {
+  const m = lees({ recepten: { las01: { naam: 'Lasagne', ingredienten: { b2222: { naam: 'Eieren', aantal: '2' }, a1111: { naam: 'eieren', aantal: '1' }, c3333: { naam: 'Melk', aantal: '1' } } } } });
+  return gelijk(JSON.stringify(Array.from(m.recepten.get('las01').ingredienten)), '[["a1111",{"naam":"eieren","aantal":"2"}],["c3333",{"naam":"Melk","aantal":"1"}]]');
+});
+controle('recepten: verwijderen en Ongedaan maken (terug) zet het recept met zijn ingrediënten terug', () => {
+  const k = kern(); const m = lees(RB);
+  const record = k.recordNaarJson('recept', m.recepten.get('las01'));
+  k.pasToe(m, H({ actie: 'weg', soort: 'recept', id: 'las01' }));
+  const weg = m.recepten.has('las01');
+  k.pasToe(m, H({ actie: 'terug', soort: 'recept', id: 'las01', record }));
+  return gelijk(weg + '|' + Array.from(m.recepten.get('las01').ingredienten.values()).map((x) => x.naam + x.aantal).join(), 'false|Melk4,Gehakt2,Lasagnebladen1');
+});
+controle('recepten: voor onthoudt het ingrediënt (ing), ook na schrijven en lezen; zonder ing blijft het leeg', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4', ing: 'mel01' }));
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'pan01', naam: 'Pannenkoeken', aantal: '2' }));
+  const m2 = lees(uit(k, m));
+  return gelijk(Array.from(m2.artikelen.get('mel01').voor).map(([r, x]) => r + ':' + x.ing).join(), 'las01:mel01,pan01:');
+});
+controle('recepten: rondje op een artikel dat intussen elders is opgeruimd → het artikel komt terug en staat voor het recept op de lijst', () => {
+  const na = B({ recepten: { las01: { naam: 'Lasagne', ingredienten: { bla01: { naam: 'Lasagnebladen', aantal: '1' } } } } });
+  const record = { naam: 'Lasagnebladen', soort: 'eenmalig', weg: '2025-01-01' };
+  const r = K.synchroniseer(na, [H({ actie: 'terug', soort: 'artikel', id: 'bla01', record }), H({ actie: 'voor', soort: 'artikel', id: 'bla01', recept: 'las01', naam: 'Lasagne', aantal: '1', ing: 'bla01', wat: 'Lasagnebladen' })], NU);
+  const b = JSON.parse(r.tekst).artikelen.bla01;
+  const bestaat = K.synchroniseer(B({ artikelen: { bla01: record } }), [H({ actie: 'terug', soort: 'artikel', id: 'bla01', record })], NU).resultaten.map((x) => x.status).join();
+  return gelijk(!!b.op + '|' + JSON.stringify(b.voor) + '|' + bestaat, 'true|{"las01":{"naam":"Lasagne","aantal":"1","ing":"bla01"}}|al');
+});
+controle('recepten: tegelijk hetzelfde ingrediënt toegevoegd → meteen samengevoegd; latere wijziging volgt de bestaande id', () => {
+  const k = kern(); const m = lees(RB);
+  const r = k.pasAllesToe(m, [H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'x2222', naam: 'melk', aantal: '1' }),
+    H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'x2222', aantal: '6' })]);
+  return gelijk(r.resultaten.map((x) => x.status).join() + '|' + m.recepten.get('las01').ingredienten.size + '|' + m.recepten.get('las01').ingredienten.get('mel01').aantal, 'samengevoegd,ok|3|6');
+});
+controle('recepten: wijziging aan een ingrediënt dat de ander weghaalde → vervalt (zonder reden "ongeldig")', () => {
+  const k = kern(); const m = lees(RB);
+  const r = k.pasToe(m, H({ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'weg22', aantal: '3' }));
+  return gelijk(r.status + '|' + (r.reden || ''), 'vervallen|');
+});
+controle('rechtzetten: "alleen voor recepten" zonder recept → weg', () => {
+  const m = lees({ artikelen: { mel01: { naam: 'Melk', op: '2026-11-21T09:00', opvoor: '1' } } });
+  return gelijk((m.artikelen.get('mel01').opvoor || '') + '|' + m.rechtgezet, '|1');
 });
 controle('recepten: recept verwijderen laat de lijst ongemoeid (naam blijft in het regeltje)', () => {
   const k = kern(); const m = lees(RB);
@@ -495,22 +627,40 @@ controle('recepten: recept verwijderen laat de lijst ongemoeid (naam blijft in h
   return gelijk(m.recepten.size + '|' + a.opAantal + '|' + a.voorTekst, '1|2|Lasagne');
 });
 controle('recepten: wekelijks terug terwijl het alleen voor een recept op de lijst staat → eigen aantal erbij', () => {
-  const k = kern(); const vb = JSON.parse(JSON.stringify(RB)); vb.instellingen = { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } };
+  const k = kern(); const vb = JSON.parse(JSON.stringify(RB)); vb.instellingen = { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } };
   const m = lees(vb);
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4', t: '2026-11-20T10:00' }));
   const n = k.wekelijksTerug(m, NU);
   const a = k.voorVan(m.artikelen.get('mel01'));
   return gelijk(n + '|' + a.opAantal + '|' + a.voorTekst, '1|7|3 + 4\u00A0Lasagne');
 });
-controle('recepten: nieuw artikel dat samenvalt met een bestaand → het recept wijst naar het bestaande', () => {
-  const k = kern(); const m = lees(RB);
-  const r = k.pasAllesToe(m, [H({ actie: 'nieuw', soort: 'artikel', id: 'gehx2', velden: { naam: 'gehakt', soort: 'eenmalig' } }), H({ actie: 'receptArtikel', soort: 'recept', id: 'pan01', artikel: 'gehx2', aantal: '1' })]);
-  return gelijk(JSON.stringify(Array.from(m.recepten.get('pan01').artikelen.keys())), '["mel01","geh01"]');
+controle('wekelijks terug: staat het er nog op, dan begint de week met het vaste aantal (lijstaantal weg); niet gekochte recepten blijven', () => {
+  const k = kern(); const vb = JSON.parse(JSON.stringify(RB)); vb.instellingen = { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } };
+  vb.artikelen.mel01.op = '2026-11-18T10:00'; vb.artikelen.mel01.opaantal = '6';
+  const m = lees(vb);
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4', t: '2026-11-20T10:00' }));
+  const n = k.wekelijksTerug(m, NU);
+  const a = k.voorVan(m.artikelen.get('mel01'), m);
+  return gelijk([n, a.opAantal, a.voorTekst, a.normaal, m.artikelen.get('mel01').opaantal].join('|'), '1|7|3 + 4\u00A0Lasagne|0|');
 });
-controle('recepten: recepten-lijst op naam met zoekvorm', () => gelijk(K.receptLijst(lees(RB)).map((r) => r.naam + ':' + r.artikelen.length).join(), 'Lasagne:3,Pannenkoeken:1'));
-controle('recepten: rechtzetten — verwijzing naar een verdwenen artikel weg; voor zonder op weg', () => {
-  const m = lees({ artikelen: { mel01: { naam: 'Melk', voor: { las01: { naam: 'Lasagne', aantal: '4' } }, opvoor: '1' } }, recepten: { las01: { naam: 'Lasagne', artikelen: { mel01: '4', wegxx: '1' } } } });
-  return gelijk(m.recepten.get('las01').artikelen.size + '|' + m.artikelen.get('mel01').voor.size + '|' + m.artikelen.get('mel01').opvoor + '|' + m.rechtgezet, '1|0||2');
+controle('wekelijks: laat binnenkomend afvinken van vorige week → blijft op de lijst, recepten van toen eraf (gekocht)', () => {
+  const na = B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+    recepten: { las01: { naam: 'Lasagne', artikelen: { mel01: '4' } } },
+    artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', aantal: '2', op: '2026-11-21T06:00', voor: { las01: { naam: 'Lasagne', aantal: '4' } } } } });
+  const r = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' })], NU);
+  const b = JSON.parse(r.tekst).artikelen.mel01;
+  return gelijk([b.op, b.voor === undefined, b.opvoor || ''].join('|'), '2026-11-21T06:00|true|');
+});
+controle('recepten: oud formaat (artikel-id → aantal) wordt bij lezen omgezet naar ingrediënten met de artikelnaam; verdwenen artikel vervalt', () => {
+  const oud = JSON.stringify({ versie: '1352905-7DA', artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks' } }, recepten: { las01: { naam: 'Lasagne', artikelen: { mel01: '4', wegxx: '1' } } } });
+  const r = K.leesBestand(oud);
+  return gelijk(r.ok + '|' + JSON.stringify(Array.from(r.model.recepten.get('las01').ingredienten)) + '|' + (JSON.parse(K.schrijfBestand(r.model)).recepten.las01.artikelen === undefined),
+    'true|[["mel01",{"naam":"Melk","aantal":"4"}]]|true');
+});
+controle('recepten: recepten-lijst op naam met zoekvorm', () => gelijk(K.receptLijst(lees(RB)).map((r) => r.naam + ':' + r.ingredienten.map((x) => x.naam + x.aantal).join('/')).join(), 'Lasagne:Gehakt2/Lasagnebladen1/Melk4,Pannenkoeken:Melk2'));
+controle('recepten: rechtzetten — voor zonder op weg', () => {
+  const m = lees({ artikelen: { mel01: { naam: 'Melk', voor: { las01: { naam: 'Lasagne', aantal: '4' } }, opvoor: '1' } }, recepten: { las01: { naam: 'Lasagne', ingredienten: { mel01: { naam: 'Melk', aantal: '4' } } } } });
+  return gelijk(m.recepten.get('las01').ingredienten.size + '|' + m.artikelen.get('mel01').voor.size + '|' + m.artikelen.get('mel01').opvoor + '|' + m.rechtgezet, '1|0||1');
 });
 
 /* ---------- tags ---------- */
@@ -559,7 +709,7 @@ controle('instellingen: standaard als hij ontbreekt of niet klopt; zet alleen ge
 controle('wekelijks: ontbreekt dag of tijd, dan dezelfde standaard als Instellingen (za 06:00)', () => {
   const k = kern(); const m = k.leegModel();
   const geen = k.wekelijksMoment(m, new Date(2026, 10, 24, 12, 0));
-  m.instellingen.wekelijks = { teruggezet: '2026-11-14T06:00' };
+  m.instellingen.wekelijks = { auto: 'ja', teruggezet: '2026-11-14T06:00' };
   const t = k.wekelijksMoment(m, new Date(2026, 10, 24, 12, 0));
   return gelijk(String(geen) + '|' + k.tijdstipTekst(t), 'null|2026-11-21T06:00');
 });
@@ -632,15 +782,12 @@ controle('opruimen: oude afgeronde actie; archief op 1 maand: weg na 1 maand nie
   const o = uit(k, m);
   return gelijk(n + '|' + Object.keys(o.artikelen).sort().join() + '|' + Object.keys(o.acties).join(), '3|bat01,lam02,mel01,tas01|a2222');
 });
-controle('opruimen: een eenmalig artikel in een recept blijft, ook lang niet gekocht; uit het recept gehaald gaat het weg', () => {
+controle('opruimen: een eenmalig artikel wordt opgeruimd; het recept houdt zijn ingrediënt', () => {
   const k = kern();
-  const m = lees({ instellingen: { archief: { bewaren: '1w' } }, artikelen: { bla01: { naam: 'Lasagnebladen', soort: 'eenmalig', gekocht: ['2025-01-01'] }, kaa01: { naam: 'Kaars', soort: 'eenmalig', weg: '2025-01-01' } },
-    recepten: { las01: { naam: 'Lasagne', artikelen: { bla01: '1' } } } });
-  const n1 = k.opruimen(m, NU);
-  const na1 = Array.from(m.artikelen.keys()).join() + '|' + Array.from(m.recepten.get('las01').artikelen.keys()).join();
-  m.recepten.get('las01').artikelen.clear();
-  const n2 = k.opruimen(m, NU);
-  return gelijk(n1 + '|' + na1 + '|' + n2 + '|' + m.artikelen.size, '1|bla01|bla01|1|0');
+  const m = lees({ instellingen: { archief: { bewaren: '1w' } }, artikelen: { bla01: { naam: 'Lasagnebladen', soort: 'eenmalig', gekocht: ['2025-01-01'] } },
+    recepten: { las01: { naam: 'Lasagne', ingredienten: { bla01: { naam: 'Lasagnebladen', aantal: '1' } } } } });
+  const n = k.opruimen(m, NU);
+  return gelijk(n + '|' + m.artikelen.size + '|' + m.recepten.get('las01').ingredienten.get('bla01').naam, '1|0|Lasagnebladen');
 });
 controle('opruimen: instelling archief bewaren (1 jaar) telt; ongeldige waarde wordt niet gelezen', () => {
   const k = kern();
@@ -679,7 +826,7 @@ controle('lezen: actie met onbekende datum komt in het logboek (K9)', () => geli
   K.leesBestand(B({ acties: { a1111: { naam: 'APK', datum: '2026-13' } } })).model.opgelost.join(), 'APK: onbekende datum "2026-13", getoond zonder periode'));
 
 controle('wekelijks: offline van de lijst vóór het moment, gesynct na de reset → blijft op de nieuwe lijst; aankoop blijft (B4)', () => {
-  const na = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+  const na = B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
     artikelen: { ban01: { naam: 'Bananen', soort: 'wekelijks', op: '2026-11-21T06:00', gekocht: ['2026-11-14'] } } });
   const r = K.synchroniseer(na, [
     H({ actie: 'zet', soort: 'artikel', id: 'ban01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' }),
@@ -689,14 +836,14 @@ controle('wekelijks: offline van de lijst vóór het moment, gesynct na de reset
   return gelijk(b.op + '|' + b.gekocht.join() + '|' + (JSON.parse(laterAf.tekst).artikelen.ban01.op || ''), '2026-11-21T06:00|2026-11-14,2026-11-20|');
 });
 controle('wekelijks niet automatisch: offline van de lijst vóór het moment, gesynct daarna → gewoon van de lijst', () => {
-  const na = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00', auto: 'nee' } },
+  const na = B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00', auto: 'nee' } },
     artikelen: { ban01: { naam: 'Bananen', soort: 'wekelijks', op: '2026-11-14T06:00', gekocht: ['2026-11-14'] } } });
   const r = K.synchroniseer(na, [H({ actie: 'zet', soort: 'artikel', id: 'ban01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' })], NU);
   return gelijk(JSON.parse(r.tekst).artikelen.ban01.op || '', '');
 });
 controle('wekelijks: hooguit één keer per week; tijd later zetten op dezelfde dag geeft geen tweede reset (K11)', () => {
   const k = kern();
-  const m = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '10:00', teruggezet: '2026-11-21T06:00' } },
+  const m = lees({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '10:00', teruggezet: '2026-11-21T06:00' } },
     artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
   const vandaag = k.wekelijksTerug(m, new Date(2026, 10, 21, 11, 0));
   const volgende = k.wekelijksTerug(m, new Date(2026, 10, 28, 11, 0));
@@ -722,19 +869,19 @@ controle('aankopen: bewaren instelbaar 0 t/m 1000; ongeldig vervalt of maakt het
 });
 
 controle('wekelijks: gewoon geval — vrijdag offline afgevinkt, zaterdag na het moment gesynct: blijft op de nieuwe lijst (B1)', () => {
-  const r = K.synchroniseer(B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
+  const r = K.synchroniseer(B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
     artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', op: '2026-11-14T06:00', gekocht: ['2026-11-07'] } } }), [
     H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-20T17:00' }),
     H({ actie: 'gekocht', soort: 'artikel', id: 'mel01', datum: '2026-11-20', t: '2026-11-20T17:00' })], NU);
   const m = JSON.parse(r.tekst).artikelen.mel01;
-  const zaterdag = K.synchroniseer(B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
+  const zaterdag = K.synchroniseer(B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-14T06:00' } },
     artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', op: '2026-11-14T06:00' } } }), [
     H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-14T06:00', nieuw: '', t: '2026-11-21T09:00' })], NU);
   return gelijk(!!m.op + '|' + m.gekocht.join() + '|' + !!JSON.parse(zaterdag.tekst).artikelen.mel01.op, 'true|2026-11-07,2026-11-20|false');
 });
 controle('klok een jaar vooruit: twee rondes lang geen opruimen, geen wekelijkse reset, geen toekomstige datum in het bestand (B3)', () => {
   const ver = new Date(2027, 10, 20, 10, 0);
-  const begin = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+  const begin = B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
     artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
   const r1 = K.synchroniseer(begin, [], ver);
   const r2 = K.synchroniseer(r1.tekst, [], ver);
@@ -744,13 +891,13 @@ controle('klok een jaar vooruit: twee rondes lang geen opruimen, geen wekelijkse
 controle('terugzetten: alleen winkels en afdelingen die nog bestaan; bij lezen rechtgezet = ook opgeslagen (K2)', () => {
   const r = K.synchroniseer(B({ winkels: { w1111: { naam: 'AH', afdelingen: [{ id: 'd1111', naam: 'Zuivel' }] } } }),
     [H({ actie: 'terug', soort: 'artikel', id: 'mel01', record: { naam: 'Melk', soort: 'wekelijks', ligt: { w1111: 'd9999', w2222: '' } } })], NU);
-  const rec = K.synchroniseer(B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, winkels: { w1111: { naam: 'AH' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', ligt: { w1111: '', w2222: '' } } } }), [], NU);
+  const rec = K.synchroniseer(B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, winkels: { w1111: { naam: 'AH' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', ligt: { w1111: '', w2222: '' } } } }), [], NU);
   return gelijk(JSON.stringify(JSON.parse(r.tekst).artikelen.mel01.ligt) + '|' + rec.gewijzigd + '|' + JSON.stringify(JSON.parse(rec.tekst).artikelen.mel01.ligt), '{"w1111":""}|true|{"w1111":""}');
 });
 
 controle('klok vooruit: tegen de servertijd blijft hij ook de tweede ronde verdacht (M1)', () => {
   const ver = new Date(2027, 1, 1, 10, 0);
-  const begin = B({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
+  const begin = B({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-21T06:00' } },
     artikelen: { lam01: { naam: 'Lampje', soort: 'eenmalig', gekocht: ['2026-10-01'] }, mel01: { naam: 'Melk', soort: 'wekelijks', op: '2026-11-21T09:00' } } });
   const r1 = K.synchroniseer(begin, [H({ actie: 'gekocht', soort: 'artikel', id: 'mel01', datum: '2027-02-01' })], ver, '2026-11-23');
   const r2 = K.synchroniseer(r1.tekst, [], ver, '2026-11-23');
@@ -763,9 +910,9 @@ controle('lang niet gebruikt of oude backup: tegen de servertijd niet verdacht (
 });
 controle('wekelijks: moment in de toekomst (andere telefoon liep voor) telt niet; tijdzones wel (M1)', () => {
   const k = kern();
-  const toekomst = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-12-05T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
+  const toekomst = lees({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-12-05T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
   const n1 = k.wekelijksTerug(toekomst, new Date(2026, 10, 21, 10, 0));
-  const tz = lees({ instellingen: { wekelijks: { dag: 'za', tijd: '06:00', teruggezet: '2026-11-22T12:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
+  const tz = lees({ instellingen: { wekelijks: { auto: 'ja', dag: 'za', tijd: '06:00', teruggezet: '2026-11-22T12:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-14'] } } });
   const n2 = k.wekelijksTerug(tz, new Date(2026, 10, 21, 10, 0));
   return gelijk(n1 + '|' + toekomst.instellingen.wekelijks.teruggezet + '|' + n2, '1|2026-11-21T06:00|0');
 });
@@ -815,7 +962,7 @@ controle('handeling met een onverwachte vorm vervalt, de rest gaat door (L2 data
 });
 controle('wekelijks: andere dag kiezen geeft geen gat van bijna twee weken (K3)', () => {
   const k = kern();
-  const m = lees({ instellingen: { wekelijks: { dag: 'vr', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
+  const m = lees({ instellingen: { wekelijks: { auto: 'ja', dag: 'vr', tijd: '06:00', teruggezet: '2026-11-21T06:00' } }, artikelen: { mel01: { naam: 'Melk', soort: 'wekelijks', gekocht: ['2026-11-21'] } } });
   return gelijk(String(k.wekelijksTerug(m, new Date(2026, 10, 27, 10, 0))), '1');
 });
 controle('platte tekst: open "<!--" blijft snel; "<jong>" en "<oud>" blijven staan (K6)', () => {
