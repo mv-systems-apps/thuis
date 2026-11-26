@@ -281,7 +281,7 @@
   .vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   .item .normaal,.wrij .normaal{margin-left:8px;font-size:17px;font-weight:400;color:#A84A0A;text-decoration:line-through;white-space:nowrap}
   .notitie .tag.tik{cursor:pointer;padding:6px 0;margin:-6px 0}
-  .notitie .ntekst,.notitie .ntags{display:block}
+  .notitie .ntekst,.notitie .ntags,.notitie .nlink{display:block}
   /* Een notitie kan meer regels hebben; in lijsten één regel per notitie (de eerste, met …), in de band
      onder de titel en in de detailschermen alles. */
   .notitie .ntekst{white-space:pre-line}
@@ -291,10 +291,8 @@
      van een recept, van een ingrediënt en de receptregels. Een icoon alleen waar de notitie niet al naast zijn
      eigen icoon staat (het blaadje op de receptregel, in het artikel en in het paneel). */
   .notitie .rregel svg{vertical-align:-2px;margin-right:6px}
-  .notitie .rregel,.rnotities .rnot,#ingredienten .notitie,#receptBlok .kopnotitie .notitie,#receptBlok .receptrij .notitie,#receptBlok .receptrij .heeftlink{color:#8E3A22}
-  .rnotities{display:flex;flex-direction:column;gap:4px;margin-top:8px}
-  .rnotities .rnot{display:flex;gap:6px;align-items:flex-start;font-size:17px;line-height:1.3;white-space:pre-line;overflow-wrap:anywhere}
-  .rnotities .rnot svg{margin-top:2px}
+  .notitie .rregel,#ingredienten .notitie,#receptBlok .kopnotitie .notitie,#receptBlok .receptrij .notitie,#receptBlok .receptrij .heeftlink{color:#8E3A22}
+  .rnotities{display:flex;flex-direction:column;margin-top:8px}
   .notitie .link{cursor:pointer;white-space:nowrap}
   .notitie .link .lt{text-decoration:underline;white-space:normal}
   .notitie .link svg{margin-left:4px;vertical-align:-1px}
@@ -439,14 +437,18 @@
   #keuze .kruis{width:44px;height:44px;flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#E9E6F8}
   #keuze .opties{flex:1;min-height:120px;overflow-y:auto}
   /* Hele notitie (paneel in Boodschappen, leesstand van een artikel): eigen notitie en die uit recepten, elk met een icoon ervoor. */
-  .notitievol{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
-  .notitievol .nregel{display:flex;gap:8px;align-items:flex-start;font-size:20px;line-height:1.35;overflow-wrap:anywhere}
-  .notitievol .nregel svg{flex-shrink:0;margin-top:4px}
-  .notitievol .notitie{display:block;color:var(--paars);font-size:20px;line-height:1.35}
-  .notitievol .rtekst{white-space:pre-line;color:#8E3A22}
+  /* Zelfde letter en regelafstand als de lijsten en de band (17 px, 1,3), geen extra ruimte tussen de regels. */
+  .notitievol{overflow-y:auto;padding:8px 16px 16px;display:flex;flex-direction:column}
+  .notitievol .nregel,.rnotities .nregel{display:flex;gap:6px;align-items:flex-start;font-size:17px;line-height:1.3;overflow-wrap:anywhere}
+  .notitievol .nregel>svg,.rnotities .nregel>svg{flex-shrink:0;margin-top:2px}
+  .notitievol .notitie,.rnotities .notitie{display:block;color:var(--paars);font-size:17px;line-height:1.3}
+  .notitievol .rtekst,.rnotities .rtekst,.notitievol .rtekst .notitie,.rnotities .rtekst .notitie{color:#8E3A22}
+  .notitievol .grijs{color:var(--grijs)}
   /* Artikel vanaf Op de lijst: eerst lezen (naam in de kop, notitie, recepten); het potlood toont de rest. */
   #artikelScherm.lezen>:not(.wdkop):not(.notitievol){display:none}
-  #artikelScherm .wdkop .icoonknop+.icoonknop{margin-left:8px}
+  #artikelScherm .wdkop .icoonknop+.icoonknop,#actieScherm .wdkop .icoonknop+.icoonknop{margin-left:8px}
+  #actieScherm.lezen>:not(.wdkop):not(.notitievol){display:none}
+  .notitievol .hic{width:17px;flex-shrink:0;display:flex;justify-content:center;margin-top:1px}
   /* Lang indrukken (rij met een notitie): de rij kleurt licht na een korte tel, geen tekstselectie of menu. */
   .wrij .vink.druk{background:#E9E6F8}
   /* Vegen: de rij schuift mee (--dx); eronder rechts-vegen paars met een vinkje, links-vegen lichtpaars met het notitie-icoon. */
@@ -613,7 +615,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352906-004</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352906-005</div>
   </section>
 </main>
 
@@ -1848,7 +1850,9 @@ function suggestie(gekocht, vandaag) {
   return p;
 }
 
-function dagLabel(dag) { const dt = new Date(dag * 86400000); return dt.getUTCDate() + ' ' + MAANDEN[dt.getUTCMonth()]; }
+/* Overal in de app: het jaar alleen als het niet dit jaar is. */
+const jaarErbij = (j) => (+j === new Date().getFullYear() ? '' : ' ' + j);
+function dagLabel(dag) { const dt = new Date(dag * 86400000); return dt.getUTCDate() + ' ' + MAANDEN[dt.getUTCMonth()] + jaarErbij(dt.getUTCFullYear()); }
 function elkeTekst(n) {
   return n >= 14 ? 'elke ' + Math.round(n / 7) + ' weken' : n === 7 ? 'elke week' : n === 1 ? 'elke dag' : 'elke ' + n + ' dagen';
 }
@@ -2133,10 +2137,10 @@ function naarSoort(d, soort, vandaag) {
   if (soort === 'jaar') return b.slice(0, 4);
   return '';
 }
-/* Kort in de lijst ("do 27 nov", "december", "K4", "2027"), het jaar alleen als
-   het niet dit jaar is; lang bij het bladeren. */
+/* Kort in de lijst ("do 27 nov", "december", "K4", "2027"), lang ("do 27 november")
+   bij het bladeren en lezen; het jaar alleen als het niet dit jaar is. */
 function periodeTekst(d, vandaag, lang) {
-  const s = periodeSoort(d), j = d.slice(0, 4), ander = lang || j !== vandaag.slice(0, 4);
+  const s = periodeSoort(d), j = d.slice(0, 4), ander = j !== vandaag.slice(0, 4);
   if (s === 'dag' && !lang && d === vandaag) return 'vandaag';
   if (s === 'dag' && !lang && vandaag && d === verschuif(vandaag, 1, 'dag')) return 'morgen';
   if (s === 'dag') { const x = dagVan(d); return WEEKDAGEN[x.getDay()] + ' ' + x.getDate() + ' ' + (lang ? MAANDEN_LANG : MAANDEN)[x.getMonth()] + (ander ? ' ' + j : ''); }
@@ -3772,24 +3776,25 @@ function normaalVullen(el, n) {
 const BLAD_KLEIN = () => svgIcoon(PADEN.I, KLEUR.K, 17);
 const PAN_KLEIN = () => svgIcoon(PADEN.K, KLEUR.K, 17);
 /* Notitie: een blaadje papier met regels (in het paneel met de hele notitie, naast het blaadje van een recept). */
-const NOTITIE_ICOON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"></path><path d="M9 10h6M9 14h6M9 18h4"></path></svg>';
+const NOTITIE_ICOON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4B3CC0" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"></path><path d="M9 10h6M9 14h6M9 18h4"></path></svg>';
 /* Boodschappen: lang indrukken (½ s, of de rechtermuisknop) op een rij met een notitie toont de hele
-   notitie. Bewegen (scrollen) breekt af; de tik die volgt vinkt niet af (el.lang). */
+   notitie. Bewegen (scrollen) breekt af; de tik die volgt vinkt niet af (el.langGedrukt; niet el.lang: dat is de
+   ingebouwde taal-eigenschap van een element, en false wordt daar de tekst "false", die als waar telt). */
 function langDrukken(el, doe) {
   let timer = 0, kleur = 0, klaar = false, x = 0, y = 0;
   const stop = () => { clearTimeout(timer); clearTimeout(kleur); klaar = false; el.classList.remove('druk'); };
   el.addEventListener('pointerdown', (e) => {
     if (e.button > 0) return;
-    stop(); x = e.clientX; y = e.clientY; el.lang = false;
+    stop(); x = e.clientX; y = e.clientY; el.langGedrukt = false;
     kleur = setTimeout(() => el.classList.add('druk'), 150);
     /* Na ½ s: een tikje trillen (Android); bij loslaten opent het paneel. */
     timer = setTimeout(() => { klaar = true; if (navigator.vibrate) navigator.vibrate(10); }, 500);
   });
   el.addEventListener('pointermove', (e) => { if (Math.abs(e.clientX - x) > 10 || Math.abs(e.clientY - y) > 10) stop(); });
-  el.addEventListener('pointerup', () => { const ja = klaar; stop(); if (ja) { el.lang = true; doe(); } });
+  el.addEventListener('pointerup', () => { const ja = klaar; stop(); if (ja) { el.langGedrukt = true; doe(); } });
   for (const ev of ['pointercancel', 'pointerleave']) el.addEventListener(ev, stop);
   /* Rechtermuisknop, en Android meldt lang indrukken ook zo: geen menu maar de notitie (één keer: stop wist klaar). */
-  el.addEventListener('contextmenu', (e) => { e.preventDefault(); stop(); el.lang = true; doe(); });
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); stop(); el.langGedrukt = true; doe(); });
 }
 /* Boodschappen: een rij vegen (aanraken). Naar rechts = het rondje (afvinken of terugzetten), naar links = de hele
    notitie (alleen als er een is). Een rij heeft touch-action: pan-y: verticaal scrollt de telefoon zelf (dan
@@ -3836,7 +3841,7 @@ $('winkelLijst').addEventListener('pointermove', (e) => {
   v.dx = r.notitie ? dx : Math.max(0, dx);
   const onder = r.querySelector(':scope > .vonder');
   const kant = v.dx >= 0 ? 'vonder vink-r' : 'vonder not-l';
-  if (onder.className !== kant) { onder.className = kant; onder.innerHTML = v.dx >= 0 ? VEEG_VINK : NOTITIE_ICOON.replace('width="20" height="20"', 'width="28" height="28"'); }
+  if (onder.className !== kant) { onder.className = kant; onder.innerHTML = v.dx >= 0 ? VEEG_VINK : NOTITIE_ICOON.replace('width="17" height="17"', 'width="28" height="28"'); }
   r.style.setProperty('--dx', v.dx + 'px');
 }, { passive: true });
 $('winkelLijst').addEventListener('pointerup', (e) => { if (e.pointerId === rijVeeg.id) rijVeegKlaar(true); }, { passive: true });
@@ -3845,24 +3850,33 @@ $('winkelLijst').addEventListener('pointercancel', (e) => { if (e.pointerId === 
    de lijst staat een regel met het pannetje (aantal, receptnaam) en eventueel een met het blaadje (notitie van
    het ingrediënt). Voor het paneel
    in Boodschappen en de leesstand van het artikel. */
+/* Eén regel in een detailscherm: icoon en inhoud (tekst of element). soort 'recept' = bruinrood, 'grijs' = grijs. */
+function nregel(doel, icoon, inhoud, soort) {
+  const r = document.createElement('div'); r.className = 'nregel' + (soort === 'grijs' ? ' grijs' : ''); r.innerHTML = icoon;
+  if (soort === 'recept' || typeof inhoud === 'string') {
+    const t = document.createElement('span'); if (soort === 'recept') t.className = 'rtekst';
+    if (typeof inhoud === 'string') t.textContent = inhoud; else t.appendChild(inhoud);
+    r.appendChild(t);
+  } else r.appendChild(inhoud);
+  doel.appendChild(r);
+}
 function notitieVol(a) {
   const vol = document.createElement('div');
   vol.className = 'notitievol';
-  if (a.notitie || a.link) {
-    const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = NOTITIE_ICOON;
-    r.appendChild(notitieRegel(a)); vol.appendChild(r);
-  }
-  const regel = (icoon, tekst) => {
-    const r = document.createElement('div'); r.className = 'nregel'; r.innerHTML = icoon;
-    const t = document.createElement('span'); t.className = 'rtekst'; t.textContent = tekst;
-    r.appendChild(t); vol.appendChild(r);
-  };
-  for (const x of a.op ? a.voor : []) {
-    regel(svgIcoon(PADEN.K, KLEUR.K, 20), x.aantal + '\u00A0' + x.naam);
-    if (x.notitie) regel(svgIcoon(PADEN.I, KLEUR.K, 20), x.notitie);
-  }
+  if (a.notitie || a.link) nregel(vol, NOTITIE_ICOON, notitieRegel(a));
+  receptRegelsVol(a, vol);
   return vol;
 }
+/* Per recept waarvoor het artikel op de lijst staat: pannetje met "Lasagne 4×" en, als het ingrediënt een
+   notitie heeft, het blaadje met de hele notitie (tags op een eigen regel). Leesstand, paneel en bewerkscherm. */
+function receptRegelsVol(a, doel) {
+  for (const x of a.op ? a.voor : []) {
+    nregel(doel, PAN_KLEIN(), receptAantal(x), 'recept');
+    if (x.notitie) nregel(doel, BLAD_KLEIN(), notitieRegel({ notitie: x.notitie }), 'recept');
+  }
+}
+/* "Lasagne 4×": het aantal van dit artikel voor het recept, altijd erbij (niet "4 Lasagne", dat leest als vier lasagnes). */
+const receptAantal = (x) => x.naam + '\u00A0' + x.aantal + '×';
 const heeftTeLezen = (a) => !!(a.notitie || a.link || (a.op && a.voor.length));
 /* De hele notitie in een paneel (Boodschappen: lang indrukken of naar links vegen). */
 function notitiePaneel(a) {
@@ -3880,9 +3894,8 @@ function notitiePaneel(a) {
   keuzeTonen(k);
 }
 /* Notitie in een lijst (Op de lijst, Boodschappen): de eigen notitie (en tags), daaronder per recept waarvoor
-   het op de lijst staat een regel met het pannetje (aantal en receptnaam) en, als het ingrediënt een notitie
-   heeft, een regel met het blaadje. Vast patroon, elke regel één regel. Het aantal vervalt als het er alleen
-   voor dat ene recept staat (het staat al bij de naam).
+   het op de lijst staat een regel met het pannetje ("Lasagne 4×", altijd met aantal) en, als het ingrediënt
+   een notitie heeft, een regel met het blaadje. Vast patroon, elke regel één regel.
    zonderTags: Boodschappen. */
 function notitieMetRecepten(a, zonderTags) {
   const s = notitieRegel(zonderTags ? { notitie: notitieZonderTags(a.notitie || '') } : a);
@@ -3895,7 +3908,7 @@ function notitieMetRecepten(a, zonderTags) {
     s.appendChild(r);
   };
   for (const x of voor) {
-    regel(PAN_KLEIN(), (voor.length === 1 && a.opvoor && x.aantal === a.opAantal ? '' : x.aantal + '\u00A0') + x.naam);
+    regel(PAN_KLEIN(), receptAantal(x));
     if (x.notitie) regel(BLAD_KLEIN(), notitieZonderTags(x.notitie).replace(/\n+/g, ' '));
   }
   return s;
@@ -3925,7 +3938,24 @@ function notitieRegel(a, tikSoort) {
   while ((m = TAG.exec(n))) tags.push(m[2]);
   const tekst = notitieZonderTags(n);
   if (tekst) { const r = document.createElement('span'); r.className = 'ntekst'; r.textContent = tekst; s.appendChild(r); }
-  if (!tags.length && !a.link) return s;
+  /* Volgorde: de tekst, dan de link op een eigen regel, dan de tags. */
+  if (a.link) {
+    const lr = document.createElement('span');
+    lr.className = 'nlink';
+    const l = document.createElement('span');
+    l.className = 'link';
+    l.setAttribute('role', 'link');
+    l.tabIndex = 0;
+    l.innerHTML = '<span class="lt"></span>' + EXTERN;
+    l.firstChild.textContent = linkNaam(a.link);
+    const open = (e) => { e.stopPropagation(); e.preventDefault(); window.open(a.link, '_blank', 'noopener,noreferrer'); };
+    l.addEventListener('click', open);
+    /* Ook met het toetsenbord (Enter of spatie). */
+    l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); });
+    lr.appendChild(l);
+    s.appendChild(lr);
+  }
+  if (!tags.length) return s;
   const r2 = document.createElement('span');
   r2.className = 'ntags';
   for (const t of tags) {
@@ -3940,19 +3970,6 @@ function notitieRegel(a, tikSoort) {
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') zoek(e); });
     }
     r2.appendChild(b);
-  }
-  if (a.link) {
-    const l = document.createElement('span');
-    l.className = 'link';
-    l.setAttribute('role', 'link');
-    l.tabIndex = 0;
-    l.innerHTML = '<span class="lt"></span>' + EXTERN;
-    l.firstChild.textContent = linkNaam(a.link);
-    const open = (e) => { e.stopPropagation(); e.preventDefault(); window.open(a.link, '_blank', 'noopener,noreferrer'); };
-    l.addEventListener('click', open);
-    /* Ook met het toetsenbord (Enter of spatie). */
-    l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); });
-    r2.appendChild(l);
   }
   s.appendChild(r2);
   return s;
@@ -4058,10 +4075,7 @@ function tekenWeggehaald(zoekend) {
 
 /* Archief (onder Eenmalig): eenmalige artikelen die niet op de lijst staan,
    nieuwste eerst, ingeklapt. De + zet een artikel terug op de lijst. */
-function datumKort(d) {
-  const t = dagLabel(dagNummer(d));
-  return d.slice(0, 4) === String(new Date().getFullYear()) ? t : t + ' ' + d.slice(0, 4);
-}
+function datumKort(d) { return dagLabel(dagNummer(d)); }
 function tekenArchief(zoekend) {
   let sec = $('archief');
   if (sec) sec.remove();
@@ -5122,7 +5136,7 @@ function winkelRij(a, soort) {
   }
   /* Vinken (ook voor vegen naar rechts). */
   rij.vink = () => { if (gedaan) terugOpLijst(a.id); else afvinken(a); };
-  b.addEventListener('click', () => { if (b.lang) { b.lang = false; return; } if (rij.veegTot && Date.now() < rij.veegTot) return; rij.vink(); });
+  b.addEventListener('click', () => { if (b.langGedrukt) { b.langGedrukt = false; return; } if (rij.veegTot && Date.now() < rij.veegTot) return; rij.vink(); });
   rij.appendChild(b);
   if (soort === 'onbekend' || soort === 'zonder') {
     const w = document.createElement('button');
@@ -5317,7 +5331,7 @@ function tekenLog() {
       dag = d; n = 0;
       const g = document.createElement('section'); g.className = 'blok aankoopgroep';
       g.innerHTML = '<div class="kopbalk"><h3></h3><span class="tal"></span></div><div class="lijst"></div>';
-      g.querySelector('h3').textContent = datumLabel(d) + (d.slice(0, 4) !== String(new Date().getFullYear()) ? ' ' + d.slice(0, 4) : '');
+      g.querySelector('h3').textContent = datumLabel(d);
       tal = g.querySelector('.tal'); lijst = g.querySelector('.lijst');
       frag.appendChild(g);
     }
@@ -5349,7 +5363,7 @@ function logRegelWeg(soort, id) {
   if (!x) return;
   const d = x.tijd.slice(0, 10);
   bevestigPaneel({ titel: [{ vet: x.naam }],
-    tekst: datumLabel(d).replace(/^Vandaag · .*/, 'Vandaag') + (d.slice(0, 4) !== String(new Date().getFullYear()) ? ' ' + d.slice(0, 4) : ''),
+    tekst: datumLabel(d).replace(/^Vandaag · .*/, 'Vandaag'),
     opJa: () => handelen([{ actie: 'weg', soort, id }]) });
 }
 function logSluiten() {
@@ -6027,14 +6041,7 @@ function artikelOpenen(id, lezen) {
   if (a.op && a.voor.length) {
     const rn = $('artikelRnot');
     rn.hidden = false;
-    const regel = (icoon, tekst) => {
-      const r = document.createElement('div'); r.className = 'rnot'; r.innerHTML = icoon;
-      const t = document.createElement('span'); t.textContent = tekst; r.appendChild(t); rn.appendChild(r);
-    };
-    for (const x of a.voor) {
-      regel(PAN_KLEIN(), x.aantal + '\u00A0' + x.naam);
-      if (x.notitie) regel(BLAD_KLEIN(), x.notitie);
-    }
+    receptRegelsVol(a, rn);
   }
   const vakken = [[$('artikelNaam'), 'naam'], [$('artikelNotitie'), 'notitie']];
   const hoogte = () => { for (const [v] of vakken) { v.style.height = 'auto'; v.style.height = v.scrollHeight + 4 + 'px'; } };
@@ -6054,25 +6061,7 @@ function artikelOpenen(id, lezen) {
   hoogte();
   /* Leesstand (alleen vanaf Op de lijst, en alleen als er iets te lezen is): de naam in de kop, de notitie en de
      recepten; geen onderbalk. Het potlood maakt er het bewerkscherm van (zelfde scherm, alle velden). */
-  if (lezen && heeftTeLezen(a)) {
-    doel.classList.add('lezen');
-    const kop = doel.querySelector('.wdkop');
-    kop.querySelector('h2').textContent = a.naam;
-    const pot = document.createElement('button');
-    pot.className = 'icoonknop'; pot.type = 'button'; pot.id = 'artikelBewerk';
-    pot.setAttribute('aria-label', 'Bewerken'); pot.innerHTML = POTLOOD();
-    kop.insertBefore(pot, $('artikelDicht'));
-    doel.appendChild(notitieVol(a));
-    $('balk-artikel').hidden = true;
-    pot.addEventListener('click', () => {
-      doel.classList.remove('lezen');
-      kop.querySelector('h2').textContent = 'Artikel';
-      pot.remove();
-      const v = doel.querySelector(':scope > .notitievol'); if (v) v.remove();
-      $('balk-artikel').hidden = false;
-      hoogte();
-    });
-  }
+  if (lezen && heeftTeLezen(a)) leesstand(doel, 'artikel', 'Artikel', a.naam, notitieVol(a), hoogte);
 }
 
 function tekenSoorten() {
@@ -6131,9 +6120,8 @@ function artikelBijwerken() {
   const sch = $('artikelScherm');
   if (sch.classList.contains('lezen')) {
     if (!heeftTeLezen(a)) { artikelDicht(); return; }
-    sch.querySelector('.wdkop h2').textContent = a.naam;
-    const oud = sch.querySelector(':scope > .notitievol');
-    if (oud) oud.replaceWith(notitieVol(a));
+    leesstandVerversen(sch, 'artikel', bw, { oud: a, naam: a.naam, notitie: a.notitie, link: linkTekst(a.link), soort: a.letter, plekken: new Map(a.plekken.map((p) => [p.winkel, p.afd])) }, a.naam, notitieVol(a));
+    tekenSoorten();
   }
   for (const w of Array.from(bw.plekken.keys())) if (!winkelOpId.has(w)) bw.plekken.delete(w);
   const doel = $('plekken');
@@ -6299,7 +6287,6 @@ const doen = { afgerondOpen: false, dicht: new Set(), vertrekt: new Map(), histo
 const DOEN_NAAM = { week: 'Week', maand: 'Maand', kwartaal: 'Kw.', jaar: 'Jaar', alles: 'Alles' };
 const DOEN_LANG = { week: 'Week', maand: 'Maand', kwartaal: 'Kwartaal', jaar: 'Jaar', alles: 'Alles' };
 const DOEN_KOP = { week: 'Deze week', maand: 'Deze maand', kwartaal: 'Dit kwartaal', jaar: 'Dit jaar' };
-const HERHAAL_TEKST = { week: 'week', maand: 'maand', kwartaal: 'kwartaal', jaar: 'jaar' };
 function actieRij(a, vandaag, groep) {
   const rij = document.createElement('div');
   const klaar = !a.open || doen.vertrekt.has(a.id);
@@ -6320,7 +6307,7 @@ function actieRij(a, vandaag, groep) {
   } else if (a.datum) {
     const w = document.createElement('span'); w.className = 'wanneer' + (groep === 'laat' ? ' laat' : '');
     w.textContent = periodeTekst(a.datum, vandaag);
-    if (a.herhaal) { w.appendChild(document.createTextNode(' · ')); const h = document.createElement('span'); h.innerHTML = HERHAAL_IC; w.appendChild(h); w.appendChild(document.createTextNode(HERHAAL_TEKST[a.herhaal])); }
+    if (a.herhaal) { w.appendChild(document.createTextNode(' · ')); const h = document.createElement('span'); h.innerHTML = HERHAAL_IC; w.appendChild(h); w.appendChild(document.createTextNode(a.herhaal)); }
     knop.appendChild(w);
   }
   /* Geen link in de lijst (wel in de actie zelf). */
@@ -6474,7 +6461,8 @@ $('doenLijst').addEventListener('click', (e) => {
   const a = acties.find((x) => x.id === rij.dataset.id);
   if (!a) return;
   if (e.target.closest('.rondje')) { if (a.open && !doen.vertrekt.has(a.id)) actieAfronden(a); else actieHeropenen(a); }
-  else if (e.target.closest('.tekst')) actieOpenen(a.id);
+  /* Met een notitie, link of tags eerst lezen; anders meteen bewerken. */
+  else if (e.target.closest('.tekst')) actieOpenen(a.id, true);
 });
 function actieToevoegen() {
   const inp = $('doenTekst');
@@ -6699,7 +6687,7 @@ function bdGewijzigd() {
   const o = bd.oud;
   return !!o && (schoonTekst(bd.naam) !== o.naam || schoonNotitie(bd.notitie) !== o.notitie || bd.link.trim() !== linkTekst(o.link) || bd.datum !== o.datum || bd.herhaal !== o.herhaal);
 }
-function actieOpenen(id) {
+function actieOpenen(id, lezen) {
   const a = acties.find((x) => x.id === id);
   if (!a) return;
   Object.assign(bd, { id, oud: a, naam: a.naam, notitie: a.notitie, link: linkTekst(a.link), datum: a.datum, herhaal: a.herhaal });
@@ -6709,6 +6697,7 @@ function actieOpenen(id) {
     bd.laag = null; actieDicht(); return true;
   });
   const doel = $('actieScherm');
+  doel.classList.remove('lezen');
   deelOpen(doel, 'balk-actie');
   doel.innerHTML = '<div class="wdkop"><h2>Actie</h2><button class="icoonknop" id="actieDicht" type="button" aria-label="Sluiten">' + KRUIS + '</button></div>' +
     '<div class="veld"><label for="actieNaam">Naam</label><textarea id="actieNaam" rows="1" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></textarea></div>' +
@@ -6732,6 +6721,56 @@ function actieOpenen(id) {
   tekenWanneer();
   naarBoven();
   hoogte();
+  /* Leesstand (zoals bij een artikel): naam in de kop, de notitie (link, tags), wanneer en herhalen; het potlood
+     maakt er het bewerkscherm van. Zonder notitie of link meteen bewerken. */
+  if (lezen && (a.notitie || a.link)) leesstand(doel, 'actie', 'Actie', a.naam, actieVol(a), () => { tekenWanneer(); hoogte(); });
+}
+/* Leesstand van een artikel- of actiescherm (soort 'artikel' of 'actie'): de naam in de kop, potlood en kruisje,
+   de leestekst (vol), geen onderbalk. Het potlood maakt er het bewerkscherm van (zelfde scherm, alle velden).
+   Focus daarna: met muis/toetsenbord in het naamveld; op touch de kop, zodat er geen toetsenbord opspringt
+   maar een schermlezer wel het bewerkscherm meldt. */
+function leesstand(doel, soort, titel, naam, vol, naBewerk) {
+  doel.classList.add('lezen');
+  const kop = doel.querySelector('.wdkop'), h = kop.querySelector('h2');
+  h.textContent = naam;
+  const pot = document.createElement('button');
+  pot.className = 'icoonknop'; pot.type = 'button'; pot.id = soort + 'Bewerk';
+  pot.setAttribute('aria-label', 'Bewerken'); pot.innerHTML = POTLOOD();
+  kop.insertBefore(pot, $(soort + 'Dicht'));
+  doel.appendChild(vol);
+  $('balk-' + soort).hidden = true;
+  pot.addEventListener('click', () => {
+    doel.classList.remove('lezen');
+    h.textContent = titel;
+    pot.remove();
+    const v = doel.querySelector(':scope > .notitievol'); if (v) v.remove();
+    $('balk-' + soort).hidden = false;
+    naBewerk();
+    if (matchMedia('(pointer: fine)').matches) $(soort + 'Naam').focus({ preventScroll: true });
+    else { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+  });
+}
+/* Leesstand verversen na een wijziging van de ander: het bewerkscherm achter het potlood krijgt de nieuwe stand
+   (b = bw of bd; in de leesstand is niets gewijzigd), de kop de naam en de leestekst opnieuw. */
+function leesstandVerversen(sch, soort, b, nieuw, naam, vol) {
+  Object.assign(b, nieuw);
+  for (const v of ['Naam', 'Notitie', 'Link']) $(soort + v).value = b[v.toLowerCase()];
+  sch.querySelector('.wdkop h2').textContent = naam;
+  const oud = sch.querySelector(':scope > .notitievol');
+  if (oud) oud.replaceWith(vol);
+}
+/* Een actie om te lezen: de notitie (met link en tags), dan grijs wanneer (of "afgerond …") en, als hij herhaalt, "elke maand". */
+const KALENDER = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7482" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>';
+const HERHAAL_ELK = { week: 'elke week', maand: 'elke maand', kwartaal: 'elk kwartaal', jaar: 'elk jaar' };
+function actieVol(a) {
+  const vol = document.createElement('div');
+  vol.className = 'notitievol';
+  if (a.notitie || a.link) nregel(vol, NOTITIE_ICOON, notitieRegel(a));
+  const vandaag = datumTekst(new Date());
+  if (!a.open) nregel(vol, KALENDER, 'afgerond ' + periodeTekst(a.klaar.slice(0, 10), vandaag, true), 'grijs');
+  else if (a.datum) nregel(vol, KALENDER, periodeTekst(a.datum, vandaag, true), 'grijs');
+  if (a.herhaal) nregel(vol, '<span class="hic">' + HERHAAL_IC + '</span>', HERHAAL_ELK[a.herhaal], 'grijs');
+  return vol;
 }
 /* Knoppen in een rij blijven even breed. Past een tekst niet (gemeten), dan de korte
    vorm: Week → Wk, Maand → Mnd, Jaar → Jr. De voorleestekst blijft voluit. */
@@ -6820,6 +6859,12 @@ function actieBijwerken() {
     if ($('actieNotitie')) $('actieNotitie').value = bd.notitie;
     if ($('actieLink')) $('actieLink').value = bd.link;
     tekenWanneer();
+  }
+  /* Leesstand: opnieuw tekenen met wat er nu is; geen notitie of link meer = dicht. */
+  const sch = $('actieScherm');
+  if (nu && sch.classList.contains('lezen')) {
+    if (!nu.notitie && !nu.link) { actieDicht(); return; }
+    leesstandVerversen(sch, 'actie', bd, { oud: nu, naam: nu.naam, notitie: nu.notitie, link: linkTekst(nu.link), datum: nu.datum, herhaal: nu.herhaal }, nu.naam, actieVol(nu));
   }
   if (nu) return;
   /* Intussen verwijderd: niet stil sluiten. */
@@ -7042,7 +7087,7 @@ function backupsTellen() { $('backupAantal').textContent = gekoppeld && backupTa
 function datumLabel(datum) {
   const d = new Date(+datum.slice(0, 4), +datum.slice(5, 7) - 1, +datum.slice(8, 10));
   const wd = WEEKDAGEN[d.getDay()];
-  const t = wd[0].toUpperCase() + wd.slice(1) + ' ' + d.getDate() + ' ' + MAANDEN[d.getMonth()];
+  const t = wd[0].toUpperCase() + wd.slice(1) + ' ' + d.getDate() + ' ' + MAANDEN[d.getMonth()] + jaarErbij(d.getFullYear());
   return datum === datumTekst(new Date()) ? 'Vandaag · ' + t.toLowerCase() : t;
 }
 
@@ -7126,7 +7171,7 @@ async function logboekOpenen() {
     kaart.appendChild(d);
   }
 }
-/* "2026-11-22 20:02" → "vandaag 20:02", "za 06:00" (deze week) of "14 nov 20:02". */
+/* "2026-11-22 20:02" → "vandaag 20:02", "za 06:00" (deze week), "14 nov 20:02" of "14 nov 2025 20:02". */
 function logTijd(t) {
   const m = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})/.exec(t);
   if (!m) return t;
@@ -7134,7 +7179,7 @@ function logTijd(t) {
   const verschil = Math.round((new Date(nu.getFullYear(), nu.getMonth(), nu.getDate()) - dag) / 86400000);
   if (verschil === 0) return 'vandaag ' + m[2];
   if (verschil > 0 && verschil < 7) return WEEKDAGEN[dag.getDay()] + ' ' + m[2];
-  return dag.getDate() + ' ' + MAANDEN[dag.getMonth()] + ' ' + m[2];
+  return dag.getDate() + ' ' + MAANDEN[dag.getMonth()] + jaarErbij(dag.getFullYear()) + ' ' + m[2];
 }
 $('naarLogboek').addEventListener('click', logboekOpenen);
 

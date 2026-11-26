@@ -10,6 +10,7 @@
      soorticoon, schakelaarregels) zijn minstens 44 px; tik op de tekst zet een schakelaar om.
   6. Een lange winkelnaam loopt door op een tweede regel in plaats van afgekapt te worden.
   7–10. Niet vet, gemeten knoppenrij, geen knijpzoom, tabbalk op een laptop.
+  15. Regelafstand: leesstand, notitiepaneel en receptregels in het bewerkscherm gelijk aan de lijsten (17 px, geen extra ruimte).
   14. Kleur: gewone notitie paars, alles uit een recept (receptnotitie, ingrediëntnotitie, receptregel) bruinrood, recht.
   13. Vegen in Boodschappen: rechts = afvinken, links = notitie, schuin = scrollen; tabwissel alleen via de tabbalk.
   12. Laptop: ruimte voor de scrollbalk blijft vrij (beeld verspringt niet); Wanneer: knop terug naar nu.
@@ -231,6 +232,13 @@ async def main():
         await veeg('#veegrij', 200)
         recht = await pg.evaluate("() => winkel.mandje.size")
         await pg.wait_for_timeout(1700)
+        # gewoon tikken (echte aanraking) op een rij met een notitie vinkt af (de tik na lang indrukken niet)
+        await pg.evaluate("() => { handelen([{ actie: 'zet', soort: 'artikel', id: 'a03', veld: 'notitie', oud: '', nieuw: 'Tik' }]); tekenWinkel(); }"); await pg.wait_for_timeout(100)
+        tx, ty = await pg.evaluate("() => { const r = [...document.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === 'Artikel 03'); const b = r.querySelector('.ntekst').getBoundingClientRect(); return [b.x + 10, b.y + b.height / 2]; }")
+        mt = await pg.evaluate("() => winkel.mandje.size")
+        await pg.touchscreen.tap(tx, ty); await pg.wait_for_timeout(100)
+        tik = await pg.evaluate("() => winkel.mandje.size") == mt + 1
+        await pg.wait_for_timeout(1700)
         # links: een rij met een notitie (a00 heeft #zuivel)
         await pg.evaluate("() => { handelen([{ actie: 'zet', soort: 'artikel', id: 'a01', veld: 'notitie', oud: '', nieuw: 'Halfvol' }]); tekenWinkel(); const r = [...document.querySelectorAll('#winkelLijst .wrij')].find((x) => x.querySelector('.nm').firstChild.textContent === 'Artikel 01'); r.id = 'veegnot'; }")
         await pg.wait_for_timeout(100)
@@ -254,8 +262,8 @@ async def main():
         naarDoen = await pg.evaluate("() => !document.getElementById('scherm-doen').hidden")
         panY = await pg.evaluate("() => { const r = document.querySelector('#winkelLijst .wrij'); return r ? getComputedStyle(r).touchAction : 'pan-y'; }")
         sel = await pg.evaluate("() => [...document.querySelectorAll('#winkelLijst .wrij .vink')].every((v) => getComputedStyle(v).userSelect === 'none')")
-        check('vegen (rij: touch-action pan-y, geen wachten bij scrollen; geen tekstselectie op elke rij): kort = terug, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
-              kort == [mstart, False] and recht == mstart + 1 and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y' and sel, [kort, recht, links, schuin, nogWinkel, naarDoen, panY, sel])
+        check('vegen (rij: touch-action pan-y, geen wachten bij scrollen; geen tekstselectie op elke rij): kort = terug, tikken op een rij met notitie vinkt af, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
+              kort == [mstart, False] and recht == mstart + 1 and tik and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y' and sel, [kort, recht, tik, links, schuin, nogWinkel, naarDoen, panY, sel])
 
         # 14. Kleur van notities
         kl = await pg.evaluate("""async () => {
@@ -269,9 +277,36 @@ async def main():
           receptDicht(true); scherm.filter = 'L'; tekenBoodschappen(); await new Promise((r) => setTimeout(r, 100));
           const rij = document.querySelector('#lijst .item[data-id="a00"]');
           uit.push(c(rij && rij.querySelector('.rregel')), c(rij && rij.querySelector('.ntekst')));
+          const vol = (box) => { const r = box ? box.querySelectorAll(':scope > .nregel') : [];
+            return [c(r[0] && r[0].querySelector('.ntekst')), c(r[1] && r[1].querySelector('.rtekst')), c(r[2] && r[2].querySelector('.ntekst')), c(r[2] && r[2].querySelector('.tag'))]; };
+          artikelOpenen('a00', true); await new Promise((r) => setTimeout(r, 100));
+          uit.push(...vol(document.querySelector('#artikelScherm > .notitievol'))); artikelDicht();
+          notitiePaneel(artikelen.find((a) => a.id === 'a00')); await new Promise((r) => setTimeout(r, 100));
+          uit.push(...vol(document.querySelector('#keuze .notitievol'))); sluitKeuze();
           return uit; }""")
         br, pa = 'rgb(142, 58, 34)/normal', 'rgb(75, 60, 192)/normal'
-        check('kleur: receptnotitie, ingrediëntnotitie (en tags) en receptregel bruinrood en recht; eigen notitie paars', kl == [br, br, br, br, pa], kl)
+        check('kleur: receptnotitie, ingrediëntnotitie (en tags) en receptregel bruinrood en recht; eigen notitie paars (lijst, leesstand, paneel)', kl == [br, br, br, br, pa] + [pa, br, br, br] * 2, kl)
+
+        # 15. Regelafstand in de detailschermen gelijk aan de lijsten
+        maat = await pg.evaluate("""async () => {
+          const meet = (box) => { if (!box) return 'geen'; const r = [...box.querySelectorAll(':scope > .nregel')].map((x) => x.getBoundingClientRect());
+            const gaps = []; for (let i = 1; i < r.length; i++) gaps.push(Math.round(r[i].top - r[i - 1].bottom));
+            const f = getComputedStyle(box.querySelector('.nregel')); return f.fontSize + '/' + f.lineHeight + '/' + [...new Set(gaps)].join(','); };
+          scherm.filter = 'L'; tekenBoodschappen(); artikelOpenen('a00', true); await new Promise((r) => setTimeout(r, 100));
+          const lees = meet(document.querySelector('#artikelScherm > .notitievol'));
+          document.getElementById('artikelBewerk').click(); await new Promise((r) => setTimeout(r, 100));
+          const bewerk = meet(document.getElementById('artikelRnot')); artikelDicht();
+          notitiePaneel(artikelen.find((a) => a.id === 'a00')); await new Promise((r) => setTimeout(r, 100));
+          const paneel = meet(document.querySelector('#keuze .notitievol')); sluitKeuze();
+          return [lees, bewerk, paneel]; }""")
+        check('regelafstand: leesstand, bewerkscherm en paneel 17 px, regelhoogte 22,1 px, geen extra ruimte', all(m == '17px/22.1px/0' for m in maat), maat)
+
+        # 16. Potlood op een touchscherm: focus op de kop, geen invoerveld (dus geen toetsenbord)
+        fc = await pg.evaluate("""async () => {
+          artikelOpenen('a00', true); await new Promise((r) => setTimeout(r, 100));
+          document.getElementById('artikelBewerk').click(); await new Promise((r) => setTimeout(r, 50));
+          const e = document.activeElement; const uit = e.tagName + '/' + e.textContent; artikelDicht(); return uit; }""")
+        check('potlood op touch: focus op de kop "Artikel", niet in een invoerveld', fc == 'H2/Artikel', fc)
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()

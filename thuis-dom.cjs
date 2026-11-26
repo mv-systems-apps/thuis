@@ -906,7 +906,7 @@ const BEGIN = [
     [...dC.querySelectorAll('#wanneerSoort button')][1].click(); await slaap(10);
     const vandaag = wC.eval('datumTekst(new Date())');
     controle('doen: Dag kiezen begint bij vandaag, herhalen verschijnt met Nee/Week/Maand/Kwartaal/Jaar', !dC.getElementById('herhaalVeld').hidden && [...dC.querySelectorAll('#herhaalSoort button')].map((b) => b.textContent).join() === 'Nee,Week,Maand,Kw.,Jaar'
-      && dC.querySelector('.blader label').textContent === wC.eval("periodeTekst(datumTekst(new Date()), '', true)"));
+      && dC.querySelector('.blader label').textContent === wC.eval("periodeTekst(datumTekst(new Date()), datumTekst(new Date()), true)"));
     dC.querySelectorAll('.blader button')[0].click(); await slaap(10);
     [...dC.querySelectorAll('#herhaalSoort button')][1].click(); await slaap(10);
     dC.getElementById('actieOpslaan').click(); await slaap(50);
@@ -1823,7 +1823,7 @@ const BEGIN = [
     const datumVak = dD.querySelector('.blader label input[type="date"]');
     controle('editor: label Naam en een datumvak bij een dag (UI 11, punt 7)', dD.querySelector('label[for="actieNaam"]').textContent === 'Naam' && !!datumVak);
     datumVak.value = datumTekstT(21); datumVak.dispatchEvent(new wD.Event('change')); await slaap(10);
-    controle('editor: datum kiezen in de kalender zet de dag (punt 7)', wD.eval('bd.datum') === datumTekstT(21) && dD.querySelector('.blader label').textContent === wD.eval("periodeTekst('" + datumTekstT(21) + "', '', true)"));
+    controle('editor: datum kiezen in de kalender zet de dag (punt 7)', wD.eval('bd.datum') === datumTekstT(21) && dD.querySelector('.blader label').textContent === wD.eval("periodeTekst('" + datumTekstT(21) + "', datumTekst(new Date()), true)"));
     /* Terug naar nu: Vandaag / Deze maand …, grijs als je er al staat. */
     const nuK = () => dD.querySelector('#wanneerNu button');
     controle('editor: knop Vandaag onder de datum, aan als het een andere dag is', !!nuK() && nuK().textContent === 'Vandaag' && !nuK().disabled);
@@ -2414,8 +2414,8 @@ const BEGIN = [
     /* Beginsituatie: Melk 3 + 5 Lasagne, Gehakt alleen voor Lasagne (2). */
     wR.eval("(() => { const m = artikelen.find((a) => a.naam === 'Melk'), g = artikelen.find((a) => a.naam === 'Gehakt'); handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', aantal: '5' }, { actie: 'voor', soort: 'artikel', id: m.id, recept: 'las01', naam: 'Lasagne', aantal: '5', ing: 'ime01', wie: ik }, { actie: 'voor', soort: 'artikel', id: g.id, recept: 'las01', naam: 'Lasagne', aantal: '2', ing: 'igh01', wie: ik }]); })()"); await slaap(30);
     wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(20);
-    controle('Op de lijst: Melk 8× met de receptregel "5 Lasagne", Gehakt 2× met "Lasagne" (alleen voor dat recept)', rijL('Melk').querySelector('.aantal').textContent === '8×' && rr2(rijL('Melk')) === '5\u00A0Lasagne' &&
-      rijL('Gehakt').querySelector('.aantal').textContent === '2×' && rr2(rijL('Gehakt')) === 'Lasagne');
+    controle('Op de lijst: Melk 8× met de receptregel "Lasagne 5×", Gehakt 2× met "Lasagne 2×" (het aantal altijd erbij)', rijL('Melk').querySelector('.aantal').textContent === '8×' && rr2(rijL('Melk')) === 'Lasagne\u00A05×' &&
+      rijL('Gehakt').querySelector('.aantal').textContent === '2×' && rr2(rijL('Gehakt')) === 'Lasagne\u00A02×');
     /* Van de lijst en terugtikken onder "Van de lijst gehaald": de recepten komen terug */
     rijL('Melk').querySelector('.rondje').click(); await slaap(20);
     rijL('Gehakt').querySelector('.rondje').click(); await slaap(20);
@@ -2431,7 +2431,7 @@ const BEGIN = [
     wR.eval("scherm.teller = ''; tekenBoodschappen()"); await slaap(20);
     /* Boodschappen: het regeltje ook daar; afvinken en terugtikken houdt de recepten */
     dR.getElementById('tab-winkel').click(); await slaap(30);
-    controle('Boodschappen: Melk 8× met het regeltje', !!wrij('Melk') && wrij('Melk').querySelector('.aantal').textContent === '8×' && rr2(wrij('Melk')) === '5\u00A0Lasagne');
+    controle('Boodschappen: Melk 8× met het regeltje', !!wrij('Melk') && wrij('Melk').querySelector('.aantal').textContent === '8×' && rr2(wrij('Melk')) === 'Lasagne\u00A05×');
     wrij('Melk').querySelector('.vink').click(); await slaap(30);
     controle('afgevinkt: recepten eraf', wR.eval("artikelen.find((a) => a.naam === 'Melk').voor.length") === 0);
     await slaap(1600);
@@ -2548,7 +2548,7 @@ const BEGIN = [
     dR.getElementById('tab-boodschappen').click(); wR.eval("scherm.filter = 'L'; scherm.teller = ''; tekenBoodschappen()"); await slaap(20);
     wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'op', oud: a.op, nieuw: '' }]); handelen([{ actie: 'voor', soort: 'artikel', id: a.id, recept: 'pas01', naam: 'Pasta verde', aantal: '1', wie: ik }]); })()"); await slaap(30);
     melkRij().querySelector('.icoon').click(); await slaap(20);
-    controle('alleen voor een recept (wekelijks 3): teller "Aantal" 0, − uit, regeltje "Pasta verde", normaal 4× doorgestreept voor 1×', tel().firstElementChild.textContent === 'Aantal' && tel().querySelector('.n').textContent === '0' && tel().querySelector('.min').disabled && melkRij().querySelector('.normaal').textContent === 'normaal 4×' && melkRij().querySelector('.aantal').textContent === '1×' && rr2(melkRij()) === 'Pasta verde', rr2(melkRij()));
+    controle('alleen voor een recept (wekelijks 3): teller "Aantal" 0, − uit, regeltje "Pasta verde", normaal 4× doorgestreept voor 1×', tel().firstElementChild.textContent === 'Aantal' && tel().querySelector('.n').textContent === '0' && tel().querySelector('.min').disabled && melkRij().querySelector('.normaal').textContent === 'normaal 4×' && melkRij().querySelector('.aantal').textContent === '1×' && rr2(melkRij()) === 'Pasta verde\u00A01×', rr2(melkRij()));
     tel().querySelector('.meer').click(); await slaap(30);
     controle('+ vanaf 0: het vaste aantal telt mee (4×), teller "Aantal" 3, niets doorgestreept', tel().firstElementChild.textContent === 'Aantal' && tel().querySelector('.n').textContent === '3' && !melkRij().querySelector('.normaal') && wR.eval("artikelen.find((x) => x.naam === 'Melk').opAantal") === 4);
     tel().querySelector('.min').click(); await slaap(30); tel().querySelector('.min').click(); await slaap(30);
@@ -2667,10 +2667,10 @@ const BEGIN = [
     wR.eval("receptDicht(true)"); await slaap(20);
     wR.eval("scherm.filter = 'L'; tekenBoodschappen()"); await slaap(30);
     const rr = (r) => [...r.querySelectorAll('.notitie > *')].map((c) => c.className + ':' + c.textContent).join(' | ');
-    controle('op de lijst: Gehakt alleen voor Lasagne → regel met pannetje en receptnaam (zonder aantal), regel met blaadje en de notitie (zonder tags)', !!rijL('Gehakt') && rr(rijL('Gehakt')) === 'rregel:Lasagne | rregel:Rundergehakt 500 g' && !!rijL('Gehakt').querySelector('.rregel svg'), rijL('Gehakt') && rr(rijL('Gehakt')));
-    controle('op de lijst: Melk eigen notitie (zonder tags en link), dan de receptregels', rr(rijL('Melk')) === 'ntekst:Halfvol | rregel:4\u00A0Lasagne | rregel:Volle melk', rr(rijL('Melk')));
+    controle('op de lijst: Gehakt alleen voor Lasagne → regel met pannetje en "Lasagne 2×", regel met blaadje en de notitie (zonder tags)', !!rijL('Gehakt') && rr(rijL('Gehakt')) === 'rregel:Lasagne 2× | rregel:Rundergehakt 500 g' && !!rijL('Gehakt').querySelector('.rregel svg'), rijL('Gehakt') && rr(rijL('Gehakt')));
+    controle('op de lijst: Melk eigen notitie (zonder tags en link), dan de receptregels', rr(rijL('Melk')) === 'ntekst:Halfvol | rregel:Lasagne\u00A04× | rregel:Volle melk', rr(rijL('Melk')));
     wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk' }, { actie: 'nieuw', soort: 'recept', id: 'pan01', velden: { naam: 'Pannenkoeken' } }, { actie: 'ingredient', soort: 'recept', id: 'pan01', ingredient: 'ime02', naam: 'Melk', aantal: '1', notitie: 'Halfvol mag ook' }, { actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, recept: 'pan01', naam: 'Pannenkoeken', aantal: '1', ing: 'ime02' }])"); await slaap(30);
-    controle('op de lijst: meer recepten met een notitie → per recept een regel, met de receptnaam', rr(rijL('Melk')) === 'ntekst:Halfvol | rregel:4\u00A0Lasagne | rregel:Volle melk | rregel:1\u00A0Pannenkoeken | rregel:Halfvol mag ook', rr(rijL('Melk')));
+    controle('op de lijst: meer recepten met een notitie → per recept een regel, met de receptnaam', rr(rijL('Melk')) === 'ntekst:Halfvol | rregel:Lasagne\u00A04× | rregel:Volle melk | rregel:Pannenkoeken\u00A01× | rregel:Halfvol mag ook', rr(rijL('Melk')));
     wR.eval("handelen([{ actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, recept: 'pan01', aantal: '' }])"); await slaap(30);
     const vak = dR.getElementById('invoerTekst');
     vak.focus(); vak.value = '#slag'; vak.dispatchEvent(new wR.Event('input')); await slaap(20);
@@ -2679,14 +2679,17 @@ const BEGIN = [
     rijL('Melk').querySelector('.tekstknop').click(); await slaap(30);
     { const sch = dR.getElementById('artikelScherm'), vol = sch.querySelector(':scope > .notitievol');
       controle('artikel vanaf Op de lijst: eerst lezen (naam in de kop, potlood, notitie en receptregel; geen onderbalk)', sch.classList.contains('lezen') && sch.querySelector('.wdkop h2').textContent === 'Melk' && !!dR.getElementById('artikelBewerk')
-        && !!vol && /Halfvol/.test(vol.textContent) && /4\u00A0LasagneVolle melk/.test(vol.textContent) && vol.querySelectorAll('.nregel').length === 3 && dR.getElementById('balk-artikel').hidden, vol && vol.textContent);
+        && !!vol && /Halfvol/.test(vol.textContent) && /Lasagne\u00A04×Volle melk/.test(vol.textContent) && vol.querySelectorAll('.nregel').length === 3 && dR.getElementById('balk-artikel').hidden, vol && vol.textContent);
       wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk, 1 liter' }])"); await slaap(30);
-      controle('leesstand ververst als er iets verandert (notitie van het ingrediënt)', sch.classList.contains('lezen') && /Volle melk, 1 liter/.test(sch.querySelector(':scope > .notitievol').textContent), sch.querySelector(':scope > .notitievol').textContent);
-      wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk' }])"); await slaap(30);
+      controle('leesstand ververst als er iets verandert (notitie van het ingrediënt)', sch.classList.contains('lezen') && /Volle melk, 1\sliter/.test(sch.querySelector(':scope > .notitievol').textContent), sch.querySelector(':scope > .notitievol').textContent);
+      wR.eval("handelen([{ actie: 'ingredient', soort: 'recept', id: 'las01', ingredient: 'ime01', notitie: 'Volle melk' }, { actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'notitie', oud: 'Halfvol #zuivel', nieuw: 'Volle #zuivel' }])"); await slaap(30);
       dR.getElementById('artikelBewerk').click(); await slaap(20);
+      controle('artikel: na het potlood (muis) staat de focus in het naamveld', dR.activeElement === dR.getElementById('artikelNaam'), dR.activeElement && dR.activeElement.id);
+      controle('artikel: na verversen in de leesstand toont het bewerkscherm de nieuwe notitie (geen botsing)', dR.getElementById('artikelNotitie').value === 'Volle #zuivel' && !wR.eval('bwGewijzigd()'), dR.getElementById('artikelNotitie').value);
+      wR.eval("artikelDicht(); handelen([{ actie: 'zet', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Melk').id, veld: 'notitie', oud: 'Volle #zuivel', nieuw: 'Halfvol #zuivel' }]); artikelOpenen(artikelen.find((a) => a.naam === 'Melk').id, false)"); await slaap(30);
       controle('potlood: het bewerkscherm (alle velden, onderbalk), leestekst weg', !sch.classList.contains('lezen') && sch.querySelector('.wdkop h2').textContent === 'Artikel' && !dR.getElementById('artikelBewerk') && !sch.querySelector(':scope > .notitievol') && !dR.getElementById('balk-artikel').hidden && !!dR.getElementById('artikelNaam')); }
     const rn = dR.getElementById('artikelRnot');
-    controle('artikel bewerken: receptregel (aantal, recept, notitie) onder het notitieveld, alleen lezen; het notitieveld zelf onveranderd', !!rn && !rn.hidden && rn.textContent === '4\u00A0LasagneVolle melk' && rn.querySelectorAll('.rnot').length === 2 && !rn.querySelector('textarea,input') && dR.getElementById('artikelNotitie').value === 'Halfvol #zuivel', rn && rn.textContent);
+    controle('artikel bewerken: receptregel (aantal, recept, notitie) onder het notitieveld, alleen lezen; het notitieveld zelf onveranderd', !!rn && !rn.hidden && rn.textContent === 'Lasagne\u00A04×Volle melk' && rn.querySelectorAll('.nregel').length === 2 && !rn.querySelector('textarea,input') && dR.getElementById('artikelNotitie').value === 'Halfvol #zuivel', rn && rn.textContent);
     dR.getElementById('artikelDicht').click(); await slaap(20);
     wR.eval("scherm.filter = 'W'; tekenBoodschappen()"); await slaap(30);
     [...dR.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Melk').querySelector('.tekstknop').click(); await slaap(30);
@@ -2701,7 +2704,7 @@ const BEGIN = [
     const pe = (type) => { const e = new wR.Event(type, { bubbles: true, cancelable: true }); e.clientX = 50; e.clientY = 50; e.button = 0; vk.dispatchEvent(e); return e; };
     pe('pointerdown'); await slaap(200);
     pe('pointerup'); vk.click(); await slaap(20);
-    controle('Boodschappen: kort tikken (0,2 s) opent niets', !dR.getElementById('keuze'));
+    controle('Boodschappen: kort tikken (0,2 s) op een rij met notitie opent niets en vinkt af', !dR.getElementById('keuze') && wR.eval('winkel.mandje.size') === vinkVoor + 1, wR.eval('winkel.mandje.size'));
     wR.eval("terugOpLijst(artikelen.find((a) => a.naam === 'Melk').id)"); await slaap(1700);
     { const v2 = wrij('Melk').querySelector('.vink'); const pe2 = (type) => { const e = new wR.Event(type, { bubbles: true, cancelable: true }); e.clientX = 50; e.clientY = 50; e.button = 0; v2.dispatchEvent(e); };
       pe2('pointerdown'); await slaap(560);
@@ -2709,7 +2712,7 @@ const BEGIN = [
       pe2('pointerup'); v2.click(); await slaap(20); }
     const p = dR.getElementById('keuze');
     controle('lang indrukken (½ s) → paneel met de hele notitie (eigen met icoon, recept met blaadje); de tik erna vinkt niet af', !!p && p.querySelector('h3').textContent === 'Melk' && p.querySelectorAll('.notitievol .nregel').length === 3
-      && /Halfvol/.test(p.querySelectorAll('.nregel')[0].textContent) && p.querySelectorAll('.nregel')[1].textContent === '4\u00A0Lasagne' && p.querySelectorAll('.nregel')[2].textContent === 'Volle melk' && wR.eval('winkel.mandje.size') === vinkVoor, p && p.textContent + ' mandje ' + wR.eval('winkel.mandje.size') + '/' + vinkVoor);
+      && /Halfvol/.test(p.querySelectorAll('.nregel')[0].textContent) && p.querySelectorAll('.nregel')[1].textContent === 'Lasagne\u00A04×' && p.querySelectorAll('.nregel')[2].textContent === 'Volle melk' && wR.eval('winkel.mandje.size') === vinkVoor, p && p.textContent + ' mandje ' + wR.eval('winkel.mandje.size') + '/' + vinkVoor);
     p.querySelector('.kruis').click(); await slaap(20);
     controle('paneel dicht met het kruisje', !dR.getElementById('keuze'));
     { const v3 = wrij('Melk').querySelector('.vink'); const e = new wR.MouseEvent('contextmenu', { bubbles: true, cancelable: true }); v3.dispatchEvent(e);
@@ -2805,6 +2808,39 @@ const BEGIN = [
       'Winkels (overzicht)': 'tag/↗/-', 'Recepten (overzicht)': 'tag/↗/-', 'Doen': 'tag/↗/-', 'Recept: ingrediënt': 'tag/-/-',
       'Recept: band': 'tag/-/link', 'Winkel: band': 'tag/-/link', 'Artikel: leesstand': 'tag/-/link', 'Boodschappen: paneel': 'tag/-/link' };
     for (const [k, v] of Object.entries(verwacht)) controle('consistentie ' + k + ': ' + v, uit[k] === v, uit[k]);
+    /* Volgorde in detailschermen: tekst, dan de link op een eigen regel, dan de tags. */
+    { const kl = (n) => n ? [...n.children].map((c) => c.className).join('|') : 'geen';
+      controle('volgorde in de band van een winkel: tekst, link, tags', kl(dR.querySelector('#winkelDetail .kopnotitie .notitie')) === 'ntekst|nlink|ntags', kl(dR.querySelector('#winkelDetail .kopnotitie .notitie'))); }
+    /* Doen: met notitie eerst lezen (notitie, wanneer, herhalen), potlood = bewerken; zonder notitie meteen bewerken. */
+    wR.eval("handelen([{ actie: 'zet', soort: 'actie', id: 'act01', veld: 'datum', oud: '', nieuw: '" + datumTekstT(7) + "' }, { actie: 'zet', soort: 'actie', id: 'act01', veld: 'herhaal', oud: '', nieuw: 'maand' }, { actie: 'nieuw', soort: 'actie', id: 'act02', velden: { naam: 'Dakgoot' } }])"); await slaap(30);
+    rij('#doenLijst .actierij', 'Filter kopen').querySelector('.tekstknop').click(); await slaap(30);
+    { const sch = dR.getElementById('actieScherm'), vol = sch.querySelector(':scope > .notitievol');
+      const regels = vol ? [...vol.querySelectorAll(':scope > .nregel')].map((r) => r.textContent) : [];
+      controle('Doen: actie met notitie opent eerst om te lezen (naam in de kop, notitie met link en tags, wanneer, elke maand; geen onderbalk)', sch.classList.contains('lezen') && sch.querySelector('.wdkop h2').textContent === 'Filter kopen' && !!dR.getElementById('actieBewerk')
+        && regels.length === 3 && /Maat 30/.test(regels[0]) && !!vol.querySelector('.nlink .link') && !!vol.querySelector('.ntags .tag') && regels[1] === wR.eval("periodeTekst('" + datumTekstT(7) + "', datumTekst(new Date()), true)") && regels[2] === 'elke maand' && dR.getElementById('balk-actie').hidden, regels.join(' / '));
+      wR.eval("handelen([{ actie: 'zet', soort: 'actie', id: 'act01', veld: 'notitie', oud: 'Maat 30 #klus', nieuw: 'Maat 40 #klus' }])"); await slaap(30);
+      { const t = wR.eval("[...actieVol({ open: false, klaar: '2024-03-05 10:00', datum: '2024-03-01', herhaal: '', notitie: 'x', link: '' }).querySelectorAll('.nregel')].map((r) => r.textContent).join('|')");
+        controle('Doen: leesstand van een afgeronde actie toont "afgerond …", niet de geplande datum', t === 'x|afgerond di 5 maart 2024', t); }
+      { const j = new Date().getFullYear(), d = (y) => y + '-03-05';
+        const t = wR.eval(`[actieVol({ open: true, datum: '${d(j)}', herhaal: '', notitie: '', link: '' }).textContent, actieVol({ open: true, datum: '${d(j + 1)}', herhaal: '', notitie: '', link: '' }).textContent,
+          datumLabel('${d(j)}'), datumLabel('${d(j - 1)}'), logTijd('${d(j - 1)} 20:02'), datumKort('${d(j)}'), datumKort('${d(j - 1)}')].join('|')`);
+        const wd = (y) => ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'][new Date(y, 2, 5).getDay()], Wd = (y) => wd(y)[0].toUpperCase() + wd(y)[1];
+        const verwacht = [wd(j) + ' 5 maart', wd(j + 1) + ' 5 maart ' + (j + 1), Wd(j) + ' 5 mrt', Wd(j - 1) + ' 5 mrt ' + (j - 1), '5 mrt ' + (j - 1) + ' 20:02', '5 mrt', '5 mrt ' + (j - 1)].join('|');
+        controle('jaartal alleen als het niet dit jaar is: leesstand actie, backups/Aankopen, logboek, archief', t === verwacht, t + ' ≠ ' + verwacht); }
+      controle('Doen: leesstand ververst', /Maat 40/.test(sch.querySelector(':scope > .notitievol').textContent));
+      dR.getElementById('actieBewerk').click(); await slaap(20);
+      controle('Doen: na het potlood (muis) staat de focus in het naamveld', dR.activeElement === dR.getElementById('actieNaam'), dR.activeElement && dR.activeElement.id);
+      controle('Doen: na verversen in de leesstand toont het bewerkscherm de nieuwe stand (geen botsing bij opslaan)', dR.getElementById('actieNotitie').value === 'Maat 40 #klus' && !wR.eval('bdGewijzigd()'), dR.getElementById('actieNotitie').value);
+      controle('Doen: potlood = het bewerkscherm (alle velden, onderbalk)', !sch.classList.contains('lezen') && sch.querySelector('.wdkop h2').textContent === 'Actie' && !sch.querySelector(':scope > .notitievol') && !dR.getElementById('balk-actie').hidden && !!dR.getElementById('actieNaam'));
+      dR.getElementById('actieDicht').click(); await slaap(20);
+      rij('#doenLijst .actierij', 'Dakgoot').querySelector('.tekstknop').click(); await slaap(30);
+      controle('Doen: actie zonder notitie opent meteen in het bewerkscherm', !sch.classList.contains('lezen') && !dR.getElementById('actieBewerk') && !!dR.getElementById('actieNaam'));
+      dR.getElementById('actieDicht').click(); await slaap(20); }
+    /* Tags van een ingrediëntnotitie: in de leesstand op een eigen regel. */
+    dR.getElementById('tab-boodschappen').click(); await slaap(30);
+    wR.eval("scherm.filter = 'L'; tekenBoodschappen(); handelen([{ actie: 'voor', soort: 'artikel', id: artikelen.find((a) => a.naam === 'Gehakt').id, recept: 'las01', naam: 'Lasagne', aantal: '2', ing: 'igh01' }]); artikelOpenen(artikelen.find((a) => a.naam === 'Gehakt').id, true)"); await slaap(30);
+    { const vol = dR.querySelector('#artikelScherm > .notitievol'); const rt = vol && [...vol.querySelectorAll('.rtekst')].find((x) => /Rundergehakt/.test(x.textContent));
+      controle('leesstand: notitie van het ingrediënt met de tags op een eigen regel', !!rt && rt.querySelector('.ntekst').textContent === 'Rundergehakt' && rt.querySelector('.ntags .tag').textContent === '#slager', rt && rt.innerHTML); }
     if (process.env.TABEL) console.log(JSON.stringify(uit, null, 1));
     wR.close();
   }

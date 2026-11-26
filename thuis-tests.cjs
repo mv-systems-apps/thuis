@@ -116,7 +116,9 @@ controle('service worker: eigen cachenaam en thuis.html in de verplichte lijst',
 function kern() {
   const m = /\/\* == kern == \*\/([\s\S]*?)\/\* == einde kern == \*\//.exec(scripts);
   if (!m) throw new Error('kernblok ontbreekt');
-  const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date, JSON, URL });
+  /* De klok staat vast op 26 nov 2026 (jaartal alleen als het niet dit jaar is), zodat de tests ook volgend jaar kloppen. */
+  class VasteDatum extends Date { constructor(...a) { super(...(a.length ? a : [2026, 10, 26, 12, 0])); } static now() { return new VasteDatum().getTime(); } }
+  const ctx = vm.createContext({ TextDecoder, Intl, Map, Set, Date: VasteDatum, JSON, URL });
   vm.runInContext(m[1] + '\n;this.__k = { FORMAAT, normNaam, zoekVorm, schoonTekst, schoonNotitie, leegModel, maakId, leesBestand, schrijfBestand, migreren, MIGRATIES, recordSleutel, HANDELINGEN, instelling, INSTELLINGEN, wekelijksMoment, recordUitJson, recordNaarJson, pasToe, pasAllesToe, vervangIds, wekelijksTerug, opruimen, synchroniseer, backupsWeg, laatsteMoment, tijdstipTekst, artikelLijst, winkelLijst, winkelIndeling, winkelAanbod, winkelTellingen, teKoopIn, afdelingIn, suggestie, suggestieTekst, gekochtTekst, zoekArtikelen, winkelZoek, veiligeLink, linkNaam, linkVanInvoer, linkTekst, periodeGrenzen, verschuif, volgendeKeer, actieGroep, inDoenFilter, naarSoort, periodeTekst, actieLijst, tagsVan, zoekPast, tagTelling, receptLijst, voorVan };', ctx);
   return ctx.__k;
 }
@@ -796,9 +798,9 @@ controle('doen-filters: binnen de termijn af (te laat altijd), Alles ook zonder 
   '2,4,7,7,9'));
 controle('periode: andere soort kiezen houdt de plek; teksten kort en lang', () => gelijk([K.naarSoort('2026-11-27', 'kwartaal', '2026-11-21'), K.naarSoort('', 'maand', '2026-11-21'), K.naarSoort('2026-K2', 'dag', '2026-11-21'),
   K.periodeTekst('2026-11-27', '2026-11-21'), K.periodeTekst('2027-01-05', '2026-11-21'), K.periodeTekst('2026-12', '2026-11-21'), K.periodeTekst('2026-K4', '2026-11-21'), K.periodeTekst('2026-11-27', '2026-11-21', true)].join('|'),
-  '2026-K4|2026-11|2026-04-01|vr 27 nov|di 5 jan 2027|december|K4|vr 27 november 2026'));
+  '2026-K4|2026-11|2026-04-01|vr 27 nov|di 5 jan 2027|december|K4|vr 27 november'));
 controle('periode: vandaag en morgen in de lijst, niet in het lange formaat', () => gelijk([K.periodeTekst('2026-11-21', '2026-11-21'), K.periodeTekst('2026-11-22', '2026-11-21'), K.periodeTekst('2026-11-21', '2026-11-21', true)].join('|'),
-  'vandaag|morgen|za 21 november 2026'));
+  'vandaag|morgen|za 21 november'));
 controle('acties: open = nooit afgerond of herhalend; ongeldige herhaling bij een periode telt niet; onveilige link niet', () => {
   const al = K.actieLijst(lees({ acties: { a1111: { naam: 'Vuilnis', datum: '2026-11-27', herhaal: 'week', klaar: '2026-11-20T08:00' }, a2222: { naam: 'Lamp', klaar: '2026-11-20T08:00' },
     a3333: { naam: 'Filter', datum: '2026-12', herhaal: 'week', link: 'javascript:x' } } }));
@@ -1101,6 +1103,11 @@ controle('suggestie: na drie aankopen en langer dan gewoonlijk geleden', () => {
   const s = K.suggestie(['2026-10-03', '2026-10-24', '2026-10-10', '2026-10-17'], '2026-11-21');
   return gelijk(s && K.suggestieTekst(s), '24 okt · elke week');
 });
+controle('jaartal alleen als het niet dit jaar is: lijst, leesstand/kiezer en "laatst gekocht"', () => gelijk([
+  K.periodeTekst('2026-03-05', '2026-11-26'), K.periodeTekst('2026-03-05', '2026-11-26', true), K.periodeTekst('2027-03-05', '2026-11-26', true),
+  K.periodeTekst('2026-12', '2026-11-26', true), K.periodeTekst('2027-01', '2026-11-26', true), K.periodeTekst('2027-K1', '2026-11-26', true),
+  K.gekochtTekst(['2025-12-20']), K.gekochtTekst(['2026-01-03'])].join('|'),
+  'do 5 mrt|do 5 maart|vr 5 maart 2027|december|januari 2027|K1 2027|Laatst gekocht 20 dec 2025|Laatst gekocht 3 jan'));
 controle('suggestie: niet bij te weinig aankopen of als het nog niet zo lang geleden is', () =>
   gelijk(K.suggestie(['2026-10-24', '2026-11-14'], '2026-11-21') === null && K.suggestie(['2026-10-24', '2026-10-31', '2026-11-07', '2026-11-18'], '2026-11-21') === null, true));
 controle('gekocht: één regel; "meestal" pas vanaf drie aankopen', () => gelijk([

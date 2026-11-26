@@ -159,6 +159,8 @@ om met de hand te bewerken.
 
 Datums: dag `2026-11-19`, maand `2026-12`, kwartaal `2027-K1`, jaar `2027`;
 tijdstippen `2026-11-21T10:12` in lokale tijd (Europe/Amsterdam).
+Op het scherm staat overal (lijsten, leesstand, kiezer, laatst gekocht, archief, Aankopen,
+backups, logboek) het jaartal alleen als het niet dit jaar is.
 
 Opruimen door de app: afgeronde acties na 3 maanden; historie na de ingestelde
 tijd (standaard 3 maanden); aankopen boven het ingestelde aantal; eenmalige artikelen in
@@ -274,9 +276,10 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   recepten, zodat de namen gelijk blijven) en "+ Nieuw" (alleen een ingrediënt, geen artikel).
 - Aantallen met recepten: één regel, opgeteld. Melk staat 3× (wekelijks) op de lijst, Lasagne
   heeft er 4 nodig en Pannenkoeken 2: "Melk 9×", en onder de notitie per recept een regel met het
-  pannetje ("4 Lasagne", "2 Pannenkoeken") en, als het ingrediënt een notitie heeft, daaronder een regel
+  pannetje ("Lasagne 4×", "Pannenkoeken 2×"; het aantal altijd erbij en niet vet: "4 Lasagne" las als
+  vier lasagnes) en, als het ingrediënt een notitie heeft, daaronder een regel
   met het blaadje ("Volle melk…"). Vast patroon, elke regel één regel (receptkleur). Het eigen deel (3) staat er niet apart; het artikelscherm en de teller tonen het.
-  Staat het er alleen voor één recept: alleen "Lasagne" (het aantal staat al bij de naam). Het aantal in een recept aanpassen telt mee op de lijst. Van de
+  Overal dezelfde regels: lijst, Boodschappen, leesstand, notitiepaneel en bewerkscherm. Het aantal in een recept aanpassen telt mee op de lijst. Van de
   lijst (rondje op Artikelen) of afgevinkt: de recepten gaan eraf, het eigen aantal blijft (melk
   weer 3×); terugtikken in de winkelmand of onder "Van de lijst gehaald" zet ze terug. Zie ook het lijstaantal hieronder.
 - Eenmalig heeft geen lijstaantal: het aantal ís daar "deze keer"; de teller wijzigt het overal zelf
@@ -296,7 +299,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   aantal telt weer mee).
 - Wekelijks en het eigen deel wijkt af van het vaste: achter de naam doorgestreept (oranje, "let op")
   wat het normaal zou zijn (vast + recepten), dan het aantal: "~~3×~~ 2×", met recept "~~7×~~ 6×" en de
-  receptregel "4 Lasagne", alleen voor het recept "~~7×~~ 4×" en "Lasagne". Zo werkt het ook zonder
+  receptregel "Lasagne 4×", alleen voor het recept "~~7×~~ 4×" en "Lasagne 4×". Zo werkt het ook zonder
   kleur; de receptregels leggen alleen de recepten uit. Eenmalig en regelmatig: niets doorgestreept. Gaat het laatste recept eraf terwijl
   het er alleen daarvoor op stond, dan gaat het van de lijst. Wekelijks terug telt het eigen
   aantal weer mee. De receptregels staan waar je ziet wat je deze keer koopt: Op de lijst en
@@ -336,7 +339,7 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   in Boodschappen, in het artikel en in het notitiepaneel): pannetje = recept, blaadje = notitie van het
   ingrediënt, elk op een eigen regel.
 - Notitie bij een ingrediënt (recept): Naam en Notitie in het bewerkpaneel van het ingrediënt (tik
-  op de naam; geen link), met tags. In het recept paars onder het ingrediënt. Staat een artikel
+  op de naam; geen link), met tags. In het recept bruinrood onder het ingrediënt. Staat een artikel
   voor dat recept op de lijst, dan staat de notitie op zijn receptregel (niet bij het artikel
   bewaard: van de lijst = weg). Zoeken op een tag uit zo'n notitie vindt het artikel zolang het
   daarvoor op de lijst staat; de tag staat ook in de tagkeuze.
@@ -345,6 +348,14 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
   van. Verandert er intussen iets (ophalen: elke 3 min, in Boodschappen elke 30 s, bij terugkomen
   meteen), dan ververst de leesstand; is er niets meer te lezen, dan sluit hij. Niets te lezen (geen notitie, link of recept), of vanaf een ander filter, zoeken of een
   winkel: meteen bewerken.
+- Actie (Doen): met een notitie of link eerst lezen, net als een artikel: naam in de kop, de notitie
+  (link, tags), dan grijs met een kalendertje wanneer ("do 3 december"; jaar alleen als het niet dit jaar is) en, als hij herhaalt, op
+  een eigen regel met het herhaal-icoon "elke maand"; afgerond: "afgerond …" in plaats van wanneer.
+  Potlood = bewerken (focus: met muis of toetsenbord in het naamveld, op touch op de kop, zodat er
+  geen toetsenbord opspringt); zonder notitie of link meteen bewerken. Ook bij een artikel.
+- Detailschermen (band onder de titel, leesstand, notitiepaneel): eerst de notitie, dan de link op een
+  eigen regel, dan de tags; ook een ingrediëntnotitie heeft daar zijn tags op een eigen regel. Letter
+  en regelafstand overal gelijk aan de lijsten (17 px, 1,3, geen extra ruimte tussen de regels).
 - Boodschappen: tik op de regel = afvinken (ook op de notitie). Lang indrukken (½ s; laptop:
   rechtermuisknop) of naar links vegen = het notitiepaneel (alleen als er een notitie is); naar
   rechts vegen = afvinken (zoals het rondje). Vegen telt pas bij een duidelijk horizontale beweging
@@ -477,7 +488,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Groepen met inklapbare kopbalken (open; dicht blijft dicht tot je hem weer opent, tijdens zoeken open), vroegste eerst; vandaag en morgen heten zo. Per regel het rondje en de
   naam; eronder grijs de periode ("vr 27 nov", "december", "K4", "2027"; het
   jaar alleen als het niet dit jaar is) en het herhaalteken met "week"; daaronder
-  paars de notitie en de link.
+  paars de notitie (geen link: wel het ↗-teken achter de naam). Tik met notitie of link: eerst
+  de leesstand (zie Notities en tags), anders meteen bewerken.
 - Afronden: een herhalende actie schuift door naar de volgende keer (melding met
   Ongedaan maken, 6 s); een gewone blijft 1,5 s grijs en gaat naar "Afgerond"
   (ingeklapt, met wanneer; het rondje heropent). Wie het deed wordt niet bewaard.

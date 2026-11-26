@@ -8,7 +8,7 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (26 november 2026, versie 1352906-004): in gebruik. Werkt: aanmelden
+Stand (26 november 2026, versie 1352906-005): in gebruik. Werkt: aanmelden
 bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
 (lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
 tabbladen met vegen rondom:
@@ -26,7 +26,7 @@ tabbladen met vegen rondom:
   afvinken (tik of naar rechts vegen), hele notitie (lang indrukken of naar links vegen), Elders,
   één winkelmand voor alle winkels (per telefoon), gedeelde Aankopen (per dag, met zoeken).
 - **Doen**: acties met periode en herhalen, filters Week/Maand/Kw./Jaar/Alles (standaard Alles),
-  inklapbare groepen, Gedaan (afgeronde acties).
+  inklapbare groepen, Gedaan (afgeronde acties); met notitie of link eerst een leesstand (potlood = bewerken).
 - **Instellingen**: synchroniseren, wekelijks terug op de lijst (standaard met de hand),
   weergave, Doen, Bewaren (aankopen, archief, afgeronde acties), backups, logboek.
 
