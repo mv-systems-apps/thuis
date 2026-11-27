@@ -265,6 +265,49 @@ async def main():
         check('vegen (rij: touch-action pan-y, geen wachten bij scrollen; geen tekstselectie op elke rij): kort = terug, tikken op een rij met notitie vinkt af, ver naar rechts = afgevinkt, naar links = notitie, schuin = niets; in Boodschappen tabwissel alleen op de tabbalk',
               kort == [mstart, False] and recht == mstart + 1 and tik and links and schuin == [True, True] and nogWinkel and naarDoen and panY == 'pan-y' and sel, [kort, recht, tik, links, schuin, nogWinkel, naarDoen, panY, sel])
 
+        # 13b. Vegen in de andere lijsten (Artikelen, Doen, Gedaan); lang indrukken doet niets
+        await pg.evaluate("() => { toonScherm('boodschappen'); scherm.filter = 'W'; tekenBoodschappen(); }"); await pg.wait_for_timeout(200)
+        await pg.evaluate("() => { handelen([{ actie: 'nieuw', soort: 'artikel', id: 'vga01', velden: { naam: 'Veegartikel', soort: 'wekelijks' } }, { actie: 'nieuw', soort: 'artikel', id: 'vga02', velden: { naam: 'Veegleeg', soort: 'wekelijks' } }]); tekenBoodschappen(); }"); await pg.wait_for_timeout(100)
+        await pg.evaluate("() => { const r = document.querySelector('#lijst .item[data-id=vga01]'); r.id = 'aveeg'; window.__aid = 'vga01'; }")
+        await veeg('#aveeg', 200)
+        art_r = await pg.evaluate("() => !!artikelOpId.get(window.__aid).op && document.getElementById('artikelScherm').hidden")
+        await pg.evaluate("() => { const a = artikelOpId.get(window.__aid); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'notitie', oud: a.notitie, nieuw: 'Veegnotitie' }]); tekenBoodschappen(); const r = document.querySelector('#lijst .item[data-id=\"' + a.id + '\"]'); r.id = 'aveeg'; }"); await pg.wait_for_timeout(100)
+        await veeg('#aveeg', -200)
+        art_l = await pg.evaluate("() => { const k = document.getElementById('keuze'); const v = !!k && /Veegnotitie/.test(k.textContent); if (k) k.querySelector('.kruis').click(); return v && document.getElementById('artikelScherm').hidden; }")
+        await pg.evaluate("() => { document.querySelector('#lijst .item[data-id=vga02]').id = 'aleeg'; }")
+        x, y = await pg.evaluate("() => { const r = document.getElementById('aleeg').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }")
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]})
+        for i in range(1, 9): await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x - 15 * i, 'y': y}]}); await pg.wait_for_timeout(16)
+        grijs = await pg.evaluate("() => { const o = document.querySelector('#aleeg > .vonder'); return !!o && o.classList.contains('leeg') && /#A7A2C4/.test(o.innerHTML); }")
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await pg.wait_for_timeout(300)
+        leeg = await pg.evaluate("() => !document.getElementById('keuze') && document.getElementById('artikelScherm').hidden && !document.querySelector('#aleeg.vegen')")
+        tab = await pg.evaluate("() => !document.getElementById('scherm-boodschappen').hidden")
+        # lang indrukken op een artikel met notitie: geen paneel meer (vegen is er); de tik erna opent het artikel zoals gewoon
+        x, y = await pg.evaluate("() => { const r = document.querySelector('#lijst .item[data-id=\"' + window.__aid + '\"] .naam').getBoundingClientRect(); return [r.x + 10, r.y + r.height / 2]; }")
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]}); await pg.wait_for_timeout(650)
+        await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await pg.wait_for_timeout(300)
+        lang = await pg.evaluate("() => { const v = !document.getElementById('keuze'); if (!document.getElementById('artikelScherm').hidden) artikelDicht(); return v; }")
+        # Doen: naar rechts = afronden (1,5 s grijs)
+        await pg.evaluate("() => { handelen([{ actie: 'nieuw', soort: 'actie', id: 'vg001', velden: { naam: 'Veegactie' } }]); toonScherm('doen'); doen.filter = 'alles'; tekenDoen(); document.querySelector('#doenLijst .actierij[data-id=vg001]').id = 'dveeg'; }"); await pg.wait_for_timeout(150)
+        await veeg('#dveeg', 200)
+        doen_r = await pg.evaluate("() => doen.vertrekt.has('vg001')")
+        await pg.wait_for_timeout(1800)
+        # Gedaan: naar links = weg, met Ongedaan maken; die zet hem terug
+        await pg.evaluate("() => { logOpenen('historie'); }"); await pg.wait_for_timeout(300)
+        await pg.evaluate("() => { const r = [...document.querySelectorAll('#historieScherm .aankooprij')].find((x) => /Veegactie/.test(x.textContent)); r.id = 'hveeg'; window.__hid = r.dataset.id; }")
+        await veeg('#hveeg', -200)
+        weg = await pg.evaluate("() => !model.historie.has(window.__hid) && [...document.querySelectorAll('.melding')].some((m) => /Veegactie/.test(m.textContent) && /Ongedaan maken/.test(m.textContent))")
+        await pg.evaluate("() => [...document.querySelectorAll('.melding button')].find((b) => /Ongedaan maken/.test(b.textContent)).click()"); await pg.wait_for_timeout(200)
+        terug = await pg.evaluate("() => model.historie.has(window.__hid)")
+        await pg.evaluate("() => logSluiten()")
+        # recept: naar links op een ingrediënt met een notitie = die notitie
+        await pg.evaluate("() => { handelen([{ actie: 'nieuw', soort: 'recept', id: 'rcv01', velden: { naam: 'Veegrecept' } }, { actie: 'ingredient', soort: 'recept', id: 'rcv01', ingredient: 'ivg01', naam: 'Bloem', aantal: '1', notitie: 'Zelfrijzend' }, { actie: 'ingredient', soort: 'recept', id: 'rcv01', ingredient: 'ivg02', naam: 'Suiker', aantal: '1' }]); toonScherm('boodschappen'); receptOpenen('rcv01'); }"); await pg.wait_for_timeout(200)
+        await pg.evaluate("() => { document.querySelector('#ingredienten .item[data-ing=ivg01]').id = 'iveeg'; }")
+        await veeg('#iveeg', -200)
+        ing = await pg.evaluate("() => { const k = document.getElementById('keuze'); const v = !!k && /Zelfrijzend/.test(k.textContent) && /Bloem/.test(k.querySelector('h3').textContent); if (k) k.querySelector('.kruis').click(); receptDicht(true); return v; }")
+        check('vegen in de andere lijsten: Artikelen rechts = op de lijst, links = notitie, zonder notitie grijs en niets (geen tabwissel), lang indrukken = geen paneel; Doen rechts = afronden; Gedaan links = weg met Ongedaan maken; recept links = notitie van het ingrediënt',
+              [art_r, art_l, grijs, leeg, tab, lang, doen_r, weg, terug, ing] == [True] * 10, [art_r, art_l, grijs, leeg, tab, lang, doen_r, weg, terug, ing])
+
         # 14. Kleur van notities
         kl = await pg.evaluate("""async () => {
           handelen([{ actie: 'nieuw', soort: 'recept', id: 'rc1', velden: { naam: 'Lasagne', notitie: 'Voor 4 #pasta' } },
@@ -307,6 +350,12 @@ async def main():
           document.getElementById('artikelBewerk').click(); await new Promise((r) => setTimeout(r, 50));
           const e = document.activeElement; const uit = e.tagName + '/' + e.textContent; artikelDicht(); return uit; }""")
         check('potlood op touch: focus op de kop "Artikel", niet in een invoerveld', fc == 'H2/Artikel', fc)
+
+        # 18. Randen van invoervelden: licht (bewuste keuze, zie ontwerp §7a); versiestempel grijs als de andere grijze tekst
+        rand = await pg.evaluate("""async () => { artikelOpenen('a00', false); await new Promise((r) => setTimeout(r, 100));
+          const c = getComputedStyle(document.getElementById('artikelNotitie')).borderTopColor; artikelDicht();
+          return [c, getComputedStyle(document.querySelector('.stempel')).color]; }""")
+        check('randen invoervelden licht #CFCBE6 (bewuste keuze), versiestempel var(--grijs)', rand == ['rgb(207, 203, 230)', 'rgb(90, 100, 114)'], rand)
 
         check('geen fouten op de pagina', not pagefout, pagefout)
         await b.close()

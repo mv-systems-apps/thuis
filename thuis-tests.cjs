@@ -982,10 +982,13 @@ controle('technische velden: geen botsing, de nieuwste datum wint stil (L2)', ()
   const d = JSON.parse(r.tekst);
   return gelijk(r.resultaten.map((x) => x.status).join() + '|' + d.artikelen.cad01.weg + '|' + d.acties.afv01.klaar, 'al,ok|2026-11-24|2026-11-23T10:00');
 });
-controle('historie: regels ouder dan de ingestelde tijd gaan weg (standaard 3 maanden)', () => {
-  const r = K.synchroniseer(B({ historie: { h0001: { naam: 'Afval', tijd: '2026-11-20T08:00' }, h0002: { naam: 'Bellen', tijd: '2026-07-01T10:00' } } }), [], NU);
-  const kort = K.synchroniseer(B({ instellingen: { historie: { bewaren: '1w' } }, historie: { h0001: { naam: 'Afval', tijd: '2026-11-20T08:00' }, h0003: { naam: 'Fiets', tijd: '2026-11-10T10:00' } } }), [], NU);
-  return gelijk(Object.keys(JSON.parse(r.tekst).historie).join() + '|' + Object.keys(JSON.parse(kort.tekst).historie).join(), 'h0001|h0001');
+controle('afgeronde acties gaan weg na de ingestelde tijd (standaard 3 maanden); Gedaan (historie) nooit vanzelf', () => {
+  const r = K.synchroniseer(B({ historie: { h0001: { naam: 'Afval', tijd: '2026-11-20T08:00' }, h0002: { naam: 'Bellen', tijd: '2025-07-01T10:00' } },
+    acties: { a1111: { naam: 'Pakket', klaar: '2026-11-10T10:00' }, a2222: { naam: 'Oud', klaar: '2026-07-01T10:00' } } }), [], NU);
+  const kort = K.synchroniseer(B({ instellingen: { historie: { bewaren: '1w' } }, historie: { h0001: { naam: 'Afval', tijd: '2026-11-20T08:00' }, h0003: { naam: 'Fiets', tijd: '2026-11-10T10:00' } },
+    acties: { a1111: { naam: 'Pakket', klaar: '2026-11-10T10:00' }, a3333: { naam: 'Nieuw', klaar: '2026-11-20T10:00' }, a4444: { naam: 'Afval', herhaal: 'week', datum: '2026-11-28', klaar: '2026-01-01T10:00' } } }), [], NU);
+  const d = JSON.parse(r.tekst), k = JSON.parse(kort.tekst);
+  return gelijk([Object.keys(d.historie).join(), Object.keys(d.acties).join(), Object.keys(k.historie).join(), Object.keys(k.acties).join()].join('|'), 'h0001,h0002|a1111|h0001,h0003|a4444,a3333');
 });
 controle('namen als constructor en toString: deel bewaard, handeling vervalt netjes (L11)', () => {
   const r = K.leesBestand('{"versie":"' + K.FORMAAT + '","constructor":{"x":1}}');

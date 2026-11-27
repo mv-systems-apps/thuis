@@ -8,7 +8,7 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (26 november 2026, versie 1352906-006): in gebruik. Werkt: aanmelden
+Stand (26 november 2026, versie 1352906-007): in gebruik. Werkt: aanmelden
 bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
 (lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
 tabbladen met vegen rondom:
@@ -24,12 +24,14 @@ tabbladen met vegen rondom:
   lijst; aantallen opgeteld met "3 + 4 Lasagne" eronder). Tags zijn tikbaar in de band onder de titel
   van een recept of winkel.
 - **Boodschappen**: winkelkeuze (Huidig, Nodig, Alternatief), per afdeling
-  afvinken (tik of naar rechts vegen), hele notitie (lang indrukken of naar links vegen), Elders,
-  één winkelmand voor alle winkels (per telefoon), gedeelde Aankopen (per dag, met zoeken).
+  afvinken (tik of naar rechts vegen), hele notitie (naar links vegen; vegen werkt in alle lijsten), Elders,
+  één winkelmand voor alle winkels (per telefoon), gedeelde Aankopen (per dag, met zoeken; tik of vegen:
+  Opnieuw op de lijst of verwijderen, met Ongedaan maken).
 - **Doen**: acties met periode en herhalen, filters Alles/Week/Maand/Kw./Jaar (standaard Alles),
-  inklapbare groepen, Gedaan (afgeronde acties); met notitie of link eerst een leesstand (potlood = bewerken).
+  inklapbare groepen, afronden met 1,5 s om terug te tikken, Afgerond (opgeruimd na de ingestelde tijd) en Gedaan
+  (alles wat afgerond is, ook herhalend; Opnieuw of verwijderen); met notitie of link eerst een leesstand (potlood = bewerken).
 - **Instellingen**: synchroniseren, wekelijks terug op de lijst (standaard met de hand),
-  weergave, Doen, Bewaren (aankopen, archief, afgeronde acties), backups, logboek.
+  weergave, Doen, Bewaren (aankopen, archief, afgeronde acties, logboek), backups, logboek.
 
 Tests:
 - `node thuis-tests.cjs` — kern (bestand, samenvoegen) en opbouw; `APP=<pad>` voor een andere versie

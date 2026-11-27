@@ -4,7 +4,7 @@ Vierde app naast golf-score, trends en events. Boodschappen en acties voor twee
 personen (Mark en zijn vrouw), elk op een eigen Android-telefoon (Edge of Chrome,
 als PWA op het beginscherm). Vervangt Microsoft To Do.
 
-Status (24-11-2026): in gebruik, versie 1352904-003. Dit document beschrijft
+Status (27-11-2026): in gebruik, versie 1352906-007. Dit document beschrijft
 het ontwerp zoals het gebouwd is; §7a de bewuste keuzes uit de reviews.
 
 Volgt `apps-basis/conventies.md`, behalve waar §8 een bewuste afwijking noemt.
@@ -46,7 +46,7 @@ scripts; de app gebruikt het systeemlettertype.
 ### 2.3 OneDrive
 - **Aanmelden:** een eigen, kleine PKCE-flow tegen Microsoft (geen MSAL), met
   een app-registratie voor persoonlijke accounts. Redirect-URI is de GitHub
-  Pages-URL. Scope: `Files.ReadWrite.All offline_access`.
+  Pages-URL. Scope: zie hieronder.
 - **Grens van 24 uur:** een webapp mag een aanmelding maar 24 uur vernieuwen.
   Daarom meldt de app bij het openen opnieuw aan als die grens nadert en er
   netwerk is (meestal zonder invoer: alleen even naar Microsoft en terug).
@@ -69,7 +69,7 @@ scripts; de app gebruikt het systeemlettertype.
   voornaam bij "nieuw").
 - **Schrijven:** `PUT …/content` met `If-Match: <eTag>`. Bij 412 opnieuw
   lezen, de wachtrij opnieuw toepassen en opnieuw schrijven.
-- **Verversen:** op het tabblad Winkel elke 30 s, elders elke 3 minuten, en bij
+- **Verversen:** op het tabblad Boodschappen elke 30 s, elders elke 3 minuten, en bij
   openen of terugkeren uit de achtergrond. Alleen als de app in beeld is.
 - **Netwerkgrenzen:** 10 s per verzoek, zoals in de andere apps.
 - **De service worker** laat verzoeken naar Microsoft (andere origin) ongemoeid.
@@ -110,9 +110,11 @@ om met de hand te bewerken.
   van de lijstregels (`recordSleutel`) volgen die tabel. Een nieuw veld: één regel
   in `SCHEMA`; daarna alleen nog tonen (artikelLijst/actieLijst, de regel) en
   bewerken (de editor). Alle records zijn plat (ook acties: geen apart bakje).
-  Na een update met een nieuw formaat gaat de oude kopie op de telefoon weg, maar
-  de wachtrij niet: die wordt alsnog verstuurd en elke handeling gecontroleerd;
-  wat niet meer past, vervalt met de gewone melding.
+  Na een update met een nieuw formaat blijft de oude kopie op de telefoon (hij wordt bij het
+  lezen omgezet), met het mandje en de keuzes: de lijst staat er meteen, ook offline. Alleen een
+  kopie die de app niet kan lezen gaat weg, en dan ook het mandje en de keuzes. De wachtrij blijft
+  altijd: die wordt alsnog verstuurd en elke handeling gecontroleerd; wat niet meer past, vervalt
+  met de gewone melding.
 - **Vaste id's.** Winkels, afdelingen, artikelen en acties hebben een id van
   vijf willekeurige tekens (kleine letters en cijfers zonder 0 o 1 l i; via
   `crypto.getRandomValues`, uniek binnen het bestand). De naam is een gewoon
@@ -209,8 +211,8 @@ van artikelen: opruimen raakt hun ingrediënten niet.
   de instelling, dan gaan de wekelijkse artikelen die sindsdien niet gekocht
   zijn op de lijst, en wordt `teruggezet` bijgewerkt. Zo zet een telefoon die
   offline was, net gekochte bananen niet opnieuw op de lijst.
-- Acties (Doen): een afgeronde actie opnieuw invoeren heropent hem —
-  bij het bouwen van Doen uitwerken.
+- Acties (Doen): een afgeronde actie opnieuw intypen heropent hem (zonder een datum die al voorbij is);
+  ook "Opnieuw" in Gedaan.
 
 ## 5. Schermen
 
@@ -219,7 +221,7 @@ kop heeft een kleurverloop van kobalt naar paars, met rechts het sync-wolkje.
 Tabbalk met alleen iconen, vijf tabbladen: **Winkels** (winkelpui),
 **Artikelen** (klembord), **Boodschappen** (winkelwagen), **Doen** (vinkvak) en
 **Instellingen** (tandwiel). Wisselen kan ook door te vegen, rondom (in Boodschappen alleen op de
-tabbalk: daar is vegen over een rij afvinken of de notitie); niet vanaf
+tabbalk; in de andere lijsten niet op een rij: daar is vegen voor de rij); niet vanaf
 de rand van het scherm (terug-gebaar van Android), niet tijdens typen en niet in
 een menu of keuzelijst. De terugknop: zie §7a (Bewerken, terugknop en meldingen).
 Kleur en vorm per soort, hoe vaker hoe meer hoeken: eenmalig orchidee #8E33A6 (rondje met 1),
@@ -356,12 +358,16 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Detailschermen (band onder de titel, leesstand, notitiepaneel): eerst de notitie, dan de link op een
   eigen regel, dan de tags; ook een ingrediëntnotitie heeft daar zijn tags op een eigen regel. Letter
   en regelafstand overal gelijk aan de lijsten (17 px, 1,3, geen extra ruimte tussen de regels).
-- Boodschappen: tik op de regel = afvinken (ook op de notitie). Lang indrukken (½ s; laptop:
-  rechtermuisknop) of naar links vegen = het notitiepaneel (alleen als er een notitie is); naar
-  rechts vegen = afvinken (zoals het rondje). Vegen telt pas bij een duidelijk horizontale beweging
-  en na een derde van de breedte; anders schuift de rij terug. Een rij heeft touch-action: pan-y:
-  verticaal scrollt de telefoon zelf, zonder op de app te wachten (alle luisteraars passief). De rij schuift mee met eronder
-  paars + vinkje of lichtpaars + notitie-icoon.
+- Boodschappen: tik op de regel = afvinken (ook op de notitie).
+- Vegen, in elke lijst met rijen (Boodschappen, Artikelen ook in een winkel, afdeling of recept, Doen,
+  Gedaan, Aankopen): naar rechts = het rondje (afvinken, op de lijst / eraf, afronden); naar links = het
+  notitiepaneel (bij een actie met wanneer en herhalen); zonder notitie is het icoon grijs en gebeurt er
+  niets. In Gedaan en Aankopen naar links = verwijderen (rood, prullenbak) met Ongedaan maken; naar
+  rechts daar niets. Geen lang indrukken; op de laptop (niet vegen) doet de rechtermuisknop wat naar
+  links vegen doet. Vegen telt pas bij een duidelijk horizontale beweging en na een derde van de
+  breedte; anders schuift de rij terug. Een rij heeft touch-action: pan-y: verticaal scrollt de telefoon
+  zelf, zonder op de app te wachten (alle luisteraars passief). De rij schuift mee met eronder paars +
+  vinkje, lichtpaars + notitie-icoon (grijs zonder notitie) of rood + prullenbak.
 - Tagkeuze: zwevend boven het vak waarin je typt (notitie: 6 px, het toetsenbord zit
   eronder; zoekvak: 9 px, zodat ook de focusrand zichtbaar blijft), even breed, met een
   paarse rand en een lichte schaduw; schuift mee als het scherm verschuift.
@@ -397,10 +403,12 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   De kop heet "Route", rechts het aantal afdelingen (alleen het getal) en "Volgorde" (pijltjes):
   dan een greep vooraan om te verslepen en een potlood (ook tik op de naam) voor Afdeling bewerken;
   aan = gevuld paars met een vinkje, nog een tik zet het terug. Een winkel zonder afdelingen toont
-  meteen de artikelen onder "Artikelen"; onderaan "Artikel of afdeling": typen filtert ze en toont boven
-  de balk artikelen uit andere winkels, '+ Artikel: "…"' en '+ Afdeling: "…"'; + of Enter = artikel
-  (zonder afdeling). Na de eerste afdeling de route. Een andere winkel openen: Volgorde uit. Onderaan
-  (met afdelingen) "Afdeling".
+  meteen de artikelen onder "Artikelen". Onderaan altijd "Artikel of afdeling": typen filtert (de route
+  en "Afdeling?", of de artikelen), zoekt in de route ook in de artikelen (onder de route het blok
+  "Artikelen" met per afdeling een kleine grijze subkop met het aantal; past geen afdeling, dan verdwijnt
+  de route; niets gevonden: "Niets gevonden") en toont boven de balk artikelen uit andere winkels, '+ Artikel: "…"'
+  en '+ Afdeling: "…"' (niet als die afdeling al bestaat); + of Enter = artikel, zonder afdeling (komt
+  onder "Afdeling?"). Een andere winkel openen: Volgorde uit.
   Hernoemen gaat mee in `ligt=`; weghalen laat het artikel te koop in die
   winkel zonder afdeling. Verwijderen meteen, 6 s Ongedaan maken.
 - Eén afdeling (tik op een rij): eigen scherm met terug (naar de route, op dezelfde plek; ook de
@@ -413,7 +421,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   een tik opent een paneel met de winkels en afdelingen waar het ligt en als laatste regel, paars,
   "+ <deze winkel>" met deze afdeling; Annuleren of Voeg toe, de andere winkels blijven), dan
   '+ Artikel: "…"' (niet als de precieze naam al in het lijstje staat; nergens "+ Nieuw": de regel zegt
-  wat er bijkomt, in een recept '+ Ingrediënt: "…"'). Nergens vastgelegd: geen
+  wat er bijkomt, in een recept '+ Ingrediënt: "…"', in een keuzepaneel '+ Winkel: "…"' of '+ Afdeling: "…"'
+  in plaats van "Niets gevonden"). Nergens vastgelegd: geen
   icoon, een tik legt het meteen hier. + of Enter: bestaat
   de naam al (ook in een andere winkel), dan krijgt dat artikel deze winkel en afdeling erbij;
   anders een nieuw artikel, soort regelmatig (niet op de lijst), meteen hier.
@@ -495,15 +504,16 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   jaar alleen als het niet dit jaar is) en het herhaalteken met "week"; daaronder
   paars de notitie (geen link: wel het ↗-teken achter de naam). Tik met notitie of link: eerst
   de leesstand (zie Notities en tags), anders meteen bewerken.
-- Afronden: een herhalende actie schuift door naar de volgende keer (melding met
-  Ongedaan maken, 6 s); een gewone blijft 1,5 s grijs en gaat naar "Afgerond"
-  (ingeklapt, met wanneer; het rondje heropent). Wie het deed wordt niet bewaard.
+- Afronden: het rondje vult zich en de actie blijft 1,5 s grijs staan; terugtikken binnen die tijd =
+  niets gebeurd (geen melding met Ongedaan maken, net als bij boodschappen). Pas daarna wordt het
+  verstuurd (naar de achtergrond: meteen): een herhalende actie schuift door naar de volgende keer, een
+  gewone gaat naar "Afgerond" (ingeklapt, met wanneer; het rondje heropent). Wie het deed wordt niet bewaard.
 - Geen eigenaar (later eventueel).
 
 ### 5.4 Bewerken
 - **Artikel** (tik op de naam in de lijst; geen potloodje): volledig scherm met
   kruisje rechtsboven. Naam (loopt door over meer regels), soort (drie knoppen),
-  te koop bij (per winkel de afdeling of een grijs "—"; tik = afdeling kiezen,
+  te koop bij (per winkel de afdeling of grijs "Afdeling?"; tik = afdeling kiezen, bovenaan "Afdeling?" om hem weg te halen,
   ✕ = weghalen; "Winkel toevoegen": zoeken of toevoegen zoals in de Winkels-tab,
   daarna meteen de afdeling), gekocht in één regel ("Laatst gekocht 15 nov ·
   meestal elke week"; "meestal" pas vanaf drie aankopen). Onderaan prullenbak
@@ -535,7 +545,8 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   de lijst en acties, met "Terugzetten" (geen extra bevestiging). Eerst bewaart
   de app de huidige stand als `thuis_voor_terugzetten.json`; daarna een melding
   met "Ongedaan maken". Alleen als er geen wijzigingen klaarstaan, met
-  If-Match. Een backup in een ouder formaat is niet terug te zetten.
+  If-Match. Een backup in een ouder formaat wordt bij het terugzetten omgezet; een onleesbare of
+  nieuwere niet ("Niet terug te zetten").
   Vóór het terugzetten ook de dagbackup van vandaag (als die er nog niet is).
   Zet je meteen nog een backup terug (binnen een uur en zonder wijzigingen
   ertussen), dan blijft `thuis_voor_terugzetten.json` de stand van vóór de
@@ -565,12 +576,15 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   "Opnieuw aanmelden").
 - Gegevens › Logboek: wat de app zelf oploste of deed (rechtgezette verwijzingen,
   samengevoegde namen, tegelijk gewijzigd, een mislukte synchronisatie — één
-  keer per nieuwe fout), per telefoon, de laatste 100, nieuwste eerst.
+  keer per nieuwe fout; een onleesbaar thuis.json met de precieze reden), per telefoon, nieuwste eerst.
+  Kop "Regels" met alleen het aantal; leeg: "Nog niets gelogd". Hoeveel regels blijven: Bewaren ›
+  "Logboek: aantal regels" 25 (standaard), 50 of 100, per telefoon; minder dan er nu zijn vraagt eerst
+  ("12 oudste regels uit het logboek verwijderen?").
 
 ### 5.7 Eerste start
 - Aanmelden bij Microsoft, dan de deellink van de gedeelde map plakken. Staat er
   nog geen `thuis.json`, dan maakt de app een leeg bestand. De voornaam komt uit
-  het Microsoft-account (geen aparte "Ik ben").
+  het Microsoft-account.
 - Misschien later: een nieuwe lijst met standaardafdelingen, de deellink vanuit de app maken.
 
 ### 5.8 Meldingen en ongedaan maken
@@ -606,7 +620,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   van het filter, een andere soort zet je in de editor.
 - "@" in het zoekvak toont de winkels boven de balk, met hoeveel artikelen er te koop zijn. Kiezen zet
   "@Winkel " in het vak (toetsenbord blijft open). De lijst toont dan alles wat daar te koop is, per
-  afdeling in de volgorde van de route, onderaan "Afdeling?". Verder typen zoekt in de
+  afdeling in de volgorde van de route, bovenaan "Afdeling?". Verder typen zoekt in de
   afdelingen ("@Plus zuiv"; "@Plus?" of "@Plus afd" voor zonder afdeling). Winkelnamen met spaties mogen.
 - Met "@" vooraan voegt de + niets toe (zoals bij "#"). De filterknoppen tellen en zoeken mee; tik je
   tijdens het zoeken Eenmalig/Wekelijks/Regelmatig aan, dan krijgt een nieuw artikel die soort.
@@ -632,7 +646,7 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
 - Herhalen rekent vanaf de vervaldatum; een datum die al voorbij is, wordt
   overgeslagen tot de eerstvolgende in de toekomst. Herhalen zonder datum kan
   niet.
-- Bij een herhalende actie onthoudt `klaar=` de laatste keer.
+- Bij een herhalende actie onthoudt `klaar` (in het bestand) de laatste keer.
 
 ## 7. Backup en herstel
 
@@ -643,9 +657,9 @@ tabbalk; het toetsenbord komt pas na een tik. Geen uitlegteksten in schermen.
   maanden. De app ruimt op na het maken van de dagbackup (hooguit één keer per
   dag) en verwijdert alleen bestanden met precies die naam. De termijnen komen
   later als instelling.
-- Terugzetten (Instellingen): lijst met backups, per backup de datum en
-  het aantal winkels, artikelen en acties; vóór het terugzetten eerst een backup
-  van de huidige stand.
+- Terugzetten (Instellingen): lijst met backups, per backup de datum en de grootte (kB); een tik
+  toont de inhoud (aantal winkels, artikelen, op de lijst, acties) met "Terugzetten"; vóór het
+  terugzetten eerst een backup van de huidige stand.
 - Een `thuis.json` die er was en nu weg is, wordt niet stil opnieuw gemaakt.
 - Opslaan op de telefoon mislukt (wachtrij, mandje, keuzes): melding "Opslaan
   niet gelukt" met "Opnieuw proberen", tot het weer lukt.
@@ -700,14 +714,23 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   winkel met een vraagteken (in Aankopen "Plus?"; veld `onzeker`).
   Aankopen bijhouden: 50, 100, 250 of 500 (standaard); lager dan het huidige aantal vraagt eerst; 0 (uit
   een oudere versie) = geen aankopen.
-- Gedaan (Doen; in de code en het bestand `historie`): elke afgeronde actie (ook herhalend), naam en moment. Ongedaan maken of meteen terugtikken
-  haalt de regel weg; later heropenen niet. "Afgeronde acties: verwijderen na" (blok Bewaren) 1 week t/m 1 jaar (standaard 3 maanden); korter vraagt eerst ("12 afgeronde acties verwijderen?").
-- Aankopen (Boodschappen) en Gedaan (Doen): een tik op een regel vraagt "Verwijderen?", zonder Ongedaan maken.
+- Gedaan (Doen; in de code en het bestand `historie`): elke afgeronde actie (ook herhalend), naam en moment. Meteen terugtikken (binnen 1,5 s)
+  maakt geen regel; later heropenen haalt hem niet weg. Gedaan wordt nooit vanzelf leeggemaakt (zoals de
+  winkelmand: dat doe je zelf). "Afgeronde acties: verwijderen na" (blok Bewaren) 1 week t/m 1 jaar (standaard
+  3 maanden) geldt voor de groep Afgerond in Doen (niet herhalende acties); korter vraagt eerst ("12 afgeronde
+  acties verwijderen?"). In het bestand heet die instelling nog `historie`.
+- Aankopen (Boodschappen) en Gedaan (Doen): een tik op een regel opent een paneel met de datum, links de
+  prullenbak en Opnieuw (annuleren = kruisje); verwijderen (ook naar links vegen) geeft Ongedaan maken.
+  Opnieuw (ook naar rechts vegen, paars met het herhaal-icoon) = "nog een keer"; de regel blijft staan: een
+  aankoop zet het artikel met die naam weer op de lijst (het vaste aantal), een afgeronde actie gaat weer
+  open; bestaat het niet meer, dan een nieuw eenmalig artikel of een nieuwe actie zonder datum; staat het al
+  op de lijst of open, dan alleen een melding. Met Ongedaan maken.
   Zonder tijdstip (de dag zegt genoeg). Bij een aankoop grijs de winkel eronder (een
   aankoop onthoudt de winkel, optioneel veld `winkel`; oudere aankopen hebben hem niet),
   uit te zetten bij Instellingen → Weergave.
   De regels Aankopen onder Boodschappen en Gedaan onder Doen tonen ook "0". Het woord "Historie" komt in de app niet meer voor.
-- Archief (eenmalig, niet op de lijst): standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
+- Archief (eenmalig, niet op de lijst): in het archief gedempt met "gekocht 12 okt" of "van de lijst 12 okt"; bij
+  zoeken niet gedempt, wel met dat regeltje. Standaard 1 jaar; korter vraagt eerst met het aantal. Wordt
   een artikel eenmalig, dan loopt de bewaartijd vanaf die dag. Terugzetten uit het archief stuurt het
   hele artikel mee.
 - Suggestie: na minstens drie aankopen, als de gebruikelijke tussentijd voorbij is; stopt na vier keer
@@ -715,7 +738,10 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
 
 ### Bewerken, terugknop en meldingen
 - Eén stapel lagen (paneel, subscherm, ander tabblad dan Artikelen), elk een stap in de geschiedenis.
-  Terug sluit altijd de bovenste; op Artikelen zonder lagen sluit terug de app.
+  Terug sluit altijd de bovenste; op Artikelen zonder lagen sluit terug de app. Escape (laptop) doet
+  hetzelfde bij een paneel of een deelscherm (editor, Aankopen, Gedaan, Backups, Logboek).
+- Invoervelden: lichte rand #CFCBE6, met focus fel paars. Bewust: mooier dan een donkerder rand, ook al haalt
+  hij de 3:1 voor contrast niet (getest met #8A83BE, 27-11-2026).
 - Met wijzigingen: terug, kruisje of tik ernaast vraagt "Wijzigingen opslaan?"; terug of het kruisje van
   die vraag = verder bewerken. Editors versturen alleen wat je zelf veranderde t.o.v. de stand bij het
   openen. Intussen verwijderd: melding met "Terugzetten met mijn wijzigingen".
@@ -830,7 +856,7 @@ Een tweede object met dezelfde functies naast `ONEDRIVE`, plus een keuze bij het
 - Bekend risico: de vier apps delen het domein mv-systems-apps.github.io en dus
   de opslag in de browser. Later een eigen subdomein per app. Tot dan: CSP in
   alle apps en geen code van anderen; tweestapsverificatie op GitHub.
-- Links bij acties alleen als ze met `https://` beginnen.
+- Links (artikelen, winkels, recepten, acties) alleen met `https://`, bij opslaan én bij tonen.
 
 ## 8. Bewuste afwijkingen van conventies.md (op te nemen in §4)
 
@@ -847,7 +873,7 @@ Een tweede object met dezelfde functies naast `ONEDRIVE`, plus een keuze bij het
   vinkje om meteen te sluiten); alle andere meldingen blijven tot je ze wegtikt.
 
 Ook: aanvullen in `maak_zips.py`, `README.md` en `nieuwe-chat.txt`, en
-controleren of `check_app.py` de app herkent. Token, wachtrij, "Ik ben", de
+controleren of `check_app.py` de app herkent. Token, wachtrij, de
 laatste winkel en de koppeling met de map horen in de reset.
 
 ## 9. Performance
