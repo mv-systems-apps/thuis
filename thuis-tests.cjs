@@ -440,13 +440,13 @@ controle('recepten: niet op de lijst → erop alleen voor het recept; regeltje e
   const a = k.voorVan(m.artikelen.get('geh01'));
   return gelijk(m.artikelen.get('geh01').op + '|' + m.artikelen.get('geh01').opvoor + '|' + a.opAantal + '|' + vt(a), '2026-11-21T10:00|1|2|Lasagne');
 });
-controle('recepten: al op de lijst (3×) plus twee recepten → 9×, "3 + 4 Lasagne + 2 Pannenkoeken"', () => {
+controle('recepten: al op de lijst (3×) plus twee recepten → "?" (eigen 0), totaal 6, niet alleen voor recepten', () => {
   const k = kern(); const m = lees(RB);
   k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'pan01', naam: 'Pannenkoeken', aantal: '2' }));
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
   const a = k.voorVan(m.artikelen.get('mel01'));
-  return gelijk(a.opAantal + '|' + vt(a) + '|' + m.artikelen.get('mel01').opvoor, '9|3 + 4\u00A0Lasagne + 2\u00A0Pannenkoeken|');
+  return gelijk(a.opAantal + '|' + vt(a) + '|' + m.artikelen.get('mel01').opvoor, '6|4\u00A0Lasagne + 2\u00A0Pannenkoeken|' + '');
 });
 controle('recepten: hernoemd → het regeltje noemt de nieuwe naam (en na verwijderen nog steeds)', () => {
   const k = kern(); const m = lees(RB);
@@ -457,14 +457,14 @@ controle('recepten: hernoemd → het regeltje noemt de nieuwe naam (en na verwij
   const b = vt(k.voorVan(m.artikelen.get('mel01'), m));
   return gelijk(a + '|' + b, 'Lasagne veggie|Lasagne veggie');
 });
-controle('recepten: eenmalig alleen voor een recept → geen normaal; wekelijks wel (vast + recepten = 7)', () => {
+controle('recepten: alleen voor een recept → eigen deel 0 ("?") voor alle soorten; geen normaal', () => {
   const k = kern(); const m = lees(RB);
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', naam: 'Lasagne', aantal: '2' }));
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
   const g = k.voorVan(m.artikelen.get('geh01'), m), me = k.voorVan(m.artikelen.get('mel01'), m);
-  return gelijk([g.opAantal, vt(g), g.normaal, me.opAantal, vt(me), me.normaal].join('|'), '2|Lasagne|0|4|Lasagne|7');
+  return gelijk([g.opAantal, vt(g), g.normaal, me.opAantal, vt(me), me.normaal].join('|'), '2|Lasagne|0|4|Lasagne|0');
 });
-controle('lijstaantal: alleen deze keer; normaal 3 (doorgestreept), met recept normaal 7 en "2 + 4 Lasagne"; van de lijst = weg; vast aantal blijft', () => {
+controle('lijstaantal: alleen deze keer; normaal 3 (doorgestreept); een recept erbij → "?" (lijstaantal weg, niets doorgestreept); van de lijst = weg; vast aantal blijft', () => {
   const k = kern(); const m = lees(RB);
   k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
   k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '2' }));
@@ -473,7 +473,65 @@ controle('lijstaantal: alleen deze keer; normaal 3 (doorgestreept), met recept n
   const b = k.voorVan(m.artikelen.get('mel01'), m);
   k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-21T09:00', nieuw: '' }));
   const r = m.artikelen.get('mel01');
-  return gelijk([a.opAantal, a.normaal, vt(a), b.opAantal, b.normaal, vt(b), r.opaantal, r.aantal].join('|'), '2|3||6|7|2 + 4\u00A0Lasagne||3');
+  return gelijk([a.opAantal, a.normaal, vt(a), b.opAantal, b.normaal, vt(b), r.opaantal, r.aantal].join('|'), '2|3||4|0|4\u00A0Lasagne||3');
+});
+controle('eenmalig zelf op de lijst: recept erbij → "?", recept eraf → blijft staan met "?"; zelf een aantal → weg "?"; alleen via recept → eraf = van de lijst', () => {
+  const k = kern(); const m = lees(RB);
+  const g = () => m.artikelen.get('geh01');
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'geh01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  const a0 = k.voorVan(g(), m).eigen;
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', naam: 'Lasagne', aantal: '2' }));
+  const a1 = k.voorVan(g(), m).eigen + '/' + g().opvraag + '/' + (g().opvoor || '-');
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', naam: 'Lasagne', aantal: '3' }));
+  const a1b = g().opvraag;
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'geh01', veld: 'opvraag', oud: '1', nieuw: '' }));
+  const a2 = k.voorVan(g(), m).eigen;
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'geh01', recept: 'las01', aantal: '' }));
+  const a3 = !!g().op + '/' + k.voorVan(g(), m).eigen + '/' + g().opvraag;
+  const bewaard = uit(K, m).artikelen.geh01.opvraag;
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'geh01', veld: 'op', oud: g().op, nieuw: '' }));
+  const a4 = g().opvraag + '|';
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'bla01', recept: 'las01', naam: 'Lasagne', aantal: '1' }));
+  const b1 = !!m.artikelen.get('bla01').op + '/' + m.artikelen.get('bla01').opvoor + '/' + (m.artikelen.get('bla01').opvraag || '-');
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'bla01', recept: 'las01', aantal: '' }));
+  const b2 = !!m.artikelen.get('bla01').op;
+  return gelijk([a0, a1, a1b, a2, a3, bewaard, a4, b1, b2].join(' '), '1 0/1/- 1 1 true/0/1 1 | true/1/- false');
+});
+controle('wekelijks zelf op de lijst met lijstaantal: recept erbij → "?" (lijstaantal weg), opvoor wist "?"; recept eraf → blijft met "?"', () => {
+  const k = kern(); const m = lees(RB); const r = () => m.artikelen.get('mel01');
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '2' }));
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
+  const a = [r().opvraag, r().opaantal || '-', k.voorVan(r(), m).eigen, k.voorVan(r(), m).normaal].join('/');
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '5' }));
+  const b = r().opaantal || '-';
+  k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', aantal: '' }));
+  const c = !!r().op + '/' + r().opvraag;
+  return gelijk([a, b, c].join(' '), '1/-/0/0 - true/1');
+});
+controle('lijstaantal: van de lijst wist het (zonder recepten)', () => {
+  const k = kern(); const m = lees(RB);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'opaantal', oud: '', nieuw: '2' }));
+  const voor = m.artikelen.get('mel01').opaantal;
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id: 'mel01', veld: 'op', oud: '2026-11-21T09:00', nieuw: '' }));
+  return gelijk(voor + '|' + (m.artikelen.get('mel01').opaantal || '-'), '2|-');
+});
+controle('opvraag rechtzetten: niet op de lijst kan niet; wel bij alle soorten', () => {
+  const m = lees({ artikelen: { a1111: { naam: 'A', soort: 'eenmalig', opvraag: '1' }, b1111: { naam: 'B', soort: 'regelmatig', op: '2026-11-21T09:00', opvraag: '1', opaantal: '4' }, c1111: { naam: 'C', soort: 'eenmalig', op: '2026-11-21T09:00', opvraag: '1' },
+    d1111: { naam: 'D', soort: 'regelmatig', op: '2026-11-21T09:00', opvraag: '1', opvoor: '1', voor: { b2222: { naam: 'X', aantal: '2' } } } } });
+  return gelijk(['a1111', 'b1111', 'c1111', 'd1111'].map((id) => m.artikelen.get(id).opvraag || '-').join(',') + '|' + (m.artikelen.get('b1111').opaantal || '-'), '-,1,1,-|-');
+});
+controle('lijstaantal regelmatig: ook normaal (het vaste aantal); gelijk aan het vaste = geen normaal', () => {
+  const k = kern(); const m = lees(RB);
+  const id = 'geh01';
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id, veld: 'soort', oud: 'eenmalig', nieuw: 'regelmatig' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id, veld: 'aantal', oud: '', nieuw: '2' }));
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id, veld: 'op', oud: '', nieuw: '2026-11-21T09:00' }));
+  const a = k.voorVan(m.artikelen.get(id), m);
+  k.pasToe(m, H({ actie: 'zet', soort: 'artikel', id, veld: 'opaantal', oud: '', nieuw: '4' }));
+  const b = k.voorVan(m.artikelen.get(id), m);
+  return gelijk([a.normaal, b.eigen, b.normaal].join('|'), '0|4|2');
 });
 controle('lijstaantal: niet op de lijst kan niet; eenmalig heeft geen lijstaantal; schrijven en lezen bewaart het; oud formaat wordt gelezen', () => {
   const k = kern(); const m = lees(RB);
@@ -546,7 +604,7 @@ controle('recepten: alleen voor een recept op de lijst, zelf erbij in dezelfde m
   const a = k.voorVan(m.artikelen.get('mel01'), m);
   return gelijk(a.opAantal + '|' + vt(a) + '|' + a.opvoor, '7|3 + 4\u00A0Lasagne|false');
 });
-controle('recepten: wekelijks alleen voor twee recepten → 6×, "4 Lasagne + 2 Pannenkoeken", normaal 9 (doorgestreept); één eraf → alleen dat recept', () => {
+controle('recepten: wekelijks alleen voor twee recepten → eigen deel "?" (0), totaal 6; één eraf → alleen dat recept', () => {
   const k = kern(); const m = lees(RB);
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'las01', naam: 'Lasagne', aantal: '4' }));
   k.pasToe(m, H({ actie: 'voor', soort: 'artikel', id: 'mel01', recept: 'pan01', naam: 'Pannenkoeken', aantal: '2' }));

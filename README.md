@@ -8,7 +8,7 @@ De gedeelde afspraken voor alle apps staan in de repo
 `conventies.md` en `README.md` daar. Het ontwerp van deze app staat in
 `ontwerp.md`.
 
-Stand (26 november 2026, versie 1352906-007): in gebruik. Werkt: aanmelden
+Stand (26 november 2026, versie 1352906-008): in gebruik. Werkt: aanmelden
 bij Microsoft, de gedeelde map koppelen, synchroniseren via `thuis.json`
 (lokale kopie, wachtrij, If-Match, dagbackup, backups terugzetten), vijf
 tabbladen met vegen rondom:
@@ -19,9 +19,8 @@ tabbladen met vegen rondom:
   krijgt artikelen en de eerste afdeling via "Artikel of afdeling".
 - **Artikelen**: toevoegen, zoeken (ook op #tags en @winkel), filters (ook allemaal
   uit), op en van de lijst, aantal, notitie (ook meer regels; in lijsten één regel per notitie) en link (of zoekwoorden), leesstand vanaf Op de lijst, bewerkscherm,
-  archief voor eenmalige artikelen, suggesties onder Op de lijst, lijstaantal (deze keer, met
-  doorgestreept het normale aantal), recepten als kladblok met eigen ingrediënten (met notitie, getoond op de receptregel onder het artikel) (per ingrediënt op de
-  lijst; aantallen opgeteld met "3 + 4 Lasagne" eronder). Tags zijn tikbaar in de band onder de titel
+  archief voor eenmalige artikelen, suggesties onder Op de lijst, lijstaantal (deze keer; de teller toont "normaal N×"), recepten als kladblok met eigen ingrediënten (met notitie, getoond op de receptregel onder het artikel) (per ingrediënt op de
+  lijst; aantallen niet opgeteld, per recept een regel "Lasagne 4×" eronder). Tags zijn tikbaar in de band onder de titel
   van een recept of winkel.
 - **Boodschappen**: winkelkeuze (Huidig, Nodig, Alternatief), per afdeling
   afvinken (tik of naar rechts vegen), hele notitie (naar links vegen; vegen werkt in alle lijsten), Elders,

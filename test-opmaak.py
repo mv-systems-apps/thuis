@@ -150,8 +150,8 @@ async def main():
         await pg.evaluate("() => afdelingOpenen('zui')"); await pg.wait_for_timeout(100)
         m2 += await pg.evaluate("() => [...document.querySelectorAll('#winkelDetail .item .icoon')].slice(0, 1).map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])")
         await pg.evaluate("() => { afdelingDicht(true); winkelDicht(); toonScherm('instellingen'); }"); await pg.wait_for_timeout(100)
-        m2 += await pg.evaluate("() => ['swWinkelTal', 'swArtikelWinkels', 'swAankoopWinkel'].map((id) => { const r = document.getElementById(id).closest('.rij').getBoundingClientRect(); return [id, Math.round(r.width), Math.round(r.height)]; })")
-        check('tikvlakken elders minstens 44 px (Volgorde, ster, potlood, soorticoon, schakelaarregels)', len(m2) >= 7 and all(x[1] >= 44 and x[2] >= 44 for x in m2), m2)
+        m2 += await pg.evaluate("() => ['swWinkelTal', 'swAankoopWinkel'].map((id) => { const r = document.getElementById(id).closest('.rij').getBoundingClientRect(); return [id, Math.round(r.width), Math.round(r.height)]; })")
+        check('tikvlakken elders minstens 44 px (Volgorde, ster, potlood, soorticoon, schakelaarregels)', len(m2) >= 6 and all(x[1] >= 44 and x[2] >= 44 for x in m2), m2)
         aan = await pg.evaluate("() => { const v = weergave.winkelTal; document.getElementById('lblWinkelTal').click(); const n = weergave.winkelTal; document.getElementById('lblWinkelTal').click(); return v !== n && weergave.winkelTal === v; }")
         check('tik op de tekst van een schakelaar zet hem om', aan, aan)
         await pg.evaluate("() => toonScherm('winkel')")
@@ -287,6 +287,10 @@ async def main():
         await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]}); await pg.wait_for_timeout(650)
         await cdp2.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await pg.wait_for_timeout(300)
         lang = await pg.evaluate("() => { const v = !document.getElementById('keuze'); if (!document.getElementById('artikelScherm').hidden) artikelDicht(); return v; }")
+        # Op de lijst: naar links = de teller ("− +"), niet de notitie
+        await pg.evaluate("() => { scherm.filter = 'L'; scherm.teller = ''; tekenBoodschappen(); document.querySelector('#lijst .item[data-id=\"' + window.__aid + '\"]').id = 'lveeg'; document.getElementById('lveeg').scrollIntoView({ block: 'center' }); }"); await pg.wait_for_timeout(150)
+        await veeg('#lveeg', -200)
+        lijst_l = await pg.evaluate("() => { const v = scherm.teller === window.__aid && !!document.querySelector('#lijst .teller') && !document.getElementById('keuze') && document.getElementById('artikelScherm').hidden; scherm.teller = ''; scherm.filter = 'W'; tekenBoodschappen(); return v; }")
         # Doen: naar rechts = afronden (1,5 s grijs)
         await pg.evaluate("() => { handelen([{ actie: 'nieuw', soort: 'actie', id: 'vg001', velden: { naam: 'Veegactie' } }]); toonScherm('doen'); doen.filter = 'alles'; tekenDoen(); document.querySelector('#doenLijst .actierij[data-id=vg001]').id = 'dveeg'; }"); await pg.wait_for_timeout(150)
         await veeg('#dveeg', 200)
@@ -305,8 +309,8 @@ async def main():
         await pg.evaluate("() => { document.querySelector('#ingredienten .item[data-ing=ivg01]').id = 'iveeg'; }")
         await veeg('#iveeg', -200)
         ing = await pg.evaluate("() => { const k = document.getElementById('keuze'); const v = !!k && /Zelfrijzend/.test(k.textContent) && /Bloem/.test(k.querySelector('h3').textContent); if (k) k.querySelector('.kruis').click(); receptDicht(true); return v; }")
-        check('vegen in de andere lijsten: Artikelen rechts = op de lijst, links = notitie, zonder notitie grijs en niets (geen tabwissel), lang indrukken = geen paneel; Doen rechts = afronden; Gedaan links = weg met Ongedaan maken; recept links = notitie van het ingrediënt',
-              [art_r, art_l, grijs, leeg, tab, lang, doen_r, weg, terug, ing] == [True] * 10, [art_r, art_l, grijs, leeg, tab, lang, doen_r, weg, terug, ing])
+        check('vegen in de andere lijsten: Artikelen rechts = op de lijst, links = notitie, zonder notitie grijs en niets (geen tabwissel), lang indrukken = geen paneel; Doen rechts = afronden; Gedaan links = weg met Ongedaan maken; recept links = notitie van het ingrediënt; Op de lijst links = teller',
+              [art_r, art_l, grijs, leeg, tab, lang, doen_r, weg, terug, ing, lijst_l] == [True] * 11, [art_r, art_l, grijs, leeg, tab, lang, doen_r, weg, terug, ing, lijst_l])
 
         # 14. Kleur van notities
         kl = await pg.evaluate("""async () => {
