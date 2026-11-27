@@ -754,8 +754,10 @@ const BEGIN = [
     filterE.click(); await slaap(20);
     const namen7 = () => [...d7.querySelectorAll('#lijst .item')].map(naamVanRij).join();
     const arch = () => d7.getElementById('archief');
-    controle('archief: onder Eenmalig alleen Pesto; archief ingeklapt met "2", kopbalken',
-      namen7() === 'Pesto' && !!arch() && arch().querySelector('.kopbalk .tal').textContent === '2' && !arch().querySelector('.lijst') && !!d7.querySelector('#lijstBlok > .kopbalk'), namen7());
+    controle('archief: onder Eenmalig alleen Pesto; archief de eerste keer open met "2", kopbalken',
+      namen7() === 'Pesto' && !!arch() && arch().querySelector('.kopbalk .tal').textContent === '2' && !!arch().querySelector('.lijst') && !!d7.querySelector('#lijstBlok > .kopbalk'), namen7());
+    arch().querySelector('.kopbalk').click(); await slaap(20);
+    controle('archief dichtklappen: onthouden per telefoon', !arch().querySelector('.lijst') && w7.eval('KEUZES.archiefOpen.waarde()') === false);
     arch().querySelector('.kopbalk').click(); await slaap(20);
     const archNamen = [...arch().querySelectorAll('.item')].map((r) => naamVanRij(r) + ':' + r.querySelector('.hint').textContent).join();
     controle('archief uitgeklapt: nieuwste eerst, gekocht of van de lijst', archNamen === 'Hummus:gekocht 19 nov,Zonnebrand:van de lijst 10 nov', archNamen);
@@ -767,11 +769,18 @@ const BEGIN = [
     controle('archief: + zet Hummus terug op de lijst, onder Eenmalig', namen7() === 'Hummus,Pesto' && [...arch().querySelectorAll('.item')].length === 1, namen7());
     [...d7.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Pesto').querySelector('.rondje').click();
     await rust(1800);
-    controle('archief: van de lijst gehaald gaat (na even grijs) naar het archief', namen7() === 'Hummus' && /Pesto/.test(arch().textContent), namen7());
+    { const wg = d7.getElementById('weggehaald');
+      controle('Eenmalig: weghalen → bovenaan onder "Van de lijst gehaald" (niet nog eens in het archief)', namen7() === 'Hummus' && !!wg && /Pesto/.test(wg.textContent) && !/Pesto/.test(arch().textContent), namen7()); }
     await slaap(1500);
+    { /* Twee op dezelfde dag van de lijst: het laatste bovenaan in het archief (op tijdstip, niet op naam). */
+      w7.eval("weggehaaldLegen(); handelen([{ actie: 'nieuw', soort: 'artikel', id: 'aaa01', velden: { naam: 'Aardbeien', soort: 'eenmalig', op: '2026-11-20T08:00' } }, { actie: 'nieuw', soort: 'artikel', id: 'zzz01', velden: { naam: 'Zout', soort: 'eenmalig', op: '2026-11-20T08:00' } }]);" +
+        "handelen([{ t: datumTekst(new Date()) + 'T00:01', actie: 'zet', soort: 'artikel', id: 'aaa01', veld: 'op', oud: '2026-11-20T08:00', nieuw: '' }, { t: datumTekst(new Date()) + 'T00:01', actie: 'zet', soort: 'artikel', id: 'aaa01', veld: 'weg', oud: '', nieuw: datumTekst(new Date()) }]);" +
+        "handelen([{ t: datumTekst(new Date()) + 'T00:02', actie: 'zet', soort: 'artikel', id: 'zzz01', veld: 'op', oud: '2026-11-20T08:00', nieuw: '' }, { t: datumTekst(new Date()) + 'T00:02', actie: 'zet', soort: 'artikel', id: 'zzz01', veld: 'weg', oud: '', nieuw: datumTekst(new Date()) }]);"); await slaap(30);
+      const alle = [...arch().querySelectorAll('.item')].map(naamVanRij); const volg = alle.filter((n) => n === 'Zout' || n === 'Aardbeien').join();
+      controle('archief: op dezelfde dag het laatst weggehaalde bovenaan (Zout na Aardbeien)', volg === 'Zout,Aardbeien', volg); }
     const t7 = R(od7.bestanden['thuis.json'].tekst);
     const vandaag = new Date(); const dstr7 = vandaag.getFullYear() + '-' + String(vandaag.getMonth() + 1).padStart(2, '0') + '-' + String(vandaag.getDate()).padStart(2, '0');
-    controle('archief: "weg" met de datum van vandaag in het bestand', new RegExp('^artikel;Pesto;soort=eenmalig;weg=' + dstr7 + '$', 'm').test(t7), t7);
+    controle('archief: "weg" met de datum van vandaag in het bestand', new RegExp('^artikel;Pesto;soort=eenmalig;weg=' + dstr7 + ';wegtijd=' + dstr7 + 'T\\d\\d:\\d\\d$', 'm').test(t7), t7);
     d7.getElementById('tab-instellingen').click(); await slaap(50);
     const ak = d7.getElementById('archiefBewaren');
     controle('instelling archief: keuzeveld met "1 jaar" (standaard)', ak.classList.contains('mveld') && ak.textContent === '1 jaar', ak.textContent);
@@ -1762,7 +1771,7 @@ const BEGIN = [
     /* archief: terugzetten stuurt het hele artikel mee */
     const lid = wK.eval("artikelen.find((a) => a.naam === 'Lampje').id");
     [...dK.querySelectorAll('#filters .filter')][1].click(); await slaap(30);
-    dK.querySelector('#archief .kopbalk').click(); await slaap(30);
+    if (!dK.querySelector('#archief .lijst')) { dK.querySelector('#archief .kopbalk').click(); await slaap(30); }
     dK.querySelector('#archief .item[data-id="' + lid + '"] .rondje').click(); await slaap(30);
     const laatste = wK.eval("JSON.stringify(wachtrij.filter((h) => h.id === '" + lid + "').map((h) => h.actie))");
     controle('archief: terugzetten stuurt het hele artikel mee (komt terug als het intussen is opgeruimd)', laatste === '["terug","zet","zet"]', laatste);
@@ -2156,7 +2165,11 @@ const BEGIN = [
     /* daarna op Artikelen: de editor opent daar weer gewoon */
     dW.getElementById('tab-boodschappen').click(); await slaap(30);
     const iv = dW.getElementById('invoerTekst'); iv.value = 'Appels'; iv.dispatchEvent(new wW.Event('input')); await slaap(20);
-    const rij = [...dW.querySelectorAll('#lijst .item')][0];
+    { const voor = wW.eval("!!artikelen.find((a) => a.naam === 'Appels').op");
+      [...dW.querySelectorAll('#lijst .item')][0].querySelector('.tekst').click(); await slaap(30);
+      controle('gevonden tijdens het typen: tik op de naam zet het op de lijst (zoals intypen en +), geen bewerkscherm, vak leeg', !voor && wW.eval("!!artikelen.find((a) => a.naam === 'Appels').op") && dW.getElementById('artikelScherm').hidden && iv.value === '' && wW.eval('scherm.filter') === 'L'); }
+    wW.eval("scherm.filter = ''; tekenBoodschappen()"); await slaap(20);
+    const rij = [...dW.querySelectorAll('#lijst .item')].find((r) => naamVanRij(r) === 'Appels');
     rij.querySelector('.tekst').click(); await slaap(30);
     controle('editor vanuit Artikelen: weer op Artikelen', !dW.getElementById('artikelScherm').hidden && !dW.getElementById('scherm-boodschappen').hidden && wW.getComputedStyle(dW.getElementById('scherm-boodschappen')).display === 'none');
     dW.getElementById('artikelDicht').click(); await slaap(30);
@@ -2792,17 +2805,26 @@ const BEGIN = [
     controle('+ vanaf "?": de standaard (3), je eigen keuze', tel().querySelector('.n').textContent === '3' && melkRij().querySelector('.aantal').textContent === '3×' && !melkRij().querySelector('.normaal') && mt() === '3|3|false', mt());
     tel().querySelector('.min').click(); await slaap(30);
     controle('−: 2 deze keer, 3× doorgestreept voor 2×', tel().querySelector('.n').textContent === '2' && melkRij().querySelector('.normaal').textContent === 'normaal 3×' && melkRij().querySelector('.aantal').textContent === '2×' && mt() === '2|3|false', mt());
-    tel().querySelector('.min').click(); await slaap(30); tel().querySelector('.min').click(); await slaap(30);
-    controle('met een recept: − vanaf 1 terug naar "?" (blijft je eigen keuze)', tel().querySelector('.n').textContent === '?' && tel().querySelector('.min').disabled && mt() === '0|3|false' && wR.eval("artikelen.find((x) => x.naam === 'Melk').rec.opvraag") === '1', mt());
+    tel().querySelector('.min').click(); await slaap(30);
+    controle('minstens 1, ook met een recept ("?" komt alleen van de recepten)', tel().querySelector('.n').textContent === '1' && tel().querySelector('.min').disabled && mt() === '1|3|false', mt());
+    /* Een tweede recept erbij: "?" en wat het was (1) doorgestreept; de teller staat op 1; tik op het getal = zo houden */
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); handelen([{ actie: 'nieuw', soort: 'recept', id: 'pap01', velden: { naam: 'Pap' } }, { actie: 'voor', soort: 'artikel', id: a.id, recept: 'pap01', naam: 'Pap', aantal: '2', wie: ik }]); })()"); await slaap(30);
+    controle('recept erbij: "~~1×~~ ?×", teller op 1 (wat het was)', melkRij().querySelector('.normaal').textContent === 'normaal 1×' && melkRij().querySelector('.aantal.onbekend').textContent === '?×' && tel().querySelector('.n').textContent === '1' && mt() === '0|3|false', mt());
+    tel().querySelector('.n').click(); await slaap(30);
+    controle('tik op het getal: houden (1), "?" weg', tel().querySelector('.n').textContent === '1' && !melkRij().querySelector('.onbekend') && mt() === '1|3|false', mt());
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Melk'); handelen([{ actie: 'voor', soort: 'artikel', id: a.id, recept: 'pap01', aantal: '' }]); })()"); await slaap(30);
     tel().querySelector('.meer').click(); await slaap(30);
-    controle('+ vanaf "?": weer 3, lijstaantal leeg, niets doorgestreept', tel().querySelector('.n').textContent === '3' && !melkRij().querySelector('.normaal') && mt() === '3|3|false', mt());
+    controle('recept eraf → "?" (was 1); + vanaf 1 = 2', tel().querySelector('.n').textContent === '2' && mt() === '2|3|false', mt());
+    tel().querySelector('.meer').click(); await slaap(30);
+    controle('+: 3, lijstaantal leeg, niets doorgestreept', tel().querySelector('.n').textContent === '3' && !melkRij().querySelector('.normaal') && mt() === '3|3|false', mt());
     /* Regelmatig, vast 1: + is gewoon zelf 1, zonder lijstaantal */
     wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); handelen([{ actie: 'voor', soort: 'artikel', id: a.id, recept: 'pas01', naam: 'Pasta verde', aantal: '2', wie: ik }]); scherm.teller = a.id; tekenBoodschappen(); })()"); await slaap(30);
     controle('Gehakt (eenmalig) alleen voor het recept (2): teller "Aantal" (geen standaard) met "?", achter de naam "?×"', tel().firstElementChild.textContent === 'Aantal' && rijL('Gehakt').querySelector('.aantal.onbekend').textContent === '?×' && tel().querySelector('.n').textContent === '?' && tel().querySelector('.min').disabled);
     tel().querySelector('.meer').click(); await slaap(30);
     controle('+: 1, geen lijstaantal nodig', tel().querySelector('.n').textContent === '1' && wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); return a.eigen + '|' + (a.rec.opaantal || '-'); })()") === '1|-');
-    tel().querySelector('.min').click(); await slaap(30);
-    controle('eenmalig met een recept: − vanaf 1 gaat terug naar "?" (blijft je eigen keuze)', tel().querySelector('.n').textContent === '?' && tel().querySelector('.min').disabled && wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); return !a.opvoor && a.rec.opvraag === '1'; })()"));
+    controle('eenmalig: minstens 1', tel().querySelector('.n').textContent === '1' && tel().querySelector('.min').disabled);
+    /* Weer alleen voor het recept (zoals na het rondje in het recept) */
+    wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Gehakt'); handelen([{ actie: 'zet', soort: 'artikel', id: a.id, veld: 'opvoor', oud: '', nieuw: '1' }]); })()"); await slaap(30);
     /* Boter: zelf op Eenmalig gezet (1), aanvinken in een recept → "?", recept weer uit → blijft staan met "?". */
     { wR.eval("handelen([{ actie: 'nieuw', soort: 'artikel', id: 'bot01', velden: { naam: 'Boter', soort: 'eenmalig', op: tijdstipTekst(new Date()) } }, { actie: 'ingredient', soort: 'recept', id: 'pas01', ingredient: 'ibo01', naam: 'Boter', aantal: '1' }])"); await slaap(30);
       const bt = () => wR.eval("(() => { const a = artikelen.find((x) => x.naam === 'Boter'); return !!a.op + '|' + a.eigen + '|' + (a.opvoor || '-'); })()");

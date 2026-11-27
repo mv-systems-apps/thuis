@@ -262,7 +262,7 @@
   /* Een knop naast de kopknop van de lijst (die zelf een knop is): zwevend, rechts vóór het
      pijltje (kopbalk-padding 14 + pijltje 20 + tussenruimte 8); het pijltje schuift een
      knopbreedte op. */
-  #wekAlles{position:absolute;top:1px;right:calc(14px + 20px + 8px);z-index:1;margin:0}
+  #wekAlles{position:absolute;top:calc((46px - var(--kopknop)) / 2);right:calc(14px + 20px + 8px);z-index:1;margin:0}
   #wekAlles[hidden]{display:none}
   #lijstKop.metknop #lijstPijl{margin-left:calc(var(--kopknop) + 8px)}
   #lijstPijl:empty{display:none}
@@ -358,7 +358,9 @@
   .afdrij .tal{flex-shrink:0;font-size:17px;color:var(--grijs)}
   .arij .potlood{width:44px;height:44px;flex-shrink:0;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
   /* Volgorde aan/uit in de kop: aan is gevuld paars met een vinkje. */
-  .kopbalk .kopknop,#wekAlles{width:var(--kopknop);height:var(--kopknop);flex-shrink:0;margin:-4px 0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
+  .kopbalk .kopknop,#wekAlles{width:var(--kopknop);height:var(--kopknop);flex-shrink:0;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
+  /* In de kop (flex): iets over de rand, zoals Volgorde. #wekAlles staat los (absoluut) en midden in de kop: geen marge. */
+  .kopbalk .kopknop{margin:-4px 0}
   .kopbalk .kopknop[hidden]{display:none}
   .kopbalk .volgorde{margin-right:-8px}
   .kopbalk .volgorde[aria-pressed="true"]{background:var(--paars)}
@@ -628,7 +630,7 @@
         <div class="rij"><span class="label">Opslag vastgezet</span><span class="waarde" id="appOpslag">—</span></div>
       </div>
     </div>
-    <div class="stempel" id="app-version-stamp">Versie 1352906-008</div>
+    <div class="stempel" id="app-version-stamp">Versie 1352906-009</div>
   </section>
 </main>
 
@@ -783,6 +785,10 @@ const SCHEMA = {
     op: { type: 'tekst', zet: true, samen: 'lijst' },
     opdoor: { type: 'tekst', zet: true, samen: 'lijst' },
     weg: { type: 'datum', zet: true, geldig: OOK_LEEG((v) => DATUM.test(v)), samen: 'nieuwste' },
+    /* Tijdstip dat een eenmalig artikel van de lijst ging (kopen of weghalen): alleen voor de volgorde van het
+       archief (het laatste bovenaan), niet getoond. Zet de kern zelf (geen eigen handeling). Een oudere app
+       laat het staan (onbekende velden blijven bewaard). */
+    wegtijd: { type: 'tekst', geldig: OOK_LEEG((v) => TIJDSTIP.test(v)) },
     gekocht: { type: 'datums' },
     /* Recepten waarvoor het (extra) op de lijst staat: recept-id → { naam, aantal }. De naam
        wordt onthouden, zodat het regeltje blijft kloppen als het recept intussen weg is.
@@ -790,10 +796,11 @@ const SCHEMA = {
     voor: { type: 'voor' },
     /* "1": staat alleen voor recepten op de lijst (het eigen aantal telt dan niet mee). */
     opvoor: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => v === '1'), samen: 'stil' },
-    /* "1": zelf op de lijst gezet, maar de recepten veranderden (erbij of eraf): hoeveel is weer de vraag
-       ("?"). Alleen op de lijst en niet samen met opvoor of een lijstaantal; zelf een aantal kiezen of van de
-       lijst maakt het leeg. Een oudere app laat het veld staan (onbekende velden blijven bewaard). */
-    opvraag: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => v === '1'), samen: 'stil' },
+    /* "1"–"99": zelf op de lijst gezet, maar de recepten veranderden (erbij of eraf): hoeveel is weer de vraag
+       ("?"); de waarde is wat het was (doorgestreept getoond, de teller begint daar: je kunt terug). Alleen
+       op de lijst en niet samen met opvoor of een lijstaantal; zelf een aantal kiezen of van de lijst maakt
+       het leeg. Een oudere app laat het veld staan (onbekende velden blijven bewaard). */
+    opvraag: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => RECEPT_AANTAL.test(v)), samen: 'stil' },
     /* Lijstaantal: alleen deze keer ("1"–"99"); leeg = het vaste aantal. Gaat weg als het van de lijst gaat.
        Tijdelijk: bij gelijktijdig wijzigen wint stil de laatste (geen melding). */
     opaantal: { type: 'tekst', zet: true, geldig: OOK_LEEG((v) => RECEPT_AANTAL.test(v)), samen: 'stil' }
@@ -1144,8 +1151,9 @@ function rechtzetten(model) {
   /* "voor" zonder "op" (of "opvoor" zonder "voor") kan niet: rechtzetten. */
   for (const a of model.artikelen.values()) {
     if (!a.op && (a.voor.size || a.opvoor || a.opaantal || a.opvraag)) { a.voor.clear(); a.opvoor = ''; a.opaantal = ''; a.opvraag = ''; model.rechtgezet++; }
-    if (a.opvraag && (a.opvraag !== '1' || a.opvoor)) { a.opvraag = ''; model.rechtgezet++; }
+    if (a.opvraag && (!RECEPT_AANTAL.test(a.opvraag) || a.opvoor)) { a.opvraag = ''; model.rechtgezet++; }
     if (a.opvraag && a.opaantal) { a.opaantal = ''; model.rechtgezet++; }
+    if (a.wegtijd && (!TIJDSTIP.test(a.wegtijd) || a.soort !== 'eenmalig')) { a.wegtijd = ''; model.rechtgezet++; }
     /* Een lijstaantal of "alleen voor recepten" dat niet klopt (met de hand bewerkt bestand): weg. */
     if (a.opaantal && !RECEPT_AANTAL.test(a.opaantal)) { a.opaantal = ''; model.rechtgezet++; }
     if (a.opvoor && a.opvoor !== '1') { a.opvoor = ''; model.rechtgezet++; }
@@ -1339,13 +1347,13 @@ function handelZet(model, h, verz, r) {
     doel[h.veld] = nieuw;
     /* Van de lijst (ook afvinken): de recepten gaan er ook af. Zelf op de lijst gezet: het
        eigen aantal telt weer mee. */
-    if (h.soort === 'artikel' && h.veld === 'op') { r.opvoor = ''; if (nieuw === '') { r.voor.clear(); r.opaantal = ''; r.opvraag = ''; } }
+    if (h.soort === 'artikel' && h.veld === 'op') { r.opvoor = ''; if (nieuw === '') { r.voor.clear(); r.opaantal = ''; r.opvraag = ''; wegTijd(r, h); } }
     /* "?": geen lijstaantal ernaast (er is maar één waarheid). */
-    if (h.soort === 'artikel' && h.veld === 'opvraag' && nieuw === '1') r.opaantal = '';
+    if (h.soort === 'artikel' && h.veld === 'opvraag' && nieuw) r.opaantal = '';
     /* Alleen voor recepten: het eigen deel is 0, dus geen lijstaantal (er is maar één waarheid). */
     if (h.soort === 'artikel' && h.veld === 'opvoor' && nieuw === '1') { r.opaantal = ''; r.opvraag = ''; }
     /* Wordt een artikel eenmalig, dan loopt de bewaartijd van het archief vanaf nu (anders ruimt opruimen het meteen op). */
-    if (h.soort === 'artikel' && h.veld === 'soort' && nieuw === 'eenmalig' && DATUM.test(String(h.t || '').slice(0, 10)) && String(h.t).slice(0, 10) > (r.weg || '')) r.weg = String(h.t).slice(0, 10);
+    if (h.soort === 'artikel' && h.veld === 'soort' && nieuw === 'eenmalig' && DATUM.test(String(h.t || '').slice(0, 10)) && String(h.t).slice(0, 10) > (r.weg || '')) { r.weg = String(h.t).slice(0, 10); if (!r.op) wegTijd(r, h); }
   };
   /* Zelf op de lijst gezet terwijl het er alleen voor recepten op stond (ook in dezelfde minuut): het eigen aantal telt weer mee. */
   if (cur === nieuw) { if (h.soort === 'artikel' && h.veld === 'op' && nieuw !== '' && r.opvoor) { r.opvoor = ''; return { status: 'ok' }; } return { status: 'al' }; }
@@ -1482,6 +1490,15 @@ function handelIngredient(model, h, verz, r) {
    recept er weer af (''). Stond het er nog niet op, dan komt het erop, alleen voor
    recepten (opvoor). Gaat het laatste recept eraf terwijl het alleen daarvoor op de lijst
    stond, dan gaat het van de lijst (een eenmalig artikel naar het archief, vanaf die dag). */
+/* Een eenmalig artikel gaat van de lijst: het tijdstip, voor de volgorde van het archief (nieuwste wint). */
+function wegTijd(r, h) {
+  if (r.soort === 'eenmalig' && TIJDSTIP.test(String(h.t || '')) && h.t > (r.wegtijd || '')) r.wegtijd = h.t;
+}
+/* Het aantal wordt weer de vraag ("?"), en onthoudt wat het was (stond het al op "?": dat blijft). */
+function vraagWordt(r) {
+  if (!r.opvraag) r.opvraag = String(r.soort === 'eenmalig' ? (+r.aantal || 1) : (+r.opaantal || +r.aantal || 1));
+  r.opaantal = '';
+}
 function handelVoor(model, h, verz, r) {
   if (!isTekst(h.recept) || !ID_PATROON.test(h.recept)) return { status: 'vervallen', reden: 'ongeldig' };
   const n = h.aantal || '';
@@ -1492,11 +1509,12 @@ function handelVoor(model, h, verz, r) {
     r.voor.delete(h.recept);
     if (!r.voor.size && r.opvoor) {
       r.op = ''; r.opdoor = ''; r.opvoor = ''; r.opaantal = ''; r.opvraag = '';
+      wegTijd(r, h);
       const dag = String(h.t || '').slice(0, 10);
       if (r.soort === 'eenmalig' && DATUM.test(dag) && dag > (r.weg || '')) r.weg = dag;
     }
     /* Zelf op de lijst gezet: een recept eraf maakt het aantal weer de vraag; het blijft staan. */
-    else if (r.op && !r.opvoor) { r.opvraag = '1'; r.opaantal = ''; }
+    else if (r.op && !r.opvoor) vraagWordt(r);
     return { status: 'ok' };
   }
   const naam = schoonTekst(h.naam);
@@ -1504,7 +1522,7 @@ function handelVoor(model, h, verz, r) {
   if (nu && nu.aantal === n && nu.naam === naam && nu.ing === ing && r.op) return { status: 'al' };
   r.voor.set(h.recept, { naam, aantal: n, ing });
   /* Zelf op de lijst gezet: een recept erbij maakt het aantal weer de vraag ("?"). */
-  if (!nu && r.op && !r.opvoor) { r.opvraag = '1'; r.opaantal = ''; }
+  if (!nu && r.op && !r.opvoor) vraagWordt(r);
   if (!r.op) { r.op = TIJDSTIP.test(String(h.t || '')) ? h.t : tijdstipTekst(new Date()); r.opdoor = isTekst(h.wie) ? h.wie : ''; r.opvoor = '1'; }
   return { status: 'ok' };
 }
@@ -1805,7 +1823,7 @@ function artikelLijst(model) {
   return opNaam(model.artikelen).map((r) => ({
     id: r.id, naam: r.naam, sleutel: normNaam(r.naam), zoek: zoekVorm(r.naam), soort: r.soort, letter: SOORT_LETTER[r.soort], aantal: +r.aantal || 1, notitie: r.notitie, link: veiligeLink(r.link) || '',
     plekken: Array.from(r.ligt, ([winkel, afd]) => ({ winkel, afd })),
-    op: r.op, opdoor: r.opdoor, weg: r.weg, gekocht: r.gekocht.slice(), laatst: laatsteDag(r),
+    op: r.op, opdoor: r.opdoor, weg: r.weg, gekocht: r.gekocht.slice(), laatst: laatsteDag(r), wegtijd: r.wegtijd || '',
     /* Recepten: voor = [{ recept, naam, aantal, ing, notitie }] (op naam; notitie = die van het ingrediënt);
        opAantal = wat er op de lijst staat (het eigen aantal, tenzij alleen voor recepten, plus de recepten). */
     ...voorVan(r, model),
@@ -1832,7 +1850,8 @@ function voorVan(r, model) {
   /* Deze keer een ander eigen aantal dan het vaste (wekelijks en regelmatig; eenmalig heeft geen vast aantal):
      normaal = het vaste aantal, in beeld doorgestreept voor het aantal ("~~3×~~ 2×"). Recepten tellen niet
      mee. 0 = geen afwijking. */
-  const normaal = r.op && r.soort !== 'eenmalig' && eigen > 0 && eigen !== vast ? vast : 0;
+  /* "?" na een recept erbij of eraf: wat het was, doorgestreept ("~~2×~~ ?×"), ook bij eenmalig. */
+  const normaal = r.op && r.opvraag ? +r.opvraag : r.op && r.soort !== 'eenmalig' && eigen > 0 && eigen !== vast ? vast : 0;
   return { voor, opvoor: !!r.opvoor, opAantal, eigen, normaal };
 }
 /* Recepten op naam, met hun ingrediënten (naam, aantal, notitie) en een zoekvorm. */
@@ -2667,6 +2686,8 @@ const KEUZES = {
     waarde: () => Object.assign({}, weergave), leeg: () => { Object.assign(weergave, WEERGAVE_STANDAARD); } },
   /* Logboek (per telefoon): hoeveel regels er blijven, 25 (standaard), 50 of 100. */
   logboekRegels: { lees: (v) => { logboekMax = LOGBOEK_KEUZES.indexOf(v) !== -1 ? v : 25; }, waarde: () => logboekMax, leeg: () => { logboekMax = 25; } },
+  /* Archief open of dicht (per telefoon); de eerste keer open. */
+  archiefOpen: { lees: (v) => { scherm.archiefOpen = v !== false; }, waarde: () => scherm.archiefOpen, leeg: () => { scherm.archiefOpen = true; } },
   doenStandaard: { lees: (v) => { doen.standaard = DOEN_FILTERS.indexOf(v) !== -1 ? v : 'alles'; doen.filter = doen.standaard; }, waarde: () => doen.standaard, leeg: () => { doen.standaard = 'alles'; doen.filter = 'alles'; } }
 };
 const backupTal = { n: null };
@@ -3657,7 +3678,7 @@ function plusNaam(el, k, naam) {
   (el.closest('button') || el).setAttribute('aria-label', PLUS_WAT[k] + ': ' + naam);
 }
 
-const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', weggehaald: new Map(), archiefOpen: false, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '', sugOpen: false };
+const scherm = { filter: 'L', nieuwSoort: 'E', zoek: '', weggehaald: new Map(), archiefOpen: true, teller: '', dicht: { lijst: false, weg: false }, zoekIn: '', sugOpen: false };
 /* Recepten op Artikelen: open = het open recept (id), teller = het artikel met de teller open,
    dicht = welke groep dicht is, favorieten per telefoon. */
 const rs = { open: '', teller: '', laag: null, scroll: 0, dicht: { fav: false, rest: false }, favorieten: [] };
@@ -3884,11 +3905,16 @@ function artikelRij(a, opties) {
      zonder recepten tot 1. Elders: "Aantal", het vaste aantal (1–99). Een eenmalig artikel op de lijst telt
      overal als "deze keer" (ook in Eenmalig): ook daar "?" en − tot "?". */
   const alsLijst = lijst || (a.letter === 'E' && !!a.op);
-  const zelf = alsLijst ? a.eigen : a.aantal;
+  /* "?" na een recept erbij of eraf: de teller staat op wat het was (doorgestreept op de regel); − en + gaan
+     daarvandaan, een tik op het getal houdt het zo. */
+  const was = alsLijst && a.eigen === 0 && +a.rec.opvraag || 0;
+  if (was) t.dataset.vraag = '1';
+  const zelf = was || (alsLijst ? a.eigen : a.aantal);
   /* Eenmalig heeft geen standaard: daar "Aantal". */
   t.firstChild.textContent = lijst && a.letter !== 'E' ? 'normaal ' + a.aantal + '×' : 'Aantal';
   t.querySelector('.n').textContent = zelf > 0 ? zelf : '?';
-  t.querySelector('.min').disabled = zelf <= 0 || (zelf <= 1 && !(alsLijst && a.voor.length));
+  if (was) t.querySelector('.n').setAttribute('aria-label', 'Was ' + was + '; tik om zo te houden');
+  t.querySelector('.min').disabled = zelf <= 1;
   t.querySelector('.meer').disabled = zelf >= 99;
   frag.appendChild(t);
   return frag;
@@ -3947,8 +3973,8 @@ function veegActies(r) {
     return { rechts, links: a && (a.notitie || a.link) ? () => notitiePaneel(a, actieVol(a)) : null };
   }
   const a = artikelOpId.get(id);
-  /* Op de lijst: naar links = de teller (een tik op de naam toont daar al de hele notitie, in de leesstand). */
-  if (r.dataset.lijst === '1' && a) return { rechts, links: () => { const ic = r.querySelector('.icoon'); if (ic && ic.getAttribute('aria-expanded') !== 'true') ic.click(); }, teller: true };
+  /* Op de lijst: naar links = de teller open of dicht (een tik op de naam toont daar al de hele notitie, in de leesstand). */
+  if (r.dataset.lijst === '1' && a) return { rechts, links: () => { const ic = r.querySelector('.icoon'); if (ic) ic.click(); }, teller: true };
   return { rechts, links: a && heeftTeLezen(a) ? () => notitiePaneel(a) : null };
 }
 const rijVeeg = { rij: null, id: 0, x: 0, y: 0, dx: 0, bezig: false, uit: false, acties: null };
@@ -4213,8 +4239,8 @@ function tagTerugGaan(viaLaag) {
 }
 
 /* De teller. Op de lijst (lijst): het lijstaantal, alleen deze keer; gelijk aan het vaste aantal = leeg.
-   Op "?" (alleen voor recepten, of de recepten veranderden): + = de standaard (eenmalig 1); met recepten gaat
-   − vanaf 1 terug naar "?". Elders: het vaste aantal (1–99). */
+   Op "?" alleen voor recepten: + = de standaard (eenmalig 1). Op "?" na een recept erbij of eraf: vanaf wat
+   het was (tik op het getal = zo houden). Minstens 1. Elders: het vaste aantal (1–99). */
 function aantalZetten(id, stap, lijst) {
   const a = artikelen.find((x) => x.id === id);
   if (!a) return;
@@ -4222,6 +4248,17 @@ function aantalZetten(id, stap, lijst) {
   if (a.op && (lijst || a.letter === 'E')) {
     const raw = a.rec.opaantal || '';
     /* Op "?" (alleen voor recepten, of de recepten veranderden): + = de standaard (eenmalig 1), je eigen keuze. */
+    /* "?" met wat het was: vanaf dat getal (stap 0 = zo houden); je eigen keuze. */
+    const was = a.eigen === 0 && +a.rec.opvraag;
+    if (was) {
+      const nieuw = Math.min(99, was + stap);
+      if (nieuw < 1) return;
+      const hs = [{ actie: 'zet', soort: 'artikel', id, veld: 'opvraag', oud: a.rec.opvraag, nieuw: '' }];
+      if (a.letter === 'E') { if (nieuw !== a.aantal) hs.push({ actie: 'zet', soort: 'artikel', id, veld: 'aantal', oud: a.aantal > 1 ? String(a.aantal) : '', nieuw: nieuw > 1 ? String(nieuw) : '' }); }
+      else if (nieuw !== a.aantal) hs.push({ actie: 'zet', soort: 'artikel', id, veld: 'opaantal', oud: '', nieuw: String(nieuw), keer: a.op });
+      handelen(hs);
+      return;
+    }
     if (a.eigen === 0) {
       if (stap <= 0) return;
       const nu = tijdstipTekst(new Date());
@@ -4233,11 +4270,8 @@ function aantalZetten(id, stap, lijst) {
       return;
     }
     const nieuw = Math.min(99, a.eigen + stap);
-    if (nieuw < 1) {
-      /* Met recepten: terug naar "?" (blijft je eigen keuze: het recept eraf haalt het niet weg); zonder minstens 1. */
-      if (a.voor.length) handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'opvraag', oud: '', nieuw: '1' }]);
-      return;
-    }
+    /* Minstens 1 ("?" komt alleen van de recepten). */
+    if (nieuw < 1) return;
     /* Eenmalig: geen apart lijstaantal, de teller wijzigt het aantal zelf. */
     if (a.letter === 'E') { handelen([{ actie: 'zet', soort: 'artikel', id, veld: 'aantal', oud: a.aantal > 1 ? String(a.aantal) : '', nieuw: nieuw > 1 ? String(nieuw) : '' }]); return; }
     const nieuwRaw = nieuw === a.aantal ? '' : String(nieuw);
@@ -4252,7 +4286,9 @@ function aantalZetten(id, stap, lijst) {
 
 /* "Van de lijst gehaald": wat je net weghaalde, om het makkelijk terug te zetten. */
 function tekenWeggehaald(zoekend) {
-  const weg = (!zoekend && scherm.filter === 'L') ? artikelen.filter((a) => !a.op && scherm.weggehaald.has(a.id)) : [];
+  /* Op de lijst en in Eenmalig: wat je net weghaalde, het laatste bovenaan (een tik zet het terug). */
+  const weg = !zoekend && (scherm.filter === 'L' || scherm.filter === 'E')
+    ? Array.from(scherm.weggehaald.keys()).reverse().map((id) => artikelOpId.get(id)).filter((a) => a && !a.op && (scherm.filter === 'L' || a.letter === 'E')) : [];
   let sec = $('weggehaald');
   if (sec) sec.remove();
   if (!weg.length) return;
@@ -4280,13 +4316,16 @@ function tekenArchief(zoekend) {
   let sec = $('archief');
   if (sec) sec.remove();
   if (zoekend || (scherm.filter !== 'E' && scherm.filter !== '')) return;
-  const arch = artikelen.filter((a) => a.letter === 'E' && !a.op)
-    .sort((x, y) => (x.laatst < y.laatst ? 1 : x.laatst > y.laatst ? -1 : SORTEER.compare(x.naam, y.naam)));
+  /* Het laatst gekochte of weggehaalde bovenaan: op het tijdstip (wegtijd), anders de dag. Wat hierboven onder
+     "Van de lijst gehaald" staat, niet nog eens. */
+  const sleutel = (a) => (a.wegtijd && a.wegtijd.slice(0, 10) >= a.laatst ? a.wegtijd : a.laatst);
+  const arch = artikelen.filter((a) => a.letter === 'E' && !a.op && !scherm.weggehaald.has(a.id)).map((a) => [sleutel(a), a])
+    .sort(([kx, x], [ky, y]) => (kx < ky ? 1 : kx > ky ? -1 : SORTEER.compare(x.naam, y.naam))).map(([, a]) => a);
   if (!arch.length) return;
   sec = document.createElement('div');
   sec.id = 'archief';
   sec.className = 'blok';
-  sec.appendChild(klapKop('Archief', String(arch.length), scherm.archiefOpen, () => { scherm.archiefOpen = !scherm.archiefOpen; tekenArchief(false); }));
+  sec.appendChild(klapKop('Archief', String(arch.length), scherm.archiefOpen, () => { scherm.archiefOpen = !scherm.archiefOpen; keuzeBewaren('archiefOpen'); tekenArchief(false); }));
   if (scherm.archiefOpen) sec.insertAdjacentHTML('beforeend', '<div class="lijst"></div>');
   if (scherm.archiefOpen) {
     const frag = document.createDocumentFragment();
@@ -4427,7 +4466,8 @@ function tellerKlik(e, stand, teken, doel) {
     if (b) aantalZetten(tel.dataset.id, b.classList.contains('meer') ? 1 : -1, tel.dataset.lijst === '1');
     /* Ergens anders op de regel: de teller dicht, net als een tweede tik op het icoon.
        Het getal tussen de knoppen niet: net naast - of + mis tikken sluit hem dan niet. */
-    else if (!e.target.closest('.n')) { stand.teller = ''; teken(); }
+    else if (e.target.closest('.n')) { if (tel.dataset.vraag === '1') aantalZetten(tel.dataset.id, 0, tel.dataset.lijst === '1'); }
+    else { stand.teller = ''; teken(); }
     return true;
   }
   if (!(e.target.closest('.icoon') || e.target.closest('.aantal'))) return false;
@@ -4443,7 +4483,13 @@ function tellerKlik(e, stand, teken, doel) {
 function lijstKlik(e) {
   if (tellerKlik(e, scherm, tekenBoodschappen, $('scherm-boodschappen'))) return;
   const naam = e.target.closest('.tekst');
-  /* Vanaf Op de lijst eerst lezen; elders meteen bewerken. */
+  /* Tijdens het typen (gevonden): een tik op de naam zet het op de lijst, net als de naam intypen en +
+     (stond het er al: het licht op). Anders: vanaf Op de lijst eerst lezen, elders meteen bewerken. */
+  if (naam && normNaam(scherm.zoek)) {
+    const a = artikelen.find((x) => x.id === naam.closest('.item').dataset.id);
+    if (a) { $('invoerTekst').value = a.naam; toevoegen(); }
+    return;
+  }
   if (naam) { const it = naam.closest('.item'); artikelOpenen(it.dataset.id, it.dataset.lezen === '1'); return; }
   const knop = e.target.closest('.rondje');
   if (!knop) return;

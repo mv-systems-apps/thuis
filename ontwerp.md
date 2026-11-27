@@ -153,7 +153,7 @@ om met de hand te bewerken.
 |---|---|
 | `instellingen` | `wekelijks`: `dag`, `tijd`, `teruggezet`, `auto` (ja/nee, standaard nee: handmatig, met het knopje bij Wekelijks); `archief`: `bewaren` (1w, 1m, 3m, 1j); `aankopen`: `bewaren` ("0" t/m "1000"); `historie`: `bewaren` (1w, 1m, 3m, 1j); `opruimen`: `tot` (na terugzetten) |
 | `winkels` | `naam`; `afdelingen`: lijst van `{id, naam}` in de route |
-| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, mag meer regels hebben (\n), blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums); `voor` (recept-id → { `naam`, `aantal` }: waarvoor het extra op de lijst staat; de receptregel toont de huidige naam van het recept; de naam wordt onthouden (bij verwijderen de laatste), zodat de receptregel klopt als het recept weg is; van de lijst of afgevinkt = leeg); `opvoor` ("1" = staat alleen voor recepten op de lijst, het eigen aantal telt dan niet); `opvraag` ("1" = eenmalig, zelf op de lijst, maar de recepten veranderden: het aantal is "?"; van de lijst = leeg; een oudere app laat het staan); `opaantal` (lijstaantal "1" t/m "99", alleen deze keer; leeg = het vaste aantal; van de lijst = leeg) |
+| `artikelen` | `naam`; `soort` (eenmalig, wekelijks, regelmatig); `aantal` ("2" t/m "99"; zonder = 1, blijft staan na het kopen); `notitie` (vrije tekst, mag meer regels hebben (\n), blijft staan); `link` (alleen https, zonder naam of wachtwoord, met een echte domeinnaam; getoond als het domein met ↗); `ligt` (winkel-id → afdeling-id; `""` = te koop daar, afdeling onbekend; geen `ligt` = nog nergens vastgelegd, staat in elke winkel bovenaan); `op` (sinds wanneer op de lijst); `opdoor`; `weg` (dag dat een eenmalig artikel van de lijst ging, voor wat nooit gekocht is); `gekocht` (laatste zes datums); `voor` (recept-id → { `naam`, `aantal` }: waarvoor het extra op de lijst staat; de receptregel toont de huidige naam van het recept; de naam wordt onthouden (bij verwijderen de laatste), zodat de receptregel klopt als het recept weg is; van de lijst of afgevinkt = leeg); `opvoor` ("1" = staat alleen voor recepten op de lijst, het eigen aantal telt dan niet); `wegtijd` (tijdstip dat een eenmalig artikel van de lijst ging, door kopen of weghalen; alleen voor de volgorde van het archief, niet getoond; zet de kern zelf); `opvraag` ("1" = eenmalig, zelf op de lijst, maar de recepten veranderden: het aantal is "?"; van de lijst = leeg; een oudere app laat het staan); `opaantal` (lijstaantal "1" t/m "99", alleen deze keer; leeg = het vaste aantal; van de lijst = leeg) |
 | `recepten` | `naam`, `notitie` (met #tags), `link`, `ingredienten` (id → { `naam`, `aantal` "1" t/m "99" }): eigen ingrediënten, los van de artikelen (een kladblok); aanvinken zet het artikel met dezelfde naam op de lijst |
 | `acties` | `naam`, `datum`, `herhaal` (week, maand, kwartaal, jaar), `maanddag`, `notitie`, `link`, `klaar`. Geen eigenaar of wie: ook niet in de handelingen |
 | `aankopen` | per id `naam`, `tijd`, optioneel `winkel` (winkel-id) en `onzeker` ("1": afgevinkt onder Elders); niet wie |
@@ -247,8 +247,12 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Filterknoppen (icoon + aantal): Op de lijst, Eenmalig, Wekelijks,
   Regelmatig, Recepten (kookpan; telt recepten). Eenmalig toont (en telt) alleen wat op de
   lijst staat; gekocht of van de lijst gehaald gaat een eenmalig artikel naar
-  het "Archief" eronder (ingeklapt, nieuwste eerst, grijs, met "gekocht 19 nov"
-  of "van de lijst 14 jul"; de + zet het terug). Zoeken vindt ook het archief.
+  het "Archief" eronder (grijs, met "gekocht 19 nov" of "van de lijst 14 jul"; de + zet het terug).
+  Het archief is er om eenmalige dingen snel terug te vinden zonder ze opnieuw te typen; de bewaartijd
+  ruimt ze op. Het laatst gekochte of weggehaalde staat bovenaan (op tijdstip: `wegtijd`, ook van de
+  andere telefoon; niet getoond). Open of dicht onthoudt de telefoon (de eerste keer open). Weghalen in
+  Eenmalig werkt zoals op Op de lijst: het blijft even bovenaan onder "Van de lijst gehaald" (het laatste
+  bovenaan, een tik zet het terug) en staat dan niet nog eens in het archief. Zoeken vindt ook het archief.
   Nog een tik op het gekozen vakje zet het uit: "Alle artikelen" (alles behalve
   het archief, dat eronder staat; een nieuw artikel wordt eenmalig). Bij het
   openen van de app staat "Op de lijst" aan.
@@ -296,9 +300,11 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
      het aantal weer de vraag: "?" (veld opvraag; een lijstaantal vervalt). Het blijft staan, ook als het
      laatste recept eraf gaat.
   3. Via een recept gekomen en daarna zelf de teller gebruikt: je eigen keuze, verder als 2.
-  "?" = achter de naam "?×" in oranje (de kleur van de doorstreping: let op), ook in Boodschappen; de
-  teller toont "?" (− uit) en + gaat naar de standaard (eenmalig 1); met recepten gaat − vanaf 1 terug
-  naar "?". Niets doorgestreept bij "?". Van de lijst (Eenmalig, de lijst, afvinken) haalt de recepten
+  "?" = achter de naam "?×" in oranje (de kleur van de doorstreping: let op), ook in Boodschappen.
+  Bij 1 (alleen via een recept) toont de teller "?" (− uit) en gaat + naar de standaard (eenmalig 1).
+  Bij 2 en 3 onthoudt "?" wat het was (opvraag = dat getal): op de regel doorgestreept ("~~2×~~ ?×"), de
+  teller staat op 2 en − en + gaan daarvandaan; een tik op het getal houdt het zo (je kunt dus terug).
+  De teller gaat nooit onder 1: "?" komt alleen van de recepten. Van de lijst (Eenmalig, de lijst, afvinken) haalt de recepten
   eraf; in het recept staat het rondje dan uit. Wekelijks terug: "?" vervalt (de standaard).
 - Eenmalig is een bron (tags, ↗, een tik opent meteen het bewerkscherm), maar toont dezelfde aantallen
   ("?×") en receptregels als de lijst, met dezelfde teller; het is hetzelfde artikel.
@@ -386,7 +392,8 @@ vierkant van 44 px met een lichte tint en zonder rand (licht paars, zoals
 - Vegen, in elke lijst met rijen (Boodschappen, Artikelen ook in een winkel, afdeling of recept, Doen,
   Gedaan, Aankopen): naar rechts = het rondje (afvinken, op de lijst / eraf, afronden); naar links = het
   notitiepaneel (bij een actie met wanneer en herhalen); zonder notitie is het icoon grijs en gebeurt er
-  niets. In Gedaan en Aankopen naar links = verwijderen (rood, prullenbak) met Ongedaan maken; naar
+  niets. Op Op de lijst naar links = de teller open of dicht ("− +"; de notitie staat in de leesstand).
+  In Gedaan en Aankopen naar links = verwijderen (rood, prullenbak) met Ongedaan maken; naar
   rechts daar niets. Geen lang indrukken; op de laptop (niet vegen) doet de rechtermuisknop wat naar
   links vegen doet. Vegen telt pas bij een duidelijk horizontale beweging en na een derde van de
   breedte; anders schuift de rij terug. Een rij heeft touch-action: pan-y: verticaal scrollt de telefoon
@@ -798,7 +805,8 @@ Wat uit de reviews is overgebleven als vaste regel, per onderwerp. De geschieden
   Alles; de regel springt in beeld en licht op. Iets dat er al staat, licht op. Hetzelfde voor een
   ingrediënt in een recept en een artikel of afdeling in een winkel (ook gekozen uit het lijstje).
 - Na + blijft het toetsenbord open (Artikelen, Doen, afdelingen); een nieuwe winkel opent zijn pagina.
-  Tijdens zoeken: een rondje laat het toetsenbord open en selecteert de zoektekst. Typen verbergt "Van
+  Tijdens zoeken (gevonden): een tik op de naam zet het op de lijst, net als de naam intypen en + (stond
+  het er al: het licht op); bewerken via de filters. Tijdens zoeken: een rondje laat het toetsenbord open en selecteert de zoektekst. Typen verbergt "Van
   de lijst gehaald"; een ander filter wist het.
 - Tab wisselen sluit een open winkel en Backups/Logboek. Tijdens het typen blijven de filters bovenaan.
 - Platte tekst: alleen bekende HTML-tags en afgesloten <!-- --> weg; losse < en > en "<jong>" blijven;
